@@ -1,4 +1,5 @@
 ---
+import SiteHeader from '@/components/react/SiteHeader';
 import { site } from '@/data/site';
 
 const links = [
@@ -9,60 +10,4 @@ const links = [
 ] as const;
 ---
 
-<header class="glass-header sticky top-0 z-50">
-  <div class="container-page flex items-center justify-between gap-4 py-3.5 sm:py-4">
-    <a
-      href="#inicio"
-      class="group inline-flex items-center gap-2.5 font-semibold tracking-tight text-text transition hover:text-accent"
-    >
-      <span
-        class="glass-surface-sm inline-flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold text-accent transition group-hover:border-border-strong"
-        aria-hidden="true"
-      >
-        FM
-      </span>
-      <span class="hidden text-sm sm:inline">{site.name}</span>
-    </a>
-
-    <nav class="hidden items-center gap-1 lg:flex" aria-label="Principal">
-      {
-        links.map((l) => (
-          <a
-            href={l.href}
-            class="group relative rounded-md px-3 py-2 text-sm text-muted transition hover:text-text"
-          >
-            <span class="relative z-10">{l.label}</span>
-            <span
-              class="absolute inset-x-2 -bottom-px h-px origin-center scale-x-0 bg-accent/70 transition duration-200 group-hover:scale-x-100"
-              aria-hidden="true"
-            />
-          </a>
-        ))
-      }
-    </nav>
-
-    <details class="relative lg:hidden">
-      <summary
-        class="glass-surface-sm list-none rounded-lg px-3 py-2 text-sm font-medium text-text [&::-webkit-details-marker]:hidden"
-      >
-        Menú
-      </summary>
-      <div
-        class="glass-surface absolute right-0 mt-2 w-56 overflow-hidden rounded-xl p-1.5 shadow-elevated"
-        role="navigation"
-        aria-label="Móvil"
-      >
-        {
-          links.map((l) => (
-            <a
-              href={l.href}
-              class="block rounded-lg px-3 py-2.5 text-sm text-muted transition hover:bg-white/45 hover:text-text"
-            >
-              {l.label}
-            </a>
-          ))
-        }
-      </div>
-    </details>
-  </div>
-</header>
+<SiteHeader client:load siteName={site.name} links={links} />

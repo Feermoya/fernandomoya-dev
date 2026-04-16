@@ -1,0 +1,51 @@
+<!-- Parallax decorativo en hero (ligero, sin tocar la navbar: la maneja motion/react). -->
+<script>
+  function prefersReduced() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  let raf = 0;
+  let lastY = 0;
+  let scrollBound = false;
+
+  function applyParallax(scrollY: number) {
+    if (prefersReduced()) return;
+    document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) => {
+      const rate = parseFloat(el.dataset.parallax || '0.1');
+      el.style.transform = `translate3d(0, ${scrollY * rate}px, 0)`;
+    });
+  }
+
+  function onScroll() {
+    lastY = window.scrollY;
+    if (prefersReduced()) return;
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      applyParallax(lastY);
+      raf = 0;
+    });
+  }
+
+  function bindScroll() {
+    if (scrollBound) return;
+    window.addEventListener('scroll', onScroll, { passive: true });
+    scrollBound = true;
+  }
+
+  function unbindScroll() {
+    if (!scrollBound) return;
+    window.removeEventListener('scroll', onScroll);
+    scrollBound = false;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  }
+
+  function boot() {
+    unbindScroll();
+    bindScroll();
+    onScroll();
+  }
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>

@@ -14,7 +14,7 @@ const base =
 const styles =
   variant === 'primary'
     ? 'border border-transparent bg-accent text-white shadow-sm hover:bg-accent-hover'
-    : 'border border-transparent text-muted hover:border-border/70 hover:bg-white/45 hover:text-text hover:shadow-sm';
+    : 'border border-white/[0.1] bg-white/[0.03] text-muted shadow-glass-depth-sm backdrop-blur-md hover:border-white/[0.18] hover:bg-white/[0.06] hover:text-text';
 
 const isHash = href.startsWith('#');
 const isMailto = href.startsWith('mailto:');

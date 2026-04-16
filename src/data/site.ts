@@ -21,6 +21,13 @@ export const site = {
   },
   /** Frase corta: footer, hero secundario. */
   tagline: 'Desarrollo frontend, sitios claros y entregas serias.',
+  /**
+   * Métricas para count-up en “Sobre mí” (editá valores reales antes de publicar).
+   */
+  metrics: [
+    { value: 5, suffix: '+', label: 'Años en desarrollo web' },
+    { value: 12, suffix: '+', label: 'Proyectos publicados' },
+  ],
 } as const;
 
 export type SiteConfig = typeof site;

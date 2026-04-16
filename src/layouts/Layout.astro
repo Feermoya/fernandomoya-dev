@@ -1,8 +1,11 @@
 ---
 import '@/styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import AmbientBackdrop from '@/components/layout/AmbientBackdrop.astro';
+import CursorGlow from '@/components/react/CursorGlow';
 import Header from '@/components/layout/Header.astro';
 import Footer from '@/components/layout/Footer.astro';
-import MotionRoot from '@/components/layout/MotionRoot.astro';
+import ScrollMotion from '@/components/layout/ScrollMotion.astro';
 import { site } from '@/data/site';
 import { absoluteUrl } from '@/utils/seo';
 
@@ -20,12 +23,12 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
 ---
 
 <!doctype html>
-<html lang={site.locale} class="bg-surface-0">
+<html lang={site.locale} class="bg-bg-base text-text">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content="#f8f7f5" />
+    <meta name="theme-color" content="#0d0f14" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -45,21 +48,19 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <ClientRouter />
   </head>
-  <body class="flex min-h-dvh flex-col overflow-x-clip">
-    <MotionRoot />
-    <Header />
-    <main id="main" class="flex-1">
-      <slot />
-    </main>
-    <Footer />
-    <noscript>
-      <style>
-        .motion-hidden {
-          opacity: 1 !important;
-          transform: none !important;
-        }
-      </style>
-    </noscript>
+  <body class="relative min-h-dvh overflow-x-clip bg-bg-base text-text">
+    <AmbientBackdrop />
+    <div class="relative z-[1] flex min-h-dvh flex-col">
+      <ScrollMotion />
+      <CursorGlow client:idle />
+      <Header />
+      <main id="main" class="flex-1">
+        <slot />
+      </main>
+      <Footer />
+    </div>
   </body>
 </html>

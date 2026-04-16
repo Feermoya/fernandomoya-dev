@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
@@ -24,5 +25,5 @@ export default defineConfig({
       },
     },
   },
-  integrations: [sitemap()],
+  integrations: [react(), sitemap()],
 });

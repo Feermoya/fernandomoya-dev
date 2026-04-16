@@ -2,12 +2,11 @@
 interface Props {
   as?: 'div' | 'section' | 'article';
   class?: string;
-  /** default: vidrio principal; soft: capa más ligera */
   variant?: 'default' | 'soft';
 }
 
 const { as: Tag = 'div', class: className = '', variant = 'default' } = Astro.props;
-const surface = variant === 'soft' ? 'glass-surface-sm' : 'glass-surface';
+const surface = variant === 'soft' ? 'glass-surface-sm' : 'glass-panel';
 ---
 
 <Tag class={`${surface} rounded-xl p-6 sm:p-8 ${className}`}>

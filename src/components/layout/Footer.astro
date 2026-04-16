@@ -11,7 +11,7 @@ const quick = [
 ] as const;
 ---
 
-<footer class="border-t border-border/55 bg-gradient-to-b from-white/30 to-surface-1/40">
+<footer class="footer-glass">
   <div class="container-page py-12 sm:py-14">
     <div class="grid gap-10 md:grid-cols-12 md:gap-12">
       <div class="md:col-span-5">
@@ -21,16 +21,13 @@ const quick = [
 
         <div class="mt-6 space-y-2.5 text-sm">
           <p>
-            <a
-              class="text-text underline-offset-4 transition hover:text-accent hover:underline"
-              href={`mailto:${site.email}`}
-            >
+            <a class="link-underline-grow text-text" href={`mailto:${site.email}`}>
               {site.email}
             </a>
           </p>
           <p>
             <a
-              class="inline-flex items-center gap-2 text-muted transition hover:text-text"
+              class="link-underline-grow inline-flex items-center gap-2 text-muted hover:text-text"
               href={site.social.linkedin}
               rel="noreferrer"
               target="_blank"
@@ -54,7 +51,7 @@ const quick = [
           {
             quick.map((l) => (
               <li>
-                <a class="text-sm text-text/90 transition hover:text-accent" href={l.href}>
+                <a class="link-underline-grow text-sm text-text/90 hover:text-accent" href={l.href}>
                   {l.label}
                 </a>
               </li>
@@ -71,7 +68,7 @@ const quick = [
       </div>
     </div>
 
-    <div class="mt-12 flex flex-col gap-2 border-t border-border/45 pt-8 sm:flex-row sm:items-center sm:justify-between">
+    <div class="mt-12 flex flex-col gap-2 border-t border-white/[0.08] pt-8 sm:flex-row sm:items-center sm:justify-between">
       <p class="text-xs text-muted">© {year} {site.name}</p>
       <p class="text-xs text-muted">Desarrollo frontend · {site.location}</p>
     </div>
