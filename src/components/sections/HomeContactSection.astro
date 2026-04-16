@@ -1,0 +1,105 @@
+---
+import ButtonLink from '@/components/ui/ButtonLink.astro';
+import GlassPanel from '@/components/ui/GlassPanel.astro';
+import { site } from '@/data/site';
+---
+
+<section id="contacto" class="container-page pb-20 sm:pb-24" aria-labelledby="contact-heading" data-motion="fade">
+  <div class="glass-surface rounded-2xl px-6 py-10 sm:px-10 sm:py-12">
+    <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+      <div class="max-w-xl">
+        <p class="text-eyebrow">Contacto</p>
+        <h2 id="contact-heading" class="mt-2 text-xl font-semibold tracking-tight text-text sm:text-2xl">
+          ¿Necesitás presencia web o mejoras en un sitio existente?
+        </h2>
+        <p class="mt-4 text-sm leading-relaxed text-muted sm:text-base">
+          Escribime con una idea del alcance y los plazos. Respondo desde {site.location}; también trabajo
+          con clientes en otras ciudades.
+        </p>
+      </div>
+      <div class="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center lg:flex-col lg:items-end">
+        <ButtonLink href={`mailto:${site.email}`}>Enviar email</ButtonLink>
+        <a class="link-subtle text-center text-sm sm:text-left lg:text-right" href={`mailto:${site.email}`}>
+          {site.email}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 grid gap-6 lg:grid-cols-12">
+    <GlassPanel as="section" class="lg:col-span-5" variant="soft">
+      <h3 class="text-lg font-semibold tracking-tight text-text">Canales</h3>
+      <p class="mt-3 text-sm leading-relaxed text-muted">
+        Email (configurá tu correo en <span class="font-mono text-xs text-text/80">src/data/site.ts</span>):
+      </p>
+      <p class="mt-4">
+        <a
+          class="text-base font-semibold text-accent underline underline-offset-4"
+          href={`mailto:${site.email}`}
+        >
+          {site.email}
+        </a>
+      </p>
+      <p class="mt-6 text-sm leading-relaxed text-muted">
+        <a class="text-accent underline underline-offset-4" href={site.social.linkedin} rel="noreferrer" target="_blank">
+          LinkedIn
+        </a>
+        <span class="mt-1 block font-mono text-[10px] text-muted">Actualizar URL en site.ts</span>
+      </p>
+    </GlassPanel>
+
+    <GlassPanel as="section" class="lg:col-span-7">
+      <h3 class="text-lg font-semibold tracking-tight text-text">Mensaje</h3>
+      <p class="mt-3 text-sm leading-relaxed text-muted">
+        Conectá un <span class="font-mono text-xs text-text/80">action</span> cuando quieras recibir envíos (Formspree,
+        serverless, etc.).
+      </p>
+
+      <form class="mt-6 space-y-4" method="post" action="#" aria-label="Enviar mensaje">
+        <div>
+          <label class="text-xs font-semibold uppercase tracking-wider text-muted" for="contact-name">
+            Nombre
+          </label>
+          <input
+            id="contact-name"
+            name="name"
+            autocomplete="name"
+            class="mt-2 w-full rounded-lg border border-border/70 bg-white/55 px-3 py-2 text-sm text-text outline-none ring-accent/25 focus:ring-2"
+            required
+          />
+        </div>
+        <div>
+          <label class="text-xs font-semibold uppercase tracking-wider text-muted" for="contact-email">
+            Email
+          </label>
+          <input
+            id="contact-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            class="mt-2 w-full rounded-lg border border-border/70 bg-white/55 px-3 py-2 text-sm text-text outline-none ring-accent/25 focus:ring-2"
+            required
+          />
+        </div>
+        <div>
+          <label class="text-xs font-semibold uppercase tracking-wider text-muted" for="contact-message">
+            Mensaje
+          </label>
+          <textarea
+            id="contact-message"
+            name="message"
+            rows="5"
+            class="mt-2 w-full rounded-lg border border-border/70 bg-white/55 px-3 py-2 text-sm text-text outline-none ring-accent/25 focus:ring-2"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center rounded-lg border border-transparent bg-accent px-4 py-2.5 text-sm font-medium text-white transition hover:bg-accent-hover"
+        >
+          Enviar
+        </button>
+      </form>
+    </GlassPanel>
+  </div>
+</section>

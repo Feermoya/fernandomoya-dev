@@ -1,0 +1,97 @@
+---
+import { Image } from 'astro:assets';
+import ButtonLink from '@/components/ui/ButtonLink.astro';
+import GlassPanel from '@/components/ui/GlassPanel.astro';
+import { PLACEHOLDER_BIO } from '@/data/placeholders';
+import { site } from '@/data/site';
+import profilePhoto from '@/assets/profile.png';
+---
+
+<section id="sobre-mi" class="container-page pb-16 sm:pb-20" aria-labelledby="about-home-heading" data-motion="fade">
+  <div class="grid gap-10 lg:grid-cols-12 lg:items-stretch lg:gap-14">
+    <div class="flex justify-center lg:col-span-5 lg:justify-start">
+      <div class="w-full max-w-[min(100%,320px)]">
+        <div class="glass-surface rounded-2xl p-1.5">
+          <div class="relative overflow-hidden rounded-xl ring-1 ring-black/[0.06]">
+            <Image
+              src={profilePhoto}
+              alt={`Retrato de ${site.name}`}
+              width={400}
+              height={500}
+              loading="lazy"
+              decoding="async"
+              class="aspect-[4/5] w-full object-cover"
+              sizes="(min-width: 1024px) 320px, 90vw"
+            />
+            <div
+              class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/8 via-transparent to-black/[0.03]"
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-col lg:col-span-7">
+      <GlassPanel as="section" class="h-full">
+        <p class="text-eyebrow">Perfil</p>
+        <h2
+          id="about-home-heading"
+          class="mt-2 text-2xl font-semibold tracking-tight text-text sm:text-[1.65rem] sm:leading-snug"
+        >
+          Sobre mí
+        </h2>
+        <p class="mt-5 max-w-prose text-sm leading-[1.75] text-muted sm:text-base">
+          Trabajo como desarrollador frontend: traduzco diseño y contenidos en páginas que cargan bien, se
+          entienden y no se complican al mantener. Me interesan el rendimiento real, la accesibilidad básica
+          bien resuelta y un diseño que no pelee con el uso cotidiano.
+        </p>
+        <p class="mt-5 max-w-prose text-sm leading-[1.75] text-muted sm:text-base">
+          Me enfoco en sitios que se entienden rápido, cargan bien y no se vuelven un problema de
+          mantenimiento. Trabajo con equipos y también directo con marcas que necesitan presencia web clara,
+          sin procesos innecesarios.
+        </p>
+        <p
+          class="mt-6 rounded-lg border border-dashed border-border/80 bg-white/25 px-4 py-3 text-sm leading-relaxed text-muted"
+        >
+          <span class="font-mono text-[11px] text-accent">PLACEHOLDER_BIO</span>
+          <span class="mx-1 text-border-strong/70">—</span>
+          {PLACEHOLDER_BIO}
+        </p>
+        <div class="mt-8">
+          <ButtonLink href="#contacto" variant="ghost">Escribime</ButtonLink>
+        </div>
+      </GlassPanel>
+    </div>
+  </div>
+
+  <div class="mt-10 grid gap-6 lg:grid-cols-12">
+    <GlassPanel as="section" class="lg:col-span-7">
+      <h3 class="text-lg font-semibold tracking-tight text-text">Cómo trabajo</h3>
+      <ul class="mt-4 space-y-3 text-sm leading-relaxed text-muted">
+        <li>Priorizo HTML semántico y CSS claro antes de sumar dependencias.</li>
+        <li>JavaScript cuando aporta: formularios, interactividad puntual, integraciones.</li>
+        <li>Comunicación directa: alcance, plazos y entregables sin rodeos.</li>
+      </ul>
+    </GlassPanel>
+
+    <GlassPanel as="section" class="lg:col-span-5" variant="soft">
+      <h3 class="text-lg font-semibold tracking-tight text-text">Stack y contexto</h3>
+      <p class="mt-4 text-sm leading-relaxed text-muted">
+        Uso lo que encaje al proyecto: desde sitios estáticos con Astro hasta bases más clásicas en
+        HTML/CSS/JS. No vendo un stack de moda; elijo según mantenimiento y hosting.
+      </p>
+      <p class="mt-6 text-sm text-muted">
+        <span class="text-text">Email:</span>{' '}
+        <a class="text-accent underline underline-offset-4" href={`mailto:${site.email}`}>
+          {site.email}
+        </a>
+      </p>
+      <p class="mt-2 text-sm text-muted">
+        <span class="text-text">LinkedIn:</span>{' '}
+        <a class="text-accent underline underline-offset-4" href={site.social.linkedin} rel="noreferrer" target="_blank">
+          Perfil
+        </a>
+      </p>
+    </GlassPanel>
+  </div>
+</section>

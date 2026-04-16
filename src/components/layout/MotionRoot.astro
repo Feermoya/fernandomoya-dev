@@ -1,0 +1,68 @@
+<!-- Motion One + IO: anima solo nodos bajo el fold; sin ocultar hero (LCP). -->
+<script>
+  import { animate } from '@motionone/dom';
+
+  const SEL = '[data-motion="fade"]';
+  const HIDDEN = 'motion-hidden';
+
+  let activeIo: IntersectionObserver | null = null;
+
+  function prefersReduced() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function markBelowFold() {
+    const vh = window.innerHeight;
+    document.querySelectorAll(SEL).forEach((el) => {
+      if (el.getBoundingClientRect().top > vh * 0.9) {
+        el.classList.add(HIDDEN);
+      }
+    });
+  }
+
+  function run() {
+    activeIo?.disconnect();
+    activeIo = null;
+
+    if (prefersReduced()) {
+      document.querySelectorAll(SEL).forEach((el) => el.classList.remove(HIDDEN));
+      return;
+    }
+
+    document.querySelectorAll(SEL).forEach((el) => el.classList.remove(HIDDEN));
+    markBelowFold();
+
+    const pending = document.querySelectorAll(`${SEL}.${HIDDEN}`);
+    if (pending.length === 0) return;
+
+    activeIo = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          activeIo?.unobserve(el);
+          const controls = animate(
+            el,
+            { opacity: [0, 1], y: [12, 0] },
+            { duration: 0.48, easing: [0.22, 1, 0.36, 1] },
+          );
+          const done = () => {
+            el.classList.remove(HIDDEN);
+            el.style.removeProperty('opacity');
+            el.style.removeProperty('transform');
+          };
+          if (controls.finished) {
+            controls.finished.then(done).catch(done);
+          } else {
+            done();
+          }
+        });
+      },
+      { rootMargin: '0px 0px -6% 0px', threshold: 0.06 },
+    );
+
+    pending.forEach((el) => activeIo?.observe(el));
+  }
+
+  run();
+</script>

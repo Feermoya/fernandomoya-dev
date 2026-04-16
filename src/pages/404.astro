@@ -1,0 +1,22 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import ButtonLink from '@/components/ui/ButtonLink.astro';
+import { pageTitle } from '@/utils/seo';
+
+const title = pageTitle('No encontrado');
+const description = 'La página que buscás no existe o fue movida.';
+---
+
+<Layout title={title} description={description} path="/404" noindex>
+  <section class="container-page py-24 text-center" data-motion="fade">
+    <p class="text-eyebrow">404</p>
+    <h1 class="mt-3 text-3xl font-semibold tracking-tight text-text">No encontrado</h1>
+    <p class="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted">
+      Esta URL no existe. Volvé al inicio de la landing.
+    </p>
+    <div class="mt-10 flex justify-center gap-3">
+      <ButtonLink href="/">Ir al inicio</ButtonLink>
+      <ButtonLink href="/#proyectos" variant="ghost">Proyectos</ButtonLink>
+    </div>
+  </section>
+</Layout>

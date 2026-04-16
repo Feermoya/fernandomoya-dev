@@ -1,0 +1,243 @@
+@import "tailwindcss";
+
+/**
+ * Tema claro + cristal refinado: base cálida, acento acero/petróleo.
+ * Glass con blur medido, bordes translúcidos, sombras premium. Sin neon.
+ */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+
+  --color-surface-0: oklch(0.985 0.005 88);
+  --color-surface-1: oklch(0.972 0.006 92);
+  --color-surface-2: oklch(0.955 0.008 96);
+  --color-border: oklch(0.86 0.014 250);
+  --color-border-strong: oklch(0.8 0.018 248);
+  --color-text: oklch(0.32 0.024 265);
+  --color-muted: oklch(0.48 0.02 260);
+  --color-accent: oklch(0.42 0.052 245);
+  --color-accent-hover: oklch(0.36 0.056 245);
+
+  /* Vidrio: bordes y reflejos (no saturación fuerte) */
+  --color-glass-border: oklch(0.92 0.012 250);
+  --color-glass-border-deep: oklch(0.78 0.02 248);
+  --color-glass-tint: oklch(0.99 0.004 95);
+  --color-glass-shine: oklch(1 0 0);
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  --shadow-glass: 0 1px 0 rgba(15, 23, 42, 0.05);
+  --shadow-glass-soft: 0 8px 32px -8px rgba(15, 23, 42, 0.07), 0 2px 8px -4px rgba(15, 23, 42, 0.04);
+  --shadow-elevated: 0 20px 50px -18px rgba(15, 23, 42, 0.12), 0 8px 16px -8px rgba(15, 23, 42, 0.06);
+  --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.045);
+  --shadow-inset-shine: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+  --blur-glass: 18px;
+  --blur-glass-sm: 12px;
+
+  --breakpoint-xs: 24rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    @apply text-text antialiased min-h-dvh;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    background-color: var(--color-surface-0);
+    background-image:
+      radial-gradient(120% 90% at 15% -10%, oklch(0.94 0.025 245 / 0.35), transparent 52%),
+      radial-gradient(90% 70% at 100% 0%, oklch(0.96 0.02 85 / 0.9), transparent 45%),
+      linear-gradient(180deg, oklch(0.992 0.003 90) 0%, var(--color-surface-0) 38%, oklch(0.978 0.006 92) 100%);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 18%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-accent) 55%, white);
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /**
+   * Superficie vidrio base: translúcida, blur, borde fino, brillo superior sutil.
+   */
+  .glass-surface {
+    border-width: 1px;
+    border-style: solid;
+    border-color: color-mix(in oklab, var(--color-glass-border) 92%, var(--color-glass-border-deep));
+    background:
+      linear-gradient(
+        155deg,
+        color-mix(in oklab, var(--color-glass-shine) 78%, transparent) 0%,
+        color-mix(in oklab, var(--color-glass-tint) 62%, oklch(0.96 0.008 250)) 48%,
+        color-mix(in oklab, white 52%, var(--color-surface-1)) 100%
+      );
+    backdrop-filter: blur(var(--blur-glass)) saturate(1.12);
+    -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.12);
+    box-shadow: var(--shadow-glass-soft), var(--shadow-inset-shine);
+  }
+
+  .glass-surface-sm {
+    border-width: 1px;
+    border-style: solid;
+    border-color: color-mix(in oklab, var(--color-glass-border) 88%, transparent);
+    background: linear-gradient(
+      165deg,
+      color-mix(in oklab, white 70%, transparent) 0%,
+      color-mix(in oklab, var(--color-surface-1) 88%, oklch(0.94 0.02 250)) 100%
+    );
+    backdrop-filter: blur(var(--blur-glass-sm)) saturate(1.08);
+    -webkit-backdrop-filter: blur(var(--blur-glass-sm)) saturate(1.08);
+    box-shadow: var(--shadow-soft), var(--shadow-inset-shine);
+  }
+
+  /** Barra superior flotante: menos carga visual */
+  .glass-header {
+    border-bottom-width: 1px;
+    border-bottom-color: color-mix(in oklab, var(--color-glass-border) 75%, white);
+    background: color-mix(in oklab, var(--color-glass-tint) 72%, transparent);
+    backdrop-filter: blur(14px) saturate(1.08);
+    -webkit-backdrop-filter: blur(14px) saturate(1.08);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass-surface,
+    .glass-surface-sm,
+    .glass-header {
+      @apply border-border bg-surface-1;
+      box-shadow: var(--shadow-soft);
+    }
+  }
+
+  @media (max-width: 639.98px) {
+    .glass-surface {
+      backdrop-filter: blur(14px) saturate(1.08);
+      -webkit-backdrop-filter: blur(14px) saturate(1.08);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glass-surface,
+    .glass-surface-sm {
+      backdrop-filter: blur(12px) saturate(1.05);
+      -webkit-backdrop-filter: blur(12px) saturate(1.05);
+    }
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  .text-display {
+    font-size: clamp(1.875rem, 3.5vw + 1rem, 2.75rem);
+    line-height: 1.12;
+    letter-spacing: -0.028em;
+    font-weight: 600;
+  }
+
+  .text-lead {
+    font-size: clamp(1rem, 0.2vw + 0.98rem, 1.125rem);
+    line-height: 1.7;
+    letter-spacing: -0.01em;
+  }
+
+  .text-eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-muted;
+  }
+
+  .motion-hidden {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .motion-hidden {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /** Tarjeta proyecto: combina con la clase `glass-surface` en el mismo elemento */
+  .glass-card {
+    transition:
+      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.28s ease;
+  }
+
+  .glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+    border-color: color-mix(in oklab, var(--color-glass-border-deep) 55%, var(--color-glass-border));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glass-card:hover {
+      transform: none;
+    }
+  }
+
+  .link-subtle {
+    @apply text-accent underline-offset-[4px] transition hover:text-accent-hover hover:underline;
+  }
+
+  .article-content :where(h2) {
+    @apply mt-10 text-xl font-semibold tracking-tight text-text;
+  }
+
+  .article-content :where(h3) {
+    @apply mt-8 text-lg font-semibold tracking-tight text-text;
+  }
+
+  .article-content :where(p) {
+    @apply mt-4 leading-relaxed text-muted;
+  }
+
+  .article-content :where(ul) {
+    @apply mt-4 list-disc pl-6 text-muted;
+  }
+
+  .article-content :where(li) {
+    @apply mt-2;
+  }
+
+  .article-content :where(strong) {
+    @apply font-semibold text-text;
+  }
+
+  .article-content :where(a) {
+    @apply text-accent underline underline-offset-4 hover:text-accent-hover;
+  }
+}

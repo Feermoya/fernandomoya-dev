@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import ProjectCard from '@/components/project/ProjectCard.astro';
+import { byOrderThenDate } from '@/utils/sort';
+
+const all = await getCollection('projects');
+const clients = all.filter((p) => p.data.kind === 'client').sort(byOrderThenDate);
+const own = all.filter((p) => p.data.kind === 'own').sort(byOrderThenDate);
+---
+
+<section
+  id="proyectos"
+  class="relative border-t border-border/50 py-14 sm:py-16 lg:py-20"
+  aria-labelledby="projects-heading"
+  data-motion="fade"
+>
+  <div
+    class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-40 opacity-90"
+    aria-hidden="true"
+    style="background-image: linear-gradient(to bottom, oklch(0.97 0.008 95 / 0.9), transparent);"
+  >
+  </div>
+  <div class="container-page">
+    <div class="max-w-xl">
+      <p class="text-eyebrow">Portfolio</p>
+      <h2
+        id="projects-heading"
+        class="mt-2 text-2xl font-semibold tracking-tight text-text sm:text-[1.65rem]"
+      >
+        Proyectos
+      </h2>
+      <p class="mt-3 max-w-prose text-sm leading-relaxed text-muted sm:text-base">
+        Clientes y proyectos propios. Cada tarjeta enlaza al sitio en vivo.
+      </p>
+    </div>
+
+    <div class="mt-12 border-b border-border/50 pb-10">
+      <h3 class="text-lg font-semibold tracking-tight text-text sm:text-xl">Proyectos de clientes</h3>
+      <p class="mt-2 max-w-xl text-sm leading-relaxed text-muted">
+        Sitios y marcas con las que trabajé en implementación y puesta online.
+      </p>
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 sm:gap-7 xl:grid-cols-3">
+        {clients.map((p) => <ProjectCard project={p} />)}
+      </div>
+    </div>
+
+    <div class="mt-12">
+      <h3 class="text-lg font-semibold tracking-tight text-text sm:text-xl">Proyectos propios</h3>
+      <p class="mt-2 max-w-xl text-sm leading-relaxed text-muted">
+        Productos y sitios que mantengo o construyo de forma independiente.
+      </p>
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 sm:gap-7 xl:grid-cols-3">
+        {own.map((p) => <ProjectCard project={p} />)}
+      </div>
+    </div>
+  </div>
+</section>

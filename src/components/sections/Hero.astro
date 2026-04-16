@@ -1,0 +1,61 @@
+---
+import { Image } from 'astro:assets';
+import ButtonLink from '@/components/ui/ButtonLink.astro';
+import { site } from '@/data/site';
+import profilePhoto from '@/assets/profile.png';
+---
+
+<section id="inicio" class="relative overflow-hidden border-b border-border/40" aria-labelledby="hero-heading">
+  <div
+    class="pointer-events-none absolute inset-0 -z-10 opacity-[0.85]"
+    aria-hidden="true"
+    style="background-image: radial-gradient(ellipse 80% 55% at 70% -5%, oklch(0.93 0.03 245 / 0.22), transparent 55%);"
+  >
+  </div>
+
+  <div class="container-page py-12 sm:py-16 lg:py-20">
+    <div class="grid items-center gap-10 lg:grid-cols-12 lg:gap-14">
+      <div class="lg:col-span-7">
+        <p class="text-eyebrow">{site.name} · {site.location}</p>
+        <h1 id="hero-heading" class="text-display text-balance text-text">
+          Desarrollo frontend y sitios bien construidos
+        </h1>
+        <p class="text-lead mt-6 max-w-[38rem] text-pretty text-muted">
+          Implementación clara, performance real y diseño con criterio. HTML y CSS sólidos; JavaScript
+          cuando aporta. Entregas que se pueden mantener.
+        </p>
+        <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <ButtonLink href="#proyectos">Ver proyectos</ButtonLink>
+          <ButtonLink href="#contacto" variant="ghost">Contacto</ButtonLink>
+        </div>
+      </div>
+
+      <div class="flex justify-center lg:col-span-5 lg:justify-end">
+        <div class="w-full max-w-[200px] sm:max-w-[240px] lg:max-w-[260px]">
+          <div class="glass-surface relative rounded-2xl p-1.5">
+            <div
+              class="relative overflow-hidden rounded-xl ring-1 ring-black/[0.06]"
+              style="box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);"
+            >
+              <Image
+                src={profilePhoto}
+                alt={`Retrato de ${site.name}`}
+                width={400}
+                height={500}
+                loading="eager"
+                fetchpriority="low"
+                decoding="async"
+                class="aspect-[4/5] w-full object-cover"
+                sizes="(min-width: 1024px) 260px, (min-width: 640px) 240px, 200px"
+              />
+              <div
+                class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-black/[0.04]"
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

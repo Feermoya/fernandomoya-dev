@@ -1,0 +1,21 @@
+#!/bin/sh
+# Requiere identidad local (o efectiva) exacta para este proyecto.
+EXPECTED_NAME="feermoya"
+EXPECTED_EMAIL="fmoya97.fm@gmail.com"
+
+name=$(git config --get user.name)
+email=$(git config --get user.email)
+
+if [ "$name" != "$EXPECTED_NAME" ]; then
+  echo "pre-commit: user.name debe ser \"$EXPECTED_NAME\" (actual: ${name:-<vacío>})" >&2
+  echo "pre-commit: en este repo: git config user.name \"$EXPECTED_NAME\"" >&2
+  exit 1
+fi
+
+if [ "$email" != "$EXPECTED_EMAIL" ]; then
+  echo "pre-commit: user.email debe ser \"$EXPECTED_EMAIL\" (actual: ${email:-<vacío>})" >&2
+  echo "pre-commit: en este repo: git config user.email \"$EXPECTED_EMAIL\"" >&2
+  exit 1
+fi
+
+exit 0

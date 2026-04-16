@@ -1,0 +1,49 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { data } = project;
+
+const date = data.publishDate.toLocaleDateString('es-AR', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+
+const kindLabel = data.kind === 'client' ? 'Proyecto de cliente' : 'Proyecto propio';
+---
+
+<dl class="grid gap-3 sm:grid-cols-2">
+  <div class="rounded-lg border border-border bg-surface-1 p-4 sm:col-span-2">
+    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Tipo</dt>
+    <dd class="mt-1.5 text-sm font-medium text-text">{kindLabel}</dd>
+    <dd class="mt-0.5 text-sm text-muted">{data.projectType}</dd>
+  </div>
+
+  {
+    data.client && (
+      <div class="rounded-lg border border-border bg-surface-1 p-4 sm:col-span-2">
+        <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Cliente</dt>
+        <dd class="mt-1.5 text-sm text-text">{data.client}</dd>
+      </div>
+    )
+  }
+
+  <div class="rounded-lg border border-border bg-surface-1 p-4 sm:col-span-2">
+    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Stack</dt>
+    <dd class="mt-2 flex flex-wrap gap-1.5">
+      {data.stack.map((s) => (
+        <span class="rounded border border-border bg-surface-0 px-2 py-0.5 text-xs text-muted">{s}</span>
+      ))}
+    </dd>
+  </div>
+
+  <div class="rounded-lg border border-border bg-surface-1 p-4 sm:col-span-2">
+    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Publicado</dt>
+    <dd class="mt-1.5 text-sm text-text">{date}</dd>
+  </div>
+</dl>

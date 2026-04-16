@@ -1,0 +1,18 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Hero from '@/components/sections/Hero.astro';
+import HomeAbout from '@/components/sections/HomeAbout.astro';
+import ProjectsSection from '@/components/sections/ProjectsSection.astro';
+import HomeTrust from '@/components/sections/HomeTrust.astro';
+import HomeContactSection from '@/components/sections/HomeContactSection.astro';
+import { site } from '@/data/site';
+import { pageTitle } from '@/utils/seo';
+---
+
+<Layout title={pageTitle()} description={site.description} path="/">
+  <Hero />
+  <HomeAbout />
+  <ProjectsSection />
+  <HomeTrust />
+  <HomeContactSection />
+</Layout>
