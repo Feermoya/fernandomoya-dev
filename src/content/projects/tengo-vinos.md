@@ -10,7 +10,7 @@ stack:
   - JavaScript
 featured: true
 order: 20
-cover: tengo-vinos.svg
+cover: vinos.webp
 links:
   live: https://tengovinos.com/
 ---

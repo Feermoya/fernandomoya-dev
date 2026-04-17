@@ -377,6 +377,12 @@
       box-shadow 0.2s ease;
   }
 
+  /** Hero: sin aire extra bajo el header (desktop y mobile). */
+  .hero-root--tight {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
   /** Hero: blobs locales (25s alternate) */
   .hero-local-blobs {
     position: absolute;
@@ -656,16 +662,17 @@
     }
   }
 
-  /** Tarjeta proyecto: capa frost sobre imagen */
+  /**
+   * Tarjeta proyecto: solo degradado (sin backdrop-filter sobre la captura).
+   * El blur en toda la imagen hacía que la foto se viera borrosa.
+   */
   .project-card-media::after {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    backdrop-filter: blur(14px) saturate(1.05);
-    -webkit-backdrop-filter: blur(14px) saturate(1.05);
-    background: linear-gradient(to top, rgba(13, 15, 20, 0.55), transparent 55%, rgba(255, 255, 255, 0.04));
+    background: linear-gradient(to top, rgba(13, 15, 20, 0.45), transparent 50%);
   }
 
   /** Badge tipo proyecto */

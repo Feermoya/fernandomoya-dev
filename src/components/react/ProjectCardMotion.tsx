@@ -11,7 +11,6 @@ export type ProjectCardData = {
   live: string;
   kindLabel: string;
   kind: ProjectKind;
-  stackLine: string;
 };
 
 /** Hover: solo transform en Motion; sombra/borde vía CSS (evita animar box-shadow). */
@@ -41,8 +40,8 @@ export default function ProjectCardMotion({ project }: Props) {
           <img
             src={p.coverSrc}
             alt={p.title}
-            width={480}
-            height={200}
+            width={960}
+            height={400}
             loading="lazy"
             decoding="async"
             className="relative z-0 h-full w-full object-cover transition-transform duration-300 ease-out motion-reduce:transition-none motion-reduce:group-hover:scale-100 group-hover:scale-[1.03] will-change-transform"
@@ -57,12 +56,7 @@ export default function ProjectCardMotion({ project }: Props) {
       <div className="flex min-h-0 flex-1 flex-col px-3 pb-2 pt-2.5">
         <p className="text-[10px] leading-tight text-muted">{p.projectType}</p>
         <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug tracking-tight text-text">{p.title}</h3>
-        <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted">{p.description}</p>
-        <p className="mt-2 truncate text-[10px] text-muted">
-          <span className="font-medium text-text/80">Stack</span>
-          <span className="mx-1 text-border-strong/50">·</span>
-          {p.stackLine}
-        </p>
+        <p className="mt-1.5 line-clamp-3 text-[11px] leading-relaxed text-muted">{p.description}</p>
       </div>
 
       <div className="mt-auto border-t border-white/[0.1] bg-white/[0.04] px-3 py-2">
@@ -72,7 +66,7 @@ export default function ProjectCardMotion({ project }: Props) {
           rel="noopener noreferrer"
           className="group/live inline-flex w-full items-center justify-center gap-1 rounded-md border border-transparent bg-accent/95 py-2 text-[11px] font-medium text-white shadow-sm transition-colors duration-200 ease-out hover:bg-accent-hover"
         >
-          Sitio en vivo
+          Ver sitio
           <span
             aria-hidden="true"
             className="inline-block opacity-75 transition-transform duration-200 ease-out will-change-transform group-hover/live:translate-x-[3px] group-hover/live:-translate-y-[3px]"

@@ -10,7 +10,7 @@ stack:
   - JavaScript
 featured: true
 order: 30
-cover: patricia-moya.svg
+cover: patricia.webp
 client: Patricia Moya
 links:
   live: https://www.soypatriciamoya.com/

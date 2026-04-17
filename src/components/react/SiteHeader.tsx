@@ -23,7 +23,7 @@ export default function SiteHeader({ siteName, links }: Props) {
       className="site-header-glass sticky top-0 z-50 border-b border-white/[0.08]"
       data-scrolled={isScrolled ? 'true' : 'false'}
     >
-      <div className="header-inner container-page flex items-center justify-between gap-4 py-3 sm:py-3.5">
+      <div className="header-inner container-page flex items-center justify-between gap-4 py-2 sm:py-2.5 lg:py-2">
         <a
           href="#inicio"
           className="group inline-flex items-center gap-2 font-semibold tracking-tight text-text transition-colors duration-200 ease-out hover:text-accent motion-reduce:transition-none"

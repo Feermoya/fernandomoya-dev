@@ -10,7 +10,7 @@ stack:
   - Firebase Hosting
 featured: false
 order: 50
-cover: poletino-servicios.svg
+cover: poletino.webp
 client: Poletino Servicios
 links:
   live: https://poletino-servicios.web.app/

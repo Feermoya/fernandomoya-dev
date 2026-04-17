@@ -5,7 +5,7 @@ import { site } from '@/data/site';
 
 <section
   id="inicio"
-  class="hero-root relative overflow-hidden border-b border-white/[0.08] pb-10 pt-8 sm:pb-12 sm:pt-10 lg:pb-14 lg:pt-12"
+  class="hero-root hero-root--tight relative overflow-hidden border-b border-white/[0.08] pb-8 pt-0 sm:pb-10 lg:pb-12"
   aria-labelledby="hero-heading"
 >
   <div class="hero-local-blobs" aria-hidden="true">
@@ -27,18 +27,19 @@ import { site } from '@/data/site';
   </div>
 
   <div class="container-page relative z-10">
-    <div class="hero-glass-card relative overflow-hidden rounded-2xl p-6 sm:p-8 lg:p-10">
+    <div class="hero-glass-card relative overflow-hidden rounded-2xl p-5 sm:p-7 lg:p-8">
       <div class="hero-mesh-corner" aria-hidden="true"></div>
       <div class="hero-grid-lines" aria-hidden="true"></div>
 
       <HeroMotion
         client:load
         eyebrow={`${site.name} · ${site.location}`}
-        headline="Frontend claro, sitios que cargan y se mantienen"
-        lead="Implementación sólida, performance medible y UI con criterio. Menos ruido, más entrega."
-        pillA="Astro · Tailwind · Motion"
-        pillB="Mendoza · Remoto"
-        aside="Glass real, con Motion para guiar la lectura. Sin ruido visual."
+        headline="Hago sitios web claros, rápidos y fáciles de usar"
+        lead="Trabajo con marcas y proyectos que necesitan una web que funcione bien, se entienda y no se rompa con el tiempo. Trabajo con sitios reales: marcas, negocios y proyectos que necesitan presencia online clara y funcional."
+        pillA="Marcas y negocios"
+        pillB="Mendoza · También remoto"
+        ctaPrimary="Ver proyectos"
+        ctaSecondary="Escribime"
       />
     </div>
   </div>

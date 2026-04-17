@@ -9,7 +9,10 @@ type Props = {
   lead: string;
   pillA: string;
   pillB: string;
-  aside: string;
+  /** Opcional: nota corta a la derecha (solo lg). */
+  aside?: string;
+  ctaPrimary: string;
+  ctaSecondary: string;
 };
 
 const headlineWordContainer: Variants = {
@@ -38,7 +41,16 @@ function ShimmerPill({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function HeroMotion({ eyebrow, headline, lead, pillA, pillB, aside }: Props) {
+export default function HeroMotion({
+  eyebrow,
+  headline,
+  lead,
+  pillA,
+  pillB,
+  aside,
+  ctaPrimary,
+  ctaSecondary,
+}: Props) {
   const reduce = useReducedMotion();
   const words = headline.split(/\s+/).filter(Boolean);
 
@@ -85,10 +97,10 @@ export default function HeroMotion({ eyebrow, headline, lead, pillA, pillB, asid
         variants={staggerItem}
       >
         <MagneticButton href="#proyectos" shimmer>
-          Ver trabajo
+          {ctaPrimary}
         </MagneticButton>
         <MagneticButton href="#contacto" variant="ghost">
-          Hablemos
+          {ctaSecondary}
         </MagneticButton>
       </motion.div>
 
@@ -98,7 +110,9 @@ export default function HeroMotion({ eyebrow, headline, lead, pillA, pillB, asid
       >
         <ShimmerPill>{pillA}</ShimmerPill>
         <ShimmerPill>{pillB}</ShimmerPill>
-        <p className="mt-2 max-w-[14rem] text-right text-[11px] leading-relaxed text-muted max-lg:hidden">{aside}</p>
+        {aside?.trim() ? (
+          <p className="mt-2 max-w-[17rem] text-right text-[11px] leading-relaxed text-muted max-lg:hidden">{aside}</p>
+        ) : null}
       </motion.div>
     </motion.div>
   );

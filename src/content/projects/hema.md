@@ -10,7 +10,7 @@ stack:
   - JavaScript
 featured: true
 order: 10
-cover: hema.svg
+cover: hema.webp
 client: HEMA
 links:
   live: https://hema.com.ar/

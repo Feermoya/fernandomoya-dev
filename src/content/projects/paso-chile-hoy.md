@@ -10,7 +10,7 @@ stack:
   - JavaScript
 featured: true
 order: 10
-cover: paso-chile-hoy.svg
+cover: pasoChile.webp
 links:
   live: https://www.pasochilehoy.com/
 ---

@@ -20,7 +20,7 @@ const projects = defineCollection({
     stack: z.array(z.string()).default([]),
     featured: z.boolean().default(false),
     order: z.number().default(0),
-    /** Archivo en `src/assets/projects/` (placeholders `.svg` hasta capturas reales). */
+    /** Archivo en `src/assets/projects/` (p. ej. `.webp`, `.jpg`). */
     cover: z.string(),
     /** Nombre del cliente u organización (solo si aplica). */
     client: z.string().optional(),

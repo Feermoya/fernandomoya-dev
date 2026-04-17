@@ -14,10 +14,9 @@ async function toCardData(p: CollectionEntry<'projects'>): Promise<ProjectCardDa
   const cover = getProjectCover(p.data.cover);
   let coverSrc: string | null = null;
   if (cover) {
-    coverSrc = (await getImage({ src: cover, width: 480, height: 200 })).src;
+    /** 960×400 ≈ 2× respecto al slot de tarjeta para pantallas retina. */
+    coverSrc = (await getImage({ src: cover, width: 960, height: 400 })).src;
   }
-  const stackShort = p.data.stack.slice(0, 2).join(' · ');
-  const stackMore = p.data.stack.length > 2;
   return {
     id: p.id,
     title: p.data.title,
@@ -27,7 +26,6 @@ async function toCardData(p: CollectionEntry<'projects'>): Promise<ProjectCardDa
     live: p.data.links.live,
     kindLabel: p.data.kind === 'client' ? 'Cliente' : 'Propio',
     kind: p.data.kind,
-    stackLine: stackShort + (stackMore ? '…' : ''),
   };
 }
 

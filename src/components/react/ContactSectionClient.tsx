@@ -54,10 +54,10 @@ export default function ContactSectionClient({ location, email, linkedin }: Prop
               className="mt-2 text-lg font-semibold tracking-tight text-text sm:text-xl"
               variants={leftItem}
             >
-              ¿Proyecto o mejora en un sitio existente?
+              ¿Tenés un proyecto o querés mejorar tu web?
             </motion.h2>
             <motion.p className="mt-3 text-sm leading-relaxed text-muted" variants={leftItem}>
-              Escribime con alcance aproximado y plazos. {location} · también remoto.
+              Contame qué necesitás y vemos cómo encararlo. Trabajo desde {location} y también de forma remota.
             </motion.p>
             <motion.div className="mt-5 flex flex-col gap-2.5" variants={leftItem}>
               <a
@@ -124,7 +124,7 @@ export default function ContactSectionClient({ location, email, linkedin }: Prop
                   type="submit"
                   className="btn-submit-shimmer relative inline-flex items-center justify-center overflow-hidden rounded-lg border border-transparent bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-hover"
                 >
-                  <span className="relative z-[1]">Enviar</span>
+                  <span className="relative z-[1]">Enviar mensaje</span>
                 </button>
               </form>
               <p className="mt-3 text-[10px] leading-relaxed text-muted">

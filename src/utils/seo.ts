@@ -6,7 +6,8 @@ export function pageTitle(segment?: string) {
 }
 
 export function absoluteUrl(pathname: string) {
-  const base = site.url.replace(/\/$/, '');
+  /** Alineado con `site` de `astro.config.mjs` (Vercel: VERCEL_URL / PUBLIC_SITE_URL). */
+  const base = String(import.meta.env.SITE || site.url).replace(/\/$/, '');
   const path = pathname.startsWith('/') ? pathname : `/${pathname}`;
   return `${base}${path}`;
 }

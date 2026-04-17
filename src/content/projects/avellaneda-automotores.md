@@ -10,7 +10,7 @@ stack:
   - JavaScript
 featured: false
 order: 20
-cover: avellaneda-automotores.svg
+cover: avellaneda.webp
 client: Avellaneda Automotores
 links:
   live: https://avellanedaautomotores.com.ar/

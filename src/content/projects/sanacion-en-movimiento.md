@@ -10,7 +10,7 @@ stack:
   - JavaScript
 featured: false
 order: 40
-cover: sanacion-en-movimiento.svg
+cover: sanacion.webp
 client: Sanación en Movimiento
 links:
   live: https://sanacionenmovimientooficial.com/

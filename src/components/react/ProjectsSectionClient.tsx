@@ -32,12 +32,12 @@ export default function ProjectsSectionClient({ groups }: Props) {
           transition={{ duration: reduce ? 0 : DURATION_ENTER, ease: EASE_OUT_SOFT }}
         >
           <div className="max-w-lg">
-            <p className="text-eyebrow">Selección</p>
+            <p className="text-eyebrow">Sitios</p>
             <h2 id="projects-heading" className="mt-1.5 text-xl font-semibold tracking-tight text-text sm:text-2xl">
               Proyectos
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              Clientes y trabajo propio. Cada tarjeta abre el sitio en vivo.
+              Algunos de los sitios en los que trabajé. Podés verlos en vivo.
             </p>
           </div>
         </motion.div>

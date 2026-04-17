@@ -1,40 +1,37 @@
 ---
 import AboutSectionClient from '@/components/react/AboutSectionClient';
-import { PLACEHOLDER_BIO } from '@/data/placeholders';
 import { site } from '@/data/site';
 import { getImage } from 'astro:assets';
 import profilePhoto from '@/assets/profile.png';
 
 const profileSrc = (await getImage({ src: profilePhoto, width: 120, height: 120 })).src;
-const chips = ['Semántico', 'Performance', 'Astro / estático'] as const;
+const chips = ['Sitios nuevos', 'Mejoras a lo que ya tenés', 'Marcas y negocios'] as const;
 const skills = [
-  'HTML',
-  'CSS',
-  'TypeScript',
-  'JavaScript',
-  'React',
-  'Astro',
-  'Tailwind CSS',
-  'Motion',
-  'Vite',
-  'Git',
-  'Accesibilidad',
-  'Performance web',
-  'SEO técnico',
-  'Diseño responsivo',
+  'Sitios a medida',
+  'Catálogos y listados',
+  'Formularios y contacto',
+  'Buena lectura en celular',
+  'Carga rápida',
+  'Mantenimiento y orden',
 ] as const;
+
+const aboutBody = [
+  'Trabajo como desarrollador web desde hace varios años, creando sitios para clientes y proyectos propios.',
+  'Me enfoco en hacer páginas que cargan rápido, se entienden fácil y no se vuelven un problema con el tiempo.',
+  'Si ya tenés un sitio, también puedo ayudarte a mejorarlo, ordenarlo o hacerlo más claro para tus usuarios.',
+].join('\n\n');
 ---
 
 <AboutSectionClient
   client:visible
   profileSrc={profileSrc}
   profileAlt={`Retrato de ${site.name}`}
-  heading="Implementación con criterio"
-  body="Traduzco diseño y contenidos en páginas rápidas, accesibles y fáciles de mantener. HTML y CSS primero; JavaScript cuando suma. Trabajo con equipos o directo con marcas que necesitan claridad."
+  heading="Sobre mí"
+  body={aboutBody}
   chips={[...chips]}
   skills={[...skills]}
-  placeholderLabel="PLACEHOLDER_BIO"
-  placeholderBody={PLACEHOLDER_BIO}
+  placeholderLabel=""
+  placeholderBody=""
   linkedin={site.social.linkedin}
   email={site.email}
   metrics={[...site.metrics]}
