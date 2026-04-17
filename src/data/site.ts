@@ -4,9 +4,9 @@ const LINKEDIN = 'https://www.linkedin.com/in/fernando-moya-1997-/';
 
 export const site = {
   name: 'Fernando Moya',
-  title: 'Fernando Moya — Sitios web claros, rápidos y fáciles de usar',
+  title: 'Fernando Moya — Si tu web no está funcionando, se puede arreglar',
   description:
-    'Sitios para marcas y proyectos que necesitan una web que funcione bien, se entienda y dure. Mendoza, Argentina. También remoto.',
+    'Webs para marcas y negocios: claras, que carguen bien y no generen problemas. Mendoza, Argentina.',
   url: 'https://example.com',
   locale: 'es-AR',
   author: 'Fernando Moya',
@@ -18,7 +18,7 @@ export const site = {
     whatsapp: 'https://wa.me/5492615760276',
   },
   /** Frase corta: footer, hero secundario. */
-  tagline: 'Sitios claros, en producción y pensados para la gente que los usa.',
+  tagline: 'Sitios claros, pensados para que la gente los entienda y los use.',
   /**
    * Métricas para count-up en “Sobre mí” (editá valores reales antes de publicar).
    */

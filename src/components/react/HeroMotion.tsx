@@ -7,8 +7,10 @@ type Props = {
   eyebrow: string;
   headline: string;
   lead: string;
+  /** Línea de invitación (tono cliente). */
+  serviceLine?: string;
   pillA: string;
-  pillB: string;
+  pillB?: string;
   /** Opcional: nota corta a la derecha (solo lg). */
   aside?: string;
   ctaPrimary: string;
@@ -45,6 +47,7 @@ export default function HeroMotion({
   eyebrow,
   headline,
   lead,
+  serviceLine,
   pillA,
   pillB,
   aside,
@@ -53,10 +56,11 @@ export default function HeroMotion({
 }: Props) {
   const reduce = useReducedMotion();
   const words = headline.split(/\s+/).filter(Boolean);
+  const hasService = Boolean(serviceLine?.trim());
 
   return (
     <motion.div
-      className="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-10"
+      className="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-start lg:gap-10"
       variants={staggerContainer}
       initial={reduce ? 'visible' : 'hidden'}
       animate="visible"
@@ -92,8 +96,16 @@ export default function HeroMotion({
       >
         {lead}
       </motion.p>
+      {hasService ? (
+        <motion.p
+          className="mt-4 max-w-[36rem] text-pretty text-sm font-medium leading-relaxed text-text/90 lg:col-span-8 lg:col-start-1 lg:row-start-4"
+          variants={staggerItem}
+        >
+          {serviceLine!.trim()}
+        </motion.p>
+      ) : null}
       <motion.div
-        className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:col-span-8 lg:col-start-1 lg:row-start-4 max-lg:mt-8"
+        className={`mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:col-span-8 lg:col-start-1 max-lg:mt-6 ${hasService ? 'lg:row-start-5' : 'lg:row-start-4'}`}
         variants={staggerItem}
       >
         <MagneticButton href="#proyectos" shimmer>
@@ -105,11 +117,11 @@ export default function HeroMotion({
       </motion.div>
 
       <motion.div
-        className="flex flex-col items-start gap-2.5 lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:row-end-5 lg:items-end lg:self-end"
+        className={`flex flex-col items-start gap-2.5 lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:items-end lg:self-end ${hasService ? 'lg:row-end-6' : 'lg:row-end-5'}`}
         variants={staggerItem}
       >
         <ShimmerPill>{pillA}</ShimmerPill>
-        <ShimmerPill>{pillB}</ShimmerPill>
+        {pillB?.trim() ? <ShimmerPill>{pillB.trim()}</ShimmerPill> : null}
         {aside?.trim() ? (
           <p className="mt-2 max-w-[17rem] text-right text-[11px] leading-relaxed text-muted max-lg:hidden">{aside}</p>
         ) : null}

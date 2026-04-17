@@ -1,8 +1,9 @@
 import { motion, useReducedMotion, type Variants } from 'motion/react';
+import { useCallback, type FormEvent } from 'react';
 import { DURATION_ENTER, EASE_OUT_SOFT } from '@/motion/easing';
 
 type Props = {
-  location: string;
+  whatsappUrl: string;
   email: string;
   linkedin: string;
 };
@@ -26,8 +27,31 @@ const leftItem: Variants = {
   },
 };
 
-export default function ContactSectionClient({ location, email, linkedin }: Props) {
+export default function ContactSectionClient({ whatsappUrl, email, linkedin }: Props) {
   const reduce = useReducedMotion();
+
+  const onWhatsAppSubmit = useCallback(
+    (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      const name = String(fd.get('name') ?? '').trim();
+      const mail = String(fd.get('email') ?? '').trim();
+      const message = String(fd.get('message') ?? '').trim();
+      const text = [
+        'Hola Fernando,',
+        name ? `Soy ${name}.` : '',
+        mail ? `Email: ${mail}` : '',
+        '',
+        message,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      const base = whatsappUrl.split('?')[0];
+      const url = `${base}?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    },
+    [whatsappUrl],
+  );
 
   return (
     <section id="contacto" className="container-page pb-14 sm:pb-16" aria-labelledby="contact-heading">
@@ -57,14 +81,16 @@ export default function ContactSectionClient({ location, email, linkedin }: Prop
               ¿Tenés un proyecto o querés mejorar tu web?
             </motion.h2>
             <motion.p className="mt-3 text-sm leading-relaxed text-muted" variants={leftItem}>
-              Contame qué necesitás y vemos cómo encararlo. Trabajo desde {location} y también de forma remota.
+              Contame qué necesitás y vemos cómo encararlo.
             </motion.p>
             <motion.div className="mt-5 flex flex-col gap-2.5" variants={leftItem}>
               <a
-                href={`mailto:${email}`}
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-transparent bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-accent-hover"
               >
-                Email
+                WhatsApp
               </a>
               <a
                 className="text-sm text-muted underline-offset-4 transition hover:text-accent hover:underline"
@@ -74,13 +100,19 @@ export default function ContactSectionClient({ location, email, linkedin }: Prop
               >
                 LinkedIn
               </a>
+              <a
+                className="text-sm text-muted underline-offset-4 transition hover:text-accent hover:underline"
+                href={`mailto:${email}`}
+              >
+                Email
+              </a>
             </motion.div>
           </motion.div>
 
           <div className="lg:col-span-7">
             <div className="glass-card rounded-xl p-4 sm:p-5">
               <p className="text-xs font-medium uppercase tracking-wider text-muted">Mensaje</p>
-              <form className="mt-3 space-y-3" method="post" action="#" aria-label="Enviar mensaje">
+              <form className="mt-3 space-y-3" onSubmit={onWhatsAppSubmit} aria-label="Enviar mensaje por WhatsApp">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <label className="text-[10px] font-semibold uppercase tracking-wider text-muted" htmlFor="contact-name">
@@ -124,12 +156,9 @@ export default function ContactSectionClient({ location, email, linkedin }: Prop
                   type="submit"
                   className="btn-submit-shimmer relative inline-flex items-center justify-center overflow-hidden rounded-lg border border-transparent bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-hover"
                 >
-                  <span className="relative z-[1]">Enviar mensaje</span>
+                  <span className="relative z-[1]">Enviar por WhatsApp</span>
                 </button>
               </form>
-              <p className="mt-3 text-[10px] leading-relaxed text-muted">
-                Conectá <span className="font-mono text-text/70">action</span> cuando quieras recibir envíos.
-              </p>
             </div>
           </div>
         </div>

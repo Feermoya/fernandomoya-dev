@@ -4,21 +4,20 @@ import { site } from '@/data/site';
 import { getImage } from 'astro:assets';
 import profilePhoto from '@/assets/profile.png';
 
-const profileSrc = (await getImage({ src: profilePhoto, width: 120, height: 120 })).src;
-const chips = ['Sitios nuevos', 'Mejoras a lo que ya tenés', 'Marcas y negocios'] as const;
-const skills = [
-  'Sitios a medida',
+const profileSrc = (await getImage({ src: profilePhoto, width: 640, height: 640 })).src;
+const chips = [
+  'Sitios nuevos',
+  'Mejoras de sitios existentes',
   'Catálogos y listados',
   'Formularios y contacto',
-  'Buena lectura en celular',
   'Carga rápida',
-  'Mantenimiento y orden',
 ] as const;
+const skills: readonly string[] = [];
 
 const aboutBody = [
-  'Trabajo como desarrollador web desde hace varios años, creando sitios para clientes y proyectos propios.',
-  'Me enfoco en hacer páginas que cargan rápido, se entienden fácil y no se vuelven un problema con el tiempo.',
-  'Si ya tenés un sitio, también puedo ayudarte a mejorarlo, ordenarlo o hacerlo más claro para tus usuarios.',
+  'Hace varios años trabajo haciendo sitios web para clientes y proyectos propios.',
+  'Busco que las páginas carguen rápido, se entiendan fácil y no se vuelvan un problema con el tiempo.',
+  'Si ya tenés un sitio, también puedo ayudarte a mejorarlo, ordenarlo o hacerlo más claro.',
 ].join('\n\n');
 ---
 

@@ -37,7 +37,7 @@ export default function ProjectsSectionClient({ groups }: Props) {
               Proyectos
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              Algunos de los sitios en los que trabajé. Podés verlos en vivo.
+              Son sitios con los que trabajo hoy. Podés verlos en vivo.
             </p>
           </div>
         </motion.div>

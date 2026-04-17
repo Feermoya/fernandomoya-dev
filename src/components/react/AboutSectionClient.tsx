@@ -65,14 +65,14 @@ export default function AboutSectionClient({
             viewport={view}
             variants={photoBlock}
           >
-            <div className="about-photo-orbit mx-auto h-20 w-20 sm:mx-0 sm:h-[4.5rem] sm:w-[4.5rem]">
+            <div className="about-photo-orbit mx-auto h-52 w-52 sm:mx-0 sm:h-60 sm:w-60 lg:h-72 lg:w-72">
               <div className="about-photo-orbit__inner flex h-full w-full items-center justify-center">
                 <img
                   src={profileSrc}
                   alt={profileAlt}
-                  width={120}
-                  height={120}
-                  className="h-full w-full rounded-full object-cover"
+                  width={640}
+                  height={640}
+                  className="h-full w-full rounded-full object-cover contrast-[1.06] brightness-[1.04]"
                 />
               </div>
             </div>
