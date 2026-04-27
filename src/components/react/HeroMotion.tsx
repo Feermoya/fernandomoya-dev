@@ -1,11 +1,15 @@
 import { motion, useReducedMotion, type Variants } from 'motion/react';
 import MagneticButton from '@/components/react/MagneticButton';
+import Typeanimation from '@/components/ui/typeanimation';
 import { staggerContainer, staggerItem } from '@/components/react/motion-variants';
 import { DURATION_ENTER, EASE_OUT_SOFT, HERO_WORD_STAGGER } from '@/motion/easing';
 
 type Props = {
   eyebrow: string;
-  headline: string;
+  headline?: string;
+  headlinePrefix?: string;
+  animatedWords?: string[];
+  headlineSuffix?: string;
   lead: string;
   /** Línea de invitación (tono cliente). */
   serviceLine?: string;
@@ -15,6 +19,8 @@ type Props = {
   aside?: string;
   ctaPrimary: string;
   ctaSecondary: string;
+  ctaPrimaryHref?: string;
+  ctaSecondaryHref?: string;
 };
 
 const headlineWordContainer: Variants = {
@@ -46,6 +52,9 @@ function ShimmerPill({ children }: { children: React.ReactNode }) {
 export default function HeroMotion({
   eyebrow,
   headline,
+  headlinePrefix,
+  animatedWords,
+  headlineSuffix,
   lead,
   serviceLine,
   pillA,
@@ -53,10 +62,14 @@ export default function HeroMotion({
   aside,
   ctaPrimary,
   ctaSecondary,
+  ctaPrimaryHref,
+  ctaSecondaryHref,
 }: Props) {
   const reduce = useReducedMotion();
-  const words = headline.split(/\s+/).filter(Boolean);
   const hasService = Boolean(serviceLine?.trim());
+
+  // Si se proveen props animadas, usar animación, si no, fallback a headline clásico
+  const showAnimated = headlinePrefix && animatedWords && animatedWords.length > 0 && headlineSuffix;
 
   return (
     <motion.div
@@ -69,7 +82,24 @@ export default function HeroMotion({
         {eyebrow}
       </motion.p>
 
-      {reduce ? (
+      {showAnimated ? (
+        <h1
+          id="hero-heading"
+          className="text-display-hero text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
+        >
+          <span>{headlinePrefix} </span>
+          <Typeanimation
+            words={animatedWords}
+            typingSpeed="slow"
+            deletingSpeed="slow"
+            gradientFrom="#60a5fa"
+            gradientTo="#a78bfa"
+            pauseDuration={1800}
+            className="inline-block font-extrabold min-w-[7.5ch]"
+          />
+          <span>, {headlineSuffix}</span>
+        </h1>
+      ) : reduce ? (
         <h1
           id="hero-heading"
           className="text-display-hero text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
@@ -82,7 +112,7 @@ export default function HeroMotion({
           className="text-display-hero text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
           variants={headlineWordContainer}
         >
-          {words.map((w, i) => (
+          {headline?.split(/\s+/).filter(Boolean).map((w, i) => (
             <motion.span key={`${w}-${i}`} className="mr-[0.22em] inline-block last:mr-0" variants={headlineWord}>
               {w}
             </motion.span>
@@ -108,10 +138,10 @@ export default function HeroMotion({
         className={`mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:col-span-8 lg:col-start-1 max-lg:mt-6 ${hasService ? 'lg:row-start-5' : 'lg:row-start-4'}`}
         variants={staggerItem}
       >
-        <MagneticButton href="#proyectos" shimmer>
+        <MagneticButton href={ctaPrimaryHref || "#contacto"} shimmer>
           {ctaPrimary}
         </MagneticButton>
-        <MagneticButton href="#contacto" variant="ghost">
+        <MagneticButton href={ctaSecondaryHref || "#proyectos"} variant="ghost">
           {ctaSecondary}
         </MagneticButton>
       </motion.div>
