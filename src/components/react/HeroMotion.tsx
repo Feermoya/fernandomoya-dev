@@ -78,7 +78,7 @@ export default function HeroMotion({
       initial={reduce ? 'visible' : 'hidden'}
       animate="visible"
     >
-      <motion.p className="text-eyebrow lg:col-span-8 lg:col-start-1 lg:row-start-1" variants={staggerItem}>
+      <motion.p className="text-eyebrow text-white/25 lg:col-span-8 lg:col-start-1 lg:row-start-1" variants={staggerItem}>
         {eyebrow}
       </motion.p>
 
@@ -120,25 +120,26 @@ export default function HeroMotion({
         </motion.h1>
       )}
 
+      <motion.div className="mt-6 h-px w-10 bg-[#60a5fa]/30 lg:col-span-8 lg:col-start-1 lg:row-start-3" variants={staggerItem} />
       <motion.p
-        className="text-lead mt-5 max-w-[36rem] text-pretty text-muted lg:col-span-8 lg:col-start-1 lg:row-start-3"
+        className="mt-5 max-w-[32.5rem] text-pretty text-[1.125rem] font-normal leading-[1.65] text-white/75 lg:col-span-8 lg:col-start-1 lg:row-start-4"
         variants={staggerItem}
       >
         {lead}
       </motion.p>
       {hasService ? (
         <motion.p
-          className="mt-4 max-w-[36rem] text-pretty text-sm font-medium leading-relaxed text-text/90 lg:col-span-8 lg:col-start-1 lg:row-start-4"
+          className="mt-1.5 max-w-[32.5rem] text-pretty text-[0.92rem] font-normal leading-relaxed text-white/38 lg:col-span-8 lg:col-start-1 lg:row-start-5"
           variants={staggerItem}
         >
           {serviceLine!.trim()}
         </motion.p>
       ) : null}
       <motion.div
-        className={`mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:col-span-8 lg:col-start-1 max-lg:mt-6 ${hasService ? 'lg:row-start-5' : 'lg:row-start-4'}`}
+        className={`mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:col-span-8 lg:col-start-1 max-lg:mt-8 ${hasService ? 'lg:row-start-6' : 'lg:row-start-5'}`}
         variants={staggerItem}
       >
-        <MagneticButton href={ctaPrimaryHref || "#contacto"} shimmer>
+        <MagneticButton href={ctaPrimaryHref || '/'} shimmer>
           {ctaPrimary}
         </MagneticButton>
         <MagneticButton href={ctaSecondaryHref || "#proyectos"} variant="ghost">
@@ -147,13 +148,13 @@ export default function HeroMotion({
       </motion.div>
 
       <motion.div
-        className={`flex flex-col items-start gap-2.5 lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:items-end lg:self-end ${hasService ? 'lg:row-end-6' : 'lg:row-end-5'}`}
+        className={`flex flex-col items-start gap-2.5 lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:items-end lg:self-end ${hasService ? 'lg:row-end-7' : 'lg:row-end-6'}`}
         variants={staggerItem}
       >
         <ShimmerPill>{pillA}</ShimmerPill>
         {pillB?.trim() ? <ShimmerPill>{pillB.trim()}</ShimmerPill> : null}
         {aside?.trim() ? (
-          <p className="mt-2 max-w-[17rem] text-right text-[11px] leading-relaxed text-muted max-lg:hidden">{aside}</p>
+          <p className="mt-2 max-w-[17rem] text-right text-[11px] leading-relaxed text-white/25 max-lg:hidden">{aside}</p>
         ) : null}
       </motion.div>
     </motion.div>

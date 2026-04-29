@@ -844,31 +844,15 @@
   }
 }
 
-/** Foto sobre mí: anillo glass (conic-gradient girando vía ::before) */
+/** Foto sobre mí: borde gradiente animado sutil */
 .about-photo-orbit {
   position: relative;
   display: inline-block;
   border-radius: 9999px;
   padding: 2px;
-  overflow: hidden;
-}
-
-.about-photo-orbit::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 160%;
-  height: 160%;
-  translate: -50% -50%;
-  background: conic-gradient(
-    from 0deg,
-    rgba(45, 91, 227, 0.85),
-    rgba(227, 132, 45, 0.55),
-    rgba(255, 255, 255, 0.22),
-    rgba(45, 91, 227, 0.85)
-  );
-  animation: about-orbit-rotate 7s linear infinite;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6, #8b5cf6);
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
 }
 
 .about-photo-orbit__inner {
@@ -877,17 +861,28 @@
   border-radius: 9999px;
   overflow: hidden;
   background: var(--color-bg-base);
+  padding: 3px;
 }
 
-@keyframes about-orbit-rotate {
-  to {
-    transform: rotate(360deg);
+.about-photo-orbit__inner img {
+  border-radius: 9999px;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .about-photo-orbit::before {
+  .about-photo-orbit {
     animation: none;
-    opacity: 0.55;
+    background-position: 50% 50%;
   }
 }

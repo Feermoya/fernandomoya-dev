@@ -5,32 +5,18 @@ import { getImage } from 'astro:assets';
 import profilePhoto from '@/assets/profile.png';
 
 const profileSrc = (await getImage({ src: profilePhoto, width: 640, height: 640 })).src;
-const chips = [
-  'Sitios nuevos',
-  'Mejoras de sitios existentes',
-  'Catálogos y listados',
-  'Formularios y contacto',
-  'Carga rápida',
-] as const;
-const skills: readonly string[] = [];
-
-const aboutBody = [
-  'Hace varios años trabajo haciendo sitios web para clientes y proyectos propios.',
-  'Busco que las páginas carguen rápido, se entiendan fácil y no se vuelvan un problema con el tiempo.',
-  'Si ya tenés un sitio, también puedo ayudarte a mejorarlo, ordenarlo o hacerlo más claro.',
-].join('\n\n');
+const chips: readonly string[] = [];
+const aboutBody =
+  'Si alguien entra a tu web, tiene que entender rápido qué hacés, por qué confiar y cómo contactarte.';
 ---
 
 <AboutSectionClient
   client:visible
   profileSrc={profileSrc}
   profileAlt={`Retrato de ${site.name}`}
-  heading="Sobre mí"
+  heading="Diseño webs que explican mejor tu negocio"
   body={aboutBody}
   chips={[...chips]}
-  skills={[...skills]}
-  placeholderLabel=""
-  placeholderBody=""
   linkedin={site.social.linkedin}
   email={site.email}
   metrics={[...site.metrics]}

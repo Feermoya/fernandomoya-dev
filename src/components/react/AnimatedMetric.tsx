@@ -13,13 +13,23 @@ type Props = {
   end: number;
   suffix?: string;
   label: string;
+  className?: string;
+  valueClassName?: string;
+  labelClassName?: string;
 };
 
 /**
  * Count-up al entrar en viewport: useMotionValue + useTransform + useMotionValueEvent.
  * Sin backdrop-filter en el contenedor (texto legible sobre glass).
  */
-export default function AnimatedMetric({ end, suffix = '', label }: Props) {
+export default function AnimatedMetric({
+  end,
+  suffix = '',
+  label,
+  className,
+  valueClassName,
+  labelClassName,
+}: Props) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
@@ -40,12 +50,30 @@ export default function AnimatedMetric({ end, suffix = '', label }: Props) {
   }, [inView, end, count, reduce]);
 
   return (
-    <div ref={ref} className="rounded-xl border border-white/[0.1] bg-white/[0.06] px-4 py-3">
-      <p className="text-2xl font-semibold tabular-nums tracking-tight text-text">
+    <div
+      ref={ref}
+      className={
+        className ??
+        'rounded-xl border border-white/[0.06] bg-white/[0.06] px-4 py-3'
+      }
+    >
+      <p
+        className={
+          valueClassName ??
+          'bg-gradient-to-r from-[#60a5fa] to-[#a78bfa] bg-clip-text text-4xl font-extrabold tabular-nums tracking-tight text-transparent'
+        }
+      >
         {display}
         {suffix}
       </p>
-      <p className="mt-1 text-[11px] leading-snug text-muted">{label}</p>
+      <p
+        className={
+          labelClassName ??
+          'mt-1 text-xs leading-snug tracking-[0.04em] text-white/40'
+        }
+      >
+        {label}
+      </p>
     </div>
   );
 }

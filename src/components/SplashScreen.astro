@@ -1,0 +1,288 @@
+---
+// SplashScreen.astro — sin props
+---
+
+<div id="fm-splash" aria-hidden="true" role="presentation">
+  <div class="fm-bg-orb"></div>
+  <div class="fm-loader-line"></div>
+
+  <div class="fm-wrap">
+    <div class="fm-letters">
+      <span class="fm-lf">F</span><span class="fm-lm">M</span>
+    </div>
+    <div class="fm-info">
+      <div class="fm-name">Fernando Moya</div>
+      <div class="fm-tagline">Diseño web · Desarrollo · Identidad digital</div>
+    </div>
+    <div class="fm-bar-wrap">
+      <div class="fm-bar-fill"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap');
+
+  #fm-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #0d1117;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.45s ease, visibility 0.45s ease;
+  }
+
+  #fm-splash.fm-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  #fm-splash.fm-gone {
+    display: none;
+  }
+
+  /* Orb de fondo */
+  .fm-bg-orb {
+    position: absolute;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(96, 165, 250, 0.09) 0%,
+      rgba(167, 139, 250, 0.06) 40%,
+      transparent 70%
+    );
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    animation: fm-orb-in 1s ease 0s forwards;
+  }
+
+  /* Barra de progreso inferior */
+  .fm-loader-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    animation: fm-load 1s cubic-bezier(0.4, 0, 0.2, 1) 0.05s forwards;
+  }
+
+  /* Contenedor central */
+  .fm-wrap {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* Letras FM */
+  .fm-letters {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 0 4px 8px;
+  }
+
+  .fm-lf,
+  .fm-lm {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-size: 172px;
+    font-weight: 900;
+    line-height: 0.88;
+    display: inline-block;
+    background: linear-gradient(90deg, #60a5fa 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0;
+    transform: translateY(105%);
+  }
+
+  .fm-lf {
+    animation: fm-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
+  }
+
+  .fm-lm {
+    animation: fm-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  }
+
+  /* Info block */
+  .fm-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: fm-fade-up 0.35s ease 0.5s forwards;
+  }
+
+  .fm-name {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #fff;
+  }
+
+  .fm-tagline {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.38);
+  }
+
+  /* Barra separadora */
+  .fm-bar-wrap {
+    width: 44px;
+    height: 1.5px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 2px;
+    overflow: hidden;
+    opacity: 0;
+    animation: fm-fade-up 0.3s ease 0.62s forwards;
+  }
+
+  .fm-bar-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    animation: fm-bar 0.4s ease 0.65s forwards;
+  }
+
+  /* Keyframes */
+  @keyframes fm-orb-in {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fm-load {
+    0% {
+      width: 0;
+    }
+    60% {
+      width: 80%;
+    }
+    85% {
+      width: 92%;
+    }
+    100% {
+      width: 100%;
+    }
+  }
+
+  @keyframes fm-rise {
+    0% {
+      opacity: 0;
+      transform: translateY(105%);
+    }
+    60% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fm-fade-up {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fm-bar {
+    to {
+      width: 100%;
+    }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .fm-lf,
+    .fm-lm,
+    .fm-info,
+    .fm-bar-wrap,
+    .fm-bar-fill,
+    .fm-loader-line,
+    .fm-bg-orb {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      width: 100% !important;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    const splash = document.getElementById('fm-splash');
+
+    if (!splash) return;
+
+    // Prevenir scroll mientras dura el splash
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    // Esperar a que Nunito cargue antes de animar
+    // para que las letras redondeadas se vean desde el primer frame
+    const startAnimations = () => {
+      const letters = splash.querySelectorAll('.fm-lf, .fm-lm');
+      letters.forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        htmlEl.style.animation = 'none';
+        void htmlEl.offsetWidth;
+        htmlEl.style.animation = '';
+      });
+    };
+
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('900 1em Nunito').then(startAnimations).catch(startAnimations);
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const MIN_VISIBLE_MS = reduceMotion ? 300 : 1100;
+    const MAX_WAIT_MS = 2400;
+    const startTime = performance.now();
+    let finished = false;
+
+    const closeSplash = () => {
+      if (finished) return;
+      finished = true;
+      splash.classList.add('fm-hidden');
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+
+      // Remover del DOM después del fade
+      setTimeout(() => {
+        splash.classList.add('fm-gone');
+      }, 500);
+    };
+
+    const scheduleClose = () => {
+      const elapsed = performance.now() - startTime;
+      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+      setTimeout(closeSplash, remaining);
+    };
+
+    if (document.readyState === 'complete') {
+      scheduleClose();
+    } else {
+      window.addEventListener('load', scheduleClose, { once: true });
+      // fallback por si algo externo demora demasiado
+      setTimeout(scheduleClose, MAX_WAIT_MS);
+    }
+  })();
+</script>

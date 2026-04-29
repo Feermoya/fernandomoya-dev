@@ -33,7 +33,7 @@ import { site } from '@/data/site';
 
       <HeroMotion
         client:load
-        eyebrow={`${site.name} · ${site.location}`}
+        eyebrow="Diseño web · Desarrollo · Identidad digital"
         headlinePrefix="Si tu web no está"
         animatedWords={[
           "vendiendo",
@@ -43,12 +43,12 @@ import { site } from '@/data/site';
           "funcionando"
         ]}
         headlineSuffix="se puede arreglar."
-        lead="Trabajo con marcas y negocios que necesitan una web que se entienda, cargue bien y no genere problemas."
-        serviceLine="Puede ser una web nueva o mejorar la que ya tenés."
+        lead="Diseño y mejoro sitios web para negocios que necesitan verse más profesionales, explicar mejor lo que hacen y conseguir más consultas."
+        serviceLine="Web nueva, rediseño o mejoras puntuales."
         pillA="Marcas y negocios"
         ctaPrimary="Hablar conmigo"
         ctaSecondary="Ver trabajos"
-        ctaPrimaryHref={site.social?.whatsapp || '#contacto'}
+        ctaPrimaryHref={site.social?.whatsapp || '/'}
         ctaSecondaryHref="#proyectos"
       />
     </div>
