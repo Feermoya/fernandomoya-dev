@@ -73,7 +73,7 @@ export default function HeroMotion({
 
   return (
     <motion.div
-      className="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-start lg:gap-10"
+      className="relative z-10 grid gap-5 lg:grid-cols-12 lg:items-start lg:gap-8"
       variants={staggerContainer}
       initial={reduce ? 'visible' : 'hidden'}
       animate="visible"
@@ -85,7 +85,7 @@ export default function HeroMotion({
       {showAnimated ? (
         <h1
           id="hero-heading"
-          className="text-display-hero text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
+          className="text-display-hero text-display-hero--compact text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
         >
           <span>{headlinePrefix} </span>
           <Typeanimation
@@ -102,14 +102,14 @@ export default function HeroMotion({
       ) : reduce ? (
         <h1
           id="hero-heading"
-          className="text-display-hero text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
+          className="text-display-hero text-display-hero--compact text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
         >
           {headline}
         </h1>
       ) : (
         <motion.h1
           id="hero-heading"
-          className="text-display-hero text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
+          className="text-display-hero text-display-hero--compact text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
           variants={headlineWordContainer}
         >
           {headline?.split(/\s+/).filter(Boolean).map((w, i) => (
@@ -120,9 +120,9 @@ export default function HeroMotion({
         </motion.h1>
       )}
 
-      <motion.div className="mt-6 h-px w-10 bg-[#60a5fa]/30 lg:col-span-8 lg:col-start-1 lg:row-start-3" variants={staggerItem} />
+      <motion.div className="mt-4 h-px w-10 bg-[#60a5fa]/30 lg:col-span-8 lg:col-start-1 lg:row-start-3" variants={staggerItem} />
       <motion.p
-        className="mt-5 max-w-[32.5rem] text-pretty text-[1.125rem] font-normal leading-[1.65] text-white/75 lg:col-span-8 lg:col-start-1 lg:row-start-4"
+        className="mt-4 max-w-[32.5rem] text-pretty text-[1.125rem] font-normal leading-[1.65] text-white/75 lg:col-span-8 lg:col-start-1 lg:row-start-4"
         variants={staggerItem}
       >
         {lead}
@@ -136,7 +136,7 @@ export default function HeroMotion({
         </motion.p>
       ) : null}
       <motion.div
-        className={`mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:col-span-8 lg:col-start-1 max-lg:mt-8 ${hasService ? 'lg:row-start-6' : 'lg:row-start-5'}`}
+        className={`mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:col-span-8 lg:col-start-1 max-lg:mt-6 ${hasService ? 'lg:row-start-6' : 'lg:row-start-5'}`}
         variants={staggerItem}
       >
         <MagneticButton href={ctaPrimaryHref || '/'} shimmer>

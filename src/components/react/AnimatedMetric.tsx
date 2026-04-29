@@ -43,6 +43,7 @@ export default function AnimatedMetric({
     if (!inView) return;
     if (reduce) {
       count.set(end);
+      setDisplay(end);
       return;
     }
     const ctrl = animate(count, end, { duration: DURATION_MAX, ease: EASE_OUT_SOFT });

@@ -41,7 +41,12 @@ const quick = [
 
       <div class="footer-dev-block lg:justify-self-end">
         <div class="footer-dev-row">
-          <span class="footer-dev-name">{site.name}</span>
+          <span class="footer-dev-name" aria-label={site.name}>
+            <span class="site-logo-fm">
+              <span class="site-logo-fm__letter">F</span>
+              <span class="site-logo-fm__letter">M</span>
+            </span>
+          </span>
           <span class="footer-dev-icons">
             <a
               href={linkedinUrl}
@@ -145,17 +150,9 @@ const quick = [
   }
 
   .footer-dev-name {
-    font-size: 0.9375rem;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    color: var(--color-text);
-  }
-
-  @media (min-width: 640px) {
-    .footer-dev-name {
-      font-size: 1rem;
-    }
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
   }
 
   .footer-dev-icons {
