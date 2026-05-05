@@ -1,6 +1,6 @@
 ---
 title: Avellaneda Automotores
-description: Sitio para concesionaria con énfasis en stock, contacto y legibilidad en pantallas chicas.
+description: Una concesionaria con stock real pero una web que no lo mostraba bien. Reorganicé la información para que los autos se encuentren rápido, el contacto esté siempre a mano y se lea bien desde el celular, que es desde donde entra la mayoría.
 publishDate: 2024-04-15
 kind: client
 projectType: Sitio corporativo

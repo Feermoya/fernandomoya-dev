@@ -1,6 +1,6 @@
 ---
 title: Tengo Vinos
-description: "Proyecto propio en torno a vinos: experiencia simple para explorar y comprar sin sobrecargar la interfaz."
+description: Proyecto propio para explorar vinos sin que la interfaz compita con el producto. La idea era que se pueda navegar y comprar de forma simple, sin sentir que estás en una tienda genérica.
 publishDate: 2024-10-01
 kind: own
 projectType: E-commerce / catálogo

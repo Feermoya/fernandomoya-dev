@@ -5,9 +5,8 @@ import { getImage } from 'astro:assets';
 import profilePhoto from '@/assets/profile.png';
 
 const profileSrc = (await getImage({ src: profilePhoto, width: 640, height: 640 })).src;
-const chips: readonly string[] = [];
 const aboutBody =
-  'Si alguien entra a tu web, tiene que entender rápido qué hacés, por qué confiar y cómo contactarte.';
+  'Arranco cada proyecto con una llamada o brief corto para entender bien qué necesitás antes de escribir una sola línea de código. Trabajo con negocios de todo tipo — locales en Mendoza y clientes remotos — y entrego en 1 a 2 semanas.';
 ---
 
 <AboutSectionClient
@@ -16,7 +15,6 @@ const aboutBody =
   profileAlt={`Retrato de ${site.name}`}
   heading="Diseño webs que explican mejor tu negocio"
   body={aboutBody}
-  chips={[...chips]}
   linkedin={site.social.linkedin}
   email={site.email}
   metrics={[...site.metrics]}

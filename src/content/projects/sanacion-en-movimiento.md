@@ -1,6 +1,6 @@
 ---
 title: Sanación en Movimiento
-description: Presencia para proyecto de bienestar con tono cuidado y formularios/contacto accesibles.
+description: Proyecto de bienestar que necesitaba transmitir calma y confianza desde el primer scroll. El diseño acompaña el tono del servicio y los formularios de contacto están pensados para no generar fricción.
 publishDate: 2023-11-20
 kind: client
 projectType: Sitio de servicios

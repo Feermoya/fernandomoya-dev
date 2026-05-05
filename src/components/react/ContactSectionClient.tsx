@@ -54,10 +54,10 @@ export default function ContactSectionClient({ whatsappUrl, email, linkedin }: P
               className="mt-2 text-lg font-semibold tracking-tight text-text sm:text-xl"
               variants={leftItem}
             >
-              ¿Tenés un proyecto o querés mejorar tu web?
+              ¿Tenés un proyecto o tu web necesita una vuelta de tuerca?
             </motion.h2>
             <motion.p className="mt-3 text-sm leading-relaxed text-muted" variants={leftItem}>
-              Contame qué necesitás y vemos cómo encararlo.
+              Contame el nombre de tu negocio y qué querés mejorar. Te respondo el mismo día con lo que haría yo.
             </motion.p>
             <motion.div className="mt-5 flex flex-col gap-2.5" variants={leftItem}>
               <a
@@ -66,22 +66,26 @@ export default function ContactSectionClient({ whatsappUrl, email, linkedin }: P
                 rel="noreferrer"
                 className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-transparent bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-accent-hover"
               >
-                WhatsApp
+                Escribime por WhatsApp
               </a>
-              <a
-                className="text-sm text-muted underline-offset-4 transition hover:text-accent hover:underline"
-                href={linkedin}
-                rel="noreferrer"
-                target="_blank"
-              >
-                LinkedIn
-              </a>
-              <a
-                className="text-sm text-muted underline-offset-4 transition hover:text-accent hover:underline"
-                href={`mailto:${email}`}
-              >
-                Email
-              </a>
+              <p className="text-sm leading-relaxed text-muted">
+                <span>o por </span>
+                <a
+                  className="underline-offset-4 transition hover:text-accent hover:underline"
+                  href={linkedin}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  LinkedIn
+                </a>
+                <span> · o por </span>
+                <a
+                  className="underline-offset-4 transition hover:text-accent hover:underline"
+                  href={`mailto:${email}`}
+                >
+                  mail
+                </a>
+              </p>
             </motion.div>
           </motion.div>
         </div>

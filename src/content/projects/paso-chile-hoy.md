@@ -1,6 +1,6 @@
 ---
 title: Paso Chile Hoy
-description: Medio digital propio con foco en lectura clara, actualización frecuente y buen rendimiento.
+description: Medio digital propio con foco en que la lectura sea cómoda y las notas se encuentren rápido. Carga bien, se actualiza seguido y no le pide nada al lector para funcionar.
 publishDate: 2025-01-08
 kind: own
 projectType: Medio / noticias

@@ -1,6 +1,6 @@
 ---
 title: Patricia Moya
-description: Sitio de marca personal con foco en mensaje claro, ritmo de lectura y secciones bien jerarquizadas.
+description: Marca personal donde el mensaje tenía que hablar antes que el diseño. Trabajé la jerarquía de cada sección para que quien llega entienda quién es, qué hace y cómo contactarla sin tener que buscar.
 publishDate: 2024-09-01
 kind: client
 projectType: Marca personal

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { animate, motion, stagger, useReducedMotion, type Variants } from 'motion/react';
 import AnimatedMetric from '@/components/react/AnimatedMetric';
+import ResultsChart from '@/components/react/ResultsChart';
 import { DURATION_ENTER, EASE_OUT_SOFT } from '@/motion/easing';
 import SplitType from 'split-type';
 
@@ -11,7 +12,6 @@ type Props = {
   profileAlt: string;
   heading: string;
   body: string;
-  chips: string[];
   linkedin: string;
   email: string;
   metrics: readonly Metric[];
@@ -52,21 +52,11 @@ const textChildrenContainer: Variants = {
   },
 };
 
-const chipContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.04,
-    },
-  },
-};
-
 export default function AboutSectionClient({
   profileSrc,
   profileAlt,
   heading,
   body,
-  chips,
   linkedin,
   email,
   metrics,
@@ -209,15 +199,9 @@ export default function AboutSectionClient({
                 </motion.div>
               )}
 
-              {chips.length > 0 && (
-                <motion.ul variants={chipContainer} className="mt-4 flex flex-wrap gap-2 text-[11px] text-muted">
-                  {chips.slice(0, 5).map((c) => (
-                    <motion.li key={c} variants={textChildren} className="glass-pill rounded-full px-2.5 py-1">
-                      {c}
-                    </motion.li>
-                  ))}
-                </motion.ul>
-              )}
+              <motion.div variants={textChildren} className="w-full">
+                <ResultsChart />
+              </motion.div>
 
               <motion.div variants={textChildren} className="mt-6 flex flex-wrap items-center gap-3">
                 <a
