@@ -1,4 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Favicon">
-  <rect width="64" height="64" rx="14" fill="#faf9f7" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="32" y="40" text-anchor="middle" fill="#3d5a6b" font-family="system-ui,sans-serif" font-size="22" font-weight="600">FM</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FM logo">
+  <defs>
+    <linearGradient id="fmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#a78bfa" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#0d1117" />
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" />
+  <text
+    x="32"
+    y="40"
+    text-anchor="middle"
+    fill="url(#fmGrad)"
+    font-family="Nunito,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif"
+    font-size="27"
+    font-weight="900"
+    letter-spacing="-1.2"
+  >FM</text>
 </svg>
