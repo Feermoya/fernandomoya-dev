@@ -1,6 +1,8 @@
-import { motion, useReducedMotion, type Variants } from 'motion/react';
+import { useLayoutEffect, useRef } from 'react';
+import { animate, motion, stagger, useReducedMotion, type Variants } from 'motion/react';
 import AnimatedMetric from '@/components/react/AnimatedMetric';
 import { DURATION_ENTER, EASE_OUT_SOFT } from '@/motion/easing';
+import SplitType from 'split-type';
 
 type Metric = { value: number; suffix: string; label: string };
 
@@ -70,11 +72,43 @@ export default function AboutSectionClient({
   metrics,
 }: Props) {
   const reduce = useReducedMotion();
+  const aboutLabelRef = useRef<HTMLParagraphElement>(null);
   const accentNeedle = 'mejor tu negocio';
   const accentIdx = heading.toLowerCase().indexOf(accentNeedle);
   const accent = accentIdx >= 0 ? heading.slice(accentIdx, accentIdx + accentNeedle.length) : '';
   const titleBefore = accentIdx >= 0 ? heading.slice(0, accentIdx) : heading;
   const titleAfter = accentIdx >= 0 ? heading.slice(accentIdx + accentNeedle.length) : '';
+
+  useLayoutEffect(() => {
+    if (reduce || !aboutLabelRef.current) return;
+    const el = aboutLabelRef.current;
+    const split = new SplitType(el, { types: 'chars' });
+    const chars = (split.chars ?? []) as HTMLElement[];
+    chars.forEach((c) => {
+      c.style.display = 'inline-block';
+    });
+
+    let played = false;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e?.isIntersecting || played) return;
+        played = true;
+        io.disconnect();
+        animate(
+          chars,
+          { opacity: [0, 1], filter: ['blur(4px)', 'blur(0px)'] },
+          { delay: stagger(0.02, { startDelay: 0 }), duration: 0.52, ease: 'easeOut' },
+        );
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(el);
+
+    return () => {
+      io.disconnect();
+      split.revert();
+    };
+  }, [reduce]);
 
   return (
     <section id="sobre-mi" className="container-page py-10 sm:py-12" aria-labelledby="about-home-heading">
@@ -128,7 +162,10 @@ export default function AboutSectionClient({
           >
             <motion.div variants={textChildrenContainer} initial={false}>
               <motion.div variants={textChildren}>
-                <p className="inline-flex items-center rounded-full border border-[#60a5fa]/20 bg-white/[0.04] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#c4b5fd]/90">
+                <p
+                  ref={aboutLabelRef}
+                  className="inline-flex items-center rounded-full border border-[#60a5fa]/20 bg-white/[0.04] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#c4b5fd]/90"
+                >
                   Sobre mi trabajo
                 </p>
               </motion.div>

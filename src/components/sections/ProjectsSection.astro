@@ -1,4 +1,5 @@
 ---
+import AnimatedText from '@/components/AnimatedText.astro';
 import { getImage } from 'astro:assets';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { getProjectCover } from '@/utils/images';
@@ -47,8 +48,16 @@ const ownCards = await Promise.all(own.map(toCardData));
 <section id="proyectos" class="relative border-t border-white/[0.08] py-10 sm:py-12" aria-labelledby="projects-heading">
   <div class="container-page" data-projects-section>
     <div class="max-w-lg">
-      <p class="text-eyebrow">Sitios</p>
-      <h2 id="projects-heading" class="mt-1.5 text-xl font-semibold tracking-tight text-text sm:text-2xl">Proyectos</h2>
+      <AnimatedText tag="p" class="text-eyebrow" splitBy="chars" delay={0}>Sitios</AnimatedText>
+      <AnimatedText
+        tag="h2"
+        id="projects-heading"
+        class="mt-1.5 text-xl font-semibold tracking-tight text-text sm:text-2xl"
+        splitBy="lines"
+        delay={0.04}
+      >
+        Proyectos
+      </AnimatedText>
       <p class="mt-2 text-sm leading-relaxed text-muted">Son sitios con los que trabajo hoy. Podés verlos en vivo.</p>
     </div>
 

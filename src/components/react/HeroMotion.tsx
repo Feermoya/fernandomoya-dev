@@ -1,8 +1,10 @@
-import { motion, useReducedMotion, type Variants } from 'motion/react';
+import { useLayoutEffect, useRef } from 'react';
+import { animate, motion, stagger, useReducedMotion, type Variants } from 'motion/react';
 import MagneticButton from '@/components/react/MagneticButton';
 import Typeanimation from '@/components/ui/typeanimation';
 import { staggerContainer, staggerItem } from '@/components/react/motion-variants';
 import { DURATION_ENTER, EASE_OUT_SOFT, HERO_WORD_STAGGER } from '@/motion/easing';
+import SplitType from 'split-type';
 
 type Props = {
   eyebrow: string;
@@ -39,6 +41,8 @@ const headlineWord: Variants = {
   },
 };
 
+const HERO_SPLIT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
 function ShimmerPill({ children }: { children: React.ReactNode }) {
   return (
     <span className="pill-shimmer">
@@ -66,10 +70,45 @@ export default function HeroMotion({
   ctaSecondaryHref,
 }: Props) {
   const reduce = useReducedMotion();
+  const prefixRef = useRef<HTMLSpanElement>(null);
+  const suffixRef = useRef<HTMLSpanElement>(null);
   const hasService = Boolean(serviceLine?.trim());
 
   // Si se proveen props animadas, usar animación, si no, fallback a headline clásico
   const showAnimated = headlinePrefix && animatedWords && animatedWords.length > 0 && headlineSuffix;
+
+  useLayoutEffect(() => {
+    if (!showAnimated || reduce) return;
+
+    const prefixEl = prefixRef.current;
+    const suffixEl = suffixRef.current;
+    if (!prefixEl || !suffixEl) return;
+
+    const splitP = new SplitType(prefixEl, { types: 'words' });
+    const splitS = new SplitType(suffixEl, { types: 'words' });
+    const splits = [splitP, splitS];
+
+    const words = [...(splitP.words ?? []), ...(splitS.words ?? [])] as HTMLElement[];
+    words.forEach((w) => {
+      w.style.overflow = 'hidden';
+      w.style.display = 'inline-block';
+      w.style.verticalAlign = 'baseline';
+    });
+
+    animate(
+      words,
+      { opacity: [0, 1], y: ['110%', '0%'] },
+      {
+        duration: 0.74,
+        delay: stagger(0.06, { startDelay: 0 }),
+        ease: HERO_SPLIT_EXPO,
+      },
+    );
+
+    return () => {
+      splits.forEach((s) => s.revert());
+    };
+  }, [reduce, showAnimated, headlinePrefix, headlineSuffix]);
 
   return (
     <motion.div
@@ -87,7 +126,7 @@ export default function HeroMotion({
           id="hero-heading"
           className="text-display-hero text-display-hero--compact text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2"
         >
-          <span>{headlinePrefix} </span>
+          <span ref={prefixRef}>{headlinePrefix} </span>
           <Typeanimation
             words={animatedWords}
             typingSpeed="slow"
@@ -97,7 +136,7 @@ export default function HeroMotion({
             pauseDuration={1800}
             className="inline-block font-extrabold min-w-[7.5ch]"
           />
-          <span>, {headlineSuffix}</span>
+          <span ref={suffixRef}>, {headlineSuffix}</span>
         </h1>
       ) : reduce ? (
         <h1

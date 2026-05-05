@@ -1,0 +1,18 @@
+---
+type HtmlTag = 'h1' | 'h2' | 'h3' | 'p' | 'span' | 'div';
+
+interface Props {
+  tag?: HtmlTag;
+  splitBy?: 'words' | 'lines' | 'chars';
+  delay?: number;
+  class?: string;
+  id?: string;
+}
+
+const { tag: Tag = 'div', splitBy = 'words', delay = 0, class: className, id, ...rest } = Astro.props as Props &
+  Record<string, unknown>;
+---
+
+<Tag class={className} id={id} data-split={splitBy} data-split-delay={delay} {...rest}>
+  <slot />
+</Tag>

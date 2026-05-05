@@ -60,9 +60,22 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
+    <!-- Astro 6: transiciones de vista vía `ClientRouter` (antes `ViewTransitions` en guías antiguas). -->
     <ClientRouter />
   </head>
   <body class="relative min-h-dvh overflow-x-clip bg-bg-base text-text">
+    <div
+      id="page-transition-overlay"
+      class="page-transition-overlay pointer-events-none fixed inset-0 z-[200]"
+      aria-hidden="true"
+    >
+      <div class="page-transition-overlay-inner">
+        <div class="page-transition-overlay-logo" aria-hidden="true">
+          <span class="page-transition-overlay-letter">F</span><span class="page-transition-overlay-letter">M</span>
+        </div>
+      </div>
+    </div>
+
     <SplashScreen />
     <AmbientBackdrop />
     <div class="relative z-[1] flex min-h-dvh flex-col">
@@ -74,5 +87,12 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
       </main>
       <Footer />
     </div>
+
+    <!-- Lenis (scroll suave + sync con Motion / parallax) + SplitType init para [data-split] -->
+    <script>
+      import '@/scripts/fm-page-transition.ts';
+      import '@/scripts/fm-lenis.ts';
+      import '@/scripts/fm-split-text.ts';
+    </script>
   </body>
 </html>
