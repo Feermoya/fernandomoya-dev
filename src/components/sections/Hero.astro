@@ -1,39 +1,22 @@
 ---
+import HeroCanvas from '@/components/react/HeroCanvas';
 import HeroMotion from '@/components/react/HeroMotion';
 import { site } from '@/data/site';
 ---
 
 <section
   id="inicio"
-  class="hero-root hero-root--tight relative overflow-hidden border-b border-white/[0.08] pb-5 pt-2 sm:pt-2.5 sm:pb-7 lg:-mt-[7.25rem] lg:pt-0 lg:pb-9 xl:-mt-[7.75rem] 2xl:-mt-[8.25rem]"
+  class="hero-root hero-immersive hero-root--tight relative flex min-h-[100svh] flex-col justify-between overflow-hidden border-b border-white/[0.08] pb-10 pt-16 sm:min-h-[100svh] sm:pt-18 sm:pb-14 lg:pt-20 lg:pb-16"
   aria-labelledby="hero-heading"
 >
-  <div class="hero-local-blobs" aria-hidden="true">
-    <div class="hero-blob hero-blob--a"></div>
-    <div class="hero-blob hero-blob--b"></div>
-  </div>
+  <HeroCanvas client:load />
 
-  <div
-    class="pointer-events-none absolute -left-24 top-8 h-48 w-48 rounded-[2rem] glass-pill opacity-40 sm:h-56 sm:w-56 lg:left-[-6%]"
-    data-parallax="0.06"
-    aria-hidden="true"
-  >
-  </div>
-  <div
-    class="pointer-events-none absolute right-[-12%] top-24 hidden h-36 w-64 rounded-3xl glass-surface-sm opacity-45 shadow-glass-depth-sm sm:block lg:right-[-4%] lg:top-20"
-    data-parallax="0.11"
-    aria-hidden="true"
-  >
-  </div>
-
-  <div class="container-page relative z-10 lg:-mt-5 xl:-mt-6 2xl:-mt-7">
-    <div class="hero-glass-card relative overflow-hidden rounded-2xl p-4 sm:p-5 lg:p-6">
-      <div class="hero-mesh-corner" aria-hidden="true"></div>
-      <div class="hero-grid-lines" aria-hidden="true"></div>
-
+  <div class="container-page relative z-10">
+    <div class="hero-content-wrap">
+      <div class="hero-text-scrim" aria-hidden="true"></div>
       <HeroMotion
         client:load
-        eyebrow="Diseño web · Desarrollo · Mendoza y remoto"
+        eyebrow="Diseño web · Desarrollo · Identidad digital"
         headlinePrefix="Si tu web no está"
         animatedWords={[
           "vendiendo",
@@ -43,8 +26,8 @@ import { site } from '@/data/site';
           "funcionando"
         ]}
         headlineSuffix="se puede arreglar."
-        lead="Diseño sitios para negocios que quieren explicarse mejor, verse serios y conseguir más consultas. Arranco rápido y entrego en menos de dos semanas."
-        serviceLine="Web nueva, rediseño o mejoras puntuales."
+        lead="Diseño sitios para negocios que quieren explicarse mejor, verse serios y conseguir más consultas."
+        serviceLine=""
         pillA="Marcas y negocios"
         ctaPrimary="Hablar conmigo"
         ctaSecondary="Ver trabajos"

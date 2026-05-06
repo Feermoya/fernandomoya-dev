@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 interface TypeanimationProps {
   words: string[];
@@ -22,6 +22,11 @@ function getSpeed(val: string | number | undefined, fallback: number) {
   return fallback;
 }
 
+/** Espacios normales → NBSP: una frase de varias palabras no se parte en el salto de línea */
+function gluePhraseSpaces(phrase: string) {
+  return phrase.replace(/ /g, "\u00A0");
+}
+
 export default function Typeanimation({
   words,
   typingSpeed = "slow",
@@ -31,16 +36,21 @@ export default function Typeanimation({
   gradientTo = "#67e8f9",   // cyan-300
   className = "",
 }: TypeanimationProps) {
-  const [index, setIndex] = useState(0);
-  const [displayed, setDisplayed] = useState("");
-  const [deleting, setDeleting] = useState(false);
-  const [pause, setPause] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const gluedWords = useMemo(
+    () => words.map((w) => gluePhraseSpaces(w)),
+    [words],
+  );
 
+  const [index, setIndex] = useState(0);
+  const [displayed, setDisplayed] = useState(
+    () => gluedWords[0]?.slice(0, 1) ?? "",
+  );
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout | null = null;
-    const word = words[index];
+    const word = gluedWords[index];
+    if (!word) return;
     if (!deleting && displayed.length < word.length) {
       timeout = setTimeout(
         () => setDisplayed(word.slice(0, displayed.length + 1)),
@@ -56,22 +66,20 @@ export default function Typeanimation({
     } else if (deleting && displayed.length === 0) {
       timeout = setTimeout(() => {
         setDeleting(false);
-        setIndex((prev) => (prev + 1) % words.length);
+        setIndex((prev) => (prev + 1) % gluedWords.length);
       }, 350); // pequeña pausa entre palabras
     }
     return () => timeout && clearTimeout(timeout);
-  }, [displayed, deleting, index, words, typingSpeed, deletingSpeed, pauseDuration]);
+  }, [displayed, deleting, index, gluedWords, typingSpeed, deletingSpeed, pauseDuration]);
 
   return (
     <span
       className={className}
       style={{
-        background: `linear-gradient(90deg, ${gradientFrom}, ${gradientTo})`,
+        background: `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})`,
         WebkitBackgroundClip: "text",
         WebkitTextFillColor: "transparent",
         display: "inline-block",
-        minWidth: "7.5ch",
-        transition: "min-width 0.2s",
       }}
       aria-live="polite"
     >
