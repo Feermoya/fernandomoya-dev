@@ -1,288 +1,975 @@
----
-// SplashScreen.astro — sin props
----
 
-<div id="fm-splash" aria-hidden="true" role="presentation">
-  <div class="fm-bg-orb"></div>
-  <div class="fm-loader-line"></div>
+<div id="fm-splash" class="fm-splash" role="status" aria-label="Cargando" aria-live="polite">
+  <div class="fm-bg-orb" aria-hidden="true"></div>
+  <div class="fm-particles" aria-hidden="true">
+    <span></span><span></span><span></span>
+    <span></span><span></span><span></span>
+  </div>
 
-  <div class="fm-wrap">
-    <div class="fm-letters">
-      <span class="fm-lf">F</span><span class="fm-lm">M</span>
+  <div class="fm-wrap" aria-hidden="true">
+    <div class="fm-stack">
+    <div class="fm-letters fm-svg-stage" aria-label="FM">
+      <span class="fm-contact-shadow" aria-hidden="true"></span>
+      <span class="fm-impact-dust" aria-hidden="true"></span>
+      <span class="fm-contact-rim" aria-hidden="true"></span>
+      <span class="fm-spark" aria-hidden="true"></span>
+
+      <svg
+        class="fm-cinematic-logo"
+        viewBox="0 0 420 210"
+        role="img"
+        aria-label="FM"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <!-- Igual tono que Typeanimation del hero (135deg) -->
+          <linearGradient id="fmLogoGradient" x1="0" y1="0" x2="420" y2="210" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#60a5fa" />
+            <stop offset="100%" stop-color="#a78bfa" />
+          </linearGradient>
+        </defs>
+
+        <!-- M en dos grupos: subida (solo translate/opacity) + compresión (solo scale) ⇒ sin pisar transform -->
+        <!-- translate: centra ópticamente FM en el viewBox (las letras no ocupan 420px) -->
+        <g class="fm-svg-mark" transform="translate(44, 0)">
+          <g class="fm-svg-m-outer">
+            <g class="fm-svg-m-inner">
+              <text
+                class="fm-svg-letter fm-svg-letter-m"
+                fill="url(#fmLogoGradient)"
+                xml:space="preserve"
+                text-anchor="start"
+                x="152"
+                y="168"
+              >M</text>
+            </g>
+          </g>
+          <g class="fm-svg-f">
+            <text
+              class="fm-svg-letter fm-svg-letter-f"
+              fill="url(#fmLogoGradient)"
+              xml:space="preserve"
+              text-anchor="start"
+              x="38"
+              y="168"
+            >F</text>
+          </g>
+        </g>
+      </svg>
     </div>
+
     <div class="fm-info">
-      <div class="fm-name">Fernando Moya</div>
-      <div class="fm-tagline">Diseño web · Desarrollo · Identidad digital</div>
+      <span class="fm-name">Fernando Moya</span>
+
+      <span class="fm-tagline">
+        <span class="fm-tag-word" style="--i:0">Diseño web</span>
+        <span class="fm-tag-dot" style="--i:1">·</span>
+        <span class="fm-tag-word" style="--i:2">Desarrollo</span>
+        <span class="fm-tag-dot" style="--i:3">·</span>
+        <span class="fm-tag-word" style="--i:4">Identidad digital</span>
+      </span>
+
+      <span class="fm-bar-wrap">
+        <span class="fm-bar-fill"></span>
+      </span>
     </div>
-    <div class="fm-bar-wrap">
-      <div class="fm-bar-fill"></div>
     </div>
+  </div>
+
+  <div class="fm-loader-line" aria-hidden="true">
+    <span class="fm-load"></span>
   </div>
 </div>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap');
-
   #fm-splash {
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: #0d1117;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.45s ease, visibility 0.45s ease;
+    align-items: stretch;
+    justify-content: stretch;
+    background: #050818;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding-block: env(safe-area-inset-top, 0px) env(safe-area-inset-bottom, 0px);
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+    transition: opacity 0.55s ease, transform 0.55s ease,
+                visibility 0s linear 0.55s;
   }
-
   #fm-splash.fm-hidden {
     opacity: 0;
+    transform: scale(1.05);
     visibility: hidden;
+  }
+  #fm-splash.fm-gone { display: none; }
+
+  /* ── Orb ── */
+  .fm-bg-orb {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: min(760px, 82vw);
+    height: min(760px, 82vw);
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(96, 165, 250, 0.16) 0%,
+      rgba(109, 40, 217, 0.09) 44%,
+      transparent 70%
+    );
+    animation: fm-orb-in 1.2s ease forwards,
+               fm-breathe 4s ease-in-out 1.4s infinite;
+    pointer-events: none;
+  }
+  @keyframes fm-orb-in {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes fm-breathe {
+    0%, 100% { transform: scale(1);    opacity: 0.85; }
+    50%       { transform: scale(1.08); opacity: 1; }
+  }
+
+  /* ── Partículas flotantes ── */
+  .fm-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .fm-particles span {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: rgba(160, 180, 255, 0.28);
+    animation: fm-float var(--dur, 6s) ease-in-out var(--del, 0s) infinite alternate;
+  }
+  .fm-particles span:nth-child(1) { top: 25%; left: 20%; --dur: 5.5s; --del: 0.2s; }
+  .fm-particles span:nth-child(2) { top: 35%; right: 22%; --dur: 7s; --del: 0.8s; }
+  .fm-particles span:nth-child(3) { top: 65%; left: 30%; --dur: 6.5s; --del: 1.2s; }
+  .fm-particles span:nth-child(4) { top: 70%; right: 28%; --dur: 5s; --del: 0.5s; }
+  .fm-particles span:nth-child(5) { top: 18%; right: 35%; --dur: 8s; --del: 1.5s; }
+  .fm-particles span:nth-child(6) { top: 78%; left: 42%; --dur: 6s; --del: 0.3s; }
+  @keyframes fm-float {
+    from {
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.16;
+    }
+    to {
+      transform: translateY(-14px) translateX(6px);
+      opacity: 0.42;
+    }
+  }
+
+  /*
+    FM + nombre + tagline: misma columna centrada (evita desalineado logo vs texto).
+  */
+  /* ── Wrap: micro jitter casi imperceptible en el impacto ── */
+  .fm-wrap {
+    --fm-stage-w: clamp(280px, 36vw, 430px);
+    --fm-stage-h: clamp(145px, 19vw, 225px);
+    flex: 1;
+    align-self: stretch;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    animation: fm-cinematic-camera-kick 0.2s ease-out forwards 1.82s;
+    transform: translateZ(0);
+  }
+
+  .fm-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: max(2rem, 4vh);
+    width: min(100%, 28rem);
+    box-sizing: border-box;
+  }
+
+  @keyframes fm-cinematic-camera-kick {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    38% {
+      transform: translate3d(-0.45px, 0.26px, 0) scale(1.0012);
+    }
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  /* ── Marca FM: stage SVG cinematográfico ── */
+  .fm-letters,
+  .fm-svg-stage {
+    position: relative;
+    width: var(--fm-stage-w, clamp(280px, 36vw, 430px));
+    height: var(--fm-stage-h, clamp(145px, 19vw, 225px));
+    flex-shrink: 0;
+    margin-inline: auto;
+    transform: translateZ(0);
+    z-index: 2;
+    isolation: isolate;
+    -webkit-font-smoothing: antialiased;
+    backface-visibility: hidden;
+    /* Una sola curva global en animaciones FM = menos trabajo de compositor por frame */
+    --fm-motion: cubic-bezier(0.34, 0.962, 0.36, 1);
+  }
+  .fm-letters::before {
+    content: '';
+    position: absolute;
+    inset: -50px -70px;
+    background: radial-gradient(ellipse at center,
+      rgba(91, 127, 255, 0.28) 0%,
+      rgba(109, 40, 217, 0.10) 50%,
+      transparent 70%
+    );
+    border-radius: 50%;
+    opacity: 0;
+    animation: fm-glow-in 0.7s ease forwards 0.9s;
+    pointer-events: none;
+    z-index: -1;
+  }
+  @keyframes fm-glow-in {
+    from { opacity: 0; transform: scale(0.75); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* Brillo final sobre el stage SVG */
+  .fm-letters::after {
+    content: '';
+    position: absolute;
+    inset: 6% -8%;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.18) 48%,
+      rgba(96, 165, 250, 0.14) 52%,
+      transparent 65%
+    );
+    transform: translateX(-120%);
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    animation: fm-final-sheen 0.78s ease-out forwards 2.62s;
+    z-index: 8;
+  }
+
+  @keyframes fm-final-sheen {
+    0% {
+      opacity: 0;
+      transform: translateX(-120%);
+    }
+    20% {
+      opacity: 0.65;
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(120%);
+    }
+  }
+
+  /* Sombra de contacto (timeline SVG) */
+  .fm-contact-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: 0.02em;
+    width: 1.45em;
+    height: 0.16em;
+    border-radius: 999px;
+    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.58), transparent 72%);
+    transform: translateX(-50%) scaleX(0.42);
+    opacity: 0;
+    filter: blur(5px);
+    pointer-events: none;
+    animation: fm-svg-contact-shadow 2.45s var(--fm-motion) forwards 0.12s;
+    z-index: -1;
+  }
+
+  @keyframes fm-svg-contact-shadow {
+    0%,
+    42% {
+      opacity: 0;
+      transform: translateX(-50%) scaleX(0.38);
+    }
+    61% {
+      opacity: 0.18;
+      transform: translateX(-40%) scaleX(0.78);
+    }
+    69% {
+      opacity: 0.44;
+      transform: translateX(-30%) scaleX(1.2);
+    }
+    76% {
+      opacity: 0.26;
+      transform: translateX(-38%) scaleX(0.86);
+    }
+    100% {
+      opacity: 0.3;
+      transform: translateX(-50%) scaleX(0.94);
+    }
+  }
+
+  .fm-contact-rim {
+    position: absolute;
+    left: 50%;
+    bottom: 47%;
+    width: 54px;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.55),
+      rgba(96, 165, 250, 0.32),
+      transparent
+    );
+    opacity: 0;
+    transform: translateX(-50%) scaleX(0.35);
+    filter: blur(0.25px) drop-shadow(0 0 6px rgba(96, 165, 250, 0.22));
+    pointer-events: none;
+    z-index: 6;
+    animation: fm-svg-contact-rim 0.36s var(--fm-motion) forwards 1.8s;
+  }
+
+  @keyframes fm-svg-contact-rim {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) scaleX(0.28);
+    }
+    40% {
+      opacity: 0.58;
+      transform: translateX(-50%) scaleX(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(-50%) scaleX(1.2);
+    }
+  }
+
+  .fm-impact-dust {
+    position: absolute;
+    left: 50%;
+    bottom: 21%;
+    width: 90px;
+    height: 22px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(-50%) scaleX(0.4);
+    background:
+      radial-gradient(ellipse at 25% 50%, rgba(96, 165, 250, 0.2), transparent 58%),
+      radial-gradient(ellipse at 72% 50%, rgba(167, 139, 250, 0.16), transparent 60%);
+    filter: blur(5px);
+    z-index: 1;
+    animation: fm-svg-impact-dust 0.46s var(--fm-motion) forwards 1.8s;
+  }
+
+  @keyframes fm-svg-impact-dust {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) scaleX(0.4) translateY(0);
+    }
+    35% {
+      opacity: 0.24;
+      transform: translateX(-50%) scaleX(1) translateY(2px);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(-50%) scaleX(1.4) translateY(6px);
+    }
+  }
+
+  .fm-cinematic-logo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    display: block;
+    transform: translateZ(0);
+  }
+
+  .fm-svg-mark {
+    transform-box: view-box;
+    transform-origin: 50% 78%;
+    transform: translateZ(0);
+    /* Misma firma luminosa liviana que el hero (solo CSS, menos costosa que filtros SVG) */
+    filter:
+      drop-shadow(0 12px 24px rgb(0 0 0 / 0.26))
+      drop-shadow(0 8px 28px rgb(96 165 250 / 0.14));
+  }
+
+  /* Tipografía igual que el headline del hero (`global.css`): Nunito + tracking similar al h1 */
+  .fm-svg-letter {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 900;
+    font-size: 150px;
+    letter-spacing: -0.058em;
+    dominant-baseline: alphabetic;
+    text-rendering: optimizeLegibility;
+    paint-order: normal;
+  }
+
+  .fm-svg-f,
+  .fm-svg-m-outer,
+  .fm-svg-m-inner {
+    transform-box: fill-box;
+    backface-visibility: hidden;
+  }
+
+  /* Motion del par FM: GSAP (timeline + easing por tramo) — ver <script> */
+  .fm-svg-f {
+    opacity: 0;
+    transform-origin: 58% 90%;
+  }
+
+  .fm-svg-m-outer {
+    opacity: 0;
+    transform-origin: 50% 100%;
+  }
+
+  .fm-svg-m-inner {
+    transform-origin: 50% 100%;
+  }
+
+  /*
+    Gating: arrancar el motion solo cuando Nunito está lista + 1 frame.
+    Evita “saltos” y repaints raros el primer frame.
+  */
+  #fm-splash:not(.fm-splash-go) .fm-svg-f,
+  #fm-splash:not(.fm-splash-go) .fm-svg-m-outer {
+    opacity: 0;
+  }
+  #fm-splash:not(.fm-splash-go) .fm-svg-m-inner {
+    transform: none !important;
+  }
+  #fm-splash:not(.fm-splash-go) .fm-contact-shadow,
+  #fm-splash:not(.fm-splash-go) .fm-contact-rim,
+  #fm-splash:not(.fm-splash-go) .fm-impact-dust,
+  #fm-splash:not(.fm-splash-go) .fm-spark,
+  #fm-splash:not(.fm-splash-go) .fm-spark::before,
+  #fm-splash:not(.fm-splash-go) .fm-spark::after {
+    animation: none !important;
+  }
+  #fm-splash:not(.fm-splash-go) .fm-wrap {
+    animation: none !important;
+  }
+  #fm-splash:not(.fm-splash-go) .fm-letters::before,
+  #fm-splash:not(.fm-splash-go) .fm-letters::after {
+    animation: none !important;
+  }
+
+  /* Ráfagas direccionales (solo luz) */
+  .fm-spark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 60px;
+    height: 30px;
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-8deg) scale(0.75);
+    pointer-events: none;
+    z-index: 7;
+    animation: fm-impact-accent 0.3s ease-out forwards 1.8s;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    filter: none;
+  }
+
+  .fm-spark::before,
+  .fm-spark::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    height: 1.5px;
+    border-radius: 999px;
+    transform-origin: left center;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.75),
+      rgba(96, 165, 250, 0.48),
+      rgba(167, 139, 250, 0)
+    );
+    filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.28));
+  }
+
+  .fm-spark::before {
+    width: 48px;
+    transform: translate(-8px, -5px) rotate(-18deg) scaleX(0);
+    animation: fm-impact-line-a 0.29s ease-out forwards 1.8s;
+  }
+
+  .fm-spark::after {
+    width: 36px;
+    transform: translate(-5px, 7px) rotate(18deg) scaleX(0);
+    animation: fm-impact-line-b 0.28s ease-out forwards 1.82s;
+  }
+
+  @keyframes fm-impact-accent {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(-8deg) scale(0.75);
+    }
+    22% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(-8deg) scale(1.05);
+    }
+  }
+
+  @keyframes fm-impact-line-a {
+    0% {
+      opacity: 0;
+      transform: translate(-8px, -5px) rotate(-18deg) scaleX(0);
+    }
+    32% {
+      opacity: 1;
+      transform: translate(-8px, -5px) rotate(-18deg) scaleX(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(6px, -7px) rotate(-18deg) scaleX(0.2);
+    }
+  }
+
+  @keyframes fm-impact-line-b {
+    0% {
+      opacity: 0;
+      transform: translate(-5px, 7px) rotate(18deg) scaleX(0);
+    }
+    34% {
+      opacity: 0.82;
+      transform: translate(-5px, 7px) rotate(18deg) scaleX(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(5px, 9px) rotate(18deg) scaleX(0.15);
+    }
+  }
+
+  /* ── Info ── */
+  .fm-info {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+    z-index: 1;
+    width: 100%;
+    max-width: 28rem;
+    margin-inline: auto;
+    box-sizing: border-box;
+    text-align: center;
     pointer-events: none;
   }
 
-  #fm-splash.fm-gone {
-    display: none;
-  }
-
-  /* Orb de fondo */
-  .fm-bg-orb {
-    position: absolute;
-    width: 520px;
-    height: 520px;
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(96, 165, 250, 0.09) 0%,
-      rgba(167, 139, 250, 0.06) 40%,
-      transparent 70%
-    );
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  .fm-name {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.01em;
+    font-family: 'Nunito', sans-serif;
     opacity: 0;
-    animation: fm-orb-in 1s ease 0s forwards;
+    animation: fm-fade-up 0.45s ease forwards 2.4s;
   }
 
-  /* Barra de progreso inferior */
+  /* ── Tagline — cada palabra entra por separado ── */
+  .fm-tagline {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .fm-tag-word {
+    font-size: clamp(0.80rem, 1.9vw, 0.96rem);
+    font-weight: 500;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.04em;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: fm-tag-in 0.4s ease forwards;
+    animation-delay: calc(2.58s + var(--i) * 0.1s);
+  }
+
+  .fm-tag-dot {
+    font-size: 0.85rem;
+    color: rgba(91, 127, 255, 0.7);
+    opacity: 0;
+    animation: fm-tag-in 0.3s ease forwards;
+    animation-delay: calc(2.58s + var(--i) * 0.1s);
+  }
+
+  @keyframes fm-tag-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Subrayado animado debajo del tagline completo */
+  .fm-tagline::after {
+    content: '';
+    display: block;
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(91,127,255,0.6) 30%,
+      rgba(167,139,250,0.6) 70%,
+      transparent
+    );
+    animation: fm-underline 0.8s ease forwards;
+    animation-delay: 3.1s;
+  }
+  .fm-tagline {
+    position: relative;
+    padding-bottom: 10px;
+  }
+  @keyframes fm-underline {
+    from { width: 0%; }
+    to   { width: 100%; }
+  }
+
+  @keyframes fm-fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Barra decorativa ── */
+  .fm-bar-wrap {
+    display: block;
+    width: 48px;
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    margin-top: 0.35rem;
+    overflow: hidden;
+    opacity: 0;
+    animation: fm-fade-up 0.3s ease forwards 2.96s;
+  }
+  .fm-bar-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    border-radius: 2px;
+    animation: fm-bar 0.75s ease forwards 3.04s;
+  }
+  @keyframes fm-bar {
+    from { width: 0%; }
+    to   { width: 100%; }
+  }
+
+  /* ── Loader inferior ── */
   .fm-loader-line {
     position: absolute;
     bottom: 0;
     left: 0;
+    right: 0;
     height: 2px;
-    width: 0;
-    background: linear-gradient(90deg, #60a5fa, #a78bfa);
-    animation: fm-load 1s cubic-bezier(0.4, 0, 0.2, 1) 0.05s forwards;
+    background: rgba(255,255,255,0.04);
   }
-
-  /* Contenedor central */
-  .fm-wrap {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-  }
-
-  /* Letras FM */
-  .fm-letters {
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-    padding: 0 4px 8px;
-  }
-
-  .fm-lf,
-  .fm-lm {
-    font-family: 'Nunito', system-ui, sans-serif;
-    font-size: 172px;
-    font-weight: 900;
-    line-height: 0.88;
-    display: inline-block;
-    background: linear-gradient(90deg, #60a5fa 0%, #a78bfa 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    opacity: 0;
-    transform: translateY(105%);
-  }
-
-  .fm-lf {
-    animation: fm-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
-  }
-
-  .fm-lm {
-    animation: fm-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
-  }
-
-  /* Info block */
-  .fm-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    opacity: 0;
-    transform: translateY(8px);
-    animation: fm-fade-up 0.35s ease 0.5s forwards;
-  }
-
-  .fm-name {
-    font-family: 'Nunito', system-ui, sans-serif;
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    color: #fff;
-  }
-
-  .fm-tagline {
-    font-family: system-ui, -apple-system, sans-serif;
-    font-size: 12px;
-    font-weight: 400;
-    letter-spacing: 0.04em;
-    color: rgba(255, 255, 255, 0.38);
-  }
-
-  /* Barra separadora */
-  .fm-bar-wrap {
-    width: 44px;
-    height: 1.5px;
-    background: rgba(255, 255, 255, 0.07);
-    border-radius: 2px;
-    overflow: hidden;
-    opacity: 0;
-    animation: fm-fade-up 0.3s ease 0.62s forwards;
-  }
-
-  .fm-bar-fill {
+  .fm-load {
+    display: block;
     height: 100%;
-    width: 0;
-    background: linear-gradient(90deg, #60a5fa, #a78bfa);
-    animation: fm-bar 0.4s ease 0.65s forwards;
+    width: 0%;
+    background: linear-gradient(90deg,
+      rgba(91,127,255,0.0) 0%,
+      rgba(91,127,255,0.8) 50%,
+      rgba(167,139,250,0.8) 100%
+    );
+    animation: fm-load 2.4s ease forwards 0.05s;
   }
-
-  /* Keyframes */
-  @keyframes fm-orb-in {
-    to {
-      opacity: 1;
-    }
-  }
-
   @keyframes fm-load {
-    0% {
-      width: 0;
-    }
-    60% {
-      width: 80%;
-    }
-    85% {
-      width: 92%;
-    }
-    100% {
-      width: 100%;
-    }
+    0%   { width: 0%;   opacity: 1; }
+    85%  { width: 100%; opacity: 1; }
+    100% { width: 100%; opacity: 0; }
   }
 
-  @keyframes fm-rise {
-    0% {
-      opacity: 0;
-      transform: translateY(105%);
-    }
-    60% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fm-fade-up {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fm-bar {
-    to {
-      width: 100%;
-    }
-  }
-
-  /* Reduced motion */
+  /* ── Reduced motion ── */
   @media (prefers-reduced-motion: reduce) {
-    .fm-lf,
-    .fm-lm,
-    .fm-info,
-    .fm-bar-wrap,
-    .fm-bar-fill,
-    .fm-loader-line,
-    .fm-bg-orb {
+    .fm-svg-f,
+    .fm-svg-m-outer,
+    .fm-svg-m-inner {
       animation: none !important;
       opacity: 1 !important;
       transform: none !important;
-      width: 100% !important;
+    }
+    .fm-spark,
+    .fm-impact-dust,
+    .fm-contact-rim {
+      display: none !important;
+    }
+    .fm-letters::after {
+      animation: none !important;
+      opacity: 0 !important;
+    }
+    .fm-contact-shadow {
+      animation: none !important;
+      opacity: 0.3 !important;
+      transform: translateX(-50%) scaleX(0.94) !important;
+    }
+    .fm-wrap {
+      animation: none !important;
+    }
+    .fm-info,
+    .fm-name,
+    .fm-tag-word,
+    .fm-tag-dot,
+    .fm-bar-wrap {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .fm-particles {
+      display: none;
+    }
+    .fm-bg-orb {
+      animation: none;
     }
   }
 </style>
 
 <script>
-  (function () {
+  import gsap from 'gsap';
+
+  const MIN_VISIBLE_MS = 4100;
+  const MAX_WAIT_MS    = 5000;
+
+  /** GSAP: timeline estable en SVG (sin dos `animation` peleando por `transform`). */
+  let fmLogoGsapCtx = null;
+
+  function killFmLogoGsap() {
     const splash = document.getElementById('fm-splash');
+    if (splash) {
+      for (const sel of ['.fm-svg-f', '.fm-svg-m-outer', '.fm-svg-m-inner']) {
+        splash.querySelector(sel)?.style?.removeProperty('will-change');
+      }
+    }
+    fmLogoGsapCtx?.revert();
+    fmLogoGsapCtx = null;
+  }
 
-    if (!splash) return;
+  function runFmLogoGsap(splash) {
+    if (!splash || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    // Prevenir scroll mientras dura el splash
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+    const f = splash.querySelector('.fm-svg-f');
+    const mOuter = splash.querySelector('.fm-svg-m-outer');
+    const mInner = splash.querySelector('.fm-svg-m-inner');
+    if (!f || !mOuter || !mInner) return;
 
-    // Esperar a que Nunito cargue antes de animar
-    // para que las letras redondeadas se vean desde el primer frame
-    const startAnimations = () => {
-      const letters = splash.querySelectorAll('.fm-lf, .fm-lm');
-      letters.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        htmlEl.style.animation = 'none';
-        void htmlEl.offsetWidth;
-        htmlEl.style.animation = '';
+    killFmLogoGsap();
+
+    /* "none" = lineal entre keyframes: power2.inOut en tramos de 0.1–0.15s
+       se siente como arranque/parada en cada punto (muy “trabado” al entrar la F). */
+    const easeFKey = 'none';
+    const easeMInner = 'none';
+    const easeMOuter = 'power2.out';
+
+    const fDur = 2.45;
+    const fStart = 0.12;
+    const fStops = [
+      { p: 0, o: 0, x: -86, y: -160, r: -12, sx: 0.98, sy: 1.02 },
+      { p: 0.1, o: 1, x: -68, y: -118, r: -9, sx: 0.993, sy: 1.01 },
+      { p: 0.22, o: 1, x: -46, y: -62, r: -6, sx: 1, sy: 1 },
+      { p: 0.32, o: 1, x: -38, y: -24, r: -4, sx: 1.035, sy: 0.965 },
+      { p: 0.42, o: 1, x: -14, y: -84, r: 3, sx: 0.97, sy: 1.05 },
+      { p: 0.48, o: 1, x: 10, y: -116, r: 5.2, sx: 0.95, sy: 1.07 },
+      { p: 0.61, o: 1, x: 58, y: -58, r: 6, sx: 0.982, sy: 1.03 },
+      { p: 0.68, o: 1, x: 72, y: -36, r: 3.2, sx: 1, sy: 1 },
+      { p: 0.71, o: 1, x: 79, y: -29, r: 1, sx: 1.016, sy: 0.984 },
+      { p: 0.74, o: 1, x: 76, y: -28, r: 0.2, sx: 1.012, sy: 0.988 },
+      { p: 0.82, o: 1, x: 48, y: -54, r: -2, sx: 0.986, sy: 1.03 },
+      { p: 0.9, o: 1, x: 20, y: -16, r: 0.6, sx: 1.004, sy: 0.996 },
+      { p: 0.96, o: 1, x: 6, y: -4, r: -0.2, sx: 1, sy: 1.004 },
+      { p: 1, o: 1, x: 0, y: 0, r: 0, sx: 1, sy: 1 },
+    ];
+
+    const mDur = 1.02;
+    const mStart = 1.62;
+    const mStops = [
+      { p: 0, x: 0, y: 0, r: 0, sx: 1, sy: 1 },
+      { p: 0.11, x: 3, y: 11, r: 0.12, sx: 1.08, sy: 0.88 },
+      { p: 0.2, x: 5, y: 18, r: 0.16, sx: 1.12, sy: 0.82 },
+      { p: 0.4, x: 2, y: -8, r: -0.1, sx: 0.96, sy: 1.07 },
+      { p: 0.6, x: 1, y: 5, r: 0.05, sx: 1.012, sy: 0.98 },
+      { p: 0.82, x: 0, y: -2, r: 0, sx: 0.996, sy: 1.01 },
+      { p: 1, x: 0, y: 0, r: 0, sx: 1, sy: 1 },
+    ];
+
+    fmLogoGsapCtx = gsap.context(() => {
+      for (const el of [f, mOuter, mInner]) {
+        el.style.willChange = 'transform, opacity';
+      }
+
+      gsap.set([f, mOuter, mInner], { force3D: true });
+
+      const tl = gsap.timeline({
+        onComplete: () => {
+          for (const el of [f, mOuter, mInner]) {
+            el.style.removeProperty('will-change');
+          }
+        },
+      });
+
+      tl.fromTo(
+        mOuter,
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.42, ease: easeMOuter },
+        0.06
+      );
+
+      const s0 = fStops[0];
+      tl.set(
+        f,
+        {
+          opacity: s0.o,
+          x: s0.x,
+          y: s0.y,
+          rotation: s0.r,
+          scaleX: s0.sx,
+          scaleY: s0.sy,
+        },
+        0
+      );
+
+      for (let i = 1; i < fStops.length; i++) {
+        const prev = fStops[i - 1];
+        const cur = fStops[i];
+        tl.to(
+          f,
+          {
+            opacity: cur.o,
+            x: cur.x,
+            y: cur.y,
+            rotation: cur.r,
+            scaleX: cur.sx,
+            scaleY: cur.sy,
+            duration: fDur * (cur.p - prev.p),
+            ease: easeFKey,
+          },
+          fStart + fDur * prev.p
+        );
+      }
+
+      const ms0 = mStops[0];
+      tl.set(
+        mInner,
+        { x: ms0.x, y: ms0.y, rotation: ms0.r, scaleX: ms0.sx, scaleY: ms0.sy },
+        0
+      );
+
+      for (let i = 1; i < mStops.length; i++) {
+        const prev = mStops[i - 1];
+        const cur = mStops[i];
+        tl.to(
+          mInner,
+          {
+            x: cur.x,
+            y: cur.y,
+            rotation: cur.r,
+            scaleX: cur.sx,
+            scaleY: cur.sy,
+            duration: mDur * (cur.p - prev.p),
+            ease: easeMInner,
+          },
+          mStart + mDur * prev.p
+        );
+      }
+    }, splash);
+  }
+
+  /** Evita primer frame con métricas fallback + timeline desincronizada (impacto vs FM). */
+  function armFmSplashMotion() {
+    const splash = document.getElementById('fm-splash');
+    if (!splash || splash.classList.contains('fm-splash-go')) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const go = () => {
+      splash.classList.add('fm-splash-go');
+      if (!reduce) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => runFmLogoGsap(splash));
+        });
+      }
+    };
+
+    if (reduce) {
+      go();
+      return;
+    }
+
+    let armed = false;
+    const arm = () => {
+      if (armed) return;
+      armed = true;
+      document.fonts.load('900 150px Nunito').catch(() => {});
+      requestAnimationFrame(() => {
+        requestAnimationFrame(go);
       });
     };
 
-    if (document.fonts && document.fonts.load) {
-      document.fonts.load('900 1em Nunito').then(startAnimations).catch(startAnimations);
-    }
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const MIN_VISIBLE_MS = reduceMotion ? 300 : 1100;
-    const MAX_WAIT_MS = 2400;
-    const startTime = performance.now();
-    let finished = false;
-
-    const closeSplash = () => {
-      if (finished) return;
-      finished = true;
-      splash.classList.add('fm-hidden');
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-
-      // Remover del DOM después del fade
-      setTimeout(() => {
-        splash.classList.add('fm-gone');
-      }, 500);
-    };
-
-    const scheduleClose = () => {
-      const elapsed = performance.now() - startTime;
-      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
-      setTimeout(closeSplash, remaining);
-    };
-
-    if (document.readyState === 'complete') {
-      scheduleClose();
+    if ('fonts' in document) {
+      void document.fonts.ready.then(arm, arm);
+      setTimeout(arm, 720);
     } else {
-      window.addEventListener('load', scheduleClose, { once: true });
-      // fallback por si algo externo demora demasiado
-      setTimeout(scheduleClose, MAX_WAIT_MS);
+      setTimeout(arm, 24);
     }
-  })();
+  }
+
+  armFmSplashMotion();
+
+  function closeSplash() {
+    const splash = document.getElementById('fm-splash');
+    if (!splash || splash.classList.contains('fm-hidden')) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    splash.classList.add('fm-hidden');
+    setTimeout(() => {
+      splash.classList.add('fm-gone');
+    }, reduce ? 100 : 560);
+    document.documentElement.style.overflow = '';
+  }
+
+  const startTime = performance.now();
+
+  function scheduleClose() {
+    const elapsed   = performance.now() - startTime;
+    const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    setTimeout(closeSplash, remaining);
+  }
+
+  if ('fonts' in document) {
+    document.fonts.load('900 1em Nunito').catch(() => {});
+  }
+
+  if (document.readyState === 'complete') {
+    scheduleClose();
+  } else {
+    window.addEventListener('load', scheduleClose, { once: true });
+    setTimeout(closeSplash, MAX_WAIT_MS);
+  }
+
+  document.addEventListener('astro:before-preparation', () => {
+    killFmLogoGsap();
+    const splash = document.getElementById('fm-splash');
+    if (splash) splash.classList.add('fm-gone');
+  });
 </script>
