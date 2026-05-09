@@ -16,7 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 const siteUrl =
   process.env.PUBLIC_SITE_URL?.replace(/\/$/, '') ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://fermoyadev.com.ar');
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://www.fermoyadev.com.ar');
 
 export default defineConfig({
   site: siteUrl,
