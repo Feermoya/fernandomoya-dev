@@ -12,6 +12,14 @@ const quick = [
   { href: '#proyectos', label: 'Proyectos' },
   { href: '#sobre-mi', label: 'Sobre mí' },
 ] as const;
+
+const seoLinks = [
+  { href: '/diseno-web', label: 'Diseño web' },
+  { href: '/desarrollo-web', label: 'Desarrollo web' },
+  { href: '/pagina-web-profesional', label: 'Página web profesional' },
+  { href: '/landing-page', label: 'Landing page' },
+  { href: '/seo-tecnico', label: 'SEO técnico' },
+] as const;
 ---
 
 <footer class="footer-glass">
@@ -37,9 +45,24 @@ const quick = [
         <p class="mt-2 max-w-sm text-[13px] leading-snug text-muted sm:mt-3 sm:text-sm sm:leading-relaxed">
           Web nueva, rediseño o mejoras puntuales para que tu negocio se vea más profesional y genere más consultas.
         </p>
+        <p class="mt-5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted sm:text-[11px]">Guías rápidas</p>
+        <ul class="footer-quick mt-2">
+          {
+            seoLinks.map((l) => (
+              <li>
+                <a class="link-underline-grow text-[13px] text-text/90 hover:text-accent sm:text-sm" href={l.href}>
+                  {l.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
       </div>
 
       <div class="footer-dev-block lg:justify-self-end">
+        <p class="footer-dev-title">
+          Diseñado y desarrollado por
+        </p>
         <div class="footer-dev-row">
           <span class="footer-dev-name" aria-label={site.name}>
             <span class="site-logo-fm">
@@ -85,9 +108,7 @@ const quick = [
       </div>
     </div>
 
-    <hr class="footer-dev-sep" />
-
-    <div class="mt-6 border-t border-white/[0.08] pt-5 sm:mt-10 sm:pt-8 md:mt-12">
+    <div class="mt-6 pt-5 sm:mt-10 sm:pt-8 md:mt-12">
       <p class="text-center text-[11px] leading-snug text-muted sm:text-left sm:text-xs">
         © {year} {site.name}
         <span class="text-border-strong/40" aria-hidden="true"> · </span>
@@ -115,25 +136,6 @@ const quick = [
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0.25rem 0.75rem;
-    }
-  }
-
-  .footer-dev-sep {
-    border: none;
-    height: 1px;
-    margin: 1.25rem 0 1rem;
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  @media (min-width: 640px) {
-    .footer-dev-sep {
-      margin: 2rem 0 1.5rem;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .footer-dev-sep {
-      margin: 2.5rem 0 1.75rem;
     }
   }
 
@@ -184,6 +186,17 @@ const quick = [
     line-height: 1.4;
     margin: 0.45rem 0 0;
     color: color-mix(in srgb, var(--color-muted) 92%, transparent);
+  }
+
+  .footer-dev-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin: 0 0 0.2rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+      "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   }
 
   @media (min-width: 640px) {

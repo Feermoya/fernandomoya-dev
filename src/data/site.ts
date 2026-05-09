@@ -7,7 +7,7 @@ export const site = {
   title: 'Fernando Moya — Si tu web no está funcionando, se puede arreglar',
   description:
     'Webs para marcas y negocios: claras, que carguen bien y no generen problemas. Mendoza, Argentina.',
-  url: 'https://example.com',
+  url: 'http://fermoyadev.com.ar',
   locale: 'es-AR',
   author: 'Fernando Moya',
   email: 'fmoya97.fm@gmail.com',

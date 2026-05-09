@@ -1,0 +1,24 @@
+---
+import SeoLanding from '@/components/seo/SeoLanding.astro';
+import { seoLandings, type SeoLanding as Landing } from '@/data/seo-landings';
+
+export function getStaticPaths() {
+  return seoLandings.map((l) => ({
+    params: { landing: l.path.replace(/^\//, '') },
+    props: l,
+  }));
+}
+
+const landing = Astro.props as Landing;
+---
+
+<SeoLanding
+  title={landing.title}
+  description={landing.description}
+  path={landing.path}
+  h1={landing.h1}
+  intro={landing.intro}
+  bullets={landing.bullets}
+  faqs={landing.faqs}
+/>
+

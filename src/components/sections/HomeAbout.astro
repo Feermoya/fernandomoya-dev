@@ -9,13 +9,15 @@ const aboutBody =
   'Arranco cada proyecto con una llamada o brief corto para entender bien qué necesitás antes de escribir una sola línea de código. Trabajo con negocios de todo tipo.';
 ---
 
-<AboutSectionClient
-  client:visible
-  profileSrc={profileSrc}
-  profileAlt={`Retrato de ${site.name}`}
-  heading="Diseño webs que explican mejor tu negocio"
-  body={aboutBody}
-  linkedin={site.social.linkedin}
-  email={site.email}
-  metrics={[...site.metrics]}
-/>
+<section id="sobre-mi" class="relative border-t border-white/[0.08] py-10 sm:py-12" aria-label="Sobre mí">
+  <AboutSectionClient
+    client:visible
+    profileSrc={profileSrc}
+    profileAlt={`Retrato de ${site.name}`}
+    heading="Diseño webs que explican mejor tu negocio"
+    body={aboutBody}
+    linkedin={site.social.linkedin}
+    email={site.email}
+    metrics={[...site.metrics]}
+  />
+</section>
