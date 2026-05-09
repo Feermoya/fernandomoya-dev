@@ -6,8 +6,13 @@ import { staggerContainer, staggerItem } from '@/components/react/motion-variant
 import { DURATION_ENTER, EASE_OUT_SOFT, HERO_WORD_STAGGER } from '@/motion/easing';
 import SplitType from 'split-type';
 
+const SERVICE_BADGES = [
+  { label: 'Diseño web', icon: '◈' },
+  { label: 'Desarrollo', icon: '⟨/⟩' },
+  { label: 'Identidad digital', icon: '◎' },
+] as const;
+
 type Props = {
-  eyebrow: string;
   headline?: string;
   headlinePrefix?: string;
   animatedWords?: string[];
@@ -55,8 +60,34 @@ function ShimmerPill({ children }: { children: React.ReactNode }) {
   );
 }
 
+function HeroServiceBadges({ className }: { className?: string }) {
+  return (
+    <motion.div
+      className={['flex flex-wrap gap-2', className].filter(Boolean).join(' ')}
+      variants={staggerItem}
+    >
+      {SERVICE_BADGES.map(({ label, icon }) => (
+        <motion.span
+          key={label}
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.10] bg-white/[0.05] px-3 py-1 text-[11px] font-medium tracking-wide text-white/55 backdrop-blur-sm"
+          whileHover={{
+            borderColor: 'rgba(96,165,250,0.35)',
+            color: 'rgba(196,181,253,0.9)',
+            background: 'rgba(96,165,250,0.08)',
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          <span className="text-[10px] text-[#60a5fa]/70" aria-hidden>
+            {icon}
+          </span>
+          {label}
+        </motion.span>
+      ))}
+    </motion.div>
+  );
+}
+
 export default function HeroMotion({
-  eyebrow,
   headline,
   headlinePrefix,
   animatedWords,
@@ -128,12 +159,7 @@ export default function HeroMotion({
         initial={reduce ? 'visible' : 'hidden'}
         animate="visible"
       >
-        <motion.p
-          className="text-eyebrow text-white/40"
-          variants={staggerItem}
-        >
-          {eyebrow}
-        </motion.p>
+        <HeroServiceBadges className="justify-center" />
 
         <motion.h1
           id="hero-heading"
@@ -143,8 +169,14 @@ export default function HeroMotion({
           {staticHeadline!.trim()}
         </motion.h1>
 
+        <motion.div
+          variants={staggerItem}
+          className="mx-auto mt-5 h-px w-16 rounded-full bg-gradient-to-r from-transparent via-[#60a5fa]/50 to-transparent"
+          aria-hidden
+        />
+
         <motion.p
-          className="mx-auto mt-5 max-w-[34rem] text-balance text-[1rem] font-normal leading-7 text-white/70 sm:text-lg"
+          className="mt-4 mx-auto max-w-[42rem] text-center text-[1rem] font-normal leading-[1.68] text-white/55 sm:text-[1.05rem]"
           variants={staggerItem}
         >
           {lead}
@@ -152,7 +184,7 @@ export default function HeroMotion({
 
         {hasService ? (
           <motion.p
-            className="mx-auto mt-3 max-w-[30rem] text-balance text-sm leading-6 text-white/45 sm:text-base"
+            className="mx-auto mt-3 max-w-[30rem] text-pretty text-sm leading-6 text-white/45 sm:text-base"
             variants={staggerItem}
           >
             {serviceLine!.trim()}
@@ -166,7 +198,7 @@ export default function HeroMotion({
           <MagneticButton
             href={ctaPrimaryHref || '/'}
             shimmer
-            className="!rounded-xl !bg-[#3b4fd8] shadow-[0_16px_44px_rgba(59,79,216,0.35)] hover:!bg-[#4f5fe8]"
+            className="w-full justify-center !rounded-xl !bg-[#3b4fd8] shadow-[0_16px_44px_rgba(59,79,216,0.35)] hover:!bg-[#4f5fe8] sm:w-auto"
           >
             {ctaPrimary}
             <svg
@@ -185,7 +217,7 @@ export default function HeroMotion({
           <MagneticButton
             href={ctaSecondaryHref || '#proyectos'}
             variant="ghost"
-            className="!rounded-xl !border-[1.5px] !border-white/[0.25] !bg-transparent !text-white hover:!border-white/[0.5] hover:!bg-transparent"
+            className="w-full justify-center !rounded-xl !border-[1.5px] !border-white/[0.25] !bg-transparent !text-white hover:!border-white/[0.5] hover:!bg-transparent sm:w-auto"
           >
             {ctaSecondary}
           </MagneticButton>
@@ -209,17 +241,12 @@ export default function HeroMotion({
       initial={reduce ? 'visible' : 'hidden'}
       animate="visible"
     >
-      <motion.p
-        className="text-eyebrow text-white/40 lg:col-span-8 lg:col-start-1 lg:row-start-1"
-        variants={staggerItem}
-      >
-        {eyebrow}
-      </motion.p>
+      <HeroServiceBadges className="lg:col-span-8 lg:col-start-1 lg:row-start-1" />
 
       {showAnimated ? (
         <h1
           id="hero-heading"
-          className="min-h-[3lh] text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2 text-[clamp(2.05rem,4.6vw+0.9rem,4.25rem)] leading-[1.04] tracking-[-0.035em] font-semibold"
+          className="min-h-[3lh] max-w-3xl text-balance text-white lg:col-span-8 lg:col-start-1 lg:row-start-2 text-[clamp(3rem,13vw,4.7rem)] font-bold leading-[0.92] tracking-[-0.055em] sm:max-w-4xl sm:text-[clamp(4rem,8vw,7rem)]"
         >
           <span ref={prefixRef} className="inline">
             {headlinePrefix}{' '}
@@ -240,7 +267,7 @@ export default function HeroMotion({
                 gradientFrom="#60a5fa"
                 gradientTo="#a78bfa"
                 pauseDuration={1800}
-                className="inline-block font-extrabold drop-shadow-[0_10px_30px_rgba(96,165,250,0.18)]"
+                className="inline-block font-bold drop-shadow-[0_10px_30px_rgba(96,165,250,0.18)]"
               />
             </span>
             <span ref={suffixRef} className="inline">
@@ -251,14 +278,14 @@ export default function HeroMotion({
       ) : reduce ? (
         <h1
           id="hero-heading"
-          className="text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2 text-[clamp(2.05rem,4.6vw+0.9rem,4.25rem)] leading-[1.04] tracking-[-0.035em] font-semibold"
+          className="max-w-3xl text-balance text-white lg:col-span-8 lg:col-start-1 lg:row-start-2 text-[clamp(3rem,13vw,4.7rem)] font-bold leading-[0.92] tracking-[-0.055em] sm:max-w-4xl sm:text-[clamp(4rem,8vw,7rem)]"
         >
           {headline}
         </h1>
       ) : (
         <motion.h1
           id="hero-heading"
-          className="text-balance text-text lg:col-span-8 lg:col-start-1 lg:row-start-2 text-[clamp(2.05rem,4.6vw+0.9rem,4.25rem)] leading-[1.04] tracking-[-0.035em] font-semibold"
+          className="max-w-3xl text-balance text-white lg:col-span-8 lg:col-start-1 lg:row-start-2 text-[clamp(3rem,13vw,4.7rem)] font-bold leading-[0.92] tracking-[-0.055em] sm:max-w-4xl sm:text-[clamp(4rem,8vw,7rem)]"
           variants={headlineWordContainer}
         >
           {headline?.split(/\s+/).filter(Boolean).map((w, i) => (
@@ -270,7 +297,7 @@ export default function HeroMotion({
       )}
 
       <motion.p
-        className="mt-2 max-w-[34rem] text-pretty text-[1.05rem] sm:mt-4 sm:text-[1.125rem] font-normal leading-[1.68] text-white/74 lg:col-span-8 lg:col-start-1 lg:row-start-3"
+        className="mt-4 mx-auto max-w-[42rem] text-center text-[1rem] font-normal leading-[1.68] text-white/55 sm:text-[1.05rem] lg:col-span-8 lg:col-start-1 lg:row-start-4"
         variants={staggerItem}
       >
         {lead}
@@ -290,7 +317,7 @@ export default function HeroMotion({
         <MagneticButton
           href={ctaPrimaryHref || '/'}
           shimmer
-          className="!rounded-xl !bg-[#3b4fd8] shadow-[0_16px_44px_rgba(59,79,216,0.35)] hover:!bg-[#4f5fe8]"
+          className="w-full justify-center !rounded-xl !bg-[#3b4fd8] shadow-[0_16px_44px_rgba(59,79,216,0.35)] hover:!bg-[#4f5fe8] sm:w-auto"
         >
           {ctaPrimary}
           <svg
@@ -309,7 +336,7 @@ export default function HeroMotion({
         <MagneticButton
           href={ctaSecondaryHref || '#proyectos'}
           variant="ghost"
-          className="!rounded-xl !bg-transparent !text-white !border-[1.5px] !border-white/[0.25] hover:!border-white/[0.5] hover:!bg-transparent"
+          className="w-full justify-center !rounded-xl !border-[1.5px] !border-white/[0.25] !bg-transparent !text-white hover:!border-white/[0.5] hover:!bg-transparent sm:w-auto"
         >
           {ctaSecondary}
         </MagneticButton>

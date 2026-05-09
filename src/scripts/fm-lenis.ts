@@ -3,8 +3,16 @@ import Lenis from 'lenis';
 const defaultEasing = (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t));
 
 /** Dispara el evento global de scroll para que listeners (parallax, Motion) se actualicen cada frame de Lenis */
+let syncingScroll = false;
 function syncMotionScroll() {
-  window.dispatchEvent(new Event('scroll'));
+  // Lenis puede reaccionar al scroll sintético y volver a emitir `scroll` en el mismo stack → stack overflow.
+  if (syncingScroll) return;
+  syncingScroll = true;
+  try {
+    window.dispatchEvent(new Event('scroll'));
+  } finally {
+    syncingScroll = false;
+  }
 }
 
 function destroyFmLenis() {

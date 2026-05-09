@@ -1,10 +1,7 @@
-
-import { useLayoutEffect, useRef } from 'react';
-import { animate, motion, stagger, useReducedMotion, type Variants } from 'motion/react';
+import { motion, useReducedMotion, type Variants } from 'motion/react';
 import AnimatedMetric from '@/components/react/AnimatedMetric';
 import ResultsChart from '@/components/react/ResultsChart';
 import { DURATION_ENTER, EASE_OUT_SOFT } from '@/motion/easing';
-import SplitType from 'split-type';
 
 type Metric = { value: number; suffix: string; label: string };
 type Props = {
@@ -82,7 +79,6 @@ export default function AboutSectionClient({
   email, whatsappUrl, metrics,
 }: Props) {
   const reduce = useReducedMotion();
-  const labelRef = useRef<HTMLParagraphElement>(null);
 
   /* Resaltar "mejor tu negocio" */
   const needle   = 'mejor tu negocio';
@@ -90,27 +86,6 @@ export default function AboutSectionClient({
   const before   = idx >= 0 ? heading.slice(0, idx) : heading;
   const accent   = idx >= 0 ? heading.slice(idx, idx + needle.length) : '';
   const after    = idx >= 0 ? heading.slice(idx + needle.length) : '';
-
-  /* SplitType en el badge */
-  useLayoutEffect(() => {
-    if (reduce || !labelRef.current) return;
-    const el = labelRef.current;
-    const split = new SplitType(el, { types: 'chars' });
-    const chars = (split.chars ?? []) as HTMLElement[];
-    chars.forEach(c => { c.style.display = 'inline-block'; });
-
-    let played = false;
-    const io = new IntersectionObserver(([e]) => {
-      if (!e?.isIntersecting || played) return;
-      played = true; io.disconnect();
-      animate(chars,
-        { opacity: [0, 1], filter: ['blur(4px)', 'blur(0px)'] },
-        { delay: stagger(0.02), duration: 0.48, ease: 'easeOut' },
-      );
-    }, { threshold: 0.3 });
-    io.observe(el);
-    return () => { io.disconnect(); split.revert(); };
-  }, [reduce]);
 
   return (
     <section
@@ -139,35 +114,36 @@ export default function AboutSectionClient({
             whileInView="visible"
             viewport={view}
           >
-            {/* Badge */}
+            {/* Heading — acento con mismo gradiente que el monograma FM del header */}
             <motion.div variants={fadeUp}>
-              <p ref={labelRef}
-                className="inline-flex items-center rounded-full border border-[#60a5fa]/20 bg-white/[0.04] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#c4b5fd]/90"
-              >
-                Sobre mi trabajo
-              </p>
-            </motion.div>
-
-            {/* Heading */}
-            <motion.div variants={fadeUp}>
-              <h2 id="about-home-heading"
-                className="mt-3 max-w-[26rem] text-balance text-[clamp(1.4rem,1.1rem+1.2vw,1.95rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-white"
+              <h2
+                id="about-home-heading"
+                className="max-w-[26rem] text-balance font-['Nunito',system-ui,sans-serif] text-[clamp(1.55rem,1.2rem+1.4vw,2.1rem)] font-black leading-[1.08] tracking-[-0.04em]"
               >
                 {accent ? (
                   <>
-                    <span>{before}</span>
-                    <span className="bg-gradient-to-r from-[#60a5fa] to-[#a78bfa] bg-clip-text text-transparent">
-                      {accent}
-                    </span>
-                    <span>{after}</span>
+                    <span className="text-white">{before}</span>
+                    <span className="site-logo-fm__letter">{accent}</span>
+                    <span className="text-white">{after}</span>
                   </>
-                ) : heading}
+                ) : (
+                  <span className="text-white">{heading}</span>
+                )}
               </h2>
             </motion.div>
 
+            <motion.div
+              variants={fadeUp}
+              className="mt-3 h-px w-10 rounded-full"
+              style={{
+                background: 'linear-gradient(90deg, #60a5fa 0%, #a78bfa 100%)',
+              }}
+              aria-hidden
+            />
+
             {/* Body */}
             <motion.div variants={fadeUp}>
-              <p className="mt-3 max-w-[36rem] text-[15px] leading-relaxed text-white/55 sm:text-[16px]">
+              <p className="mt-2 max-w-[36rem] text-[13px] leading-relaxed text-white/45 sm:text-[14px] lg:text-[15px]">
                 {body}
               </p>
             </motion.div>
@@ -200,7 +176,7 @@ export default function AboutSectionClient({
                 src={profileSrc}
                 alt={profileAlt}
                 width={160} height={160}
-                className="relative z-10 h-[88px] w-[88px] rounded-full object-cover brightness-[1.05] contrast-[1.06] sm:h-[110px] sm:w-[110px] md:h-[130px] md:w-[130px]"
+                className="relative z-10 h-[72px] w-[72px] rounded-full object-cover brightness-[1.05] contrast-[1.06] sm:h-[100px] sm:w-[100px] md:h-[128px] md:w-[128px]"
               />
 
               {/* Ping de disponibilidad */}

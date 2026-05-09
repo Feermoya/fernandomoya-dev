@@ -1,4 +1,5 @@
-import { motion, useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react';
+import FmLogoMark from '@/components/react/FmLogoMark';
+import { motion, useMotionValueEvent, useScroll } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -10,7 +11,6 @@ type Props = {
 };
 
 export default function SiteHeader({ siteName, links }: Props) {
-  const reduce = useReducedMotion();
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -59,17 +59,7 @@ export default function SiteHeader({ siteName, links }: Props) {
           href="#inicio"
           className="group inline-flex min-w-0 shrink items-center gap-2.5 font-semibold tracking-tight text-text transition-colors duration-200 ease-out hover:text-accent motion-reduce:transition-none"
         >
-          <motion.span
-            className="site-logo-fm-wrap inline-flex h-9 min-w-[2.625rem] items-center justify-center overflow-hidden rounded-lg border border-white/[0.12] bg-white/[0.05] px-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] will-change-transform motion-reduce:will-change-auto"
-            aria-hidden="true"
-            whileHover={reduce ? undefined : { rotate: 4, scale: 1.04 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 22 }}
-          >
-            <span className="site-logo-fm">
-              <span className="site-logo-fm__letter">F</span>
-              <span className="site-logo-fm__letter">M</span>
-            </span>
-          </motion.span>
+          <FmLogoMark />
           <span className="hidden text-sm sm:inline">{siteName}</span>
         </a>
 

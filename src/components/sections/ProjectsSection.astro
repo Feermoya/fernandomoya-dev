@@ -48,17 +48,26 @@ const ownCards = await Promise.all(own.map(toCardData));
 <section id="proyectos" class="relative border-t border-white/[0.08] py-10 sm:py-12" aria-labelledby="projects-heading">
   <div class="container-page" data-projects-section>
     <div class="max-w-lg">
-      <AnimatedText tag="p" class="text-eyebrow" splitBy="chars" delay={0}>Sitios</AnimatedText>
+      <AnimatedText
+        tag="p"
+        class="text-[11px] font-medium uppercase tracking-wide text-white/55"
+        splitBy="chars"
+        delay={0}
+      >
+        Sitios
+      </AnimatedText>
       <AnimatedText
         tag="h2"
         id="projects-heading"
-        class="mt-1.5 text-xl font-semibold tracking-tight text-text sm:text-2xl"
+        class="mt-1.5 text-xl font-bold tracking-[-0.02em] text-white sm:text-2xl"
         splitBy="lines"
         delay={0.04}
       >
         Proyectos
       </AnimatedText>
-      <p class="mt-2 text-sm leading-relaxed text-muted">Son sitios con los que trabajo hoy. Podés verlos en vivo.</p>
+      <p class="mt-2 text-sm leading-relaxed text-white/55">
+        Son sitios con los que trabajo hoy. Podés verlos en vivo.
+      </p>
     </div>
 
     <div class="projects-list mt-8" data-projects-list>
@@ -109,11 +118,6 @@ const ownCards = await Promise.all(own.map(toCardData));
           </div>
         </a>
       ))}
-
-      <div class="group-divider" aria-hidden="true">
-        <span>PROPIOS</span>
-        <i></i>
-      </div>
 
       {ownCards.map((item, idx) => (
         <a
@@ -286,7 +290,7 @@ const ownCards = await Promise.all(own.map(toCardData));
   }
 
   .group-divider span {
-    color: rgb(148 163 184 / 0.9);
+    color: rgb(255 255 255 / 0.5);
     font-size: 0.66rem;
     font-weight: 700;
     letter-spacing: 0.18em;
@@ -298,7 +302,7 @@ const ownCards = await Promise.all(own.map(toCardData));
     display: block;
     width: 100%;
     height: 1px;
-    background: linear-gradient(90deg, rgb(148 163 184 / 0.6), transparent 70%);
+    background: linear-gradient(90deg, rgb(96 165 250 / 0.45), transparent 70%);
   }
 
   .project-row {
@@ -325,7 +329,7 @@ const ownCards = await Promise.all(own.map(toCardData));
 
   .project-row:hover,
   .project-row:focus-visible {
-    border-color: rgb(168 85 247 / 0.75);
+    border-color: rgb(96 165 250 / 0.45);
   }
 
   .row-top {
@@ -339,7 +343,7 @@ const ownCards = await Promise.all(own.map(toCardData));
     margin: 0;
     font-size: 0.74rem;
     font-weight: 500;
-    color: rgb(148 163 184 / 0.85);
+    color: rgb(255 255 255 / 0.45);
   }
 
   .row-title {
@@ -352,7 +356,7 @@ const ownCards = await Promise.all(own.map(toCardData));
     transition:
       color 0.25s ease,
       background-position 0.25s ease;
-    background-image: linear-gradient(90deg, rgb(168 85 247), rgb(96 165 250));
+    background-image: linear-gradient(90deg, rgb(96 165 250), rgb(167 139 250));
     background-size: 100%;
     background-repeat: no-repeat;
     background-position: 0 130%;
@@ -368,18 +372,18 @@ const ownCards = await Promise.all(own.map(toCardData));
 
   .row-type {
     margin: 0;
-    border: 1px solid rgb(148 163 184 / 0.28);
+    border: 1px solid rgb(255 255 255 / 0.12);
     border-radius: 999px;
     padding: 0.28rem 0.6rem;
     font-size: 0.7rem;
-    color: rgb(203 213 225 / 0.9);
+    color: rgb(255 255 255 / 0.55);
     white-space: nowrap;
   }
 
   .row-year {
     margin: 0;
     font-size: 0.74rem;
-    color: rgb(148 163 184 / 0.85);
+    color: rgb(255 255 255 / 0.45);
     white-space: nowrap;
   }
 
@@ -393,7 +397,7 @@ const ownCards = await Promise.all(own.map(toCardData));
     transition:
       opacity 0.22s ease,
       transform 0.22s ease;
-    color: rgb(196 181 253);
+    color: rgb(96 165 250);
   }
 
   .project-row:hover .row-arrow,
@@ -403,7 +407,7 @@ const ownCards = await Promise.all(own.map(toCardData));
   }
 
   .project-row:focus-visible {
-    outline: 1px dashed rgb(148 163 184 / 0.7);
+    outline: 1px dashed rgb(96 165 250 / 0.55);
     outline-offset: 2px;
   }
 
@@ -501,7 +505,7 @@ const ownCards = await Promise.all(own.map(toCardData));
       font-size: 0.69rem;
       padding: 0;
       border: 0;
-      color: rgb(148 163 184 / 0.9);
+      color: rgb(255 255 255 / 0.5);
     }
 
     .row-year {
@@ -535,7 +539,7 @@ const ownCards = await Promise.all(own.map(toCardData));
     }
 
     .project-row.is-open .row-title {
-      color: rgb(168 85 247);
+      color: rgb(167 139 250);
     }
 
     .row-mobile-image {
@@ -548,7 +552,7 @@ const ownCards = await Promise.all(own.map(toCardData));
       margin: 0.7rem 0 0;
       font-size: 0.84rem;
       line-height: 1.5;
-      color: rgb(148 163 184 / 0.95);
+      color: rgb(255 255 255 / 0.55);
     }
 
     .row-mobile-cta-wrap {
