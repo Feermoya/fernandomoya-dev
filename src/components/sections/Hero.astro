@@ -6,31 +6,23 @@ import { site } from '@/data/site';
 
 <section
   id="inicio"
-  class="hero-root hero-immersive hero-root--tight relative flex min-h-[100svh] flex-col justify-between overflow-hidden border-b border-white/[0.08] pb-10 pt-16 sm:min-h-[100svh] sm:pt-18 sm:pb-14 lg:pt-20 lg:pb-16"
+  class="hero-root hero-immersive hero-root--tight relative flex min-h-[calc(100svh-4rem)] flex-col overflow-hidden border-b border-white/[0.08] pb-8 pt-12 max-md:min-h-0 sm:min-h-[calc(100svh-4rem)] sm:pb-14 sm:pt-16 lg:pb-16 lg:pt-14"
   aria-labelledby="hero-heading"
 >
   <HeroCanvas client:load />
 
-  <div class="container-page relative z-10">
-    <div class="hero-content-wrap">
-      <div class="hero-text-scrim" aria-hidden="true"></div>
+  <div class="container-page relative z-10 flex min-h-0 w-full flex-1 flex-col justify-center">
+    <div class="hero-text-scrim hero-text-scrim--center" aria-hidden="true"></div>
+    <div class="hero-content-wrap hero-content-wrap--center">
       <HeroMotion
         client:load
         eyebrow="Diseño web · Desarrollo · Identidad digital"
-        headlinePrefix="Si tu web no está"
-        animatedWords={[
-          "vendiendo",
-          "cargando bien",
-          "transmitiendo confianza",
-          "generando consultas",
-          "funcionando"
-        ]}
-        headlineSuffix="se puede arreglar."
-        lead="Diseño sitios para negocios que quieren explicarse mejor, verse serios y conseguir más consultas."
-        serviceLine=""
-        pillA="Marcas y negocios"
-        ctaPrimary="Hablar conmigo"
-        ctaSecondary="Ver trabajos"
+        staticHeadline={`Una web clara
+vende mejor.`}
+        lead="Armo sitios desde cero para negocios que quieren verse serios y explicar bien lo que hacen."
+        pillA="Webs nuevas para negocios reales"
+        ctaPrimary="Quiero mi web"
+        ctaSecondary="Ver proyectos"
         ctaPrimaryHref={site.social?.whatsapp || '/'}
         ctaSecondaryHref="#proyectos"
       />

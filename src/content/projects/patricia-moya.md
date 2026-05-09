@@ -1,6 +1,6 @@
 ---
-title: Psicología y consulta
-description: Sitio web para consulta psicológica en Mendoza con atención presencial y online. El foco estuvo en ordenar servicios, modalidad y vías de contacto para que una persona entienda rápido el encuadre y pueda solicitar turno o consultar sin fricción.
+title: Psicología profesional
+description: Sitio web para consulta psicológica en Mendoza, con atención presencial y online, pensado para que la persona entienda modalidades, enfoque y cómo pedir turno o escribir sin fricción. El foco estuvo en ordenar servicios, límites claros del espacio terapéutico y contacto por WhatsApp y correo.
 publishDate: 2024-09-01
 kind: client
 projectType: Sitio profesional
@@ -16,10 +16,38 @@ links:
   live: https://www.soypatriciamoya.com/
 ---
 
-## Alcance
+## Contexto
 
-Landing y formulario guiado para presentar la oferta terapéutica, comunicar límites y preferencias del espacio de trabajo, y llevar la conversación a WhatsApp y correo con el mensaje armado desde el mismo sitio.
+Patricia Moya ofrece acompañamiento psicológico y necesitaba un sitio que hable a personas que pueden estar en vulnerabilidad o inseguridad al buscar ayuda. La prioridad no era “vender un estilo”, sino ordenar qué ofrece, cómo es el trabajo terapéutico y por dónde iniciar contacto con respeto y claridad.
 
-## Notas
+Quien entra suele preguntarse si encaja con la profesional, qué modalidades hay y cómo es el proceso para solicitar primera sesión o información. La web debía bajar la ansiedad del primer clic: textos legibles, secciones bien separadas y rutas cortas hacia WhatsApp o correo.
 
-Incluye secciones de servicios y modalidades, flujo para solicitud de terapia, acceso a cursos y piezas de comunicación institucional. El proyecto prioriza contenido legible y rutas claras frente al diseño ornamental.
+En conjunto, el proyecto buscaba equilibrio entre calidez humana y precisión en la información profesional, sin prometer resultados terapéuticos ni usar lenguaje vacío.
+
+## Objetivo
+
+- Presentar servicios y modalidades (presencial u online) de forma explícita.
+- Comunicar el encuadre del espacio terapéutico con claridad y límites entendibles.
+- Facilitar solicitud de contacto o turno con mensajes armados desde el sitio.
+- Ofrecer rutas a información complementaria (por ejemplo cursos o contenidos) sin confundir al visitante nuevo.
+- Garantizar buena lectura en celular, donde muchas búsquedas empiezan.
+
+## Trabajo realizado
+
+Se estructuró el contenido en bloques que siguen el viaje del visitante: quién es la profesional, qué tipo de acompañamiento ofrece, cómo es una consulta y cómo dar el primer paso. El desarrollo frontend incorpora un formulario guiado que ayuda a armar el mensaje inicial y derivarlo a WhatsApp o correo con el contexto necesario.
+
+El diseño responsive prioriza tipografía cómoda y espaciado amplio para lecturas sensibles. Los llamados a la acción están ubicados después de secciones que ya respondieron dudas básicas, para no presionar antes de tiempo.
+
+Las secciones de servicios y modalidades usan títulos directos; donde aplica, se enlaza a recursos adicionales sin mezclarlos con el flujo de primera consulta. El contacto queda visible para reducir fricción cuando la persona decide escribir.
+
+## Decisiones de diseño
+
+La jerarquía visual separa lo emocional —presentación humana del espacio— de lo operativo —cómo solicitar turno o información— para que no compitan. Se priorizó un tono sobrio y cercano, acorde al rubro de salud mental, evitando saturación de elementos decorativos.
+
+La navegación está pensada para pocas decisiones: leer, ubicarse y contactar. Los colores y el ritmo de la página buscan calma sin parecer distantes: la profesional tiene presencia, pero el foco sigue en la utilidad para quien busca ayuda.
+
+El diseño acompaña el contenido terapéutico sin competir con él: la lectura manda.
+
+## Resultado
+
+La web permite hoy que una persona conozca el enfoque, entienda modalidades y dé el primer paso con un mensaje armado y contexto claro. Funciona como puerta de entrada seria al espacio de Patricia: informa, reduce incertidumbre básica y canaliza el contacto de forma ordenada.

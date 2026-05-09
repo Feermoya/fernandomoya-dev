@@ -1,9 +1,9 @@
 ---
-title: Sanación en Movimiento
-description: Proyecto de bienestar que necesitaba transmitir calma y confianza desde el primer scroll. El diseño acompaña el tono del servicio y los formularios de contacto están pensados para no generar fricción.
+title: Bienestar integral online
+description: Sitio web para acompañamientos y prácticas de bienestar, pensado para transmitir calma y dejar el contacto accesible desde el primer pantallazo. El foco estuvo en tono humano, servicios entendibles y formularios que no frenan al visitante.
 publishDate: 2023-11-20
 kind: client
-projectType: Sitio de servicios
+projectType: Sitio de servicios de bienestar
 stack:
   - HTML
   - CSS
@@ -16,10 +16,38 @@ links:
   live: https://sanacionenmovimientooficial.com/
 ---
 
-## Alcance
+## Contexto
 
-Frontend alineado a una lectura tranquila y llamados a la acción claros.
+Sanación en Movimiento ofrece espacios de bienestar y acompañamiento; el sitio tenía que reflejar un tono sereno sin caer en clichés vacíos. Quien entra suele estar explorando opciones personales: necesita entender qué tipo de experiencias ofrecen, en qué formato y cómo concertar sin sentirse expuesto o confundido.
 
-## Notas
+En rubros de bienestar, la primera impresión importa: colores, ritmo y textos demasiado agresivos alejan; demasiado etéreos, en cambio, no explican con claridad. El equilibrio fue mostrar humanidad con información concreta.
 
-PLACEHOLDER: detallar entregables y herramientas usadas en producción.
+La web debía guiar al visitante desde la curiosidad hasta el contacto con pasos cortos y mensajes que respeten la sensibilidad del tema.
+
+## Objetivo
+
+- Presentar servicios y modalidades de forma clara y sin jerga innecesaria.
+- Transmitir confianza y calma sin prometer resultados mágicos.
+- Facilitar consultas y reservas con formularios simples y llamados a la acción visibles.
+- Que la lectura sea cómoda en celular, donde muchas búsquedas empiezan.
+- Mantener una jerarquía visual que invite a bajar la velocidad de lectura, no a saturar.
+
+## Trabajo realizado
+
+Se estructuró el contenido en secciones que cuentan qué es el espacio, qué ofertas hay y cómo dar el primer paso. El desarrollo frontend prioriza transiciones suaves y tipografía legible; los formularios reducen campos al mínimo razonable para no cortar el impulso de escribir.
+
+El diseño responsive organiza bloques en una columna fluida en pantallas chicas, con botones amplios y contrastes que no cansan la vista. Los llamados a la acción se ubican después de párrafos que ya contextualizan el servicio.
+
+Si hay integración con WhatsApp o correo, queda explícita para quien prefiere canal informal. La jerarquía visual separa testimonios o detalles secundarios del camino principal hacia el contacto.
+
+## Decisiones de diseño
+
+La información se ordenó de lo general —propuesta del espacio— a lo concreto —actividades, agendas o formas de participar—. Visualmente se priorizaron paletas y ritmo pausado, acordes a bienestar, sin sacrificar contraste ni legibilidad.
+
+La navegación evita laberintos: pocas secciones, títulos descriptivos y CTAs que repiten la misma acción en puntos naturales del recorrido.
+
+El diseño acompaña el rubro sin competir con el mensaje: espacio en blanco, fotografía cuidada si aplica y textos que son el centro.
+
+## Resultado
+
+La web cumple hoy como introducción serena al espacio: explica qué pueden encontrar, reduce fricción para consultar y deja claro cómo continuar. Quien entra puede informarse con calma y escribir cuando esté listo, sin sentir presión artificial.

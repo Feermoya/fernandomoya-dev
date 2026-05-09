@@ -606,6 +606,52 @@
     padding: 0.75rem 0;
   }
 
+  /** Hero centrado (referencia tipo Stitch): sin offset lateral, ancho completo del container */
+  .hero-content-wrap.hero-content-wrap--center {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: none;
+    width: 100%;
+  }
+
+  @media (max-width: 640px) {
+    .hero-content-wrap.hero-content-wrap--center {
+      min-height: auto;
+      display: flex;
+      justify-content: center;
+      padding-top: 0.25rem;
+      padding-bottom: 0.5rem;
+    }
+  }
+
+  /** Legibilidad suave detrás del bloque de texto centrado */
+  .hero-text-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 92% 72% at 50% 42%,
+      rgba(5, 8, 24, 0.42),
+      transparent 70%
+    );
+  }
+
+  .hero-text-scrim--center {
+    inset: -4% -8%;
+  }
+
+  @media (max-width: 640px) {
+    .hero-text-scrim.hero-text-scrim--center {
+      background: radial-gradient(
+        ellipse 110% 65% at 50% 38%,
+        rgba(5, 8, 24, 0.58),
+        transparent 68%
+      );
+      opacity: 0.92;
+    }
+  }
+
   .hero-content-wrap > * {
     position: relative;
     z-index: 1;

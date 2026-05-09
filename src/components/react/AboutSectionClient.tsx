@@ -12,8 +12,8 @@ type Props = {
   profileAlt: string;
   heading: string;
   body: string;
-  linkedin: string;
   email: string;
+  whatsappUrl: string;
   metrics: readonly Metric[];
 };
 
@@ -57,8 +57,8 @@ export default function AboutSectionClient({
   profileAlt,
   heading,
   body,
-  linkedin,
   email,
+  whatsappUrl,
   metrics,
 }: Props) {
   const reduce = useReducedMotion();
@@ -71,6 +71,8 @@ export default function AboutSectionClient({
 
   useLayoutEffect(() => {
     if (reduce || !aboutLabelRef.current) return;
+    if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 768px)').matches) return;
+
     const el = aboutLabelRef.current;
     const split = new SplitType(el, { types: 'chars' });
     const chars = (split.chars ?? []) as HTMLElement[];
@@ -203,16 +205,18 @@ export default function AboutSectionClient({
                 <ResultsChart />
               </motion.div>
 
-              <motion.div variants={textChildren} className="mt-6 flex flex-wrap items-center gap-3">
+              <motion.div variants={textChildren} className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
                 <a
                   className="text-xs text-muted underline-offset-4 transition hover:text-accent hover:underline"
-                  href={linkedin}
+                  href={whatsappUrl}
                   rel="noreferrer"
                   target="_blank"
                 >
-                  LinkedIn
+                  WhatsApp
                 </a>
-                <span className="text-xs text-muted/70">·</span>
+                <span className="text-xs text-muted/70" aria-hidden="true">
+                  ·
+                </span>
                 <a
                   className="text-[13px] text-white/45 no-underline transition duration-150 hover:text-white/80"
                   href={`mailto:${email}`}

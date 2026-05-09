@@ -12,6 +12,8 @@ type Props = {
   headlinePrefix?: string;
   animatedWords?: string[];
   headlineSuffix?: string;
+  /** H1 fijo (multilínea con `\n`); si existe, no se usa TypeAnimation ni prefijo/sufijo animados. */
+  staticHeadline?: string;
   lead: string;
   /** Línea de invitación (tono cliente). */
   serviceLine?: string;
@@ -59,6 +61,7 @@ export default function HeroMotion({
   headlinePrefix,
   animatedWords,
   headlineSuffix,
+  staticHeadline,
   lead,
   serviceLine,
   pillA,
@@ -73,9 +76,10 @@ export default function HeroMotion({
   const prefixRef = useRef<HTMLSpanElement>(null);
   const suffixRef = useRef<HTMLSpanElement>(null);
   const hasService = Boolean(serviceLine?.trim());
+  const useStaticHero = Boolean(staticHeadline?.trim());
 
-  // Si se proveen props animadas, usar animación, si no, fallback a headline clásico
-  const showAnimated = headlinePrefix && animatedWords && animatedWords.length > 0 && headlineSuffix;
+  const showAnimated =
+    !useStaticHero && headlinePrefix && animatedWords && animatedWords.length > 0 && headlineSuffix;
 
   /** Evita CLS: reserva espacio tipo “ch” según la palabra/frase más larga del ciclo */
   const typeSlotMinCh = useMemo(() => {
@@ -115,6 +119,88 @@ export default function HeroMotion({
       splits.forEach((s) => s.revert());
     };
   }, [reduce, showAnimated, headlinePrefix, headlineSuffix]);
+
+  if (useStaticHero) {
+    return (
+      <motion.div
+        className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-5xl -translate-y-6 flex-col items-center justify-center px-5 pb-16 pt-20 text-center max-md:min-h-0 max-md:-translate-y-4 max-md:pb-10 max-md:pt-8 sm:min-h-[calc(100svh-4rem)] sm:px-6 sm:pb-16 md:-translate-y-10 lg:-translate-y-16 xl:-translate-y-20"
+        variants={staggerContainer}
+        initial={reduce ? 'visible' : 'hidden'}
+        animate="visible"
+      >
+        <motion.p
+          className="text-eyebrow text-white/40"
+          variants={staggerItem}
+        >
+          {eyebrow}
+        </motion.p>
+
+        <motion.h1
+          id="hero-heading"
+          className="mt-4 max-w-3xl text-balance whitespace-pre-line text-[clamp(3rem,13vw,4.7rem)] font-bold leading-[0.92] tracking-[-0.055em] text-white sm:mt-5 sm:max-w-4xl sm:text-[clamp(4rem,8vw,7rem)]"
+          variants={staggerItem}
+        >
+          {staticHeadline!.trim()}
+        </motion.h1>
+
+        <motion.p
+          className="mx-auto mt-5 max-w-[34rem] text-balance text-[1rem] font-normal leading-7 text-white/70 sm:text-lg"
+          variants={staggerItem}
+        >
+          {lead}
+        </motion.p>
+
+        {hasService ? (
+          <motion.p
+            className="mx-auto mt-3 max-w-[30rem] text-balance text-sm leading-6 text-white/45 sm:text-base"
+            variants={staggerItem}
+          >
+            {serviceLine!.trim()}
+          </motion.p>
+        ) : null}
+
+        <motion.div
+          className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
+          variants={staggerItem}
+        >
+          <MagneticButton
+            href={ctaPrimaryHref || '/'}
+            shimmer
+            className="!rounded-xl !bg-[#3b4fd8] shadow-[0_16px_44px_rgba(59,79,216,0.35)] hover:!bg-[#4f5fe8]"
+          >
+            {ctaPrimary}
+            <svg
+              className="h-4 w-4 shrink-0 opacity-95"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </MagneticButton>
+          <MagneticButton
+            href={ctaSecondaryHref || '#proyectos'}
+            variant="ghost"
+            className="!rounded-xl !border-[1.5px] !border-white/[0.25] !bg-transparent !text-white hover:!border-white/[0.5] hover:!bg-transparent"
+          >
+            {ctaSecondary}
+          </MagneticButton>
+        </motion.div>
+
+        <motion.div
+          className="mt-7 flex flex-col items-center gap-2 sm:mt-8"
+          variants={staggerItem}
+        >
+          <ShimmerPill>{pillA}</ShimmerPill>
+          {pillB?.trim() ? <ShimmerPill>{pillB.trim()}</ShimmerPill> : null}
+        </motion.div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

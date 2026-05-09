@@ -35,14 +35,14 @@ Base de portfolio personal pensada para **carga rápida**, **poco JS** y un dise
 
 ## Placeholders personales
 
-- `src/data/site.ts` — email y LinkedIn (`PLACEHOLDER_*`).
+- `src/data/site.ts` — email y WhatsApp (`PLACEHOLDER_*`).
 - `src/data/placeholders.ts` — texto `PLACEHOLDER_BIO` y nota de foto.
 - Bloques `PLACEHOLDER_*` en `HomeAbout.astro` (foto).
 
 ## Config que conviene ajustar primero
 
 - `astro.config.mjs` → `site` (URL canónica + sitemap).
-- `src/data/site.ts` → identidad, email, redes.
+- `src/data/site.ts` → identidad, email, WhatsApp.
 - `public/robots.txt` → dominio del sitemap (debe coincidir con `site`).
 
 ## Stack

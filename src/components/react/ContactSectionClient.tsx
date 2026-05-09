@@ -4,7 +4,6 @@ import { DURATION_ENTER, EASE_OUT_SOFT } from '@/motion/easing';
 type Props = {
   whatsappUrl: string;
   email: string;
-  linkedin: string;
 };
 
 const view = { once: true as const, margin: '-80px' as const };
@@ -26,7 +25,7 @@ const leftItem: Variants = {
   },
 };
 
-export default function ContactSectionClient({ whatsappUrl, email, linkedin }: Props) {
+export default function ContactSectionClient({ whatsappUrl, email }: Props) {
   const reduce = useReducedMotion();
 
   return (
@@ -54,10 +53,10 @@ export default function ContactSectionClient({ whatsappUrl, email, linkedin }: P
               className="mt-2 text-lg font-semibold tracking-tight text-text sm:text-xl"
               variants={leftItem}
             >
-              ¿Tenés un proyecto o tu web necesita una vuelta de tuerca?
+              ¿Querés crear una web para tu negocio?
             </motion.h2>
             <motion.p className="mt-3 text-sm leading-relaxed text-muted" variants={leftItem}>
-              Contame el nombre de tu negocio y qué querés mejorar. Te respondo el mismo día con lo que haría yo.
+              Contame qué vendés, qué tipo de página necesitás y qué te gustaría mostrar. Te respondo con una idea concreta de cómo la armaría.
             </motion.p>
             <motion.div className="mt-5 flex flex-col gap-2.5" variants={leftItem}>
               <a
@@ -66,25 +65,17 @@ export default function ContactSectionClient({ whatsappUrl, email, linkedin }: P
                 rel="noreferrer"
                 className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-transparent bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-accent-hover"
               >
-                Escribime por WhatsApp
+                Quiero empezar mi web
               </a>
               <p className="text-sm leading-relaxed text-muted">
-                <span>o por </span>
-                <a
-                  className="underline-offset-4 transition hover:text-accent hover:underline"
-                  href={linkedin}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  LinkedIn
-                </a>
-                <span> · o por </span>
+                <span>También podés escribirme por </span>
                 <a
                   className="underline-offset-4 transition hover:text-accent hover:underline"
                   href={`mailto:${email}`}
                 >
                   mail
                 </a>
+                <span>.</span>
               </p>
             </motion.div>
           </motion.div>
