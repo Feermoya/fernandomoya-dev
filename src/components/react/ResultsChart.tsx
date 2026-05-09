@@ -448,7 +448,7 @@ export default function ResultsChart() {
           Lo importante
         </p>
         <h3 className="mt-4 text-[1.35rem] font-semibold leading-tight tracking-tight text-white sm:text-2xl">
-          Una web tiene que hacer tres cosas bien.
+          Una web tiene que hacer cuatro cosas bien.
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-white/50 sm:text-[0.95rem]">
           Pasá el mouse por cada punto para verlo en acción.
