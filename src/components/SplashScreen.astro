@@ -117,8 +117,8 @@
       rgba(109, 40, 217, 0.09) 44%,
       transparent 70%
     );
-    animation: fm-orb-in 1.2s ease forwards,
-               fm-breathe 4s ease-in-out 1.4s infinite;
+    animation: fm-orb-in 0.55s ease forwards,
+               fm-breathe 3.5s ease-in-out 0.95s infinite;
     pointer-events: none;
   }
   @keyframes fm-orb-in {
@@ -180,7 +180,7 @@
     width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-    animation: fm-cinematic-camera-kick 0.2s ease-out forwards 1.82s;
+    animation: fm-shake-clean 0.12s ease-out forwards 0.98s;
     transform: translateZ(0);
   }
 
@@ -194,33 +194,45 @@
     box-sizing: border-box;
   }
 
-  @keyframes fm-cinematic-camera-kick {
+  @keyframes fm-shake-clean {
     0% {
-      transform: translate3d(0, 0, 0) scale(1);
+      transform: translate3d(0, 0, 0);
     }
-    38% {
-      transform: translate3d(-0.45px, 0.26px, 0) scale(1.0012);
+    45% {
+      transform: translate3d(-0.4px, 0.2px, 0);
     }
     100% {
-      transform: translate3d(0, 0, 0) scale(1);
+      transform: translate3d(0, 0, 0);
     }
   }
 
   /* ── Marca FM: stage SVG cinematográfico ── */
+  /*
+    El viewBox y el trazo del FM dejan más aire a la derecha: el centro óptico queda
+    a la izquierda del centro del bloque. Corregimos solo el stage (no .fm-info).
+  */
   .fm-letters,
   .fm-svg-stage {
+    --fm-logo-center-offset: clamp(18px, 2.6vw, 34px);
     position: relative;
     width: var(--fm-stage-w, clamp(280px, 36vw, 430px));
     height: var(--fm-stage-h, clamp(145px, 19vw, 225px));
     flex-shrink: 0;
     margin-inline: auto;
-    transform: translateZ(0);
+    transform: translate3d(var(--fm-logo-center-offset), 0, 0) translateZ(0);
     z-index: 2;
     isolation: isolate;
     -webkit-font-smoothing: antialiased;
     backface-visibility: hidden;
     /* Una sola curva global en animaciones FM = menos trabajo de compositor por frame */
     --fm-motion: cubic-bezier(0.34, 0.962, 0.36, 1);
+  }
+
+  @media (max-width: 640px) {
+    .fm-letters,
+    .fm-svg-stage {
+      --fm-logo-center-offset: 12px;
+    }
   }
   .fm-letters::before {
     content: '';
@@ -233,7 +245,7 @@
     );
     border-radius: 50%;
     opacity: 0;
-    animation: fm-glow-in 0.7s ease forwards 0.9s;
+    animation: fm-glow-in 0.45s ease forwards 0.12s;
     pointer-events: none;
     z-index: -1;
   }
@@ -258,7 +270,7 @@
     opacity: 0;
     pointer-events: none;
     mix-blend-mode: screen;
-    animation: fm-final-sheen 0.78s ease-out forwards 2.62s;
+    animation: fm-final-sheen 0.48s ease-out forwards 1.36s;
     z-index: 8;
   }
 
@@ -289,27 +301,27 @@
     opacity: 0;
     filter: blur(5px);
     pointer-events: none;
-    animation: fm-svg-contact-shadow 2.45s var(--fm-motion) forwards 0.12s;
+    animation: fm-svg-contact-shadow 1.05s var(--fm-motion) forwards 0.08s;
     z-index: -1;
   }
 
   @keyframes fm-svg-contact-shadow {
     0%,
-    42% {
+    38% {
       opacity: 0;
       transform: translateX(-50%) scaleX(0.38);
     }
-    61% {
-      opacity: 0.18;
-      transform: translateX(-40%) scaleX(0.78);
+    54% {
+      opacity: 0.2;
+      transform: translateX(-42%) scaleX(0.82);
     }
-    69% {
-      opacity: 0.44;
-      transform: translateX(-30%) scaleX(1.2);
+    62% {
+      opacity: 0.38;
+      transform: translateX(-33%) scaleX(1.12);
     }
-    76% {
-      opacity: 0.26;
-      transform: translateX(-38%) scaleX(0.86);
+    72% {
+      opacity: 0.22;
+      transform: translateX(-44%) scaleX(0.88);
     }
     100% {
       opacity: 0.3;
@@ -336,7 +348,7 @@
     filter: blur(0.25px) drop-shadow(0 0 6px rgba(96, 165, 250, 0.22));
     pointer-events: none;
     z-index: 6;
-    animation: fm-svg-contact-rim 0.36s var(--fm-motion) forwards 1.8s;
+    animation: fm-svg-contact-rim 0.24s ease-out forwards 0.98s;
   }
 
   @keyframes fm-svg-contact-rim {
@@ -368,7 +380,7 @@
       radial-gradient(ellipse at 72% 50%, rgba(167, 139, 250, 0.16), transparent 60%);
     filter: blur(5px);
     z-index: 1;
-    animation: fm-svg-impact-dust 0.46s var(--fm-motion) forwards 1.8s;
+    animation: fm-svg-impact-dust 0.3s ease-out forwards 0.98s;
   }
 
   @keyframes fm-svg-impact-dust {
@@ -377,7 +389,7 @@
       transform: translateX(-50%) scaleX(0.4) translateY(0);
     }
     35% {
-      opacity: 0.24;
+      opacity: 0.14;
       transform: translateX(-50%) scaleX(1) translateY(2px);
     }
     100% {
@@ -424,7 +436,7 @@
     backface-visibility: hidden;
   }
 
-  /* Motion del par FM: GSAP (timeline + easing por tramo) — ver <script> */
+  /* Motion del par FM: GSAP — ver <script> */
   .fm-svg-f {
     opacity: 0;
     transform-origin: 58% 90%;
@@ -474,10 +486,10 @@
     width: 60px;
     height: 30px;
     opacity: 0;
-    transform: translate(-50%, -50%) rotate(-8deg) scale(0.75);
+    transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 7;
-    animation: fm-impact-accent 0.3s ease-out forwards 1.8s;
+    animation: fm-impact-accent 0.24s ease-out forwards 0.98s;
     background: none;
     border: none;
     border-radius: 0;
@@ -507,26 +519,24 @@
   .fm-spark::before {
     width: 48px;
     transform: translate(-8px, -5px) rotate(-18deg) scaleX(0);
-    animation: fm-impact-line-a 0.29s ease-out forwards 1.8s;
+    animation: fm-impact-line-a 0.22s ease-out forwards 0.98s;
   }
 
   .fm-spark::after {
     width: 36px;
     transform: translate(-5px, 7px) rotate(18deg) scaleX(0);
-    animation: fm-impact-line-b 0.28s ease-out forwards 1.82s;
+    animation: fm-impact-line-b 0.2s ease-out forwards 1s;
   }
 
   @keyframes fm-impact-accent {
     0% {
       opacity: 0;
-      transform: translate(-50%, -50%) rotate(-8deg) scale(0.75);
     }
-    22% {
+    30% {
       opacity: 1;
     }
     100% {
       opacity: 0;
-      transform: translate(-50%, -50%) rotate(-8deg) scale(1.05);
     }
   }
 
@@ -583,7 +593,7 @@
     letter-spacing: -0.01em;
     font-family: 'Nunito', sans-serif;
     opacity: 0;
-    animation: fm-fade-up 0.45s ease forwards 2.4s;
+    animation: fm-fade-up 0.34s ease forwards 1.24s;
   }
 
   /* ── Tagline — cada palabra entra por separado ── */
@@ -602,16 +612,16 @@
     letter-spacing: 0.04em;
     opacity: 0;
     transform: translateY(8px);
-    animation: fm-tag-in 0.4s ease forwards;
-    animation-delay: calc(2.58s + var(--i) * 0.1s);
+    animation: fm-tag-in 0.32s ease forwards;
+    animation-delay: calc(1.38s + var(--i) * 0.075s);
   }
 
   .fm-tag-dot {
     font-size: 0.85rem;
     color: rgba(91, 127, 255, 0.7);
     opacity: 0;
-    animation: fm-tag-in 0.3s ease forwards;
-    animation-delay: calc(2.58s + var(--i) * 0.1s);
+    animation: fm-tag-in 0.26s ease forwards;
+    animation-delay: calc(1.38s + var(--i) * 0.075s);
   }
 
   @keyframes fm-tag-in {
@@ -635,8 +645,8 @@
       rgba(167,139,250,0.6) 70%,
       transparent
     );
-    animation: fm-underline 0.8s ease forwards;
-    animation-delay: 3.1s;
+    animation: fm-underline 0.45s ease forwards;
+    animation-delay: 1.78s;
   }
   .fm-tagline {
     position: relative;
@@ -662,7 +672,7 @@
     margin-top: 0.35rem;
     overflow: hidden;
     opacity: 0;
-    animation: fm-fade-up 0.3s ease forwards 2.96s;
+    animation: fm-fade-up 0.24s ease forwards 1.72s;
   }
   .fm-bar-fill {
     display: block;
@@ -670,7 +680,7 @@
     width: 0%;
     background: linear-gradient(90deg, #60a5fa, #a78bfa);
     border-radius: 2px;
-    animation: fm-bar 0.75s ease forwards 3.04s;
+    animation: fm-bar 0.55s ease forwards 1.78s;
   }
   @keyframes fm-bar {
     from { width: 0%; }
@@ -695,7 +705,7 @@
       rgba(91,127,255,0.8) 50%,
       rgba(167,139,250,0.8) 100%
     );
-    animation: fm-load 2.4s ease forwards 0.05s;
+    animation: fm-load 2.05s ease forwards 0.04s;
   }
   @keyframes fm-load {
     0%   { width: 0%;   opacity: 1; }
@@ -751,8 +761,8 @@
 <script>
   import gsap from 'gsap';
 
-  const MIN_VISIBLE_MS = 4100;
-  const MAX_WAIT_MS    = 5000;
+  const MIN_VISIBLE_MS = 2600;
+  const MAX_WAIT_MS    = 3300;
 
   /** GSAP: timeline estable en SVG (sin dos `animation` peleando por `transform`). */
   let fmLogoGsapCtx = null;
@@ -778,40 +788,34 @@
 
     killFmLogoGsap();
 
-    /* "none" = lineal entre keyframes: power2.inOut en tramos de 0.1–0.15s
-       se siente como arranque/parada en cada punto (muy “trabado” al entrar la F). */
-    const easeFKey = 'none';
-    const easeMInner = 'none';
+    const easeFKey = 'power1.inOut';
+    const easeMInner = 'power1.out';
     const easeMOuter = 'power2.out';
 
-    const fDur = 2.45;
-    const fStart = 0.12;
+    const fDur = 1.48;
+    const fStart = 0.08;
+
     const fStops = [
-      { p: 0, o: 0, x: -86, y: -160, r: -12, sx: 0.98, sy: 1.02 },
-      { p: 0.1, o: 1, x: -68, y: -118, r: -9, sx: 0.993, sy: 1.01 },
-      { p: 0.22, o: 1, x: -46, y: -62, r: -6, sx: 1, sy: 1 },
-      { p: 0.32, o: 1, x: -38, y: -24, r: -4, sx: 1.035, sy: 0.965 },
-      { p: 0.42, o: 1, x: -14, y: -84, r: 3, sx: 0.97, sy: 1.05 },
-      { p: 0.48, o: 1, x: 10, y: -116, r: 5.2, sx: 0.95, sy: 1.07 },
-      { p: 0.61, o: 1, x: 58, y: -58, r: 6, sx: 0.982, sy: 1.03 },
-      { p: 0.68, o: 1, x: 72, y: -36, r: 3.2, sx: 1, sy: 1 },
-      { p: 0.71, o: 1, x: 79, y: -29, r: 1, sx: 1.016, sy: 0.984 },
-      { p: 0.74, o: 1, x: 76, y: -28, r: 0.2, sx: 1.012, sy: 0.988 },
-      { p: 0.82, o: 1, x: 48, y: -54, r: -2, sx: 0.986, sy: 1.03 },
-      { p: 0.9, o: 1, x: 20, y: -16, r: 0.6, sx: 1.004, sy: 0.996 },
-      { p: 0.96, o: 1, x: 6, y: -4, r: -0.2, sx: 1, sy: 1.004 },
+      { p: 0, o: 0, x: -56, y: -96, r: -9, sx: 0.98, sy: 1.02 },
+      { p: 0.1, o: 1, x: -46, y: -72, r: -7, sx: 0.99, sy: 1.01 },
+      { p: 0.24, o: 1, x: -30, y: -26, r: -3, sx: 1.03, sy: 0.97 },
+      { p: 0.42, o: 1, x: 8, y: -72, r: 4, sx: 0.96, sy: 1.06 },
+      { p: 0.58, o: 1, x: 38, y: -30, r: 3, sx: 0.99, sy: 1.01 },
+      { p: 0.65, o: 1, x: 46, y: -18, r: 0.8, sx: 1.025, sy: 0.975 },
+      { p: 0.7, o: 1, x: 44, y: -17, r: 0.2, sx: 1.018, sy: 0.982 },
+      { p: 0.8, o: 1, x: 24, y: -42, r: -1.8, sx: 0.98, sy: 1.035 },
+      { p: 0.9, o: 1, x: 8, y: -8, r: 0.5, sx: 1.005, sy: 0.995 },
       { p: 1, o: 1, x: 0, y: 0, r: 0, sx: 1, sy: 1 },
     ];
 
-    const mDur = 1.02;
-    const mStart = 1.62;
+    const mDur = 0.54;
+    const mStart = 0.92;
+
     const mStops = [
       { p: 0, x: 0, y: 0, r: 0, sx: 1, sy: 1 },
-      { p: 0.11, x: 3, y: 11, r: 0.12, sx: 1.08, sy: 0.88 },
-      { p: 0.2, x: 5, y: 18, r: 0.16, sx: 1.12, sy: 0.82 },
-      { p: 0.4, x: 2, y: -8, r: -0.1, sx: 0.96, sy: 1.07 },
-      { p: 0.6, x: 1, y: 5, r: 0.05, sx: 1.012, sy: 0.98 },
-      { p: 0.82, x: 0, y: -2, r: 0, sx: 0.996, sy: 1.01 },
+      { p: 0.24, x: 3, y: 13, r: 0.12, sx: 1.14, sy: 0.8 },
+      { p: 0.5, x: 1, y: -6, r: -0.08, sx: 0.95, sy: 1.08 },
+      { p: 0.74, x: 0, y: 3, r: 0.03, sx: 1.02, sy: 0.98 },
       { p: 1, x: 0, y: 0, r: 0, sx: 1, sy: 1 },
     ];
 
@@ -832,9 +836,9 @@
 
       tl.fromTo(
         mOuter,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.42, ease: easeMOuter },
-        0.06
+        { opacity: 0, y: 11 },
+        { opacity: 1, y: 0, duration: 0.14, ease: easeMOuter },
+        0.04
       );
 
       const s0 = fStops[0];

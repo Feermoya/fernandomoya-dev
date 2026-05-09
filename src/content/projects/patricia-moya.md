@@ -1,9 +1,9 @@
 ---
-title: Patricia Moya
-description: Marca personal donde el mensaje tenía que hablar antes que el diseño. Trabajé la jerarquía de cada sección para que quien llega entienda quién es, qué hace y cómo contactarla sin tener que buscar.
+title: Psicología y consulta
+description: Sitio web para consulta psicológica en Mendoza con atención presencial y online. El foco estuvo en ordenar servicios, modalidad y vías de contacto para que una persona entienda rápido el encuadre y pueda solicitar turno o consultar sin fricción.
 publishDate: 2024-09-01
 kind: client
-projectType: Marca personal
+projectType: Sitio profesional
 stack:
   - HTML
   - CSS
@@ -18,8 +18,8 @@ links:
 
 ## Alcance
 
-Estructura de contenidos y frontend para acompañar la propuesta de la marca sin ruido visual.
+Landing y formulario guiado para presentar la oferta terapéutica, comunicar límites y preferencias del espacio de trabajo, y llevar la conversación a WhatsApp y correo con el mensaje armado desde el mismo sitio.
 
 ## Notas
 
-PLACEHOLDER: sumar capturas reales y texto final del caso.
+Incluye secciones de servicios y modalidades, flujo para solicitud de terapia, acceso a cursos y piezas de comunicación institucional. El proyecto prioriza contenido legible y rutas claras frente al diseño ornamental.
