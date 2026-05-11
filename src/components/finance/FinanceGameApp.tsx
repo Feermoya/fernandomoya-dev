@@ -1,6 +1,15 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FinanceEntry, FinanceGoal, FinanceState } from '@/lib/finance/types';
-import { getInitialFinanceState, loadFinanceState, saveFinanceState } from '@/lib/finance/storage';
+import {
+  getInitialFinanceState,
+  loadFinanceState,
+  saveFinanceState,
+  getFinanceSyncId,
+  setFinanceSyncId,
+  getFinanceLocalSavedAt,
+  setFinanceLocalSavedAt,
+} from '@/lib/finance/storage';
+import { fetchFinanceRemote, isFinanceCloudConfigured, upsertFinanceRemote } from '@/lib/finance/cloudSync';
 import { FinanceDashboard } from '@/components/finance/FinanceDashboard';
 import { FinanceMissionCard } from '@/components/finance/FinanceMissionCard';
 import { FinanceQuickMetrics } from '@/components/finance/FinanceQuickMetrics';
@@ -13,18 +22,179 @@ import { getMonthlyMissionView } from '@/lib/finance/levels';
 
 const INV_TIMELINE = { icon: '📈', bar: 'bg-emerald-500' } as const;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export default function FinanceGameApp() {
   const [state, setState] = useState<FinanceState>(() =>
     typeof window !== 'undefined' ? loadFinanceState() : getInitialFinanceState(),
   );
+  const [linkedSyncId, setLinkedSyncId] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? getFinanceSyncId() : null,
+  );
+  const [cloudErr, setCloudErr] = useState<string | null>(null);
 
-  const persist = useCallback((updater: (prev: FinanceState) => FinanceState) => {
-    setState((prev) => {
-      const next = updater(prev);
-      saveFinanceState(next);
-      return next;
-    });
+  const remoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleRemoteSave = useCallback((syncId: string, next: FinanceState) => {
+    if (!isFinanceCloudConfigured()) return;
+    if (remoteTimer.current) clearTimeout(remoteTimer.current);
+    remoteTimer.current = setTimeout(() => {
+      remoteTimer.current = null;
+      void upsertFinanceRemote(syncId, next)
+        .then((iso) => {
+          setFinanceLocalSavedAt(iso);
+          setCloudErr(null);
+        })
+        .catch((e: unknown) => {
+          setCloudErr(e instanceof Error ? e.message : 'Error al guardar en la nube.');
+        });
+    }, 600);
   }, []);
+
+  const persist = useCallback(
+    (updater: (prev: FinanceState) => FinanceState) => {
+      setState((prev) => {
+        const next = updater(prev);
+        saveFinanceState(next);
+        if (typeof window !== 'undefined' && isFinanceCloudConfigured()) {
+          let sid = getFinanceSyncId();
+          if (!sid) {
+            sid = crypto.randomUUID();
+            setFinanceSyncId(sid);
+          }
+          scheduleRemoteSave(sid, next);
+          requestAnimationFrame(() => setLinkedSyncId(getFinanceSyncId()));
+        }
+        return next;
+      });
+    },
+    [scheduleRemoteSave],
+  );
+
+  const applySyncFromId = useCallback(async (rawId: string) => {
+    const id = rawId.trim();
+    if (!UUID_RE.test(id)) {
+      setCloudErr('El ID no es un UUID válido.');
+      return;
+    }
+    setCloudErr(null);
+    try {
+      setFinanceSyncId(id);
+      setLinkedSyncId(id);
+      const remote = await fetchFinanceRemote(id);
+      const local = loadFinanceState();
+      if (!remote) {
+        setState(local);
+        saveFinanceState(local);
+        const iso = await upsertFinanceRemote(id, local);
+        setFinanceLocalSavedAt(iso);
+        return;
+      }
+      const la = getFinanceLocalSavedAt();
+      const rt = new Date(remote.updatedAt).getTime();
+      const lt = la ? new Date(la).getTime() : 0;
+      const pick = rt > lt ? remote.state : local;
+      setState(pick);
+      saveFinanceState(pick, false);
+      const iso = await upsertFinanceRemote(id, pick);
+      setFinanceLocalSavedAt(iso);
+    } catch (e) {
+      setCloudErr(e instanceof Error ? e.message : 'No se pudo vincular.');
+      throw e;
+    }
+  }, []);
+
+  const pullRemoteIfNewer = useCallback(async () => {
+    if (!isFinanceCloudConfigured()) return;
+    const sid = getFinanceSyncId();
+    if (!sid) return;
+    try {
+      const remote = await fetchFinanceRemote(sid);
+      if (!remote) return;
+      const la = getFinanceLocalSavedAt();
+      if (new Date(remote.updatedAt) > new Date(la || 0)) {
+        setState(remote.state);
+        saveFinanceState(remote.state, false);
+        setFinanceLocalSavedAt(remote.updatedAt);
+        setCloudErr(null);
+      }
+    } catch {
+      /* silencioso al volver a la pestaña */
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function boot() {
+      if (typeof window === 'undefined') return;
+
+      const sp = new URLSearchParams(window.location.search);
+      for (const key of ['sync', 'cloud'] as const) {
+        const v = sp.get(key);
+        if (v && UUID_RE.test(v.trim())) {
+          setFinanceSyncId(v.trim());
+          window.history.replaceState({}, document.title, window.location.pathname);
+          break;
+        }
+      }
+
+      setLinkedSyncId(getFinanceSyncId());
+
+      if (!isFinanceCloudConfigured()) return;
+
+      const sid = getFinanceSyncId();
+      if (!sid) return;
+
+      try {
+        const local = loadFinanceState();
+        const remote = await fetchFinanceRemote(sid);
+        if (cancelled) return;
+
+        if (!remote) {
+          const has =
+            local.entries.length > 0 ||
+            local.goals.length > 0 ||
+            local.challenges.length > 0 ||
+            (typeof local.wealthTarget === 'number' && local.wealthTarget > 0);
+          if (has) {
+            const iso = await upsertFinanceRemote(sid, local);
+            setFinanceLocalSavedAt(iso);
+          }
+        } else {
+          const la = getFinanceLocalSavedAt();
+          const rt = new Date(remote.updatedAt).getTime();
+          const lt = la ? new Date(la).getTime() : 0;
+          if (rt > lt) {
+            setState(remote.state);
+            saveFinanceState(remote.state, false);
+            setFinanceLocalSavedAt(remote.updatedAt);
+          } else if (lt > rt) {
+            const iso = await upsertFinanceRemote(sid, local);
+            setFinanceLocalSavedAt(iso);
+          }
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setCloudErr(e instanceof Error ? e.message : 'Error al leer la nube.');
+        }
+      }
+    }
+
+    void boot();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isFinanceCloudConfigured()) return;
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void pullRemoteIfNewer();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [pullRemoteIfNewer]);
 
   const replaceState = useCallback(
     (next: FinanceState) => {
@@ -92,7 +262,9 @@ export default function FinanceGameApp() {
     if (
       typeof window !== 'undefined' &&
       !window.confirm(
-        '¿Borrar todas las inversiones registradas, objetivos y retos en este dispositivo? No se puede deshacer.',
+        isFinanceCloudConfigured()
+          ? '¿Borrar todo en este navegador y en la nube (mismo libro)? No se puede deshacer.'
+          : '¿Borrar todas las inversiones registradas, objetivos y retos en este dispositivo? No se puede deshacer.',
       )
     ) {
       return;
@@ -131,7 +303,10 @@ export default function FinanceGameApp() {
               No estás ahorrando por miedo. Estás comprando opciones.
             </p>
             <p className="mt-2 text-sm font-medium text-amber-100/85">
-              Cargá la primera inversión del mes: datos en tu navegador. Exportá JSON si cambiás de equipo.
+              Cargá la primera inversión del mes.
+              {isFinanceCloudConfigured()
+                ? ' Con la nube configurada, se guarda solo; en el celu abrí una vez el enlace de “tu libro” (abajo en Respaldo).'
+                : ' Sin nube, los datos son solo de este navegador: usá Respaldo abajo para copiar JSON entre equipos.'}
             </p>
           </div>
         ) : null}
@@ -226,11 +401,20 @@ export default function FinanceGameApp() {
               }
             />
             <FinanceGoals goals={state.goals} onAdd={addGoal} onUpdate={updateGoal} onRemove={removeGoal} />
-            <FinanceJsonTools state={state} onImport={replaceState} />
+            <FinanceJsonTools
+              state={state}
+              onImport={replaceState}
+              cloudAutoSync={isFinanceCloudConfigured()}
+              bookSyncId={linkedSyncId}
+              cloudError={cloudErr}
+              onLinkSyncId={applySyncFromId}
+            />
             <div className="rounded-2xl border border-red-500/25 bg-red-950/30 p-4">
               <p className="text-[11px] font-black uppercase tracking-widest text-red-300/90">Zona peligrosa</p>
               <p className="mt-2 text-xs font-medium text-red-100/80">
-                Borrá todo en este dispositivo. Exportá JSON antes.
+                {isFinanceCloudConfigured()
+                  ? 'Borrá todo en la nube y en este navegador. Exportá JSON antes si querés un archivo de respaldo.'
+                  : 'Borrá todo en este navegador. Exportá o copiá el JSON antes si querés conservarlo.'}
               </p>
               <button
                 type="button"

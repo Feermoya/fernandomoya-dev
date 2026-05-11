@@ -1,6 +1,33 @@
 import type { FinanceState } from '@/lib/finance/types';
 
 export const FINANCE_STORAGE_KEY = 'fm-finance-game-v1';
+export const FINANCE_SYNC_ID_KEY = 'fm-finance-sync-id';
+export const FINANCE_LOCAL_SAVED_AT_KEY = 'fm-finance-local-saved-at';
+
+export function getFinanceSyncId(): string | null {
+  if (typeof window === 'undefined') return null;
+  const v = window.localStorage.getItem(FINANCE_SYNC_ID_KEY);
+  return v && /^[0-9a-f-]{36}$/i.test(v) ? v : null;
+}
+
+export function setFinanceSyncId(id: string): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(FINANCE_SYNC_ID_KEY, id);
+}
+
+export function getFinanceLocalSavedAt(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(FINANCE_LOCAL_SAVED_AT_KEY);
+}
+
+export function setFinanceLocalSavedAt(iso: string): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(FINANCE_LOCAL_SAVED_AT_KEY, iso);
+}
+
+function touchFinanceLocalSavedAt(): void {
+  setFinanceLocalSavedAt(new Date().toISOString());
+}
 
 function currentMonthStr(): string {
   const d = new Date();
@@ -36,10 +63,12 @@ export function loadFinanceState(): FinanceState {
   }
 }
 
-export function saveFinanceState(state: FinanceState): void {
+/** @param bumpSavedAt en false al aplicar datos remotos (evita pisar la nube al recargar). */
+export function saveFinanceState(state: FinanceState, bumpSavedAt = true): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(FINANCE_STORAGE_KEY, JSON.stringify(state));
+    if (bumpSavedAt) touchFinanceLocalSavedAt();
   } catch {
     /* ignore quota / private mode */
   }
