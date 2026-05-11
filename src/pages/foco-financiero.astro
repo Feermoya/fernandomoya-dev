@@ -1,0 +1,52 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import FinanceGameApp from '@/components/finance/FinanceGameApp';
+import { pageTitle } from '@/utils/seo';
+---
+
+<Layout
+  title={pageTitle('Foco financiero')}
+  description="Mini app personal de progreso e inversión mensual. Datos solo en tu navegador."
+  path="/foco-financiero"
+  noindex={true}
+>
+  <div class="border-b border-white/[0.06] bg-slate-950/80 backdrop-blur-md">
+    <section class="container-page py-6 sm:py-8">
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-2xl font-black tracking-tight text-white sm:text-3xl">Foco financiero</h1>
+        <span
+          class="rounded-full border border-indigo-500/40 bg-indigo-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-200"
+        >
+          Modo juego
+        </span>
+      </div>
+      <p class="mt-3 max-w-xl text-sm font-semibold leading-relaxed text-slate-300 sm:text-base">
+        Cada mes tu plata juega para vos o se evapora.
+      </p>
+      <div class="mt-5 flex flex-wrap gap-3">
+        <a
+          href="#inversion"
+          class="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-black text-white shadow-lg transition hover:brightness-110"
+        >
+          Cargar inversión
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <details class="container-page border-b border-white/[0.04] py-3 text-sm">
+    <summary class="cursor-pointer font-bold text-slate-400 hover:text-slate-200">Por qué existe esto</summary>
+    <div class="mt-3 max-w-2xl space-y-2 rounded-xl border border-white/10 bg-slate-950/50 p-4 text-slate-300">
+      <p>
+        Herramienta personal: no está en el menú principal. Los datos viven en tu navegador; exportá JSON antes de
+        cambiar de equipo.
+      </p>
+      <p class="text-xs text-slate-500">
+        Reglas: registrar cada inversión cuando la hacés, mirar el nivel del mes y la ruta. Datos locales; exportá antes
+        de cambiar de dispositivo.
+      </p>
+    </div>
+  </details>
+
+  <FinanceGameApp client:load />
+</Layout>
