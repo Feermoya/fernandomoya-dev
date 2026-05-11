@@ -10,6 +10,7 @@ import {
   setFinanceLocalSavedAt,
 } from '@/lib/finance/storage';
 import { fetchFinanceRemote, isFinanceCloudConfigured, upsertFinanceRemote } from '@/lib/finance/cloudSync';
+import { deriveSyncIdFromPassphrase, isValidStoredSyncId } from '@/lib/finance/syncPhrase';
 import { FinanceDashboard } from '@/components/finance/FinanceDashboard';
 import { FinanceMissionCard } from '@/components/finance/FinanceMissionCard';
 import { FinanceQuickMetrics } from '@/components/finance/FinanceQuickMetrics';
@@ -21,8 +22,6 @@ import { getEntriesByMonth, formatARS } from '@/lib/finance/calculations';
 import { getMonthlyMissionView } from '@/lib/finance/levels';
 
 const INV_TIMELINE = { icon: '📈', bar: 'bg-emerald-500' } as const;
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export default function FinanceGameApp() {
   const [state, setState] = useState<FinanceState>(() =>
@@ -57,13 +56,11 @@ export default function FinanceGameApp() {
         const next = updater(prev);
         saveFinanceState(next);
         if (typeof window !== 'undefined' && isFinanceCloudConfigured()) {
-          let sid = getFinanceSyncId();
-          if (!sid) {
-            sid = crypto.randomUUID();
-            setFinanceSyncId(sid);
+          const sid = getFinanceSyncId();
+          if (sid) {
+            scheduleRemoteSave(sid, next);
+            requestAnimationFrame(() => setLinkedSyncId(sid));
           }
-          scheduleRemoteSave(sid, next);
-          requestAnimationFrame(() => setLinkedSyncId(getFinanceSyncId()));
         }
         return next;
       });
@@ -71,10 +68,10 @@ export default function FinanceGameApp() {
     [scheduleRemoteSave],
   );
 
-  const applySyncFromId = useCallback(async (rawId: string) => {
+  const applySyncFromRawId = useCallback(async (rawId: string) => {
     const id = rawId.trim();
-    if (!UUID_RE.test(id)) {
-      setCloudErr('El ID no es un UUID válido.');
+    if (!isValidStoredSyncId(id)) {
+      setCloudErr('ID inválido (UUID o código de 64 caracteres).');
       return;
     }
     setCloudErr(null);
@@ -100,9 +97,33 @@ export default function FinanceGameApp() {
       setFinanceLocalSavedAt(iso);
     } catch (e) {
       setCloudErr(e instanceof Error ? e.message : 'No se pudo vincular.');
-      throw e;
     }
   }, []);
+
+  const activatePassphrase = useCallback(
+    async (phrase: string) => {
+      let id: string;
+      try {
+        id = await deriveSyncIdFromPassphrase(phrase);
+      } catch (e) {
+        setCloudErr(e instanceof Error ? e.message : 'Frase inválida.');
+        return;
+      }
+      const prev = getFinanceSyncId();
+      if (
+        prev &&
+        prev !== id &&
+        typeof window !== 'undefined' &&
+        !window.confirm(
+          'Este equipo ya tenía otro libro conectado. ¿Reemplazarlo por esta frase? Los datos locales se fusionan con la nube de la nueva frase.',
+        )
+      ) {
+        return;
+      }
+      await applySyncFromRawId(id);
+    },
+    [applySyncFromRawId],
+  );
 
   const pullRemoteIfNewer = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
@@ -131,9 +152,9 @@ export default function FinanceGameApp() {
 
       const sp = new URLSearchParams(window.location.search);
       for (const key of ['sync', 'cloud'] as const) {
-        const v = sp.get(key);
-        if (v && UUID_RE.test(v.trim())) {
-          setFinanceSyncId(v.trim());
+        const v = sp.get(key)?.trim();
+        if (v && isValidStoredSyncId(v)) {
+          setFinanceSyncId(v);
           window.history.replaceState({}, document.title, window.location.pathname);
           break;
         }
@@ -305,7 +326,7 @@ export default function FinanceGameApp() {
             <p className="mt-2 text-sm font-medium text-amber-100/85">
               Cargá la primera inversión del mes.
               {isFinanceCloudConfigured()
-                ? ' Con la nube configurada, se guarda solo; en el celu abrí una vez el enlace de “tu libro” (sección Respaldo, debajo de las métricas).'
+                ? ' Con la nube configurada: en Respaldo escribí la misma frase secreta en la PC y en el celu; después se guarda solo.'
                 : ' Sin nube, los datos son solo de este navegador: usá Respaldo (debajo de las métricas) para copiar JSON entre equipos.'}
             </p>
           </div>
@@ -328,7 +349,8 @@ export default function FinanceGameApp() {
               cloudAutoSync={isFinanceCloudConfigured()}
               bookSyncId={linkedSyncId}
               cloudError={cloudErr}
-              onLinkSyncId={applySyncFromId}
+              onLinkSyncId={applySyncFromRawId}
+              onActivatePassphrase={activatePassphrase}
             />
 
             {/* D — Formulario */}

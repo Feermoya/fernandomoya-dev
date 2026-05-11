@@ -7,7 +7,11 @@ export const FINANCE_LOCAL_SAVED_AT_KEY = 'fm-finance-local-saved-at';
 export function getFinanceSyncId(): string | null {
   if (typeof window === 'undefined') return null;
   const v = window.localStorage.getItem(FINANCE_SYNC_ID_KEY);
-  return v && /^[0-9a-f-]{36}$/i.test(v) ? v : null;
+  if (!v) return null;
+  const t = v.trim();
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)) return t;
+  if (/^[a-f0-9]{64}$/i.test(t)) return t;
+  return null;
 }
 
 export function setFinanceSyncId(id: string): void {
