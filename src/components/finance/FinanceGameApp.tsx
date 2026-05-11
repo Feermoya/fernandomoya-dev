@@ -305,8 +305,8 @@ export default function FinanceGameApp() {
             <p className="mt-2 text-sm font-medium text-amber-100/85">
               Cargá la primera inversión del mes.
               {isFinanceCloudConfigured()
-                ? ' Con la nube configurada, se guarda solo; en el celu abrí una vez el enlace de “tu libro” (abajo en Respaldo).'
-                : ' Sin nube, los datos son solo de este navegador: usá Respaldo abajo para copiar JSON entre equipos.'}
+                ? ' Con la nube configurada, se guarda solo; en el celu abrí una vez el enlace de “tu libro” (sección Respaldo, debajo de las métricas).'
+                : ' Sin nube, los datos son solo de este navegador: usá Respaldo (debajo de las métricas) para copiar JSON entre equipos.'}
             </p>
           </div>
         ) : null}
@@ -321,6 +321,15 @@ export default function FinanceGameApp() {
 
             {/* C — Métricas */}
             <FinanceQuickMetrics state={state} month={month} />
+
+            <FinanceJsonTools
+              state={state}
+              onImport={replaceState}
+              cloudAutoSync={isFinanceCloudConfigured()}
+              bookSyncId={linkedSyncId}
+              cloudError={cloudErr}
+              onLinkSyncId={applySyncFromId}
+            />
 
             {/* D — Formulario */}
             <section id="inversion" className="scroll-mt-28">
@@ -401,14 +410,6 @@ export default function FinanceGameApp() {
               }
             />
             <FinanceGoals goals={state.goals} onAdd={addGoal} onUpdate={updateGoal} onRemove={removeGoal} />
-            <FinanceJsonTools
-              state={state}
-              onImport={replaceState}
-              cloudAutoSync={isFinanceCloudConfigured()}
-              bookSyncId={linkedSyncId}
-              cloudError={cloudErr}
-              onLinkSyncId={applySyncFromId}
-            />
             <div className="rounded-2xl border border-red-500/25 bg-red-950/30 p-4">
               <p className="text-[11px] font-black uppercase tracking-widest text-red-300/90">Zona peligrosa</p>
               <p className="mt-2 text-xs font-medium text-red-100/80">

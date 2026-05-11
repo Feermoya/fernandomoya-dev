@@ -169,7 +169,7 @@ export function FinanceJsonTools({
   };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950/40 px-3 py-3 sm:px-4">
+    <section id="respaldo" className="scroll-mt-28 rounded-2xl border border-white/10 bg-slate-950/40 px-3 py-3 sm:px-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Respaldo</span>
       </div>
