@@ -113,20 +113,20 @@ const LEVEL_TITLES: Record<number, string> = {
   10: 'Libertad',
 };
 
-function messageForLevel(level: number, state: FinanceState, month: string): string {
+function messageForLevel(level: number, _state: FinanceState, _month: string): string {
   if (level <= 0) {
-    return 'Si no invertís, no pasa nada… hasta que pasan 12 meses. Este mes todavía está en cero.';
+    return 'Separá primero. Gastar después.';
   }
 
   if (level <= 2) {
-    return 'Arrancaste. Ahora ganás por repetición, no por entusiasmo.';
+    return 'Tu objetivo hoy: sostener el ritmo.';
   }
 
   if (level <= 6) {
-    return 'Buen mes. Antes de gastar, invertiste. Eso cambia la persona que sos cuando nadie mira.';
+    return 'El mes se gana cuando separás primero.';
   }
 
-  return 'Este mes jugaste en serio. No compraste dopamina: compraste libertad.';
+  return 'Este mes jugaste en serio. Menos ruido, más avance.';
 }
 
 function nextTargetString(state: FinanceState, month: string, achieved: number): string {
@@ -331,7 +331,7 @@ export function getMonthlyMissionView(state: FinanceState, month: string): Month
     return {
       monthLabel: monthName,
       headline: `Misión de ${monthName}`,
-      tagline: 'La plata sin dirección se va sola. Ya dominaste el tablero de este mes.',
+      tagline: 'Ya dominaste el tablero de este mes.',
       targetAmount: pipe,
       currentAmount: pipe,
       percent: 100,
@@ -364,8 +364,8 @@ export function getMonthlyMissionView(state: FinanceState, month: string): Month
     headline: `Misión de ${monthName}`,
     tagline:
       achieved <= 1
-        ? 'Si no lo registrás, tu cabeza lo minimiza.'
-        : 'El mes no se gana al final. Se gana cuando cobrás.',
+        ? 'Cada carga suma al nivel del mes.'
+        : 'El mes se gana cuando separás primero.',
     targetAmount: target,
     currentAmount: pipe,
     percent,

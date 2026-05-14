@@ -5,34 +5,142 @@ import {
   loadFinanceState,
   saveFinanceState,
   getFinanceSyncId,
-  setFinanceSyncId,
-  getFinanceLocalSavedAt,
   setFinanceLocalSavedAt,
+  getFinanceLocalSavedAt,
+  resetFinanceSyncIdToDefault,
+  DEFAULT_FINANCE_SYNC_ID,
 } from '@/lib/finance/storage';
 import { fetchFinanceRemote, isFinanceCloudConfigured, upsertFinanceRemote } from '@/lib/finance/cloudSync';
-import { deriveSyncIdFromPassphrase, isValidStoredSyncId } from '@/lib/finance/syncPhrase';
-import { FinanceDashboard } from '@/components/finance/FinanceDashboard';
+import { FinanceDashboard, type FinanceDashboardCelebration } from '@/components/finance/FinanceDashboard';
 import { FinanceMissionCard } from '@/components/finance/FinanceMissionCard';
 import { FinanceQuickMetrics } from '@/components/finance/FinanceQuickMetrics';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
 import { FinanceGoals } from '@/components/finance/FinanceGoals';
 import { FinanceLevels } from '@/components/finance/FinanceLevels';
 import { FinanceJsonTools } from '@/components/finance/FinanceJsonTools';
+import { LevelUpOverlay } from '@/components/finance/LevelUpOverlay';
 import { getEntriesByMonth, formatARS } from '@/lib/finance/calculations';
-import { getMonthlyMissionView } from '@/lib/finance/levels';
+import { getMonthlyMissionView, getMonthlyLevel, getLevelProgressPercent } from '@/lib/finance/levels';
+import { getLevelTheme } from '@/lib/finance/levelTheme';
 
-const INV_TIMELINE = { icon: '📈', bar: 'bg-emerald-500' } as const;
+type SyncChip = 'synced' | 'saving' | 'error' | 'solo_local';
+
+function levelUpMessageFor(nextLevel: number): string | undefined {
+  if (nextLevel === 2) return 'Ahora estás construyendo repetición, no entusiasmo.';
+  return undefined;
+}
+
+function initialSyncChip(): SyncChip {
+  if (typeof window === 'undefined') return 'solo_local';
+  return isFinanceCloudConfigured() ? 'saving' : 'solo_local';
+}
+
+function SyncStatusChip({ status }: { status: SyncChip }) {
+  const label =
+    status === 'synced'
+      ? 'Sincronizado'
+      : status === 'saving'
+        ? 'Guardando...'
+        : status === 'error'
+          ? 'Error al sincronizar'
+          : 'Solo local';
+  const cls =
+    status === 'synced'
+      ? 'border-emerald-500/35 bg-emerald-950/50 text-emerald-200/95'
+      : status === 'error'
+        ? 'border-rose-500/40 bg-rose-950/45 text-rose-200/95'
+        : 'border-amber-500/35 bg-amber-950/40 text-amber-100/90';
+
+  return (
+    <span
+      role="status"
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${cls}`}
+    >
+      <span className="truncate">{label}</span>
+    </span>
+  );
+}
 
 export default function FinanceGameApp() {
   const [state, setState] = useState<FinanceState>(() =>
     typeof window !== 'undefined' ? loadFinanceState() : getInitialFinanceState(),
   );
-  const [linkedSyncId, setLinkedSyncId] = useState<string | null>(() =>
-    typeof window !== 'undefined' ? getFinanceSyncId() : null,
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  const [syncChip, setSyncChip] = useState<SyncChip>(() => initialSyncChip());
+  const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? getFinanceLocalSavedAt() : null,
   );
   const [cloudErr, setCloudErr] = useState<string | null>(null);
+  const [syncIdTick, setSyncIdTick] = useState(0);
+
+  const [levelUp, setLevelUp] = useState<{
+    level: number;
+    title: string;
+    icon: string;
+    message?: string;
+  } | null>(null);
+  const [celebration, setCelebration] = useState<FinanceDashboardCelebration | null>(null);
+  const celebrationKeyRef = useRef(0);
 
   const remoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pullInFlight = useRef(false);
+  const pullDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const activeSyncId = useMemo(
+    () => (typeof window !== 'undefined' ? getFinanceSyncId() : DEFAULT_FINANCE_SYNC_ID),
+    [syncIdTick],
+  );
+
+  const applyRemoteRow = useCallback((remote: { state: FinanceState; updatedAt: string }) => {
+    setState(remote.state);
+    saveFinanceState(remote.state);
+    setFinanceLocalSavedAt(remote.updatedAt);
+    setLastRemoteAt(remote.updatedAt);
+    setCloudErr(null);
+    setSyncChip('synced');
+  }, []);
+
+  /** Pull: si hay fila remota, gana la nube. Si no hay fila, no hace seed (eso solo en boot). */
+  const pullFromCloudImmediate = useCallback(async () => {
+    if (!isFinanceCloudConfigured()) return;
+    if (pullInFlight.current) return;
+    const sid = getFinanceSyncId();
+    pullInFlight.current = true;
+    try {
+      if (import.meta.env.DEV) {
+        console.debug('[finance-sync] pull immediate', { syncId: sid });
+      }
+      const remote = await fetchFinanceRemote(sid);
+      if (remote) {
+        applyRemoteRow(remote);
+        if (import.meta.env.DEV) {
+          console.debug('[finance-sync] pull winner', 'cloud', { updated_at: remote.updatedAt });
+        }
+      } else if (import.meta.env.DEV) {
+        console.debug('[finance-sync] pull no row', { syncId: sid });
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al leer la nube.';
+      setCloudErr(msg);
+      setSyncChip('error');
+      if (import.meta.env.DEV) {
+        console.debug('[finance-sync] pull failed', { syncId: sid, error: msg });
+      }
+    } finally {
+      pullInFlight.current = false;
+    }
+  }, [applyRemoteRow]);
+
+  const scheduleDebouncedPull = useCallback(() => {
+    if (!isFinanceCloudConfigured()) return;
+    if (pullDebounceTimer.current) clearTimeout(pullDebounceTimer.current);
+    pullDebounceTimer.current = setTimeout(() => {
+      pullDebounceTimer.current = null;
+      void pullFromCloudImmediate();
+    }, 650);
+  }, [pullFromCloudImmediate]);
 
   const scheduleRemoteSave = useCallback((syncId: string, next: FinanceState) => {
     if (!isFinanceCloudConfigured()) return;
@@ -42,10 +150,20 @@ export default function FinanceGameApp() {
       void upsertFinanceRemote(syncId, next)
         .then((iso) => {
           setFinanceLocalSavedAt(iso);
+          setLastRemoteAt(iso);
           setCloudErr(null);
+          setSyncChip('synced');
+          if (import.meta.env.DEV) {
+            console.debug('[finance-sync] upsert persist ok', { syncId, updated_at: iso });
+          }
         })
         .catch((e: unknown) => {
-          setCloudErr(e instanceof Error ? e.message : 'Error al guardar en la nube.');
+          const msg = e instanceof Error ? e.message : 'Error al guardar en la nube.';
+          setCloudErr(msg);
+          setSyncChip('error');
+          if (import.meta.env.DEV) {
+            console.debug('[finance-sync] upsert persist fail', { syncId, error: msg });
+          }
         });
     }, 600);
   }, []);
@@ -56,11 +174,10 @@ export default function FinanceGameApp() {
         const next = updater(prev);
         saveFinanceState(next);
         if (typeof window !== 'undefined' && isFinanceCloudConfigured()) {
-          const sid = getFinanceSyncId();
-          if (sid) {
-            scheduleRemoteSave(sid, next);
-            requestAnimationFrame(() => setLinkedSyncId(sid));
-          }
+          setSyncChip('saving');
+          scheduleRemoteSave(getFinanceSyncId(), next);
+        } else if (typeof window !== 'undefined') {
+          setSyncChip('solo_local');
         }
         return next;
       });
@@ -68,80 +185,35 @@ export default function FinanceGameApp() {
     [scheduleRemoteSave],
   );
 
-  const applySyncFromRawId = useCallback(async (rawId: string) => {
-    const id = rawId.trim();
-    if (!isValidStoredSyncId(id)) {
-      setCloudErr('ID inválido (UUID o código de 64 caracteres).');
-      return;
-    }
+  const dismissLevelUp = useCallback(() => setLevelUp(null), []);
+
+  const handleForcePush = useCallback(async () => {
+    if (!isFinanceCloudConfigured()) return;
+    const sid = getFinanceSyncId();
+    setSyncChip('saving');
     setCloudErr(null);
     try {
-      setFinanceSyncId(id);
-      setLinkedSyncId(id);
-      const remote = await fetchFinanceRemote(id);
-      const local = loadFinanceState();
-      if (!remote) {
-        setState(local);
-        saveFinanceState(local);
-        const iso = await upsertFinanceRemote(id, local);
-        setFinanceLocalSavedAt(iso);
-        return;
-      }
-      const la = getFinanceLocalSavedAt();
-      const rt = new Date(remote.updatedAt).getTime();
-      const lt = la ? new Date(la).getTime() : 0;
-      const pick = rt > lt ? remote.state : local;
-      setState(pick);
-      saveFinanceState(pick, false);
-      const iso = await upsertFinanceRemote(id, pick);
+      const iso = await upsertFinanceRemote(sid, stateRef.current);
       setFinanceLocalSavedAt(iso);
+      setLastRemoteAt(iso);
+      setSyncChip('synced');
+      if (import.meta.env.DEV) {
+        console.debug('[finance-sync] force push ok', { syncId: sid, updated_at: iso });
+      }
     } catch (e) {
-      setCloudErr(e instanceof Error ? e.message : 'No se pudo vincular.');
+      const msg = e instanceof Error ? e.message : 'Error al subir.';
+      setCloudErr(msg);
+      setSyncChip('error');
+      if (import.meta.env.DEV) {
+        console.debug('[finance-sync] force push fail', { syncId: sid, error: msg });
+      }
+      throw e;
     }
   }, []);
 
-  const activatePassphrase = useCallback(
-    async (phrase: string) => {
-      let id: string;
-      try {
-        id = await deriveSyncIdFromPassphrase(phrase);
-      } catch (e) {
-        setCloudErr(e instanceof Error ? e.message : 'Frase inválida.');
-        return;
-      }
-      const prev = getFinanceSyncId();
-      if (
-        prev &&
-        prev !== id &&
-        typeof window !== 'undefined' &&
-        !window.confirm(
-          'Este equipo ya tenía otro libro conectado. ¿Reemplazarlo por esta frase? Los datos locales se fusionan con la nube de la nueva frase.',
-        )
-      ) {
-        return;
-      }
-      await applySyncFromRawId(id);
-    },
-    [applySyncFromRawId],
-  );
-
-  const pullRemoteIfNewer = useCallback(async () => {
-    if (!isFinanceCloudConfigured()) return;
-    const sid = getFinanceSyncId();
-    if (!sid) return;
-    try {
-      const remote = await fetchFinanceRemote(sid);
-      if (!remote) return;
-      const la = getFinanceLocalSavedAt();
-      if (new Date(remote.updatedAt) > new Date(la || 0)) {
-        setState(remote.state);
-        saveFinanceState(remote.state, false);
-        setFinanceLocalSavedAt(remote.updatedAt);
-        setCloudErr(null);
-      }
-    } catch {
-      /* silencioso al volver a la pestaña */
-    }
+  const handleResetSyncIdToDefault = useCallback(() => {
+    resetFinanceSyncIdToDefault();
+    setSyncIdTick((n) => n + 1);
   }, []);
 
   useEffect(() => {
@@ -150,54 +222,47 @@ export default function FinanceGameApp() {
     async function boot() {
       if (typeof window === 'undefined') return;
 
-      const sp = new URLSearchParams(window.location.search);
-      for (const key of ['sync', 'cloud'] as const) {
-        const v = sp.get(key)?.trim();
-        if (v && isValidStoredSyncId(v)) {
-          setFinanceSyncId(v);
-          window.history.replaceState({}, document.title, window.location.pathname);
-          break;
-        }
+      if (!isFinanceCloudConfigured()) {
+        setSyncChip('solo_local');
+        return;
       }
 
-      setLinkedSyncId(getFinanceSyncId());
-
-      if (!isFinanceCloudConfigured()) return;
-
       const sid = getFinanceSyncId();
-      if (!sid) return;
+      setSyncChip('saving');
 
       try {
-        const local = loadFinanceState();
+        if (import.meta.env.DEV) {
+          console.debug('[finance-sync] boot start', { syncId: sid });
+        }
         const remote = await fetchFinanceRemote(sid);
         if (cancelled) return;
 
-        if (!remote) {
-          const has =
-            local.entries.length > 0 ||
-            local.goals.length > 0 ||
-            local.challenges.length > 0 ||
-            (typeof local.wealthTarget === 'number' && local.wealthTarget > 0);
-          if (has) {
-            const iso = await upsertFinanceRemote(sid, local);
-            setFinanceLocalSavedAt(iso);
+        if (remote) {
+          applyRemoteRow(remote);
+          if (import.meta.env.DEV) {
+            console.debug('[finance-sync] boot winner', 'cloud', { updated_at: remote.updatedAt });
           }
-        } else {
-          const la = getFinanceLocalSavedAt();
-          const rt = new Date(remote.updatedAt).getTime();
-          const lt = la ? new Date(la).getTime() : 0;
-          if (rt > lt) {
-            setState(remote.state);
-            saveFinanceState(remote.state, false);
-            setFinanceLocalSavedAt(remote.updatedAt);
-          } else if (lt > rt) {
-            const iso = await upsertFinanceRemote(sid, local);
-            setFinanceLocalSavedAt(iso);
-          }
+          return;
+        }
+
+        const local = loadFinanceState();
+        const iso = await upsertFinanceRemote(sid, local);
+        if (cancelled) return;
+        setFinanceLocalSavedAt(iso);
+        setLastRemoteAt(iso);
+        setCloudErr(null);
+        setSyncChip('synced');
+        if (import.meta.env.DEV) {
+          console.debug('[finance-sync] boot winner', 'local_seed', { updated_at: iso });
         }
       } catch (e) {
         if (!cancelled) {
-          setCloudErr(e instanceof Error ? e.message : 'Error al leer la nube.');
+          const msg = e instanceof Error ? e.message : 'Error al leer la nube.';
+          setCloudErr(msg);
+          setSyncChip('error');
+          if (import.meta.env.DEV) {
+            console.debug('[finance-sync] boot error', { syncId: sid, error: msg });
+          }
         }
       }
     }
@@ -206,16 +271,28 @@ export default function FinanceGameApp() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyRemoteRow]);
 
   useEffect(() => {
     if (!isFinanceCloudConfigured()) return;
+
     const onVis = () => {
-      if (document.visibilityState === 'visible') void pullRemoteIfNewer();
+      if (document.visibilityState === 'visible') scheduleDebouncedPull();
     };
+    const onFocus = () => scheduleDebouncedPull();
+    const onOnline = () => {
+      void pullFromCloudImmediate();
+    };
+
     document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
-  }, [pullRemoteIfNewer]);
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('online', onOnline);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('online', onOnline);
+    };
+  }, [pullFromCloudImmediate, scheduleDebouncedPull]);
 
   const replaceState = useCallback(
     (next: FinanceState) => {
@@ -241,9 +318,44 @@ export default function FinanceGameApp() {
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }, [monthEntries]);
 
-  const addEntry = useCallback(
+  const latestInvestments = useMemo(() => sortedMonthInvestments.slice(0, 3), [sortedMonthInvestments]);
+  const moreInvestments = useMemo(() => sortedMonthInvestments.slice(3), [sortedMonthInvestments]);
+
+  const handleAddEntry = useCallback(
     (entry: FinanceEntry) => {
-      persist((prev) => ({ ...prev, entries: [...prev.entries, entry] }));
+      let overlay: { level: number; title: string; icon: string; message?: string } | null = null;
+      let dash: FinanceDashboardCelebration | null = null;
+
+      persist((prev) => {
+        const m = entry.month;
+        const prevLevel = getMonthlyLevel(prev, m).level;
+        const next: FinanceState = { ...prev, entries: [...prev.entries, entry] };
+        const newLevel = getMonthlyLevel(next, m).level;
+        if (newLevel > prevLevel) {
+          const info = getMonthlyLevel(next, m);
+          const th = getLevelTheme(newLevel);
+          overlay = {
+            level: newLevel,
+            title: info.title,
+            icon: th.icon,
+            message: levelUpMessageFor(newLevel),
+          };
+          if (m === prev.currentMonth) {
+            celebrationKeyRef.current += 1;
+            dash = {
+              key: celebrationKeyRef.current,
+              barFrom: getLevelProgressPercent(prev, m, prevLevel),
+              barTo: getLevelProgressPercent(next, m, newLevel),
+            };
+          }
+        }
+        return next;
+      });
+
+      queueMicrotask(() => {
+        if (overlay) setLevelUp(overlay);
+        if (dash) setCelebration(dash);
+      });
     },
     [persist],
   );
@@ -307,149 +419,239 @@ export default function FinanceGameApp() {
         aria-hidden
         style={{
           background: `
-            radial-gradient(ellipse 120% 80% at 50% -20%, rgba(99, 102, 241, 0.35), transparent 50%),
-            radial-gradient(ellipse 80% 50% at 100% 50%, rgba(34, 211, 238, 0.12), transparent 45%),
-            radial-gradient(ellipse 60% 40% at 0% 80%, rgba(167, 139, 250, 0.15), transparent 40%),
-            linear-gradient(180deg, #020617 0%, #0f172a 45%, #020617 100%)
+            radial-gradient(ellipse 120% 80% at 50% -20%, rgba(99, 102, 241, 0.28), transparent 50%),
+            radial-gradient(ellipse 80% 50% at 100% 50%, rgba(34, 211, 238, 0.1), transparent 45%),
+            radial-gradient(ellipse 60% 40% at 0% 80%, rgba(167, 139, 250, 0.12), transparent 40%),
+            linear-gradient(180deg, #06111f 0%, #020617 42%, #0f172a 100%)
           `,
         }}
       />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:24px_24px] opacity-30" aria-hidden />
 
-      <div className="container-page relative z-[1] min-w-0">
+      <div className="container-page relative z-[1] mx-auto min-w-0 max-w-6xl py-8 sm:py-10">
         {isEmpty ? (
-          <div className="mb-8 rounded-3xl border border-amber-500/30 bg-amber-950/40 p-5 shadow-lg sm:p-6">
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-200/90">Arranque</p>
-            <p className="mt-2 text-base font-bold text-white">
-              No estás ahorrando por miedo. Estás comprando opciones.
-            </p>
-            <p className="mt-2 text-sm font-medium text-amber-100/85">
-              Cargá la primera inversión del mes.
+          <div className="mb-6 rounded-2xl border border-white/10 bg-slate-950/60 p-4 shadow-lg sm:p-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300/90">Primer paso</p>
+            <p className="mt-2 text-sm font-bold text-white sm:text-base">Cada carga suma al nivel del mes.</p>
+            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-400 sm:text-sm">
+              Cargá la primera inversión del mes acá abajo.
               {isFinanceCloudConfigured()
-                ? ' Con la nube configurada: en Respaldo escribí la misma frase secreta en la PC y en el celu; después se guarda solo.'
-                : ' Sin nube, los datos son solo de este navegador: usá Respaldo (debajo de las métricas) para copiar JSON entre equipos.'}
+                ? ' Con nube, los datos se sincronizan solos entre dispositivos.'
+                : ' Sin nube, todo queda en este navegador: el respaldo JSON está en “Respaldo y sincronización”.'}
             </p>
           </div>
         ) : null}
 
-        {/* A — Hero full width */}
-        <FinanceDashboard state={state} onMonthChange={(m) => patchState({ currentMonth: m })} />
-
-        <div className="mt-8 grid min-w-0 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] xl:items-start">
-          <div className="flex min-w-0 flex-col gap-8">
-            {/* B — Misión */}
-            <FinanceMissionCard mission={mission} />
-
-            {/* C — Métricas */}
-            <FinanceQuickMetrics state={state} month={month} />
-
-            <FinanceJsonTools
-              state={state}
-              onImport={replaceState}
-              cloudAutoSync={isFinanceCloudConfigured()}
-              bookSyncId={linkedSyncId}
-              cloudError={cloudErr}
-              onLinkSyncId={applySyncFromRawId}
-              onActivatePassphrase={activatePassphrase}
-            />
-
-            {/* D — Formulario */}
-            <section id="inversion" className="scroll-mt-28">
-              <FinanceEntryForm month={month} onAddEntry={addEntry} />
-            </section>
-
-            {/* E — Timeline inversiones del mes */}
-            <section className="rounded-3xl border border-white/10 bg-slate-950/50 p-4 shadow-xl backdrop-blur-md sm:p-5">
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-300/90">Timeline</p>
-                  <h3 className="text-lg font-black text-white">Inversiones del mes</h3>
-                </div>
-                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-bold text-slate-300">
-                  {month}
-                </span>
-              </div>
-
-              {sortedMonthInvestments.length === 0 ? (
-                <p className="text-sm font-medium text-slate-400">
-                  La plata sin dirección se va sola. Sumá la primera inversión de {month}.
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-0">
-                  {sortedMonthInvestments.map((e) => {
-                    const t = INV_TIMELINE;
-                    return (
-                      <li key={e.id} className="flex gap-3 border-b border-white/5 py-3 last:border-0">
-                        <span className={`mt-1 w-1 shrink-0 rounded-full ${t.bar}`} aria-hidden />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-white">
-                            <span className="mr-1.5" aria-hidden>
-                              {t.icon}
-                            </span>
-                            Inversión
-                            {e.category ? (
-                              <span className="font-medium text-slate-400"> · {e.category}</span>
-                            ) : null}
-                            {e.asset ? (
-                              <span className="font-medium text-slate-500"> · {e.asset}</span>
-                            ) : null}
-                          </p>
-                          <p className="mt-0.5 text-lg font-black tabular-nums text-white">{formatARS(e.amount)}</p>
-                          <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                            {e.platform ? `${e.platform} · ` : ''}
-                            {new Date(e.createdAt).toLocaleString('es-AR', {
-                              day: '2-digit',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                          {e.note ? <p className="mt-1 text-xs text-slate-400">{e.note}</p> : null}
-                        </div>
-                        <button
-                          type="button"
-                          className="shrink-0 self-start rounded-lg px-2 py-1 text-[11px] font-bold text-slate-500 hover:text-rose-300"
-                          onClick={() => removeEntry(e.id)}
-                        >
-                          Borrar
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </section>
+        <section id="dashboard-financiero" className="scroll-mt-24">
+          <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
+            <SyncStatusChip status={syncChip} />
           </div>
+          <FinanceDashboard
+            state={state}
+            onMonthChange={(m) => patchState({ currentMonth: m })}
+            celebration={celebration}
+          />
+        </section>
 
-          <div className="flex min-w-0 flex-col gap-8 xl:sticky xl:top-24">
-            <FinanceLevels
-              state={state}
-              month={month}
-              onWealthTargetChange={(n) =>
-                patchState({
-                  wealthTarget: n === undefined || n === null || Number.isNaN(n) ? undefined : n,
-                })
-              }
-            />
-            <FinanceGoals goals={state.goals} onAdd={addGoal} onUpdate={updateGoal} onRemove={removeGoal} />
-            <div className="rounded-2xl border border-red-500/25 bg-red-950/30 p-4">
-              <p className="text-[11px] font-black uppercase tracking-widest text-red-300/90">Zona peligrosa</p>
-              <p className="mt-2 text-xs font-medium text-red-100/80">
+        <div className="mt-5 grid min-w-0 gap-4 md:mt-6 md:grid-cols-2 md:items-stretch md:gap-5">
+          <FinanceMissionCard mission={mission} />
+          <section id="inversion" className="scroll-mt-28 min-w-0">
+            <FinanceEntryForm month={month} onAddEntry={handleAddEntry} />
+          </section>
+        </div>
+
+        <div className="mt-6 md:mt-7">
+          <FinanceQuickMetrics state={state} month={month} compact />
+        </div>
+
+        <section className="mt-6 md:mt-7">
+          {sortedMonthInvestments.length === 0 ? (
+            <p className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-400">
+              Todavía no cargaste inversiones este mes.
+            </p>
+          ) : (
+            <div className="rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-3 shadow-md backdrop-blur-md sm:px-5 sm:py-4">
+              <div className="mb-3">
+                <h3 className="text-sm font-black text-white sm:text-base">Últimas inversiones</h3>
+                <p className="mt-0.5 text-[11px] font-semibold text-slate-500">Lo cargado este mes</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-600">{month}</p>
+              </div>
+              <ul className="flex flex-col gap-2">
+                {latestInvestments.map((e) => {
+                  const dateStr = new Date(e.createdAt).toLocaleString('es-AR', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+                  return (
+                    <li
+                      key={e.id}
+                      className="group flex items-start justify-between gap-3 border-l-2 border-emerald-400/70 bg-white/[0.025] px-3 py-3 transition hover:bg-white/[0.045]"
+                    >
+                      <div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
+                        <p className="text-lg font-black tabular-nums leading-tight text-white sm:text-xl">
+                          {formatARS(e.amount)}
+                        </p>
+                        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                          <div className="flex flex-wrap gap-1.5">
+                            {e.asset ? (
+                              <span className="rounded-full border border-white/12 bg-white/8 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">
+                                {e.asset}
+                              </span>
+                            ) : null}
+                            {e.platform ? (
+                              <span className="rounded-full border border-white/12 bg-white/8 px-2 py-0.5 text-[10px] font-bold text-slate-400">
+                                {e.platform}
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{dateStr}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="shrink-0 rounded-lg border border-transparent px-2 py-1.5 text-[10px] font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+                        onClick={() => removeEntry(e.id)}
+                      >
+                        Borrar
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              {moreInvestments.length > 0 ? (
+                <details className="mt-2 border-t border-white/5 pt-2">
+                  <summary className="cursor-pointer list-none text-center text-xs font-bold text-indigo-300/90 hover:text-indigo-200 [&::-webkit-details-marker]:hidden">
+                    Ver todas las inversiones del mes ({sortedMonthInvestments.length})
+                  </summary>
+                  <ul className="mt-2 flex flex-col gap-2">
+                    {moreInvestments.map((e) => {
+                      const dateStr = new Date(e.createdAt).toLocaleString('es-AR', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                      return (
+                        <li
+                          key={e.id}
+                          className="group flex items-start justify-between gap-3 border-l-2 border-emerald-400/70 bg-white/[0.025] px-3 py-3 transition hover:bg-white/[0.045]"
+                        >
+                          <div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
+                            <p className="text-base font-black tabular-nums text-white">{formatARS(e.amount)}</p>
+                            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                              <div className="flex flex-wrap gap-1.5">
+                                {e.asset ? (
+                                  <span className="rounded-full border border-white/12 bg-white/8 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">
+                                    {e.asset}
+                                  </span>
+                                ) : null}
+                                {e.platform ? (
+                                  <span className="rounded-full border border-white/12 bg-white/8 px-2 py-0.5 text-[10px] font-bold text-slate-400">
+                                    {e.platform}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="text-[10px] font-semibold text-slate-500">{dateStr}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="shrink-0 rounded-lg border border-transparent px-2 py-1.5 text-[10px] font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+                            onClick={() => removeEntry(e.id)}
+                          >
+                            Borrar
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </details>
+              ) : null}
+            </div>
+          )}
+        </section>
+
+        <div className="mt-6 flex min-w-0 flex-col gap-3 md:mt-8">
+          <details className="group rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
+            <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+              Ver ruta de niveles
+            </summary>
+            <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
+              <FinanceLevels
+                compact
+                state={state}
+                month={month}
+                onWealthTargetChange={(n) =>
+                  patchState({
+                    wealthTarget: n === undefined || n === null || Number.isNaN(n) ? undefined : n,
+                  })
+                }
+              />
+            </div>
+          </details>
+
+          <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
+            <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+              Ver objetivos
+            </summary>
+            <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
+              <FinanceGoals goals={state.goals} onAdd={addGoal} onUpdate={updateGoal} onRemove={removeGoal} />
+            </div>
+          </details>
+
+          <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
+            <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+              Respaldo y sincronización
+            </summary>
+            <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
+              <FinanceJsonTools
+                state={state}
+                onImport={replaceState}
+                cloudAutoSync={isFinanceCloudConfigured()}
+                activeSyncId={activeSyncId}
+                cloudError={cloudErr}
+                lastSyncIso={lastRemoteAt}
+                onForcePull={pullFromCloudImmediate}
+                onForcePush={handleForcePush}
+                onResetSyncIdToDefault={handleResetSyncIdToDefault}
+              />
+            </div>
+          </details>
+
+          <details className="rounded-2xl border border-red-500/20 bg-red-950/20 shadow-lg open:pb-1">
+            <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-red-200/95 transition hover:bg-red-950/30 [&::-webkit-details-marker]:hidden">
+              Zona peligrosa
+            </summary>
+            <div className="border-t border-red-500/15 px-4 pb-4 pt-3">
+              <p className="text-xs font-medium text-red-100/75">
                 {isFinanceCloudConfigured()
                   ? 'Borrá todo en la nube y en este navegador. Exportá JSON antes si querés un archivo de respaldo.'
                   : 'Borrá todo en este navegador. Exportá o copiá el JSON antes si querés conservarlo.'}
               </p>
               <button
                 type="button"
-                className="mt-3 w-full rounded-xl border border-red-500/40 bg-red-600/20 py-3 text-sm font-bold text-red-100 transition hover:bg-red-600/30"
+                className="mt-3 w-full rounded-xl border border-red-500/35 bg-red-600/15 py-2.5 text-sm font-bold text-red-100 transition hover:bg-red-600/25"
                 onClick={clearAll}
               >
                 Borrar todo
               </button>
             </div>
-          </div>
+          </details>
         </div>
       </div>
+
+      {levelUp ? (
+        <LevelUpOverlay
+          open
+          level={levelUp.level}
+          title={levelUp.title}
+          icon={levelUp.icon}
+          message={levelUp.message}
+          onClose={dismissLevelUp}
+        />
+      ) : null}
     </div>
   );
 }

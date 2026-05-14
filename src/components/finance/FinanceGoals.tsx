@@ -70,16 +70,12 @@ export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
   const st = CAT_STYLE[category];
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-slate-950/50 p-4 shadow-xl backdrop-blur-md sm:p-5">
-      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-300/90">Side quests</p>
-      <h3 className="mt-1 text-xl font-black text-white">Metas que ordenan decisiones</h3>
-      <p className="mt-2 text-sm font-medium text-slate-400">
-        Misiones secundarias: cada una te obliga a mirar un número que antes evitabas.
-      </p>
+    <section className="rounded-2xl border border-white/10 bg-slate-950/50 p-3 shadow-md backdrop-blur-md sm:p-4">
+      <p className="text-xs font-medium text-slate-400">Creá o editá metas cuando quieras planificar un monto destino.</p>
 
       <form
         onSubmit={submit}
-        className={`mt-6 grid grid-cols-1 gap-3 rounded-2xl border-2 bg-gradient-to-br p-4 sm:grid-cols-2 ${st.card}`}
+        className={`mt-4 grid grid-cols-1 gap-2.5 rounded-xl border-2 bg-gradient-to-br p-3 sm:grid-cols-2 sm:gap-3 ${st.card}`}
       >
         <label className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="text-[11px] font-bold uppercase text-slate-400">Nombre</span>
@@ -125,9 +121,9 @@ export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
       </form>
 
       {goals.length === 0 ? (
-        <p className="mt-6 text-sm font-medium text-slate-500">Todavía sin side quests. Sumá una meta concreta.</p>
+        <p className="mt-4 text-xs font-medium text-slate-500">Creá una meta cuando tengas un destino concreto.</p>
       ) : (
-        <ul className="mt-6 flex flex-col gap-4">
+        <ul className="mt-4 flex flex-col gap-3">
           {goals.map((g) => {
             const pct = g.targetAmount > 0 ? Math.min(100, (g.currentAmount / g.targetAmount) * 100) : 0;
             const cs = CAT_STYLE[g.category] ?? CAT_STYLE.other;

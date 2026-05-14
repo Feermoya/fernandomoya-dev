@@ -5,15 +5,16 @@ type Props = {
   state: FinanceState;
   month: string;
   onWealthTargetChange: (value: number | undefined) => void;
+  compact?: boolean;
 };
 
-export function FinanceLevels({ state, month, onWealthTargetChange }: Props) {
+export function FinanceLevels({ state, month, onWealthTargetChange, compact = false }: Props) {
   return (
-    <div className="flex flex-col gap-4">
-      <FinanceProgressPath state={state} month={month} />
+    <div className={`flex flex-col ${compact ? 'gap-3' : 'gap-4'}`}>
+      <FinanceProgressPath state={state} month={month} compact={compact} />
 
-      <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Meta nivel 10</p>
+      <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 sm:rounded-2xl sm:px-4 sm:py-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Meta nivel 10 (opcional)</p>
         <input
           type="number"
           min={0}

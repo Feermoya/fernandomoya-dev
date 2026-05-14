@@ -4,14 +4,25 @@ export const FINANCE_STORAGE_KEY = 'fm-finance-game-v1';
 export const FINANCE_SYNC_ID_KEY = 'fm-finance-sync-id';
 export const FINANCE_LOCAL_SAVED_AT_KEY = 'fm-finance-local-saved-at';
 
-export function getFinanceSyncId(): string | null {
-  if (typeof window === 'undefined') return null;
-  const v = window.localStorage.getItem(FINANCE_SYNC_ID_KEY);
-  if (!v) return null;
-  const t = v.trim();
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)) return t;
-  if (/^[a-f0-9]{64}$/i.test(t)) return t;
-  return null;
+/** ID fijo de la fila en Supabase para esta app personal (un solo libro). */
+export const DEFAULT_FINANCE_SYNC_ID = 'fernando-foco-financiero-main';
+
+export function getFinanceSyncId(): string {
+  if (typeof window === 'undefined') return DEFAULT_FINANCE_SYNC_ID;
+
+  const stored = window.localStorage.getItem(FINANCE_SYNC_ID_KEY);
+
+  if (stored && stored.trim().length > 0) {
+    return stored.trim();
+  }
+
+  window.localStorage.setItem(FINANCE_SYNC_ID_KEY, DEFAULT_FINANCE_SYNC_ID);
+  return DEFAULT_FINANCE_SYNC_ID;
+}
+
+export function resetFinanceSyncIdToDefault(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(FINANCE_SYNC_ID_KEY, DEFAULT_FINANCE_SYNC_ID);
 }
 
 export function setFinanceSyncId(id: string): void {
@@ -24,13 +35,10 @@ export function getFinanceLocalSavedAt(): string | null {
   return window.localStorage.getItem(FINANCE_LOCAL_SAVED_AT_KEY);
 }
 
+/** Último `updated_at` remoto conocido tras fetch/upsert exitoso (metadata de sync, no árbitro de merge). */
 export function setFinanceLocalSavedAt(iso: string): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(FINANCE_LOCAL_SAVED_AT_KEY, iso);
-}
-
-function touchFinanceLocalSavedAt(): void {
-  setFinanceLocalSavedAt(new Date().toISOString());
 }
 
 function currentMonthStr(): string {
@@ -67,12 +75,11 @@ export function loadFinanceState(): FinanceState {
   }
 }
 
-/** @param bumpSavedAt en false al aplicar datos remotos (evita pisar la nube al recargar). */
-export function saveFinanceState(state: FinanceState, bumpSavedAt = true): void {
+/** Persiste solo el JSON en localStorage (caché). No toca `fm-finance-local-saved-at`; eso lo actualiza la nube al sincronizar bien. */
+export function saveFinanceState(state: FinanceState): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(FINANCE_STORAGE_KEY, JSON.stringify(state));
-    if (bumpSavedAt) touchFinanceLocalSavedAt();
   } catch {
     /* ignore quota / private mode */
   }
