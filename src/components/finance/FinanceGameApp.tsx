@@ -93,6 +93,12 @@ export default function FinanceGameApp() {
     [syncIdTick],
   );
 
+  useEffect(() => {
+    if (!celebration) return;
+    const t = window.setTimeout(() => setCelebration(null), 1800);
+    return () => clearTimeout(t);
+  }, [celebration?.key]);
+
   const applyRemoteRow = useCallback((remote: { state: FinanceState; updatedAt: string }) => {
     setState(remote.state);
     saveFinanceState(remote.state);
@@ -456,7 +462,7 @@ export default function FinanceGameApp() {
         <div className="mt-5 grid min-w-0 gap-4 md:mt-6 md:grid-cols-2 md:items-stretch md:gap-5">
           <FinanceMissionCard mission={mission} />
           <section id="inversion" className="scroll-mt-28 min-w-0">
-            <FinanceEntryForm month={month} onAddEntry={handleAddEntry} />
+            <FinanceEntryForm month={month} entries={state.entries} onAddEntry={handleAddEntry} />
           </section>
         </div>
 

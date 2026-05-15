@@ -16,9 +16,11 @@ interface Props {
   path?: string;
   ogImagePath?: string;
   noindex?: boolean;
+  /** Sin splash ni bloqueo de scroll (p. ej. `/foco-financiero` visto desde acceso directo móvil). */
+  skipSplash?: boolean;
 }
 
-const { title, description, path = '/', ogImagePath, noindex = false } = Astro.props;
+const { title, description, path = '/', ogImagePath, noindex = false, skipSplash = false } = Astro.props;
 const canonical = absoluteUrl(path);
 const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
 ---
@@ -26,10 +28,14 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
 <!doctype html>
 <html lang={site.locale} class="bg-bg-base text-text">
   <head>
-    <script is:inline>
-      // Bloquear scroll inmediatamente hasta que cierre el splash
-      document.documentElement.style.overflow = 'hidden';
-    </script>
+    {
+      !skipSplash ? (
+        <script is:inline>
+          // Bloquear scroll inmediatamente hasta que cierre el splash
+          document.documentElement.style.overflow = 'hidden';
+        </script>
+      ) : null
+    }
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap" rel="stylesheet" />
@@ -76,7 +82,7 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
       </div>
     </div>
 
-    <SplashScreen />
+    {!skipSplash ? <SplashScreen /> : null}
     <AmbientBackdrop />
     <div class="relative z-[1] flex min-h-dvh flex-col">
       <ScrollMotion />

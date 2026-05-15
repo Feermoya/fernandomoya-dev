@@ -106,3 +106,186 @@ function sumByType(
     .filter((e) => e.type === type)
     .reduce((s, e) => s + e.amount, 0);
 }
+
+/** Mínimo mensual (ARS) para contar mes como “racha activa” estilo Duolingo. */
+export const MONTHLY_STREAK_MINIMUM_ARS = 10_000;
+
+export function getCalendarMonthKey(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
+export function previousCalendarMonth(ym: string): string {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(y, m - 1, 1);
+  d.setMonth(d.getMonth() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export function addCalendarMonths(ym: string, delta: number): string {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/** Orden lexicográfico seguro para `YYYY-MM`. */
+export function compareMonthKeys(a: string, b: string): number {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
+export type MonthlyStreakStatus = 'protected' | 'pending' | 'broken';
+
+export type MonthlyStreakInfo = {
+  streakCount: number;
+  status: MonthlyStreakStatus;
+  currentMonthInvested: number;
+  minimumRequired: number;
+  missingForCurrentMonth: number;
+  completedCurrentMonth: boolean;
+  progressPercent: number;
+};
+
+function countConsecutiveQualifiedMonthsBackward(entries: FinanceEntry[], startMonth: string): number {
+  const min = MONTHLY_STREAK_MINIMUM_ARS;
+  let count = 0;
+  let cursor = startMonth;
+  const maxSteps = 600;
+  for (let step = 0; step < maxSteps; step += 1) {
+    if (getMonthlyInvested(entries, cursor) >= min) {
+      count += 1;
+      cursor = previousCalendarMonth(cursor);
+    } else {
+      break;
+    }
+  }
+  return count;
+}
+
+/**
+ * Racha mensual: cada mes cuenta si invirtió ≥ {@link MONTHLY_STREAK_MINIMUM_ARS}.
+ * Mes calendario actual sin mínimo → `pending` (no rompe hasta fin de mes).
+ * Mes pasado sin mínimo → `broken`.
+ */
+export function getMonthlyInvestmentStreak(
+  entries: FinanceEntry[],
+  referenceMonth: string,
+): MonthlyStreakInfo {
+  const min = MONTHLY_STREAK_MINIMUM_ARS;
+  const todayMonth = getCalendarMonthKey();
+  const invRef = getMonthlyInvested(entries, referenceMonth);
+  const completedCurrentMonth = invRef >= min;
+  const missingForCurrentMonth = Math.max(0, min - invRef);
+  const progressPercent = min > 0 ? Math.min(100, Math.round((invRef / min) * 100)) : 100;
+
+  const cmpToday = compareMonthKeys(referenceMonth, todayMonth);
+  const prev = previousCalendarMonth(referenceMonth);
+  const tailBeforeRef = countConsecutiveQualifiedMonthsBackward(entries, prev);
+
+  if (cmpToday > 0) {
+    return {
+      streakCount: tailBeforeRef,
+      status: 'pending',
+      currentMonthInvested: invRef,
+      minimumRequired: min,
+      missingForCurrentMonth,
+      completedCurrentMonth: false,
+      progressPercent,
+    };
+  }
+
+  if (referenceMonth === todayMonth) {
+    if (completedCurrentMonth) {
+      return {
+        streakCount: 1 + tailBeforeRef,
+        status: 'protected',
+        currentMonthInvested: invRef,
+        minimumRequired: min,
+        missingForCurrentMonth: 0,
+        completedCurrentMonth: true,
+        progressPercent: 100,
+      };
+    }
+    return {
+      streakCount: tailBeforeRef,
+      status: 'pending',
+      currentMonthInvested: invRef,
+      minimumRequired: min,
+      missingForCurrentMonth,
+      completedCurrentMonth: false,
+      progressPercent,
+    };
+  }
+
+  if (completedCurrentMonth) {
+    return {
+      streakCount: 1 + tailBeforeRef,
+      status: 'protected',
+      currentMonthInvested: invRef,
+      minimumRequired: min,
+      missingForCurrentMonth: 0,
+      completedCurrentMonth: true,
+      progressPercent: 100,
+    };
+  }
+
+  return {
+    streakCount: tailBeforeRef,
+    status: 'broken',
+    currentMonthInvested: invRef,
+    minimumRequired: min,
+    missingForCurrentMonth,
+    completedCurrentMonth: false,
+    progressPercent,
+  };
+}
+
+export type EntryFormStreakVariant = 'protected' | 'pending_empty' | 'pending_gap' | 'neutral';
+
+export type EntryFormStreakCopy = {
+  variant: EntryFormStreakVariant;
+  message: string;
+  statusLabel: string;
+};
+
+export function getEntryFormStreakCopy(entries: FinanceEntry[], formMonth: string): EntryFormStreakCopy {
+  const today = getCalendarMonthKey();
+  if (formMonth !== today) {
+    return {
+      variant: 'neutral',
+      statusLabel: 'Racha mensual',
+      message: 'La racha se calcula sobre el mes actual.',
+    };
+  }
+  const info = getMonthlyInvestmentStreak(entries, today);
+  if (info.status === 'protected') {
+    return {
+      variant: 'protected',
+      statusLabel: 'Racha protegida',
+      message: 'Este mes ya alcanzaste el mínimo para mantener la racha.',
+    };
+  }
+  if (info.status === 'pending') {
+    if (info.currentMonthInvested <= 0) {
+      return {
+        variant: 'pending_empty',
+        statusLabel: 'Racha en juego',
+        message: `Con ${formatARS(MONTHLY_STREAK_MINIMUM_ARS)} este mes mantenés viva la racha.`,
+      };
+    }
+    return {
+      variant: 'pending_gap',
+      statusLabel: 'Racha en juego',
+      message:
+        info.missingForCurrentMonth > 0
+          ? `Te faltan ${formatARS(info.missingForCurrentMonth)} para proteger tu racha.`
+          : `Invertí al menos ${formatARS(MONTHLY_STREAK_MINIMUM_ARS)} este mes para protegerla.`,
+    };
+  }
+  return {
+    variant: 'neutral',
+    statusLabel: 'Racha',
+    message: 'Un mes pasado quedó sin el mínimo. Podés reconstruir la racha desde este mes.',
+  };
+}

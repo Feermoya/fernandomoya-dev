@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { FinanceAsset, FinanceEntry } from '@/lib/finance/types';
+import { FinanceStreakCallout } from '@/components/finance/FinanceStreakCallout';
 
 type Props = {
   month: string;
+  entries: FinanceEntry[];
   onAddEntry: (entry: FinanceEntry) => void;
   /** Tras persistir la entrada (útil para celebraciones en el padre). */
   onEntrySaved?: (entry: FinanceEntry) => void;
@@ -25,7 +27,7 @@ const BORDER = 'border-emerald-500/50';
 const RING = 'ring-emerald-500/30';
 const GRADIENT = 'from-emerald-600 to-teal-600';
 
-export function FinanceEntryForm({ month, onAddEntry, onEntrySaved }: Props) {
+export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: Props) {
   const [formMonth, setFormMonth] = useState(month);
   const [amount, setAmount] = useState('');
   const [asset, setAsset] = useState<FinanceAsset | ''>('');
@@ -116,6 +118,8 @@ export function FinanceEntryForm({ month, onAddEntry, onEntrySaved }: Props) {
         >
           Cargar inversión
         </button>
+
+        <FinanceStreakCallout entries={entries} contextMonth={formMonth} className="mt-3" />
 
         <details className="mt-3 group">
           <summary className="cursor-pointer list-none text-center text-xs font-bold text-emerald-300/90 underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
