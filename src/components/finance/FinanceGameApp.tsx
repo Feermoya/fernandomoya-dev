@@ -19,8 +19,13 @@ import { FinanceGoals } from '@/components/finance/FinanceGoals';
 import { FinanceLevels } from '@/components/finance/FinanceLevels';
 import { FinanceJsonTools } from '@/components/finance/FinanceJsonTools';
 import { LevelUpOverlay } from '@/components/finance/LevelUpOverlay';
-import { getEntriesByMonth, formatARS } from '@/lib/finance/calculations';
-import { getMonthlyMissionView, getMonthlyLevel, getLevelProgressPercent } from '@/lib/finance/levels';
+import { getEntriesByMonth, formatARS, getTotalInvested, getMonthlyInvested } from '@/lib/finance/calculations';
+import {
+  addMonths,
+  getMonthlyMissionView,
+  getMonthlyLevel,
+  getLevelProgressPercent,
+} from '@/lib/finance/levels';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
 
 type SyncChip = 'synced' | 'saving' | 'error' | 'solo_local';
@@ -315,6 +320,13 @@ export default function FinanceGameApp() {
   );
 
   const month = state.currentMonth;
+  const investedMonth = getMonthlyInvested(state.entries, month);
+  const investedTotal = getTotalInvested(state.entries);
+  const prevMonth = addMonths(month, -1);
+  const investedPrev = getMonthlyInvested(state.entries, prevMonth);
+  const activeMonths = new Set(
+    state.entries.filter((e) => e.type === 'investment' && e.amount > 0).map((e) => e.month),
+  ).size;
   const monthEntries = useMemo(() => getEntriesByMonth(state.entries, month), [state.entries, month]);
   const mission = useMemo(() => getMonthlyMissionView(state, month), [state, month]);
 
@@ -419,7 +431,7 @@ export default function FinanceGameApp() {
   const isEmpty = !hasInvestments && state.goals.length === 0;
 
   return (
-    <div className="finance-app-shell relative isolate min-w-0 overflow-x-hidden pb-20 pt-6 sm:pb-28 sm:pt-8">
+    <div className="finance-app-shell relative isolate min-w-0 overflow-x-hidden pt-3 sm:pt-8">
       <div
         className="pointer-events-none absolute inset-0 -z-10"
         aria-hidden
@@ -434,7 +446,7 @@ export default function FinanceGameApp() {
       />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:24px_24px] opacity-30" aria-hidden />
 
-      <div className="container-page relative z-[1] mx-auto min-w-0 max-w-6xl py-8 sm:py-10">
+      <div className="container-page relative z-[1] mx-auto min-w-0 max-w-6xl py-4 sm:py-10">
         {isEmpty ? (
           <div className="mb-6 rounded-2xl border border-white/10 bg-slate-950/60 p-4 shadow-lg sm:p-5">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300/90">Primer paso</p>
@@ -457,13 +469,61 @@ export default function FinanceGameApp() {
             onMonthChange={(m) => patchState({ currentMonth: m })}
             celebration={celebration}
           />
+
+          <div className="mt-3 grid grid-cols-1 gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3">
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:block">
+              <p className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/40 sm:mb-2">
+                Este mes
+              </p>
+              <div className="min-w-0 text-right sm:text-left">
+              <p className="text-2xl font-black tabular-nums leading-none text-white sm:text-[1.5rem]">
+                {formatARS(investedMonth)}
+              </p>
+              {investedPrev > 0 && (
+                <p
+                  className={`mt-1 text-xs font-semibold tabular-nums sm:text-[11px] ${
+                    investedMonth >= investedPrev ? 'text-green-400' : 'text-red-400'
+                  }`}
+                >
+                  {investedMonth >= investedPrev ? '▲' : '▼'} vs {formatARS(investedPrev)}
+                </p>
+              )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:block">
+              <p className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/40 sm:mb-2">
+                Acumulado
+              </p>
+              <div className="min-w-0 text-right sm:text-left">
+                <p className="text-2xl font-black tabular-nums leading-none text-white sm:text-[1.5rem]">
+                  {formatARS(investedTotal)}
+                </p>
+                <p className="mt-1 text-xs text-white/40 sm:mt-1.5 sm:text-[11px]">histórico total</p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:block">
+              <p className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/40 sm:mb-2">
+                Meses activos
+              </p>
+              <div className="min-w-0 text-right sm:text-left">
+                <p className="text-2xl font-black tabular-nums leading-none text-white sm:text-[1.5rem]">
+                  {activeMonths}
+                </p>
+                <p className="mt-1 text-xs text-white/40 sm:mt-1.5 sm:text-[11px]">con inversión</p>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <div className="mt-5 grid min-w-0 gap-4 md:mt-6 md:grid-cols-2 md:items-stretch md:gap-5">
-          <FinanceMissionCard mission={mission} />
-          <section id="inversion" className="scroll-mt-28 min-w-0">
+        <div className="mt-4 flex min-w-0 flex-col gap-4 md:mt-6 md:grid md:grid-cols-2 md:items-stretch md:gap-5">
+          <section id="inversion" className="order-1 scroll-mt-24 min-w-0 pb-2 md:order-2 md:scroll-mt-28 md:pb-0">
             <FinanceEntryForm month={month} entries={state.entries} onAddEntry={handleAddEntry} />
           </section>
+          <div className="order-2 min-w-0 md:order-1">
+            <FinanceMissionCard mission={mission} />
+          </div>
         </div>
 
         <div className="mt-6 md:mt-7">
@@ -517,7 +577,7 @@ export default function FinanceGameApp() {
                       </div>
                       <button
                         type="button"
-                        className="shrink-0 rounded-lg border border-transparent px-2 py-1.5 text-[10px] font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
+                        className="finance-touch-target shrink-0 rounded-lg border border-transparent px-3 py-2 text-xs font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200 active:scale-[0.98]"
                         onClick={() => removeEntry(e.id)}
                       >
                         Borrar
@@ -581,7 +641,7 @@ export default function FinanceGameApp() {
 
         <div className="mt-6 flex min-w-0 flex-col gap-3 md:mt-8">
           <details className="group rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
-            <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
               Ver ruta de niveles
             </summary>
             <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
@@ -599,7 +659,7 @@ export default function FinanceGameApp() {
           </details>
 
           <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
-            <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
               Ver objetivos
             </summary>
             <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
@@ -608,7 +668,7 @@ export default function FinanceGameApp() {
           </details>
 
           <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
-            <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
               Respaldo y sincronización
             </summary>
             <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
@@ -627,7 +687,7 @@ export default function FinanceGameApp() {
           </details>
 
           <details className="rounded-2xl border border-red-500/20 bg-red-950/20 shadow-lg open:pb-1">
-            <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-red-200/95 transition hover:bg-red-950/30 [&::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-red-200/95 transition hover:bg-red-950/30 [&::-webkit-details-marker]:hidden">
               Zona peligrosa
             </summary>
             <div className="border-t border-red-500/15 px-4 pb-4 pt-3">
@@ -646,6 +706,15 @@ export default function FinanceGameApp() {
             </div>
           </details>
         </div>
+      </div>
+
+      <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#06111f]/95 backdrop-blur-md sm:hidden">
+        <a
+          href="#inversion"
+          className="mx-auto flex min-h-[52px] max-w-lg items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 text-base font-black text-slate-950 shadow-lg active:scale-[0.99]"
+        >
+          Cargar inversión
+        </a>
       </div>
 
       {levelUp ? (

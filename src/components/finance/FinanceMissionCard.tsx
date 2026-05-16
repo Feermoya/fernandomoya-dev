@@ -12,15 +12,18 @@ export function FinanceMissionCard({ mission }: Props) {
   const missionTitle = `Llegar a ${formatARS(mission.targetAmount)}`;
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-cyan-500/35 bg-gradient-to-br from-cyan-950/75 via-slate-900/90 to-indigo-950/75 p-4 pr-20 shadow-lg">
+    <section className="relative overflow-hidden rounded-2xl border border-cyan-500/35 bg-gradient-to-br from-cyan-950/75 via-slate-900/90 to-indigo-950/75 p-3.5 shadow-lg sm:p-4 sm:pr-20">
       <div className="pointer-events-none absolute -right-8 top-0 h-28 w-28 rounded-full bg-cyan-500/20 blur-2xl" aria-hidden />
 
-      <div className="absolute right-4 top-4 z-[2] flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-xl shadow-[0_0_35px_-12px_rgba(34,211,238,0.9)]">
-        ⚡
+      <div className="mb-2 flex items-center gap-2 sm:absolute sm:right-4 sm:top-4 sm:mb-0 sm:z-[2]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-lg shadow-[0_0_35px_-12px_rgba(34,211,238,0.9)] sm:h-12 sm:w-12 sm:text-xl">
+          ⚡
+        </span>
+        <span className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-100 sm:hidden">Misión del mes</span>
       </div>
 
       <div className="relative z-[1] flex flex-wrap items-start justify-between gap-2">
-        <span className="rounded-full border border-cyan-400/40 bg-cyan-500/15 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-cyan-100">
+        <span className="hidden rounded-full border border-cyan-400/40 bg-cyan-500/15 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-cyan-100 sm:inline-flex">
           Misión del mes
         </span>
         <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold text-slate-200">
@@ -56,7 +59,7 @@ export function FinanceMissionCard({ mission }: Props) {
       <div className="relative z-[1] mt-3 flex flex-wrap items-center gap-2">
         <a
           href="#inversion"
-          className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2 text-xs font-black text-white shadow-md transition hover:brightness-110 active:scale-[0.99]"
+          className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2.5 text-sm font-black text-white shadow-md transition hover:brightness-110 active:scale-[0.99] sm:min-h-[40px] sm:w-auto sm:text-xs"
         >
           Sumar inversión
         </a>

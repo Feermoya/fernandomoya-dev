@@ -97,6 +97,49 @@
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }
 
+  /** Foco financiero — PWA / acceso directo móvil */
+  .finance-app-shell {
+    padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (min-width: 640px) {
+    .finance-app-shell {
+      padding-bottom: max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem));
+    }
+  }
+
+  .finance-mobile-cta {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .finance-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .finance-input-mobile {
+    font-size: 16px;
+  }
+
+  @media (max-width: 639px) {
+    .finance-app-shell .container-page {
+      padding-left: max(0.875rem, env(safe-area-inset-left, 0px));
+      padding-right: max(0.875rem, env(safe-area-inset-right, 0px));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .finance-hero-enter {
+      animation: none !important;
+    }
+    .finance-level-pulse {
+      animation: none !important;
+    }
+  }
+
   .header-inner {
     transition: padding 0.2s ease-out;
   }

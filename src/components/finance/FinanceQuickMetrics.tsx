@@ -113,11 +113,13 @@ export function FinanceQuickMetrics({ state, month, compact = false }: Props) {
         ? 'from-amber-300 to-orange-300'
         : 'from-rose-300 to-fuchsia-400';
 
-  const pad = compact ? 'p-3 sm:p-4' : 'p-4 sm:p-5';
+  const pad = compact ? 'p-4 sm:p-4' : 'p-4 sm:p-5';
 
   return (
     <div className="space-y-3">
-      <div className={`grid gap-2 sm:gap-3 ${compact ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
+      <div
+        className={`grid gap-2.5 sm:gap-3 ${compact ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}
+      >
         <MetricCard
           label="Invertido este mes"
           value={formatARS(invested)}
@@ -176,7 +178,7 @@ export function FinanceQuickMetrics({ state, month, compact = false }: Props) {
       </div>
 
       <details className="rounded-xl border border-white/10 bg-slate-950/40">
-        <summary className="cursor-pointer list-none px-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-200 sm:px-4 [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-[44px] cursor-pointer list-none items-center px-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-200 sm:px-4 [&::-webkit-details-marker]:hidden">
           Ver métricas completas
         </summary>
         <div className="grid gap-2 border-t border-white/10 p-3 sm:grid-cols-2">

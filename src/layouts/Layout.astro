@@ -40,7 +40,12 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap" rel="stylesheet" />
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content={skipSplash
+        ? 'width=device-width, initial-scale=1, viewport-fit=cover'
+        : 'width=device-width, initial-scale=1'}
+    />
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#0d0f14" />
     <title>{title}</title>

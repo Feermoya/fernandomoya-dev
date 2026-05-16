@@ -71,7 +71,7 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
   return (
     <form
       onSubmit={submit}
-      className={`relative scroll-mt-24 overflow-hidden rounded-2xl border-2 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.20),transparent_32%),linear-gradient(135deg,rgba(2,6,23,0.95),rgba(15,23,42,0.92))] p-4 shadow-xl backdrop-blur-md transition ${BORDER} ${savedFlash ? `ring-2 ring-offset-2 ring-offset-slate-950 ${RING}` : ''}`}
+      className={`relative scroll-mt-24 overflow-hidden rounded-2xl border-2 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.20),transparent_32%),linear-gradient(135deg,rgba(2,6,23,0.95),rgba(15,23,42,0.92))] p-3.5 shadow-xl backdrop-blur-md transition sm:p-4 ${BORDER} ${savedFlash ? `ring-2 ring-offset-2 ring-offset-slate-950 ${RING}` : ''}`}
     >
       {savedFlash ? (
         <div
@@ -102,11 +102,12 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
           <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Monto a invertir</span>
           <input
             type="number"
+            inputMode="decimal"
             min={1}
             step={1}
             required
             placeholder="$ 0"
-            className="min-h-[52px] rounded-2xl border-2 border-emerald-300/20 bg-black/35 px-4 py-3 text-center text-2xl font-black tabular-nums text-white placeholder:text-slate-600 focus:border-emerald-300/50 focus:ring-4 focus:ring-emerald-400/10 sm:text-3xl"
+            className="finance-input-mobile min-h-[52px] rounded-2xl border-2 border-emerald-300/20 bg-black/35 px-4 py-3 text-center text-2xl font-black tabular-nums text-white placeholder:text-slate-600 focus:border-emerald-300/50 focus:ring-4 focus:ring-emerald-400/10 sm:text-3xl"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
@@ -114,7 +115,7 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
 
         <button
           type="submit"
-          className={`mt-3 flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-gradient-to-r px-4 py-3 text-sm font-black text-white shadow-lg transition hover:brightness-110 active:scale-[0.99] ${GRADIENT}`}
+          className={`mt-3 flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-gradient-to-r px-4 py-3.5 text-base font-black text-white shadow-lg transition hover:brightness-110 active:scale-[0.99] sm:min-h-[48px] sm:text-sm ${GRADIENT}`}
         >
           Cargar inversión
         </button>
@@ -131,7 +132,7 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
               <input
                 type="month"
                 required
-                className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-bold text-white"
+                className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-bold text-white"
                 value={formMonth}
                 onChange={(e) => setFormMonth(e.target.value)}
               />
@@ -139,7 +140,7 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
             <label className="flex flex-col gap-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Activo</span>
               <select
-                className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-semibold text-white"
+                className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-semibold text-white"
                 value={asset}
                 onChange={(e) => setAsset(e.target.value as FinanceAsset | '')}
               >
@@ -154,7 +155,7 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
             <label className="flex flex-col gap-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Plataforma</span>
               <select
-                className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-semibold text-white"
+                className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-semibold text-white"
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value as (typeof PLATFORM_OPTIONS)[number])}
               >
@@ -168,7 +169,7 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
             <label className="flex flex-col gap-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Etiqueta</span>
               <input
-                className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-500"
                 placeholder="Ej. CEDEARs, MEP"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}

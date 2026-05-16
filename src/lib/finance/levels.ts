@@ -114,19 +114,17 @@ const LEVEL_TITLES: Record<number, string> = {
 };
 
 function messageForLevel(level: number, _state: FinanceState, _month: string): string {
-  if (level <= 0) {
-    return 'Separá primero. Gastar después.';
-  }
-
-  if (level <= 2) {
-    return 'Tu objetivo hoy: sostener el ritmo.';
-  }
-
-  if (level <= 6) {
-    return 'El mes se gana cuando separás primero.';
-  }
-
-  return 'Este mes jugaste en serio. Menos ruido, más avance.';
+  if (level <= 0) return 'Metés plata este mes o no. No hay términos medios.';
+  if (level === 1) return 'Entraste. Ahora no te quedés acá.';
+  if (level === 2) return 'Buen mes. La distancia entre nivel 2 y 3 es constancia.';
+  if (level === 3) return 'Esto ya es disciplina real. Casi nadie llega acá.';
+  if (level === 4) return 'Millón en el mes. Seguís o bajás — no hay punto muerto.';
+  if (level === 5) return 'Diversificado y en volumen. Esto es construcción.';
+  if (level === 6) return 'Dominio del mes. Tres meses seguidos y cambia todo.';
+  if (level === 7) return 'Racha de tres meses. El mercado te conoce.';
+  if (level === 8) return 'Colchón construido. Ahora jugás con red.';
+  if (level === 9) return 'Seis meses de máquina. Casi no hay quien llegue acá.';
+  return 'Libertad. El juego lo dominaste.';
 }
 
 function nextTargetString(state: FinanceState, month: string, achieved: number): string {
