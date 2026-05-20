@@ -198,6 +198,11 @@ export function FinanceJsonTools({
             <p>
               <span className="font-semibold text-slate-300">ID en este navegador:</span>{' '}
               <code className="break-all rounded bg-black/35 px-1 font-mono text-[10px] text-slate-200">{activeSyncId}</code>
+              {activeSyncId !== DEFAULT_FINANCE_SYNC_ID ? (
+                <span className="mt-1 block text-amber-200/90">
+                  Este dispositivo tenía otro ID; la app ahora usa siempre el libro principal.
+                </span>
+              ) : null}
             </p>
             <p>
               <span className="font-semibold text-slate-300">Última sync conocida:</span> {fmtLast(lastSyncIso)}

@@ -17,11 +17,17 @@ import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
     (function () {
       try {
         var key = 'fm-finance-app-version';
+        var bookId = 'fernando-foco-financiero-main';
+        var syncKey = 'fm-finance-sync-id';
+        var legacyKey = 'fm-finance-legacy-sync-id';
+        var prevSync = localStorage.getItem(syncKey);
+        if (prevSync && prevSync !== bookId && !localStorage.getItem(legacyKey)) {
+          localStorage.setItem(legacyKey, prevSync);
+        }
         if (localStorage.getItem(key) !== financeAppVersion) {
-          localStorage.removeItem('fm-finance-game-v1');
-          localStorage.removeItem('fm-finance-local-saved-at');
           localStorage.setItem(key, financeAppVersion);
         }
+        localStorage.setItem(syncKey, bookId);
       } catch (e) {
         /* ignore */
       }

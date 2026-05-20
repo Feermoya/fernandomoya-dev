@@ -2,17 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FinanceEntry, FinanceGoal, FinanceState } from '@/lib/finance/types';
 import {
   getInitialFinanceState,
-  loadFinanceState,
   saveFinanceState,
   getFinanceSyncId,
-  setFinanceLocalSavedAt,
   getFinanceLocalSavedAt,
+  setFinanceLocalSavedAt,
   resetFinanceSyncIdToDefault,
-  ensureFinanceAppDataVersion,
   DEFAULT_FINANCE_SYNC_ID,
 } from '@/lib/finance/storage';
 import { isStandalonePwa } from '@/lib/finance/pwa';
-import { fetchFinanceRemote, isFinanceCloudConfigured, upsertFinanceRemote } from '@/lib/finance/cloudSync';
+import { isFinanceCloudConfigured, upsertFinanceRemote } from '@/lib/finance/cloudSync';
+import {
+  emptyFinanceStateForCloudMiss,
+  prepareFinanceCloudSession,
+  pullCanonicalFromCloud,
+} from '@/lib/finance/syncBootstrap';
 import { FinanceDashboard, type FinanceDashboardCelebration } from '@/components/finance/FinanceDashboard';
 import { FinanceQuickMetrics } from '@/components/finance/FinanceQuickMetrics';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
@@ -119,7 +122,7 @@ export default function FinanceGameApp() {
   );
 
   useEffect(() => {
-    ensureFinanceAppDataVersion();
+    prepareFinanceCloudSession();
     setLastRemoteAt(getFinanceLocalSavedAt());
   }, []);
 
@@ -135,52 +138,47 @@ export default function FinanceGameApp() {
     return () => clearTimeout(t);
   }, [microToast?.message]);
 
-  const applyRemoteRow = useCallback((remote: { state: FinanceState; updatedAt: string }) => {
-    setState(remote.state);
-    saveFinanceState(remote.state);
-    setFinanceLocalSavedAt(remote.updatedAt);
-    setLastRemoteAt(remote.updatedAt);
+  const applyCloudState = useCallback((next: FinanceState, updatedAt: string) => {
+    setState(next);
+    saveFinanceState(next);
+    setLastRemoteAt(updatedAt);
     setCloudErr(null);
     setSyncChip('synced');
   }, []);
 
-  /** Pull: si hay fila remota, la nube siempre gana (mismo libro en todos los dispositivos). */
+  /** Pull: siempre el libro canónico en Supabase (mismo en Safari, PWA y desktop). */
   const pullFromCloudImmediate = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
     if (pullInFlight.current) return;
-    const sid = getFinanceSyncId();
     pullInFlight.current = true;
     setSyncChip((prev) => (prev === 'loading' ? 'loading' : 'saving'));
     try {
-      if (import.meta.env.DEV) {
-        console.debug('[finance-sync] pull immediate', { syncId: sid });
-      }
-      const remote = await fetchFinanceRemote(sid);
-      if (remote) {
-        applyRemoteRow(remote);
+      const result = await pullCanonicalFromCloud();
+      if (result.ok) {
+        applyCloudState(result.state, result.updatedAt);
         if (import.meta.env.DEV) {
-          console.debug('[finance-sync] pull winner', 'cloud', { updated_at: remote.updatedAt });
+          console.debug('[finance-sync] pull ok', { updated_at: result.updatedAt });
         }
-      } else {
-        const msg = 'No hay fila en la nube para este ID. Revisá Supabase o restablecé el ID.';
-        setCloudErr(msg);
+        return;
+      }
+      if (result.reason === 'empty') {
+        const empty = emptyFinanceStateForCloudMiss();
+        applyCloudState(empty, new Date().toISOString());
+        setCloudErr('No hay inversiones en la nube. Si tenías datos, probá Forzar subir desde el PC.');
         setSyncChip('error');
-        if (import.meta.env.DEV) {
-          console.debug('[finance-sync] pull no row', { syncId: sid });
-        }
+        return;
       }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error al leer la nube.';
+      const msg = result.message ?? 'Error al leer la nube.';
       setCloudErr(msg);
       setSyncChip('error');
       if (import.meta.env.DEV) {
-        console.debug('[finance-sync] pull failed', { syncId: sid, error: msg });
+        console.debug('[finance-sync] pull failed', msg);
       }
-      throw e;
+      throw new Error(msg);
     } finally {
       pullInFlight.current = false;
     }
-  }, [applyRemoteRow]);
+  }, [applyCloudState]);
 
   const scheduleRemoteSave = useCallback((syncId: string, next: FinanceState) => {
     if (!isFinanceCloudConfigured()) return;
@@ -215,7 +213,7 @@ export default function FinanceGameApp() {
         saveFinanceState(next);
         if (typeof window !== 'undefined' && isFinanceCloudConfigured()) {
           setSyncChip('saving');
-          scheduleRemoteSave(getFinanceSyncId(), next);
+          scheduleRemoteSave(DEFAULT_FINANCE_SYNC_ID, next);
         } else if (typeof window !== 'undefined') {
           setSyncChip('solo_local');
         }
@@ -229,23 +227,22 @@ export default function FinanceGameApp() {
 
   const handleForcePush = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
-    const sid = getFinanceSyncId();
     setSyncChip('saving');
     setCloudErr(null);
     try {
-      const iso = await upsertFinanceRemote(sid, stateRef.current);
+      const iso = await upsertFinanceRemote(DEFAULT_FINANCE_SYNC_ID, stateRef.current);
       setFinanceLocalSavedAt(iso);
       setLastRemoteAt(iso);
       setSyncChip('synced');
       if (import.meta.env.DEV) {
-        console.debug('[finance-sync] force push ok', { syncId: sid, updated_at: iso });
+        console.debug('[finance-sync] force push ok', { syncId: DEFAULT_FINANCE_SYNC_ID, updated_at: iso });
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al subir.';
       setCloudErr(msg);
       setSyncChip('error');
       if (import.meta.env.DEV) {
-        console.debug('[finance-sync] force push fail', { syncId: sid, error: msg });
+        console.debug('[finance-sync] force push fail', { syncId: DEFAULT_FINANCE_SYNC_ID, error: msg });
       }
       throw e;
     }
@@ -270,57 +267,39 @@ export default function FinanceGameApp() {
     }
 
     const gen = ++bootGenRef.current;
-    const sid = getFinanceSyncId();
     setCloudReady(false);
     setSyncChip('loading');
     setCloudErr(null);
 
     async function boot() {
-      ensureFinanceAppDataVersion();
       try {
         if (import.meta.env.DEV) {
-          console.debug('[finance-sync] boot start', { syncId: sid, pwa: isStandalonePwa() });
+          console.debug('[finance-sync] boot start', {
+            syncId: DEFAULT_FINANCE_SYNC_ID,
+            pwa: isStandalonePwa(),
+          });
         }
-        const remote = await fetchFinanceRemote(sid);
+        const result = await pullCanonicalFromCloud();
         if (gen !== bootGenRef.current) return;
 
-        if (remote) {
-          applyRemoteRow(remote);
+        if (result.ok) {
+          applyCloudState(result.state, result.updatedAt);
           if (import.meta.env.DEV) {
-            console.debug('[finance-sync] boot winner', 'cloud', { updated_at: remote.updatedAt });
+            console.debug('[finance-sync] boot ok', { updated_at: result.updatedAt });
           }
           return;
         }
 
-        const local = loadFinanceState();
-        const hasLocal = local.entries.length > 0 || local.goals.length > 0;
-        if (gen !== bootGenRef.current) return;
+        if (result.reason === 'empty') {
+          const empty = emptyFinanceStateForCloudMiss();
+          applyCloudState(empty, new Date().toISOString());
+          setCloudErr('No hay inversiones en la nube todavía.');
+          setSyncChip('error');
+          return;
+        }
 
-        if (hasLocal) {
-          const iso = await upsertFinanceRemote(sid, local);
-          if (gen !== bootGenRef.current) return;
-          setFinanceLocalSavedAt(iso);
-          setLastRemoteAt(iso);
-          setState(local);
-          saveFinanceState(local);
-          setCloudErr(null);
-          setSyncChip('synced');
-          if (import.meta.env.DEV) {
-            console.debug('[finance-sync] boot winner', 'local_seed', { updated_at: iso });
-          }
-        } else {
-          setState(local);
-          saveFinanceState(local);
-          setSyncChip('synced');
-        }
-      } catch (e) {
-        if (gen !== bootGenRef.current) return;
-        const msg = e instanceof Error ? e.message : 'Error al leer la nube.';
-        setCloudErr(msg);
+        setCloudErr(result.message ?? 'Error al leer la nube.');
         setSyncChip('error');
-        if (import.meta.env.DEV) {
-          console.debug('[finance-sync] boot error', { syncId: sid, error: msg });
-        }
       } finally {
         if (gen === bootGenRef.current) {
           setCloudReady(true);
@@ -329,7 +308,7 @@ export default function FinanceGameApp() {
     }
 
     void boot();
-  }, [applyRemoteRow, syncIdTick]);
+  }, [applyCloudState, syncIdTick]);
 
   useEffect(() => {
     if (!isFinanceCloudConfigured()) return;

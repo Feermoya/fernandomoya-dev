@@ -4,6 +4,8 @@ import { getDefaultPreferences, normalizePreferences, withPreferences } from '@/
 
 export const FINANCE_STORAGE_KEY = 'fm-finance-game-v1';
 export const FINANCE_SYNC_ID_KEY = 'fm-finance-sync-id';
+/** ID de fila vieja en Supabase (frase/hash) — se usa solo para recuperar datos. */
+export const FINANCE_LEGACY_SYNC_ID_KEY = 'fm-finance-legacy-sync-id';
 export const FINANCE_LOCAL_SAVED_AT_KEY = 'fm-finance-local-saved-at';
 const FINANCE_APP_VERSION_KEY = 'fm-finance-app-version';
 
@@ -14,31 +16,60 @@ const FINANCE_APP_VERSION_KEY = 'fm-finance-app-version';
 export function ensureFinanceAppDataVersion(): boolean {
   if (typeof window === 'undefined') return false;
   const prev = window.localStorage.getItem(FINANCE_APP_VERSION_KEY);
-  if (prev === FINANCE_APP_DATA_VERSION) return false;
-  window.localStorage.removeItem(FINANCE_STORAGE_KEY);
-  window.localStorage.removeItem(FINANCE_LOCAL_SAVED_AT_KEY);
-  window.localStorage.setItem(FINANCE_APP_VERSION_KEY, FINANCE_APP_DATA_VERSION);
-  return true;
+  const changed = prev !== FINANCE_APP_DATA_VERSION;
+  if (changed) {
+    window.localStorage.removeItem(FINANCE_STORAGE_KEY);
+    window.localStorage.removeItem(FINANCE_LOCAL_SAVED_AT_KEY);
+    window.localStorage.setItem(FINANCE_APP_VERSION_KEY, FINANCE_APP_DATA_VERSION);
+  }
+  resetFinanceSyncIdToDefault();
+  return changed;
 }
 
 /** ID fijo de la fila en Supabase para esta app personal (un solo libro). */
 export const DEFAULT_FINANCE_SYNC_ID = 'fernando-foco-financiero-main';
 
-export function getFinanceSyncId(): string {
-  if (typeof window === 'undefined') return DEFAULT_FINANCE_SYNC_ID;
+/** Filas viejas en Supabase (frase/hash) — recuperación si el canónico quedó vacío. */
+export const KNOWN_LEGACY_CLOUD_IDS = [
+  'cf785dd8a8f0fd292bc676da6874cf6d4cf7d17b549204ab78981514bdc837a9',
+] as const;
 
-  const stored = window.localStorage.getItem(FINANCE_SYNC_ID_KEY);
-
-  if (stored && stored.trim().length > 0) {
-    return stored.trim();
+/** Guarda el ID viejo antes de migrar al canónico (no borra datos locales). */
+export function captureLegacySyncId(): void {
+  if (typeof window === 'undefined') return;
+  const stored = window.localStorage.getItem(FINANCE_SYNC_ID_KEY)?.trim();
+  if (stored && stored !== DEFAULT_FINANCE_SYNC_ID) {
+    const legacy = window.localStorage.getItem(FINANCE_LEGACY_SYNC_ID_KEY);
+    if (!legacy) {
+      window.localStorage.setItem(FINANCE_LEGACY_SYNC_ID_KEY, stored);
+    }
   }
+}
 
-  window.localStorage.setItem(FINANCE_SYNC_ID_KEY, DEFAULT_FINANCE_SYNC_ID);
+/** IDs a consultar en Supabase: canónico + legado (si existe). */
+export function listCloudSyncCandidateIds(): string[] {
+  const ids = new Set<string>([DEFAULT_FINANCE_SYNC_ID, ...KNOWN_LEGACY_CLOUD_IDS]);
+  if (typeof window !== 'undefined') {
+    const legacy = window.localStorage.getItem(FINANCE_LEGACY_SYNC_ID_KEY)?.trim();
+    if (legacy) ids.add(legacy);
+    const stored = window.localStorage.getItem(FINANCE_SYNC_ID_KEY)?.trim();
+    if (stored) ids.add(stored);
+  }
+  return [...ids];
+}
+
+/** Escrituras van siempre al libro canónico. */
+export function getFinanceSyncId(): string {
+  if (typeof window !== 'undefined') {
+    captureLegacySyncId();
+    window.localStorage.setItem(FINANCE_SYNC_ID_KEY, DEFAULT_FINANCE_SYNC_ID);
+  }
   return DEFAULT_FINANCE_SYNC_ID;
 }
 
 export function resetFinanceSyncIdToDefault(): void {
   if (typeof window === 'undefined') return;
+  captureLegacySyncId();
   window.localStorage.setItem(FINANCE_SYNC_ID_KEY, DEFAULT_FINANCE_SYNC_ID);
 }
 
