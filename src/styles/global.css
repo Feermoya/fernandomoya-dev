@@ -103,6 +103,21 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  .finance-app-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin-left: calc(-1 * max(0.875rem, env(safe-area-inset-left, 0px)));
+    margin-right: calc(-1 * max(0.875rem, env(safe-area-inset-right, 0px)));
+    margin-top: calc(-1 * max(0.75rem, env(safe-area-inset-top, 0px)));
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+    padding-left: max(0.875rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.875rem, env(safe-area-inset-right, 0px));
+    padding-bottom: 0.5rem;
+    background: linear-gradient(180deg, rgb(6 17 31 / 0.98) 0%, rgb(6 17 31 / 0.9) 75%, transparent 100%);
+    backdrop-filter: blur(10px);
+  }
+
   @media (min-width: 640px) {
     .finance-app-shell {
       padding-bottom: max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem));
@@ -143,6 +158,7 @@
   .finance-app-html {
     background-color: #06111f;
   }
+
 
   @keyframes finance-micro-toast-in {
     from {

@@ -8,8 +8,10 @@ import {
   setFinanceLocalSavedAt,
   getFinanceLocalSavedAt,
   resetFinanceSyncIdToDefault,
+  ensureFinanceAppDataVersion,
   DEFAULT_FINANCE_SYNC_ID,
 } from '@/lib/finance/storage';
+import { isStandalonePwa } from '@/lib/finance/pwa';
 import { fetchFinanceRemote, isFinanceCloudConfigured, upsertFinanceRemote } from '@/lib/finance/cloudSync';
 import { FinanceDashboard, type FinanceDashboardCelebration } from '@/components/finance/FinanceDashboard';
 import { FinanceQuickMetrics } from '@/components/finance/FinanceQuickMetrics';
@@ -49,7 +51,6 @@ function levelUpMessageFor(nextLevel: number): string | undefined {
 }
 
 function initialSyncChip(): SyncChip {
-  if (typeof window === 'undefined') return 'solo_local';
   return isFinanceCloudConfigured() ? 'loading' : 'solo_local';
 }
 
@@ -84,22 +85,15 @@ function SyncStatusChip({ status }: { status: SyncChip }) {
 }
 
 export default function FinanceGameApp() {
-  const cloudConfigured =
-    typeof window !== 'undefined' ? isFinanceCloudConfigured() : false;
+  const cloudOn = isFinanceCloudConfigured();
 
-  const [state, setState] = useState<FinanceState>(() => {
-    if (typeof window === 'undefined') return getInitialFinanceState();
-    if (isFinanceCloudConfigured()) return getInitialFinanceState();
-    return loadFinanceState();
-  });
+  const [state, setState] = useState<FinanceState>(() => getInitialFinanceState());
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const [cloudReady, setCloudReady] = useState(() => !cloudConfigured);
+  const [cloudReady, setCloudReady] = useState(() => !cloudOn);
   const [syncChip, setSyncChip] = useState<SyncChip>(() => initialSyncChip());
-  const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(() =>
-    typeof window !== 'undefined' ? getFinanceLocalSavedAt() : null,
-  );
+  const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(null);
   const [cloudErr, setCloudErr] = useState<string | null>(null);
   const [syncIdTick, setSyncIdTick] = useState(0);
 
@@ -120,9 +114,14 @@ export default function FinanceGameApp() {
   const bootGenRef = useRef(0);
 
   const activeSyncId = useMemo(
-    () => (typeof window !== 'undefined' ? getFinanceSyncId() : DEFAULT_FINANCE_SYNC_ID),
+    () => getFinanceSyncId(),
     [syncIdTick],
   );
+
+  useEffect(() => {
+    ensureFinanceAppDataVersion();
+    setLastRemoteAt(getFinanceLocalSavedAt());
+  }, []);
 
   useEffect(() => {
     if (!celebration) return;
@@ -156,14 +155,19 @@ export default function FinanceGameApp() {
       if (import.meta.env.DEV) {
         console.debug('[finance-sync] pull immediate', { syncId: sid });
       }
-      const remote = await fetchFinanceRemote(sid, { bustCache: true });
+      const remote = await fetchFinanceRemote(sid);
       if (remote) {
         applyRemoteRow(remote);
         if (import.meta.env.DEV) {
           console.debug('[finance-sync] pull winner', 'cloud', { updated_at: remote.updatedAt });
         }
-      } else if (import.meta.env.DEV) {
-        console.debug('[finance-sync] pull no row', { syncId: sid });
+      } else {
+        const msg = 'No hay fila en la nube para este ID. Revisá Supabase o restablecé el ID.';
+        setCloudErr(msg);
+        setSyncChip('error');
+        if (import.meta.env.DEV) {
+          console.debug('[finance-sync] pull no row', { syncId: sid });
+        }
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al leer la nube.';
@@ -272,11 +276,12 @@ export default function FinanceGameApp() {
     setCloudErr(null);
 
     async function boot() {
+      ensureFinanceAppDataVersion();
       try {
         if (import.meta.env.DEV) {
-          console.debug('[finance-sync] boot start', { syncId: sid });
+          console.debug('[finance-sync] boot start', { syncId: sid, pwa: isStandalonePwa() });
         }
-        let remote = await fetchFinanceRemote(sid, { bustCache: true });
+        const remote = await fetchFinanceRemote(sid);
         if (gen !== bootGenRef.current) return;
 
         if (remote) {
@@ -313,9 +318,6 @@ export default function FinanceGameApp() {
         const msg = e instanceof Error ? e.message : 'Error al leer la nube.';
         setCloudErr(msg);
         setSyncChip('error');
-        const fallback = loadFinanceState();
-        setState(fallback);
-        saveFinanceState(fallback);
         if (import.meta.env.DEV) {
           console.debug('[finance-sync] boot error', { syncId: sid, error: msg });
         }
@@ -356,6 +358,17 @@ export default function FinanceGameApp() {
       window.removeEventListener('pageshow', onPageShow);
     };
   }, [pullFromCloudImmediate]);
+
+  useEffect(() => {
+    if (!isFinanceCloudConfigured() || !cloudReady) return;
+    if (!isStandalonePwa()) return;
+
+    const tick = () => {
+      if (document.visibilityState === 'visible') void pullFromCloudImmediate();
+    };
+    const id = window.setInterval(tick, 45_000);
+    return () => clearInterval(id);
+  }, [cloudReady, pullFromCloudImmediate]);
 
   const replaceState = useCallback(
     (next: FinanceState) => {
@@ -542,7 +555,7 @@ export default function FinanceGameApp() {
   const isEmpty = !hasInvestments && state.goals.length === 0;
 
   return (
-    <div className="finance-app-shell relative isolate min-w-0 overflow-x-hidden pt-3 sm:pt-8">
+    <div className="finance-app-shell relative isolate min-w-0 overflow-x-hidden sm:pt-2">
       <div
         className="pointer-events-none absolute inset-0 -z-10"
         aria-hidden
@@ -558,7 +571,23 @@ export default function FinanceGameApp() {
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:24px_24px] opacity-30" aria-hidden />
 
       <div className="container-page relative z-[1] mx-auto min-w-0 max-w-lg py-3 sm:max-w-2xl sm:py-6">
-        <header className="mb-3 flex items-start justify-between gap-3 sm:mb-4">
+        {cloudErr && cloudReady ? (
+          <div
+            className="mb-2 flex flex-col gap-2 rounded-xl border border-rose-500/35 bg-rose-950/40 p-3 sm:mb-3"
+            role="alert"
+          >
+            <p className="text-xs font-bold text-rose-200">{cloudErr}</p>
+            <button
+              type="button"
+              onClick={() => void pullFromCloudImmediate()}
+              className="min-h-[40px] self-start rounded-xl bg-rose-600/25 px-3 text-xs font-black text-rose-50"
+            >
+              Reintentar sincronización
+            </button>
+          </div>
+        ) : null}
+
+        <header className="finance-app-header mb-3 flex items-start justify-between gap-3 sm:mb-4">
           <div className="min-w-0">
             <h1 className="text-lg font-black tracking-tight text-white sm:text-xl">Foco financiero</h1>
             <p className="text-xs font-semibold text-white/45">Cargá, mirá el nivel, seguí la racha</p>

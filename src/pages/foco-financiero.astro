@@ -2,6 +2,7 @@
 import Layout from '@/layouts/Layout.astro';
 import FinanceGameApp from '@/components/finance/FinanceGameApp';
 import { pageTitle } from '@/utils/seo';
+import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
 ---
 
 <Layout
@@ -12,5 +13,19 @@ import { pageTitle } from '@/utils/seo';
   skipSplash={true}
   appShell={true}
 >
-  <FinanceGameApp client:load />
+  <script is:inline define:vars={{ financeAppVersion: FINANCE_APP_DATA_VERSION }}>
+    (function () {
+      try {
+        var key = 'fm-finance-app-version';
+        if (localStorage.getItem(key) !== financeAppVersion) {
+          localStorage.removeItem('fm-finance-game-v1');
+          localStorage.removeItem('fm-finance-local-saved-at');
+          localStorage.setItem(key, financeAppVersion);
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    })();
+  </script>
+  <FinanceGameApp client:only="react" />
 </Layout>

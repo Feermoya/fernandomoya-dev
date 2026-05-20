@@ -1,9 +1,25 @@
+import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
 import type { FinanceState } from '@/lib/finance/types';
 import { getDefaultPreferences, normalizePreferences, withPreferences } from '@/lib/finance/preferences';
 
 export const FINANCE_STORAGE_KEY = 'fm-finance-game-v1';
 export const FINANCE_SYNC_ID_KEY = 'fm-finance-sync-id';
 export const FINANCE_LOCAL_SAVED_AT_KEY = 'fm-finance-local-saved-at';
+const FINANCE_APP_VERSION_KEY = 'fm-finance-app-version';
+
+/**
+ * Si cambió la versión de la app (deploy), borra caché local de datos.
+ * Crítico en PWA iOS, que guarda localStorage aparte de Safari.
+ */
+export function ensureFinanceAppDataVersion(): boolean {
+  if (typeof window === 'undefined') return false;
+  const prev = window.localStorage.getItem(FINANCE_APP_VERSION_KEY);
+  if (prev === FINANCE_APP_DATA_VERSION) return false;
+  window.localStorage.removeItem(FINANCE_STORAGE_KEY);
+  window.localStorage.removeItem(FINANCE_LOCAL_SAVED_AT_KEY);
+  window.localStorage.setItem(FINANCE_APP_VERSION_KEY, FINANCE_APP_DATA_VERSION);
+  return true;
+}
 
 /** ID fijo de la fila en Supabase para esta app personal (un solo libro). */
 export const DEFAULT_FINANCE_SYNC_ID = 'fernando-foco-financiero-main';

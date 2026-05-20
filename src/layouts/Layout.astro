@@ -54,10 +54,12 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     {
       appShell ? (
         <>
+          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+          <meta http-equiv="Pragma" content="no-cache" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-title" content="Foco financiero" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-          <link rel="manifest" href="/foco-financiero.webmanifest" />
+          <link rel="manifest" href="/foco-financiero.webmanifest?v=2" />
         </>
       ) : null
     }
@@ -123,11 +125,7 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     </div>
 
     {
-      appShell ? (
-        <script>
-          import '@/scripts/fm-page-transition.ts';
-        </script>
-      ) : (
+      appShell ? null : (
         <script>
           import '@/scripts/fm-page-transition.ts';
           import '@/scripts/fm-lenis.ts';

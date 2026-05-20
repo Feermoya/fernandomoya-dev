@@ -50,7 +50,6 @@ export type RemoteFinanceRow = {
 
 export async function fetchFinanceRemote(
   syncId: string = DEFAULT_FINANCE_SYNC_ID,
-  _options?: { bustCache?: boolean },
 ): Promise<RemoteFinanceRow | null> {
   if (!isFinanceCloudConfigured()) return null;
   if (import.meta.env.DEV) {
@@ -62,11 +61,13 @@ export async function fetchFinanceRemote(
   const res = await fetch(url, {
     headers: {
       ...headersRead(),
-      'Cache-Control': 'no-cache, no-store',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
       Pragma: 'no-cache',
+      Expires: '0',
     },
     method: 'GET',
     cache: 'no-store',
+    credentials: 'omit',
   });
 
   if (!res.ok) {
