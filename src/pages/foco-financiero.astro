@@ -6,85 +6,11 @@ import { pageTitle } from '@/utils/seo';
 
 <Layout
   title={pageTitle('Foco financiero')}
-  description="Mini app personal de progreso e inversión mensual. Datos solo en tu navegador."
+  description="Tu progreso e inversión mensual en una sola pantalla."
   path="/foco-financiero"
   noindex={true}
   skipSplash={true}
+  appShell={true}
 >
-  <section class="relative overflow-hidden border-b border-white/[0.08] bg-[#06111f]">
-    <div class="pointer-events-none absolute inset-0">
-      <div
-        class="absolute left-[-10%] top-[-40%] h-48 w-48 rounded-full bg-emerald-500/15 blur-3xl sm:h-72 sm:w-72 sm:bg-emerald-500/20"
-      >
-      </div>
-      <div
-        class="absolute right-[-8%] top-[-30%] h-52 w-52 rounded-full bg-violet-500/15 blur-3xl sm:h-80 sm:w-80 sm:bg-violet-500/20"
-      >
-      </div>
-      <div
-        class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:32px_32px] opacity-25 sm:opacity-40"
-      >
-      </div>
-    </div>
-
-    <div class="container-page relative z-[1] py-5 sm:py-10">
-      <div class="max-w-5xl">
-        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-          <span
-            class="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200 sm:px-3 sm:py-1 sm:text-[10px] sm:tracking-[0.22em]"
-          >
-            App personal
-          </span>
-          <span
-            class="rounded-full border border-violet-400/30 bg-violet-400/10 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-violet-200 sm:px-3 sm:py-1 sm:text-[10px] sm:tracking-[0.22em]"
-          >
-            Modo juego
-          </span>
-        </div>
-
-        <h1 class="mt-4 max-w-3xl text-[1.65rem] font-black leading-[1.15] tracking-tight text-white sm:mt-5 sm:text-5xl sm:leading-tight">
-          Convertí inversión mensual en progreso visible.
-        </h1>
-
-        <p class="mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-slate-300 sm:mt-4 sm:text-lg">
-          Una pantalla para ver tu nivel, cargar inversión y saber qué falta para subir.
-        </p>
-
-        <div class="mt-5 flex flex-col gap-2.5 sm:mt-6 sm:flex-row sm:flex-wrap sm:gap-3">
-          <a
-            href="#inversion"
-            class="inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-3.5 text-sm font-black text-slate-950 shadow-[0_18px_45px_-18px_rgba(16,185,129,0.9)] transition hover:brightness-110 active:scale-[0.99] sm:w-auto sm:py-3"
-          >
-            Cargar inversión
-          </a>
-
-          <a
-            href="#dashboard-financiero"
-            class="inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-white/12 bg-white/7 px-5 py-3.5 text-sm font-black text-white backdrop-blur-md transition hover:bg-white/10 active:scale-[0.99] sm:w-auto sm:py-3"
-          >
-            Ver nivel actual
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <details class="container-page border-b border-white/[0.04] py-2 text-sm text-slate-500">
-    <summary
-      class="finance-touch-target flex cursor-pointer list-none items-center text-sm font-medium text-slate-500 hover:text-slate-400 [&::-webkit-details-marker]:hidden"
-    >
-      Por qué existe esto
-    </summary>
-    <div class="mt-2 max-w-2xl space-y-2 rounded-lg border border-white/[0.06] bg-slate-950/40 p-3 text-sm text-slate-400">
-      <p>
-        Herramienta personal: no está en el menú principal. Con variables de nube en el hosting, los datos se guardan
-        solos entre dispositivos; si no, quedan en el navegador y podés usar Respaldo (JSON / archivo).
-      </p>
-      <p class="text-xs text-slate-500">
-        Reglas: registrar cada inversión cuando la hacés, mirar el nivel del mes y la ruta.
-      </p>
-    </div>
-  </details>
-
   <FinanceGameApp client:load />
 </Layout>

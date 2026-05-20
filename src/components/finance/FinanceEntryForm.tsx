@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { formatARS } from '@/lib/finance/calculations';
+import { DEFAULT_QUICK_AMOUNTS } from '@/lib/finance/preferences';
 import type { FinanceAsset, FinanceEntry } from '@/lib/finance/types';
 import { FinanceStreakCallout } from '@/components/finance/FinanceStreakCallout';
 
 type Props = {
   month: string;
   entries: FinanceEntry[];
+  quickAmounts?: number[];
   onAddEntry: (entry: FinanceEntry) => void;
   /** Tras persistir la entrada (útil para celebraciones en el padre). */
   onEntrySaved?: (entry: FinanceEntry) => void;
@@ -27,7 +30,8 @@ const BORDER = 'border-emerald-500/50';
 const RING = 'ring-emerald-500/30';
 const GRADIENT = 'from-emerald-600 to-teal-600';
 
-export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: Props) {
+export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onEntrySaved }: Props) {
+  const quickList = quickAmounts?.length ? quickAmounts : [...DEFAULT_QUICK_AMOUNTS];
   const [formMonth, setFormMonth] = useState(month);
   const [amount, setAmount] = useState('');
   const [asset, setAsset] = useState<FinanceAsset | ''>('');
@@ -39,6 +43,16 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
   useEffect(() => {
     setFormMonth(month);
   }, [month]);
+
+  const lastSameMonth = entries
+    .filter((e) => e.type === 'investment' && e.month === formMonth)
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
+
+  const addQuick = (n: number) => {
+    const cur = Number(amount.replace(',', '.'));
+    const base = Number.isFinite(cur) && cur > 0 ? cur : 0;
+    setAmount(String(base + n));
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +126,28 @@ export function FinanceEntryForm({ month, entries, onAddEntry, onEntrySaved }: P
             onChange={(e) => setAmount(e.target.value)}
           />
         </label>
+
+        <div className="mt-2 flex flex-wrap gap-2">
+          {quickList.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => addQuick(n)}
+              className="min-h-[40px] rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 text-xs font-black tabular-nums text-emerald-100 transition hover:bg-emerald-500/20 active:scale-[0.98]"
+            >
+              {n >= 1_000_000 ? `+${(n / 1_000_000).toFixed(1)}M` : `+${Math.round(n / 1000)}k`}
+            </button>
+          ))}
+          {lastSameMonth ? (
+            <button
+              type="button"
+              onClick={() => setAmount(String(lastSameMonth.amount))}
+              className="min-h-[40px] rounded-xl border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-300 transition hover:bg-white/10 active:scale-[0.98]"
+            >
+              Repetir {formatARS(lastSameMonth.amount)}
+            </button>
+          ) : null}
+        </div>
 
         <button
           type="submit"

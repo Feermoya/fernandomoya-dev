@@ -57,6 +57,26 @@ export type MonthlyChallenge = {
   completed: boolean;
 };
 
+export type FinanceReminderSettings = {
+  enabled: boolean;
+  /** Solo dígitos, con código país (ej. 5491123456789). */
+  phoneDigits: string;
+  /** Días del mes (1–28) en los que querés el empujón. */
+  daysOfMonth: number[];
+  /** Opcional: API key de CallMeBot para envío automático por WhatsApp. */
+  callMeBotApiKey?: string;
+  messageTemplate?: string;
+  /** YYYY-MM del último aviso in-app descartado (legacy). */
+  lastAutoReminderMonth?: string;
+  /** Claves enviadas por cron/manual: `YYYY-MM-D` (ej. `2026-05-15`). */
+  lastCronReminderKeys?: string[];
+};
+
+export type FinancePreferences = {
+  quickAmounts: number[];
+  reminder: FinanceReminderSettings;
+};
+
 /** Meta opcional para nivel 10 (patrimonio / inversión total). */
 export type FinanceState = {
   entries: FinanceEntry[];
@@ -64,6 +84,7 @@ export type FinanceState = {
   challenges: MonthlyChallenge[];
   currentMonth: string;
   wealthTarget?: number;
+  preferences?: FinancePreferences;
 };
 
 export type MonthlyLevelResult = {

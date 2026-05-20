@@ -13,6 +13,8 @@ export const site = {
   social: {
     /** Enlace wa.me sin + en la ruta. */
     whatsapp: 'https://wa.me/5492615760276',
+    /** Mismo número, solo dígitos (recordatorios Foco / CallMeBot). */
+    whatsappPhoneDigits: '5492615760276',
   },
   /** Frase corta: footer, hero secundario. */
   tagline: 'Sitios claros, pensados para presentar tu negocio y facilitar el contacto.',

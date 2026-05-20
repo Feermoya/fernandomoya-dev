@@ -12,20 +12,33 @@ import {
 } from '@/lib/finance/storage';
 import { fetchFinanceRemote, isFinanceCloudConfigured, upsertFinanceRemote } from '@/lib/finance/cloudSync';
 import { FinanceDashboard, type FinanceDashboardCelebration } from '@/components/finance/FinanceDashboard';
-import { FinanceMissionCard } from '@/components/finance/FinanceMissionCard';
 import { FinanceQuickMetrics } from '@/components/finance/FinanceQuickMetrics';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
+import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
+import { FinanceMicroToast } from '@/components/finance/FinanceMicroToast';
+import { FinanceConfettiBurst } from '@/components/finance/FinanceConfettiBurst';
+import { FinanceEntryEditModal } from '@/components/finance/FinanceEntryEditModal';
+import { FinanceWhatsAppReminders } from '@/components/finance/FinanceWhatsAppReminders';
+import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmountsEditor';
+import { triggerEntryHaptic } from '@/lib/finance/celebration';
+import {
+  normalizePreferences,
+  shouldShowInAppReminder,
+  buildWhatsAppLink,
+  reminderMessageForMonth,
+  reminderStatusLine,
+  DEFAULT_REMINDER_MESSAGE,
+} from '@/lib/finance/preferences';
+import { getCalendarMonthKey } from '@/lib/finance/calculations';
+import { cronReminderRunKey, markCronReminderSent } from '@/lib/finance/preferences';
+import { getArgentinaDateParts } from '@/lib/finance/timezone';
+import type { FinancePreferences } from '@/lib/finance/types';
 import { FinanceGoals } from '@/components/finance/FinanceGoals';
 import { FinanceLevels } from '@/components/finance/FinanceLevels';
 import { FinanceJsonTools } from '@/components/finance/FinanceJsonTools';
 import { LevelUpOverlay } from '@/components/finance/LevelUpOverlay';
-import { getEntriesByMonth, formatARS, getTotalInvested, getMonthlyInvested } from '@/lib/finance/calculations';
-import {
-  addMonths,
-  getMonthlyMissionView,
-  getMonthlyLevel,
-  getLevelProgressPercent,
-} from '@/lib/finance/levels';
+import { getEntriesByMonth, formatARS, getMonthlyInvested } from '@/lib/finance/calculations';
+import { getMonthlyMissionView, getMonthlyLevel, getLevelProgressPercent } from '@/lib/finance/levels';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
 
 type SyncChip = 'synced' | 'saving' | 'error' | 'solo_local';
@@ -43,12 +56,12 @@ function initialSyncChip(): SyncChip {
 function SyncStatusChip({ status }: { status: SyncChip }) {
   const label =
     status === 'synced'
-      ? 'Sincronizado'
+      ? 'Guardado en la nube'
       : status === 'saving'
-        ? 'Guardando...'
+        ? 'Guardando…'
         : status === 'error'
-          ? 'Error al sincronizar'
-          : 'Solo local';
+          ? 'No se pudo guardar'
+          : 'Solo en este dispositivo';
   const cls =
     status === 'synced'
       ? 'border-emerald-500/35 bg-emerald-950/50 text-emerald-200/95'
@@ -59,7 +72,7 @@ function SyncStatusChip({ status }: { status: SyncChip }) {
   return (
     <span
       role="status"
-      className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${cls}`}
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${cls}`}
     >
       <span className="truncate">{label}</span>
     </span>
@@ -88,6 +101,9 @@ export default function FinanceGameApp() {
   } | null>(null);
   const [celebration, setCelebration] = useState<FinanceDashboardCelebration | null>(null);
   const celebrationKeyRef = useRef(0);
+  const [microToast, setMicroToast] = useState<{ message: string; sub?: string } | null>(null);
+  const [confettiKey, setConfettiKey] = useState(0);
+  const [editingEntry, setEditingEntry] = useState<FinanceEntry | null>(null);
 
   const remoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pullInFlight = useRef(false);
@@ -103,6 +119,12 @@ export default function FinanceGameApp() {
     const t = window.setTimeout(() => setCelebration(null), 1800);
     return () => clearTimeout(t);
   }, [celebration?.key]);
+
+  useEffect(() => {
+    if (!microToast) return;
+    const t = window.setTimeout(() => setMicroToast(null), 2600);
+    return () => clearTimeout(t);
+  }, [microToast?.message]);
 
   const applyRemoteRow = useCallback((remote: { state: FinanceState; updatedAt: string }) => {
     setState(remote.state);
@@ -319,16 +341,45 @@ export default function FinanceGameApp() {
     [persist],
   );
 
+  const preferences = useMemo(() => normalizePreferences(state.preferences), [state.preferences]);
+
+  const patchPreferences = useCallback(
+    (prefs: FinancePreferences) => {
+      persist((prev) => ({ ...prev, preferences: prefs }));
+    },
+    [persist],
+  );
+
   const month = state.currentMonth;
-  const investedMonth = getMonthlyInvested(state.entries, month);
-  const investedTotal = getTotalInvested(state.entries);
-  const prevMonth = addMonths(month, -1);
-  const investedPrev = getMonthlyInvested(state.entries, prevMonth);
-  const activeMonths = new Set(
-    state.entries.filter((e) => e.type === 'investment' && e.amount > 0).map((e) => e.month),
-  ).size;
+  const todayMonth = getCalendarMonthKey();
+  const investedTodayMonth = getMonthlyInvested(state.entries, todayMonth);
   const monthEntries = useMemo(() => getEntriesByMonth(state.entries, month), [state.entries, month]);
   const mission = useMemo(() => getMonthlyMissionView(state, month), [state, month]);
+
+  const showReminderBanner = useMemo(
+    () => shouldShowInAppReminder(preferences.reminder, investedTodayMonth),
+    [preferences.reminder, investedTodayMonth],
+  );
+
+  const todayMonthLabel = useMemo(() => {
+    const [y, m] = todayMonth.split('-').map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  }, [todayMonth]);
+
+  const reminderBannerCopy = useMemo(
+    () => reminderStatusLine(investedTodayMonth),
+    [investedTodayMonth],
+  );
+
+  const reminderWaLink = useMemo(() => {
+    const r = preferences.reminder;
+    const text = reminderMessageForMonth(
+      r.messageTemplate ?? DEFAULT_REMINDER_MESSAGE,
+      todayMonthLabel,
+      investedTodayMonth,
+    );
+    return buildWhatsAppLink(r.phoneDigits, text);
+  }, [preferences.reminder, todayMonthLabel, investedTodayMonth]);
 
   const sortedMonthInvestments = useMemo(() => {
     return [...monthEntries]
@@ -343,12 +394,19 @@ export default function FinanceGameApp() {
     (entry: FinanceEntry) => {
       let overlay: { level: number; title: string; icon: string; message?: string } | null = null;
       let dash: FinanceDashboardCelebration | null = null;
+      let toast: { message: string; sub?: string } | null = null;
 
       persist((prev) => {
         const m = entry.month;
         const prevLevel = getMonthlyLevel(prev, m).level;
         const next: FinanceState = { ...prev, entries: [...prev.entries, entry] };
         const newLevel = getMonthlyLevel(next, m).level;
+        const inv = getMonthlyInvested(next.entries, m);
+        const mv = getMonthlyMissionView(next, m);
+        toast = {
+          message: `+${formatARS(entry.amount)} sumado`,
+          sub: `${formatARS(inv)} este mes · ${mv.percent.toFixed(0)}% del objetivo`,
+        };
         if (newLevel > prevLevel) {
           const info = getMonthlyLevel(next, m);
           const th = getLevelTheme(newLevel);
@@ -371,12 +429,35 @@ export default function FinanceGameApp() {
       });
 
       queueMicrotask(() => {
+        if (toast) setMicroToast(toast);
+        setConfettiKey((k) => k + 1);
+        triggerEntryHaptic();
         if (overlay) setLevelUp(overlay);
         if (dash) setCelebration(dash);
       });
     },
     [persist],
   );
+
+  const updateEntry = useCallback(
+    (updated: FinanceEntry) => {
+      persist((prev) => ({
+        ...prev,
+        entries: prev.entries.map((e) => (e.id === updated.id ? updated : e)),
+      }));
+      setMicroToast({ message: 'Inversión actualizada', sub: formatARS(updated.amount) });
+    },
+    [persist],
+  );
+
+  const dismissReminderBanner = useCallback(() => {
+    const { day, monthKey } = getArgentinaDateParts();
+    const runKey = cronReminderRunKey(monthKey, day);
+    patchPreferences({
+      ...preferences,
+      reminder: markCronReminderSent(preferences.reminder, runKey),
+    });
+  }, [patchPreferences, preferences]);
 
   const removeEntry = useCallback(
     (id: string) => {
@@ -446,91 +527,76 @@ export default function FinanceGameApp() {
       />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:24px_24px] opacity-30" aria-hidden />
 
-      <div className="container-page relative z-[1] mx-auto min-w-0 max-w-6xl py-4 sm:py-10">
-        {isEmpty ? (
-          <div className="mb-6 rounded-2xl border border-white/10 bg-slate-950/60 p-4 shadow-lg sm:p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300/90">Primer paso</p>
-            <p className="mt-2 text-sm font-bold text-white sm:text-base">Cada carga suma al nivel del mes.</p>
-            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-400 sm:text-sm">
-              Cargá la primera inversión del mes acá abajo.
-              {isFinanceCloudConfigured()
-                ? ' Con nube, los datos se sincronizan solos entre dispositivos.'
-                : ' Sin nube, todo queda en este navegador: el respaldo JSON está en “Respaldo y sincronización”.'}
+      <div className="container-page relative z-[1] mx-auto min-w-0 max-w-lg py-3 sm:max-w-2xl sm:py-6">
+        <header className="mb-3 flex items-start justify-between gap-3 sm:mb-4">
+          <div className="min-w-0">
+            <h1 className="text-lg font-black tracking-tight text-white sm:text-xl">Foco financiero</h1>
+            <p className="text-xs font-semibold text-white/45">Cargá, mirá el nivel, seguí la racha</p>
+          </div>
+          <SyncStatusChip status={syncChip} />
+        </header>
+
+        <FinanceInstallHint />
+
+        {showReminderBanner && reminderWaLink ? (
+          <div className="mb-4 rounded-2xl border border-amber-400/35 bg-amber-950/40 p-4">
+            <p className="text-sm font-black text-amber-100">{reminderBannerCopy.title}</p>
+            <p className="mt-1 text-xs font-semibold text-amber-200/80">{reminderBannerCopy.detail}</p>
+            <p className="mt-1 text-[10px] text-amber-200/60">
+              Solo te avisamos si no llegaste al mínimo del mes. Hoy toca recordatorio programado.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a
+                href={reminderWaLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#25D366] px-4 text-xs font-black text-white"
+              >
+                WhatsApp
+              </a>
+              <a
+                href="#inversion"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-emerald-600 px-4 text-xs font-black text-white"
+              >
+                Cargar ahora
+              </a>
+              <button
+                type="button"
+                onClick={dismissReminderBanner}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-white/15 px-3 text-xs font-bold text-slate-300"
+              >
+                Después
+              </button>
+            </div>
           </div>
         ) : null}
 
-        <section id="dashboard-financiero" className="scroll-mt-24">
-          <div className="mb-2 flex flex-wrap items-center justify-end gap-2">
-            <SyncStatusChip status={syncChip} />
+        {isEmpty ? (
+          <div className="mb-4 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300/90">Primer paso</p>
+            <p className="mt-2 text-sm font-bold text-white">Tu primera carga desbloquea el tablero del mes.</p>
           </div>
+        ) : null}
+
+        <section id="dashboard-financiero" className="scroll-mt-20">
           <FinanceDashboard
             state={state}
+            mission={mission}
             onMonthChange={(m) => patchState({ currentMonth: m })}
             celebration={celebration}
           />
-
-          <div className="mt-3 grid grid-cols-1 gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3">
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:block">
-              <p className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/40 sm:mb-2">
-                Este mes
-              </p>
-              <div className="min-w-0 text-right sm:text-left">
-              <p className="text-2xl font-black tabular-nums leading-none text-white sm:text-[1.5rem]">
-                {formatARS(investedMonth)}
-              </p>
-              {investedPrev > 0 && (
-                <p
-                  className={`mt-1 text-xs font-semibold tabular-nums sm:text-[11px] ${
-                    investedMonth >= investedPrev ? 'text-green-400' : 'text-red-400'
-                  }`}
-                >
-                  {investedMonth >= investedPrev ? '▲' : '▼'} vs {formatARS(investedPrev)}
-                </p>
-              )}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:block">
-              <p className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/40 sm:mb-2">
-                Acumulado
-              </p>
-              <div className="min-w-0 text-right sm:text-left">
-                <p className="text-2xl font-black tabular-nums leading-none text-white sm:text-[1.5rem]">
-                  {formatARS(investedTotal)}
-                </p>
-                <p className="mt-1 text-xs text-white/40 sm:mt-1.5 sm:text-[11px]">histórico total</p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:block">
-              <p className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/40 sm:mb-2">
-                Meses activos
-              </p>
-              <div className="min-w-0 text-right sm:text-left">
-                <p className="text-2xl font-black tabular-nums leading-none text-white sm:text-[1.5rem]">
-                  {activeMonths}
-                </p>
-                <p className="mt-1 text-xs text-white/40 sm:mt-1.5 sm:text-[11px]">con inversión</p>
-              </div>
-            </div>
-          </div>
         </section>
 
-        <div className="mt-4 flex min-w-0 flex-col gap-4 md:mt-6 md:grid md:grid-cols-2 md:items-stretch md:gap-5">
-          <section id="inversion" className="order-1 scroll-mt-24 min-w-0 pb-2 md:order-2 md:scroll-mt-28 md:pb-0">
-            <FinanceEntryForm month={month} entries={state.entries} onAddEntry={handleAddEntry} />
-          </section>
-          <div className="order-2 min-w-0 md:order-1">
-            <FinanceMissionCard mission={mission} />
-          </div>
-        </div>
+        <section id="inversion" className="mt-4 scroll-mt-24 min-w-0 sm:mt-5">
+          <FinanceEntryForm
+            month={month}
+            entries={state.entries}
+            quickAmounts={preferences.quickAmounts}
+            onAddEntry={handleAddEntry}
+          />
+        </section>
 
-        <div className="mt-6 md:mt-7">
-          <FinanceQuickMetrics state={state} month={month} compact />
-        </div>
-
-        <section className="mt-6 md:mt-7">
+        <section className="mt-5 md:mt-6">
           {sortedMonthInvestments.length === 0 ? (
             <p className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-400">
               Todavía no cargaste inversiones este mes.
@@ -575,13 +641,22 @@ export default function FinanceGameApp() {
                           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{dateStr}</p>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        className="finance-touch-target shrink-0 rounded-lg border border-transparent px-3 py-2 text-xs font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200 active:scale-[0.98]"
-                        onClick={() => removeEntry(e.id)}
-                      >
-                        Borrar
-                      </button>
+                      <div className="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          className="finance-touch-target rounded-lg border border-transparent px-2 py-2 text-xs font-bold text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
+                          onClick={() => setEditingEntry(e)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="finance-touch-target rounded-lg border border-transparent px-2 py-2 text-xs font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-rose-300"
+                          onClick={() => removeEntry(e.id)}
+                        >
+                          Borrar
+                        </button>
+                      </div>
                     </li>
                   );
                 })}
@@ -622,13 +697,22 @@ export default function FinanceGameApp() {
                               <p className="text-[10px] font-semibold text-slate-500">{dateStr}</p>
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            className="shrink-0 rounded-lg border border-transparent px-2 py-1.5 text-[10px] font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-slate-200"
-                            onClick={() => removeEntry(e.id)}
-                          >
-                            Borrar
-                          </button>
+                          <div className="flex shrink-0 gap-1">
+                            <button
+                              type="button"
+                              className="finance-touch-target rounded-lg border border-transparent px-2 py-2 text-xs font-bold text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
+                              onClick={() => setEditingEntry(e)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="finance-touch-target rounded-lg border border-transparent px-2 py-2 text-xs font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-rose-300"
+                              onClick={() => removeEntry(e.id)}
+                            >
+                              Borrar
+                            </button>
+                          </div>
                         </li>
                       );
                     })}
@@ -639,7 +723,16 @@ export default function FinanceGameApp() {
           )}
         </section>
 
-        <div className="mt-6 flex min-w-0 flex-col gap-3 md:mt-8">
+        <div className="mt-5 flex min-w-0 flex-col gap-2.5 md:mt-6">
+          <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+              Ver más métricas
+            </summary>
+            <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
+              <FinanceQuickMetrics state={state} month={month} compact />
+            </div>
+          </details>
+
           <details className="group rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
             <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
               Ver ruta de niveles
@@ -669,7 +762,25 @@ export default function FinanceGameApp() {
 
           <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
             <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
-              Respaldo y sincronización
+              Recordatorios WhatsApp
+            </summary>
+            <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
+              <FinanceWhatsAppReminders state={state} onPreferencesChange={patchPreferences} />
+            </div>
+          </details>
+
+          <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+              Montos rápidos
+            </summary>
+            <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
+              <FinanceQuickAmountsEditor preferences={preferences} onChange={patchPreferences} />
+            </div>
+          </details>
+
+          <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
+              Ajustes avanzados
             </summary>
             <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
               <FinanceJsonTools
@@ -716,6 +827,15 @@ export default function FinanceGameApp() {
           Cargar inversión
         </a>
       </div>
+
+      {confettiKey > 0 ? <FinanceConfettiBurst burstKey={confettiKey} /> : null}
+      {microToast ? <FinanceMicroToast message={microToast.message} sub={microToast.sub} /> : null}
+
+      <FinanceEntryEditModal
+        entry={editingEntry}
+        onClose={() => setEditingEntry(null)}
+        onSave={updateEntry}
+      />
 
       {levelUp ? (
         <LevelUpOverlay

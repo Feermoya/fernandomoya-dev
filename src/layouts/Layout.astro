@@ -18,15 +18,18 @@ interface Props {
   noindex?: boolean;
   /** Sin splash ni bloqueo de scroll (p. ej. `/foco-financiero` visto desde acceso directo móvil). */
   skipSplash?: boolean;
+  /** Shell de app: sin nav del sitio, manifest PWA dedicado, fondo foco financiero. */
+  appShell?: boolean;
 }
 
-const { title, description, path = '/', ogImagePath, noindex = false, skipSplash = false } = Astro.props;
+const { title, description, path = '/', ogImagePath, noindex = false, skipSplash = false, appShell = false } =
+  Astro.props;
 const canonical = absoluteUrl(path);
 const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
 ---
 
 <!doctype html>
-<html lang={site.locale} class="bg-bg-base text-text">
+<html lang={site.locale} class:list={['bg-bg-base text-text', appShell && 'finance-app-html']}>
   <head>
     {
       !skipSplash ? (
@@ -47,7 +50,17 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
         : 'width=device-width, initial-scale=1'}
     />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content="#0d0f14" />
+    <meta name="theme-color" content={appShell ? '#06111f' : '#0d0f14'} />
+    {
+      appShell ? (
+        <>
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-title" content="Foco financiero" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <link rel="manifest" href="/foco-financiero.webmanifest" />
+        </>
+      ) : null
+    }
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -68,42 +81,59 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    {!appShell ? <link rel="manifest" href="/site.webmanifest" /> : null}
     <link rel="sitemap" href="/sitemap-index.xml" />
 
     <!-- Astro 6: transiciones de vista vía `ClientRouter` (antes `ViewTransitions` en guías antiguas). -->
     <ClientRouter />
   </head>
-  <body class="relative min-h-dvh overflow-x-clip bg-bg-base text-text">
-    <div
-      id="page-transition-overlay"
-      class="page-transition-overlay pointer-events-none fixed inset-0 z-[200]"
-      aria-hidden="true"
-    >
-      <div class="page-transition-overlay-inner">
-        <div class="page-transition-overlay-logo" aria-hidden="true">
-          <span class="page-transition-overlay-letter">F</span><span class="page-transition-overlay-letter">M</span>
+  <body
+    class:list={[
+      'relative min-h-dvh overflow-x-clip text-text',
+      appShell ? 'bg-[#06111f]' : 'bg-bg-base',
+    ]}
+  >
+    {
+      !appShell ? (
+        <div
+          id="page-transition-overlay"
+          class="page-transition-overlay pointer-events-none fixed inset-0 z-[200]"
+          aria-hidden="true"
+        >
+          <div class="page-transition-overlay-inner">
+            <div class="page-transition-overlay-logo" aria-hidden="true">
+              <span class="page-transition-overlay-letter">F</span>
+              <span class="page-transition-overlay-letter">M</span>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      ) : null
+    }
 
     {!skipSplash ? <SplashScreen /> : null}
-    <AmbientBackdrop />
+    {!appShell ? <AmbientBackdrop /> : null}
     <div class="relative z-[1] flex min-h-dvh flex-col">
-      <ScrollMotion />
-      <CursorGlow client:idle />
-      <Header />
-      <main id="main" class="flex min-h-0 flex-1 flex-col justify-start !pt-0">
+      {!appShell ? <ScrollMotion /> : null}
+      {!appShell ? <CursorGlow client:idle /> : null}
+      {!appShell ? <Header /> : null}
+      <main id="main" class:list={['flex min-h-0 flex-1 flex-col justify-start !pt-0', appShell && '!pt-0']}>
         <slot />
       </main>
-      <Footer />
+      {!appShell ? <Footer /> : null}
     </div>
 
-    <!-- Lenis (scroll suave + sync con Motion / parallax) + SplitType init para [data-split] -->
-    <script>
-      import '@/scripts/fm-page-transition.ts';
-      import '@/scripts/fm-lenis.ts';
-      import '@/scripts/fm-split-text.ts';
-    </script>
+    {
+      appShell ? (
+        <script>
+          import '@/scripts/fm-page-transition.ts';
+        </script>
+      ) : (
+        <script>
+          import '@/scripts/fm-page-transition.ts';
+          import '@/scripts/fm-lenis.ts';
+          import '@/scripts/fm-split-text.ts';
+        </script>
+      )
+    }
   </body>
 </html>

@@ -1,4 +1,5 @@
 import type { FinanceState } from '@/lib/finance/types';
+import { getDefaultPreferences, normalizePreferences, withPreferences } from '@/lib/finance/preferences';
 
 export const FINANCE_STORAGE_KEY = 'fm-finance-game-v1';
 export const FINANCE_SYNC_ID_KEY = 'fm-finance-sync-id';
@@ -54,6 +55,7 @@ export function getInitialFinanceState(): FinanceState {
     goals: [],
     challenges: [],
     currentMonth: currentMonthStr(),
+    preferences: getDefaultPreferences(),
   };
 }
 
@@ -67,7 +69,7 @@ export function loadFinanceState(): FinanceState {
     const parsed = JSON.parse(raw) as unknown;
     const imported = importFinanceState(JSON.stringify(parsed));
     if (imported.ok) {
-      return imported.state;
+      return withPreferences(imported.state);
     }
     return getInitialFinanceState();
   } catch {
@@ -175,8 +177,13 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
     if (typeof o.wealthTarget === 'number' && Number.isFinite(o.wealthTarget)) {
       state.wealthTarget = o.wealthTarget;
     }
+    if (o.preferences && typeof o.preferences === 'object') {
+      state.preferences = normalizePreferences(o.preferences as FinanceState['preferences']);
+    } else {
+      state.preferences = getDefaultPreferences();
+    }
 
-    return { ok: true, state };
+    return { ok: true, state: withPreferences(state) };
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'JSON inválido.';
     return { ok: false, error: `No se pudo importar: ${msg}` };

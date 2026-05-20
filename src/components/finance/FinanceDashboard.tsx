@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react';
 import type { FinanceState } from '@/lib/finance/types';
-import { formatARS, getMonthlyInvested } from '@/lib/finance/calculations';
+import {
+  formatARS,
+  getMonthlyInvested,
+  getMonthlyInvestmentStreak,
+  MONTHLY_STREAK_MINIMUM_ARS,
+} from '@/lib/finance/calculations';
 import {
   addMonths,
   getGapToNextInvestmentMilestone,
   getLevelProgressPercent,
   getMonthlyLevel,
+  type MonthlyMissionView,
 } from '@/lib/finance/levels';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
+import { FinanceStreakCalendar } from '@/components/finance/FinanceStreakCalendar';
 
 export type FinanceDashboardCelebration = {
   key: number;
@@ -37,12 +44,13 @@ function getMoodLine(
 
 type Props = {
   state: FinanceState;
+  mission: MonthlyMissionView;
   onMonthChange: (month: string) => void;
   /** Pulso en la card y animación de barra al subir de nivel (mismo mes visible). */
   celebration?: FinanceDashboardCelebration | null;
 };
 
-export function FinanceDashboard({ state, onMonthChange, celebration }: Props) {
+export function FinanceDashboard({ state, mission, onMonthChange, celebration }: Props) {
   const month = state.currentMonth;
   const entries = state.entries;
   const levelInfo = getMonthlyLevel(state, month);
@@ -50,15 +58,6 @@ export function FinanceDashboard({ state, onMonthChange, celebration }: Props) {
   const rawProgress = getLevelProgressPercent(state, month, levelInfo.level);
   const gap = getGapToNextInvestmentMilestone(state, month);
   const investedMonth = getMonthlyInvested(entries, month);
-
-  const gapLine =
-    gap && gap.amountMissing > 0
-      ? `Te faltan ${formatARS(gap.amountMissing)} para el Nivel ${gap.nextLevel} · ${gap.nextTitle}.`
-      : gap?.hint
-        ? gap.hint
-        : gap
-          ? `Próximo hito: Nivel ${gap.nextLevel} · ${gap.nextTitle}.`
-          : 'Nivel máximo alcanzado en la ruta mensual.';
 
   const showProgressPercent = !(rawProgress < 1 && levelInfo.level >= 1);
   const barWidth = Math.min(
@@ -100,6 +99,9 @@ export function FinanceDashboard({ state, onMonthChange, celebration }: Props) {
   const deltaPct =
     investedPrevMonth > 0 ? Math.round((deltaVsPrev / investedPrevMonth) * 100) : null;
   const mood = getMoodLine(investedMonth, levelInfo.level, deltaPct);
+  const streak = getMonthlyInvestmentStreak(entries, month);
+  const streakUnit = streak.streakCount === 1 ? 'mes' : 'meses';
+  const missionDone = mission.status === 'completed';
 
   const heroGlow = burst
     ? `0 0 0 1px rgba(255,255,255,0.08), 0 24px 48px -12px rgba(0,0,0,0.55), 0 0 100px -12px ${theme.glow}, 0 0 140px -20px ${theme.glow}`
@@ -219,34 +221,69 @@ export function FinanceDashboard({ state, onMonthChange, celebration }: Props) {
           )}
         </div>
 
-        {gap && gap.amountMissing > 0 ? (
-          <div
-            className="mt-1 flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 sm:px-4"
-            style={{ background: 'rgba(0,0,0,0.25)', border: `1px solid ${theme.border}` }}
-          >
-            <div className="min-w-0 flex-1">
-              <p
-                className="mb-0.5 text-[9px] font-black uppercase leading-tight tracking-widest sm:text-[10px]"
-                style={{ color: theme.textMuted }}
-              >
-                Para subir al Nivel {gap.nextLevel} · {gap.nextTitle}
-              </p>
-              <p
-                className="text-[1.35rem] font-black tabular-nums leading-none sm:text-[1.6rem]"
-                style={{ color: theme.text }}
-              >
-                {formatARS(gap.amountMissing)}
-              </p>
-            </div>
-            <span className="shrink-0 text-2xl sm:text-3xl" aria-hidden>
-              🎯
+        <div
+          className="rounded-xl px-3.5 py-3 sm:px-4"
+          style={{ background: 'rgba(0,0,0,0.28)', border: `1px solid ${theme.border}` }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] sm:text-[10px]" style={{ color: theme.textMuted }}>
+              Objetivo del mes
+            </p>
+            <span
+              className="rounded-full border border-white/15 bg-black/25 px-2 py-0.5 text-[10px] font-bold"
+              style={{ color: theme.text }}
+            >
+              {missionDone ? 'Completada' : mission.status === 'in_progress' ? 'En curso' : 'Pendiente'}
             </span>
           </div>
-        ) : (
-          <p className="text-sm font-semibold" style={{ color: theme.textMuted }}>
-            {gapLine}
+          <p className="mt-1.5 text-sm font-black leading-snug sm:text-base" style={{ color: theme.text }}>
+            {mission.headline}
           </p>
-        )}
+          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
+            <span className="text-xl font-black tabular-nums sm:text-2xl" style={{ color: theme.text }}>
+              {formatARS(mission.currentAmount)}
+            </span>
+            <span className="text-xs font-bold tabular-nums" style={{ color: theme.textMuted }}>
+              / {formatARS(mission.targetAmount)} · {mission.percent.toFixed(0)}%
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full border border-white/10 bg-black/40">
+            <div
+              className="h-full rounded-full transition-[width] duration-700"
+              style={{
+                width: `${Math.min(100, mission.percent)}%`,
+                backgroundImage: barFillBackground,
+              }}
+            />
+          </div>
+          {gap && gap.amountMissing > 0 ? (
+            <p className="mt-2.5 text-[1.25rem] font-black tabular-nums leading-none sm:text-[1.45rem]" style={{ color: theme.text }}>
+              Te faltan {formatARS(gap.amountMissing)} → Nivel {gap.nextLevel} · {gap.nextTitle}
+            </p>
+          ) : gap?.hint ? (
+            <p className="mt-2 text-xs font-semibold leading-snug" style={{ color: theme.textMuted }}>
+              {gap.hint}
+            </p>
+          ) : !missionDone ? (
+            <p className="mt-2 text-xs font-semibold" style={{ color: theme.textMuted }}>
+              Recompensa: Nivel {mission.rewardLevel} · {mission.rewardTitle}
+            </p>
+          ) : null}
+        </div>
+
+        <p
+          className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold leading-snug"
+          style={{ color: theme.textMuted }}
+        >
+          <span className="font-black text-white/90">Racha {streak.streakCount} {streakUnit}</span>
+          {' · '}
+          Nivel del mes {levelInfo.level}
+          {' · '}
+          La racha pide {formatARS(MONTHLY_STREAK_MINIMUM_ARS)}/mes; los niveles miden volumen (
+          {formatARS(investedMonth)} este mes).
+        </p>
+
+        <FinanceStreakCalendar entries={entries} />
 
         <div>
           <div

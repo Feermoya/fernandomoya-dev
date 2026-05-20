@@ -110,6 +110,21 @@ function sumByType(
 /** Mínimo mensual (ARS) para contar mes como “racha activa” estilo Duolingo. */
 export const MONTHLY_STREAK_MINIMUM_ARS = 10_000;
 
+/** Recordatorios (app, WhatsApp, cron) solo si invertiste menos que esto en el mes. */
+export function needsMonthlyInvestmentReminder(
+  investedThisMonth: number,
+  minimumArs: number = MONTHLY_STREAK_MINIMUM_ARS,
+): boolean {
+  return investedThisMonth < minimumArs;
+}
+
+export function getMonthlyInvestmentReminderGap(
+  investedThisMonth: number,
+  minimumArs: number = MONTHLY_STREAK_MINIMUM_ARS,
+): number {
+  return Math.max(0, minimumArs - investedThisMonth);
+}
+
 export function getCalendarMonthKey(date: Date = new Date()): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -288,4 +303,45 @@ export function getEntryFormStreakCopy(entries: FinanceEntry[], formMonth: strin
     statusLabel: 'Racha',
     message: 'Un mes pasado quedó sin el mínimo. Podés reconstruir la racha desde este mes.',
   };
+}
+
+export type StreakMonthCell = {
+  month: string;
+  label: string;
+  invested: number;
+  qualified: boolean;
+  isCurrent: boolean;
+  isFuture: boolean;
+};
+
+export function getStreakCalendarCells(
+  entries: FinanceEntry[],
+  monthCount = 12,
+  endMonth?: string,
+): StreakMonthCell[] {
+  const end = endMonth ?? getCalendarMonthKey();
+  const today = getCalendarMonthKey();
+  const cells: StreakMonthCell[] = [];
+
+  for (let i = monthCount - 1; i >= 0; i--) {
+    const month = addCalendarMonths(end, -i);
+    const [y, m] = month.split('-').map(Number);
+    const label = new Date(y, m - 1, 1).toLocaleDateString('es-AR', { month: 'short' });
+    const invested = getMonthlyInvested(entries, month);
+    const cmpEnd = compareMonthKeys(month, end);
+    const isFuture = cmpEnd > 0 || compareMonthKeys(month, today) > 0;
+    const isCurrent = month === today;
+    const qualified = !isFuture && invested >= MONTHLY_STREAK_MINIMUM_ARS;
+
+    cells.push({
+      month,
+      label: label.charAt(0).toUpperCase() + label.slice(1),
+      invested,
+      qualified,
+      isCurrent,
+      isFuture,
+    });
+  }
+
+  return cells;
 }

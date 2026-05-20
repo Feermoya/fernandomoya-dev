@@ -140,6 +140,52 @@
     }
   }
 
+  .finance-app-html {
+    background-color: #06111f;
+  }
+
+  @keyframes finance-micro-toast-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -8px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  .finance-micro-toast > div {
+    animation: finance-micro-toast-in 0.35s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .finance-micro-toast > div {
+      animation: none;
+    }
+  }
+
+  @keyframes finance-confetti-fall {
+    0% {
+      opacity: 1;
+      transform: translateY(0) rotate(0deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(70vh) rotate(540deg);
+    }
+  }
+
+  .finance-confetti-piece {
+    animation: finance-confetti-fall 1.1s ease-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .finance-confetti-layer {
+      display: none;
+    }
+  }
+
   .header-inner {
     transition: padding 0.2s ease-out;
   }
