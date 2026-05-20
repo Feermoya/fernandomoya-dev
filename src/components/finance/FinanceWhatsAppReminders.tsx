@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
-import { formatARS, getMonthlyInvested } from '@/lib/finance/calculations';
-import { cronReminderRunKey, markCronReminderSent } from '@/lib/finance/preferences';
-import { getArgentinaDateParts, monthLabelEsFromKey } from '@/lib/finance/timezone';
-import { formatARS, MONTHLY_STREAK_MINIMUM_ARS } from '@/lib/finance/calculations';
+import { formatARS, getMonthlyInvested, MONTHLY_STREAK_MINIMUM_ARS } from '@/lib/finance/calculations';
 import {
   buildWhatsAppLink,
+  cronReminderRunKey,
   DEFAULT_REMINDER_MESSAGE,
+  markCronReminderSent,
+  normalizePreferences,
   reminderMessageForMonth,
   sendCallMeBotWhatsApp,
 } from '@/lib/finance/preferences';
-import { normalizePreferences } from '@/lib/finance/preferences';
+import { getArgentinaDateParts, monthLabelEsFromKey } from '@/lib/finance/timezone';
 import type { FinancePreferences, FinanceState } from '@/lib/finance/types';
 
 type Props = {

@@ -41,7 +41,7 @@ import { getEntriesByMonth, formatARS, getMonthlyInvested } from '@/lib/finance/
 import { getMonthlyMissionView, getMonthlyLevel, getLevelProgressPercent } from '@/lib/finance/levels';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
 
-type SyncChip = 'synced' | 'saving' | 'error' | 'solo_local';
+type SyncChip = 'loading' | 'synced' | 'saving' | 'error' | 'solo_local';
 
 function levelUpMessageFor(nextLevel: number): string | undefined {
   if (nextLevel === 2) return 'Ahora estás construyendo repetición, no entusiasmo.';
@@ -50,24 +50,28 @@ function levelUpMessageFor(nextLevel: number): string | undefined {
 
 function initialSyncChip(): SyncChip {
   if (typeof window === 'undefined') return 'solo_local';
-  return isFinanceCloudConfigured() ? 'saving' : 'solo_local';
+  return isFinanceCloudConfigured() ? 'loading' : 'solo_local';
 }
 
 function SyncStatusChip({ status }: { status: SyncChip }) {
   const label =
-    status === 'synced'
-      ? 'Guardado en la nube'
-      : status === 'saving'
-        ? 'Guardando…'
-        : status === 'error'
-          ? 'No se pudo guardar'
-          : 'Solo en este dispositivo';
+    status === 'loading'
+      ? 'Cargando nube…'
+      : status === 'synced'
+        ? 'Guardado en la nube'
+        : status === 'saving'
+          ? 'Guardando…'
+          : status === 'error'
+            ? 'No se pudo guardar'
+            : 'Solo en este dispositivo';
   const cls =
     status === 'synced'
       ? 'border-emerald-500/35 bg-emerald-950/50 text-emerald-200/95'
       : status === 'error'
         ? 'border-rose-500/40 bg-rose-950/45 text-rose-200/95'
-        : 'border-amber-500/35 bg-amber-950/40 text-amber-100/90';
+        : status === 'loading'
+          ? 'border-cyan-500/35 bg-cyan-950/40 text-cyan-100/90'
+          : 'border-amber-500/35 bg-amber-950/40 text-amber-100/90';
 
   return (
     <span
@@ -80,12 +84,18 @@ function SyncStatusChip({ status }: { status: SyncChip }) {
 }
 
 export default function FinanceGameApp() {
-  const [state, setState] = useState<FinanceState>(() =>
-    typeof window !== 'undefined' ? loadFinanceState() : getInitialFinanceState(),
-  );
+  const cloudConfigured =
+    typeof window !== 'undefined' ? isFinanceCloudConfigured() : false;
+
+  const [state, setState] = useState<FinanceState>(() => {
+    if (typeof window === 'undefined') return getInitialFinanceState();
+    if (isFinanceCloudConfigured()) return getInitialFinanceState();
+    return loadFinanceState();
+  });
   const stateRef = useRef(state);
   stateRef.current = state;
 
+  const [cloudReady, setCloudReady] = useState(() => !cloudConfigured);
   const [syncChip, setSyncChip] = useState<SyncChip>(() => initialSyncChip());
   const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(() =>
     typeof window !== 'undefined' ? getFinanceLocalSavedAt() : null,
@@ -107,7 +117,7 @@ export default function FinanceGameApp() {
 
   const remoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pullInFlight = useRef(false);
-  const pullDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bootGenRef = useRef(0);
 
   const activeSyncId = useMemo(
     () => (typeof window !== 'undefined' ? getFinanceSyncId() : DEFAULT_FINANCE_SYNC_ID),
@@ -135,17 +145,18 @@ export default function FinanceGameApp() {
     setSyncChip('synced');
   }, []);
 
-  /** Pull: si hay fila remota, gana la nube. Si no hay fila, no hace seed (eso solo en boot). */
+  /** Pull: si hay fila remota, la nube siempre gana (mismo libro en todos los dispositivos). */
   const pullFromCloudImmediate = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
     if (pullInFlight.current) return;
     const sid = getFinanceSyncId();
     pullInFlight.current = true;
+    setSyncChip((prev) => (prev === 'loading' ? 'loading' : 'saving'));
     try {
       if (import.meta.env.DEV) {
         console.debug('[finance-sync] pull immediate', { syncId: sid });
       }
-      const remote = await fetchFinanceRemote(sid);
+      const remote = await fetchFinanceRemote(sid, { bustCache: true });
       if (remote) {
         applyRemoteRow(remote);
         if (import.meta.env.DEV) {
@@ -161,19 +172,11 @@ export default function FinanceGameApp() {
       if (import.meta.env.DEV) {
         console.debug('[finance-sync] pull failed', { syncId: sid, error: msg });
       }
+      throw e;
     } finally {
       pullInFlight.current = false;
     }
   }, [applyRemoteRow]);
-
-  const scheduleDebouncedPull = useCallback(() => {
-    if (!isFinanceCloudConfigured()) return;
-    if (pullDebounceTimer.current) clearTimeout(pullDebounceTimer.current);
-    pullDebounceTimer.current = setTimeout(() => {
-      pullDebounceTimer.current = null;
-      void pullFromCloudImmediate();
-    }, 650);
-  }, [pullFromCloudImmediate]);
 
   const scheduleRemoteSave = useCallback((syncId: string, next: FinanceState) => {
     if (!isFinanceCloudConfigured()) return;
@@ -249,26 +252,32 @@ export default function FinanceGameApp() {
     setSyncIdTick((n) => n + 1);
   }, []);
 
+  const handleRefreshFromCloud = useCallback(() => {
+    void pullFromCloudImmediate();
+  }, [pullFromCloudImmediate]);
+
   useEffect(() => {
-    let cancelled = false;
+    if (typeof window === 'undefined') return;
+
+    if (!isFinanceCloudConfigured()) {
+      setCloudReady(true);
+      setSyncChip('solo_local');
+      return;
+    }
+
+    const gen = ++bootGenRef.current;
+    const sid = getFinanceSyncId();
+    setCloudReady(false);
+    setSyncChip('loading');
+    setCloudErr(null);
 
     async function boot() {
-      if (typeof window === 'undefined') return;
-
-      if (!isFinanceCloudConfigured()) {
-        setSyncChip('solo_local');
-        return;
-      }
-
-      const sid = getFinanceSyncId();
-      setSyncChip('saving');
-
       try {
         if (import.meta.env.DEV) {
           console.debug('[finance-sync] boot start', { syncId: sid });
         }
-        const remote = await fetchFinanceRemote(sid);
-        if (cancelled) return;
+        let remote = await fetchFinanceRemote(sid, { bustCache: true });
+        if (gen !== bootGenRef.current) return;
 
         if (remote) {
           applyRemoteRow(remote);
@@ -279,53 +288,74 @@ export default function FinanceGameApp() {
         }
 
         const local = loadFinanceState();
-        const iso = await upsertFinanceRemote(sid, local);
-        if (cancelled) return;
-        setFinanceLocalSavedAt(iso);
-        setLastRemoteAt(iso);
-        setCloudErr(null);
-        setSyncChip('synced');
-        if (import.meta.env.DEV) {
-          console.debug('[finance-sync] boot winner', 'local_seed', { updated_at: iso });
+        const hasLocal = local.entries.length > 0 || local.goals.length > 0;
+        if (gen !== bootGenRef.current) return;
+
+        if (hasLocal) {
+          const iso = await upsertFinanceRemote(sid, local);
+          if (gen !== bootGenRef.current) return;
+          setFinanceLocalSavedAt(iso);
+          setLastRemoteAt(iso);
+          setState(local);
+          saveFinanceState(local);
+          setCloudErr(null);
+          setSyncChip('synced');
+          if (import.meta.env.DEV) {
+            console.debug('[finance-sync] boot winner', 'local_seed', { updated_at: iso });
+          }
+        } else {
+          setState(local);
+          saveFinanceState(local);
+          setSyncChip('synced');
         }
       } catch (e) {
-        if (!cancelled) {
-          const msg = e instanceof Error ? e.message : 'Error al leer la nube.';
-          setCloudErr(msg);
-          setSyncChip('error');
-          if (import.meta.env.DEV) {
-            console.debug('[finance-sync] boot error', { syncId: sid, error: msg });
-          }
+        if (gen !== bootGenRef.current) return;
+        const msg = e instanceof Error ? e.message : 'Error al leer la nube.';
+        setCloudErr(msg);
+        setSyncChip('error');
+        const fallback = loadFinanceState();
+        setState(fallback);
+        saveFinanceState(fallback);
+        if (import.meta.env.DEV) {
+          console.debug('[finance-sync] boot error', { syncId: sid, error: msg });
+        }
+      } finally {
+        if (gen === bootGenRef.current) {
+          setCloudReady(true);
         }
       }
     }
 
     void boot();
-    return () => {
-      cancelled = true;
-    };
-  }, [applyRemoteRow]);
+  }, [applyRemoteRow, syncIdTick]);
 
   useEffect(() => {
     if (!isFinanceCloudConfigured()) return;
 
     const onVis = () => {
-      if (document.visibilityState === 'visible') scheduleDebouncedPull();
+      if (document.visibilityState === 'visible') void pullFromCloudImmediate();
     };
-    const onFocus = () => scheduleDebouncedPull();
+    const onFocus = () => {
+      void pullFromCloudImmediate();
+    };
     const onOnline = () => {
       void pullFromCloudImmediate();
+    };
+    const onPageShow = (ev: PageTransitionEvent) => {
+      if (ev.persisted) void pullFromCloudImmediate();
     };
 
     document.addEventListener('visibilitychange', onVis);
     window.addEventListener('focus', onFocus);
     window.addEventListener('online', onOnline);
+    window.addEventListener('pageshow', onPageShow);
     return () => {
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('online', onOnline);
+      window.removeEventListener('pageshow', onPageShow);
     };
-  }, [pullFromCloudImmediate, scheduleDebouncedPull]);
+  }, [pullFromCloudImmediate]);
 
   const replaceState = useCallback(
     (next: FinanceState) => {
@@ -533,9 +563,37 @@ export default function FinanceGameApp() {
             <h1 className="text-lg font-black tracking-tight text-white sm:text-xl">Foco financiero</h1>
             <p className="text-xs font-semibold text-white/45">Cargá, mirá el nivel, seguí la racha</p>
           </div>
-          <SyncStatusChip status={syncChip} />
+          <div className="flex shrink-0 items-center gap-1.5">
+            {isFinanceCloudConfigured() ? (
+              <button
+                type="button"
+                onClick={handleRefreshFromCloud}
+                disabled={syncChip === 'loading' || !cloudReady}
+                className="finance-touch-target inline-flex min-h-[36px] items-center justify-center rounded-full border border-white/12 bg-white/5 px-2.5 text-[10px] font-bold text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40"
+                title="Traer últimos datos de la nube"
+              >
+                ↻
+              </button>
+            ) : null}
+            <SyncStatusChip status={syncChip} />
+          </div>
         </header>
 
+        {!cloudReady ? (
+          <div
+            className="mb-4 flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-2xl border border-cyan-500/25 bg-cyan-950/25 px-4 py-8"
+            role="status"
+            aria-live="polite"
+          >
+            <p className="text-sm font-black text-cyan-100">Sincronizando con la nube…</p>
+            <p className="max-w-xs text-center text-xs font-semibold text-cyan-200/70">
+              Traemos siempre los últimos datos guardados. Si tarda, revisá la conexión.
+            </p>
+          </div>
+        ) : null}
+
+        {cloudReady ? (
+          <>
         <FinanceInstallHint />
 
         {showReminderBanner && reminderWaLink ? (
@@ -817,8 +875,11 @@ export default function FinanceGameApp() {
             </div>
           </details>
         </div>
+          </>
+        ) : null}
       </div>
 
+      {cloudReady ? (
       <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#06111f]/95 backdrop-blur-md sm:hidden">
         <a
           href="#inversion"
@@ -827,6 +888,7 @@ export default function FinanceGameApp() {
           Cargar inversión
         </a>
       </div>
+      ) : null}
 
       {confettiKey > 0 ? <FinanceConfettiBurst burstKey={confettiKey} /> : null}
       {microToast ? <FinanceMicroToast message={microToast.message} sub={microToast.sub} /> : null}

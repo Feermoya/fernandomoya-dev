@@ -37,14 +37,24 @@ export type RemoteFinanceRow = {
 
 export async function fetchFinanceRemote(
   syncId: string = DEFAULT_FINANCE_SYNC_ID,
+  options?: { bustCache?: boolean },
 ): Promise<RemoteFinanceRow | null> {
   if (!isFinanceCloudConfigured()) return null;
   if (import.meta.env.DEV) {
     console.debug('[finance-sync] fetch start', { syncId });
   }
+  const cacheBust = options?.bustCache ? `&_=${Date.now()}` : '';
   const res = await fetch(
-    `${restBase()}/${TABLE}?id=eq.${encodeURIComponent(syncId)}&select=body,updated_at&limit=1`,
-    { headers: headersRead(), method: 'GET' },
+    `${restBase()}/${TABLE}?id=eq.${encodeURIComponent(syncId)}&select=body,updated_at&limit=1${cacheBust}`,
+    {
+      headers: {
+        ...headersRead(),
+        'Cache-Control': 'no-cache, no-store',
+        Pragma: 'no-cache',
+      },
+      method: 'GET',
+      cache: 'no-store',
+    },
   );
   if (!res.ok) {
     if (import.meta.env.DEV) {
@@ -92,6 +102,7 @@ export async function upsertFinanceRemote(
       Prefer: 'return=representation,resolution=merge-duplicates',
     },
     body: JSON.stringify([{ id: syncId, body: state }]),
+    cache: 'no-store',
   });
   if (!res.ok) {
     const t = await res.text().catch(() => '');
