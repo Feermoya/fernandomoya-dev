@@ -8,6 +8,7 @@ import {
   normalizePreferences,
   reminderMessageForMonth,
 } from '@/lib/finance/preferences';
+import { financeGameStateSelectUrl } from '@/lib/finance/postgrest';
 import { DEFAULT_FINANCE_SYNC_ID, importFinanceState } from '@/lib/finance/storage';
 import { getArgentinaDateParts, monthLabelEsFromKey } from '@/lib/finance/timezone';
 import type { FinanceReminderSettings, FinanceState } from '@/lib/finance/types';
@@ -51,10 +52,11 @@ export async function fetchFinanceStateRemote(
   const headers = supabaseHeaders();
   if (!base || !headers) return null;
 
-  const res = await fetch(
-    `${base}/${TABLE}?id=eq.${encodeURIComponent(syncId)}&select=body&limit=1`,
-    { headers, method: 'GET' },
-  );
+  const res = await fetch(financeGameStateSelectUrl(base, syncId, 'body'), {
+    headers,
+    method: 'GET',
+    cache: 'no-store',
+  });
   if (!res.ok) {
     throw new Error(`Supabase read failed (${res.status})`);
   }

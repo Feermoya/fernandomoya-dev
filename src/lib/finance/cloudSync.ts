@@ -1,4 +1,5 @@
 import type { FinanceState } from '@/lib/finance/types';
+import { financeGameStateSelectUrl } from '@/lib/finance/postgrest';
 import { DEFAULT_FINANCE_SYNC_ID, importFinanceState } from '@/lib/finance/storage';
 
 const TABLE = 'finance_game_state';
@@ -30,6 +31,18 @@ function restBase(): string {
   return `${url}/rest/v1`;
 }
 
+async function readErrorDetail(res: Response): Promise<string> {
+  try {
+    const text = await res.text();
+    if (!text) return '';
+    const trimmed = text.trim();
+    if (trimmed.length <= 200) return trimmed;
+    return `${trimmed.slice(0, 200)}…`;
+  } catch {
+    return '';
+  }
+}
+
 export type RemoteFinanceRow = {
   state: FinanceState;
   updatedAt: string;
@@ -37,31 +50,34 @@ export type RemoteFinanceRow = {
 
 export async function fetchFinanceRemote(
   syncId: string = DEFAULT_FINANCE_SYNC_ID,
-  options?: { bustCache?: boolean },
+  _options?: { bustCache?: boolean },
 ): Promise<RemoteFinanceRow | null> {
   if (!isFinanceCloudConfigured()) return null;
   if (import.meta.env.DEV) {
     console.debug('[finance-sync] fetch start', { syncId });
   }
-  const cacheBust = options?.bustCache ? `&_=${Date.now()}` : '';
-  const res = await fetch(
-    `${restBase()}/${TABLE}?id=eq.${encodeURIComponent(syncId)}&select=body,updated_at&limit=1${cacheBust}`,
-    {
-      headers: {
-        ...headersRead(),
-        'Cache-Control': 'no-cache, no-store',
-        Pragma: 'no-cache',
-      },
-      method: 'GET',
-      cache: 'no-store',
+
+  const url = financeGameStateSelectUrl(restBase(), syncId);
+
+  const res = await fetch(url, {
+    headers: {
+      ...headersRead(),
+      'Cache-Control': 'no-cache, no-store',
+      Pragma: 'no-cache',
     },
-  );
+    method: 'GET',
+    cache: 'no-store',
+  });
+
   if (!res.ok) {
+    const detail = await readErrorDetail(res);
     if (import.meta.env.DEV) {
-      console.debug('[finance-sync] fetch error', { syncId, status: res.status });
+      console.debug('[finance-sync] fetch error', { syncId, status: res.status, detail, url });
     }
-    throw new Error(`Nube: lectura falló (${res.status}).`);
+    const suffix = detail ? ` ${detail}` : '';
+    throw new Error(`Nube: lectura falló (${res.status}).${suffix}`);
   }
+
   const rows = (await res.json()) as { body: unknown; updated_at: string }[];
   if (!rows?.length) {
     if (import.meta.env.DEV) {
@@ -105,11 +121,11 @@ export async function upsertFinanceRemote(
     cache: 'no-store',
   });
   if (!res.ok) {
-    const t = await res.text().catch(() => '');
+    const detail = await readErrorDetail(res);
     if (import.meta.env.DEV) {
-      console.debug('[finance-sync] upsert error', { syncId, status: res.status, body: t.slice(0, 200) });
+      console.debug('[finance-sync] upsert error', { syncId, status: res.status, detail });
     }
-    throw new Error(`Nube: guardado falló (${res.status}). ${t.slice(0, 120)}`);
+    throw new Error(`Nube: guardado falló (${res.status}). ${detail}`.trim());
   }
   const rows = (await res.json()) as { updated_at?: string }[];
   const updatedAt = rows?.[0]?.updated_at;

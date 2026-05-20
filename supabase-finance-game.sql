@@ -1,6 +1,7 @@
 -- Una sola vez: SQL Editor en supabase.com → pega esto → Run.
 -- Hosting (Vercel): env PUBLIC_FINANCE_SUPABASE_URL y PUBLIC_FINANCE_SUPABASE_ANON_KEY.
 -- La app usa un id de fila fijo (ver DEFAULT_FINANCE_SYNC_ID en src/lib/finance/storage.ts).
+-- Si el id tiene guiones, las lecturas REST deben usar comillas: id=in.("tu-id") (ver postgrest.ts).
 
 create table if not exists public.finance_game_state (
   id text primary key,
