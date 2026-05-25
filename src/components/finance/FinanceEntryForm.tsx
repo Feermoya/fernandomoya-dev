@@ -210,6 +210,9 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               />
+              <p className="text-[10px] font-semibold leading-snug text-slate-500">
+                Usá el ticker o nombre que pusiste en el plan mensual. Ej. MELI, TSLA, BTC.
+              </p>
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Nota</span>

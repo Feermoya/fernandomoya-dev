@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { FinanceEntry, FinanceGoal, FinanceState } from '@/lib/finance/types';
+import type { FinanceEntry, FinanceGoal, FinanceState, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
 import {
   getInitialFinanceState,
   saveFinanceState,
@@ -19,6 +19,7 @@ import {
 import { FinanceDashboard, type FinanceDashboardCelebration } from '@/components/finance/FinanceDashboard';
 import { FinanceQuickMetrics } from '@/components/finance/FinanceQuickMetrics';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
+import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
 import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
 import { FinanceMicroToast } from '@/components/finance/FinanceMicroToast';
 import { FinanceConfettiBurst } from '@/components/finance/FinanceConfettiBurst';
@@ -45,6 +46,10 @@ import { LevelUpOverlay } from '@/components/finance/LevelUpOverlay';
 import { getEntriesByMonth, formatARS, getMonthlyInvested } from '@/lib/finance/calculations';
 import { getMonthlyMissionView, getMonthlyLevel, getLevelProgressPercent } from '@/lib/finance/levels';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
+import {
+  formatPlanMissingList,
+  getMonthlyPlanProgress,
+} from '@/lib/finance/monthlyInvestmentPlan';
 
 type SyncChip = 'loading' | 'synced' | 'saving' | 'error' | 'solo_local';
 
@@ -412,6 +417,26 @@ export default function FinanceGameApp() {
   const latestInvestments = useMemo(() => sortedMonthInvestments.slice(0, 3), [sortedMonthInvestments]);
   const moreInvestments = useMemo(() => sortedMonthInvestments.slice(3), [sortedMonthInvestments]);
 
+  const addMonthlyPlanItem = useCallback(
+    (item: MonthlyInvestmentPlanItem) => {
+      persist((prev) => ({
+        ...prev,
+        monthlyInvestmentPlan: [...(prev.monthlyInvestmentPlan ?? []), item],
+      }));
+    },
+    [persist],
+  );
+
+  const removeMonthlyPlanItem = useCallback(
+    (id: string) => {
+      persist((prev) => ({
+        ...prev,
+        monthlyInvestmentPlan: (prev.monthlyInvestmentPlan ?? []).filter((x) => x.id !== id),
+      }));
+    },
+    [persist],
+  );
+
   const handleAddEntry = useCallback(
     (entry: FinanceEntry) => {
       let overlay: { level: number; title: string; icon: string; message?: string } | null = null;
@@ -420,14 +445,38 @@ export default function FinanceGameApp() {
 
       persist((prev) => {
         const m = entry.month;
+        const beforePlan = getMonthlyPlanProgress({
+          plan: prev.monthlyInvestmentPlan,
+          entries: prev.entries,
+          month: m,
+        });
         const prevLevel = getMonthlyLevel(prev, m).level;
         const next: FinanceState = { ...prev, entries: [...prev.entries, entry] };
+        const afterPlan = getMonthlyPlanProgress({
+          plan: next.monthlyInvestmentPlan,
+          entries: next.entries,
+          month: m,
+        });
         const newLevel = getMonthlyLevel(next, m).level;
         const inv = getMonthlyInvested(next.entries, m);
         const mv = getMonthlyMissionView(next, m);
+
+        const subParts: string[] = [`${formatARS(inv)} este mes · ${mv.percent.toFixed(0)}% del objetivo`];
+        if (afterPlan.totalCount > 0 && afterPlan.completedCount > beforePlan.completedCount) {
+          if (afterPlan.completedCount >= afterPlan.totalCount) {
+            subParts.push('Plan mensual completo');
+          } else {
+            subParts.push(
+              `Plan mensual: ${afterPlan.completedCount}/${afterPlan.totalCount} cumplidos`,
+            );
+            const missing = formatPlanMissingList(afterPlan.missingLabels);
+            if (missing) subParts.push(`Te falta: ${missing}`);
+          }
+        }
+
         toast = {
           message: `+${formatARS(entry.amount)} sumado`,
-          sub: `${formatARS(inv)} este mes · ${mv.percent.toFixed(0)}% del objetivo`,
+          sub: subParts.join(' · '),
         };
         if (newLevel > prevLevel) {
           const info = getMonthlyLevel(next, m);
@@ -659,6 +708,16 @@ export default function FinanceGameApp() {
             entries={state.entries}
             quickAmounts={preferences.quickAmounts}
             onAddEntry={handleAddEntry}
+          />
+        </section>
+
+        <section className="mt-4 min-w-0 sm:mt-5">
+          <FinanceMonthlyInvestmentPlan
+            month={month}
+            entries={state.entries}
+            plan={state.monthlyInvestmentPlan}
+            onAddItem={addMonthlyPlanItem}
+            onRemoveItem={removeMonthlyPlanItem}
           />
         </section>
 

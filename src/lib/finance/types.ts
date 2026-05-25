@@ -57,6 +57,16 @@ export type MonthlyChallenge = {
   completed: boolean;
 };
 
+export type MonthlyInvestmentPlanItemStatus = 'pending' | 'completed';
+
+export type MonthlyInvestmentPlanItem = {
+  id: string;
+  month: string;
+  label: string;
+  matchTerms: string[];
+  createdAt: string;
+};
+
 export type FinanceReminderSettings = {
   enabled: boolean;
   /** Solo dígitos, con código país (ej. 5491123456789). */
@@ -85,6 +95,7 @@ export type FinanceState = {
   currentMonth: string;
   wealthTarget?: number;
   preferences?: FinancePreferences;
+  monthlyInvestmentPlan?: MonthlyInvestmentPlanItem[];
 };
 
 export type MonthlyLevelResult = {

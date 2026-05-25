@@ -1,5 +1,5 @@
 import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
-import type { FinanceState } from '@/lib/finance/types';
+import type { FinanceState, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
 import { getDefaultPreferences, normalizePreferences, withPreferences } from '@/lib/finance/preferences';
 
 export const FINANCE_STORAGE_KEY = 'fm-finance-game-v1';
@@ -103,6 +103,7 @@ export function getInitialFinanceState(): FinanceState {
     challenges: [],
     currentMonth: currentMonthStr(),
     preferences: getDefaultPreferences(),
+    monthlyInvestmentPlan: [],
   };
 }
 
@@ -187,6 +188,31 @@ function isMonthlyChallenge(x: unknown): boolean {
   );
 }
 
+function isMonthlyInvestmentPlanItem(x: unknown): x is MonthlyInvestmentPlanItem {
+  if (typeof x !== 'object' || x === null) return false;
+  const o = x as Record<string, unknown>;
+  return (
+    typeof o.id === 'string' &&
+    isMonthString(o.month) &&
+    typeof o.label === 'string' &&
+    Array.isArray(o.matchTerms) &&
+    o.matchTerms.every((t) => typeof t === 'string') &&
+    typeof o.createdAt === 'string'
+  );
+}
+
+function normalizeMonthlyInvestmentPlan(raw: unknown): MonthlyInvestmentPlanItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(isMonthlyInvestmentPlanItem);
+}
+
+export function withFinanceStateDefaults(state: FinanceState): FinanceState {
+  return {
+    ...state,
+    monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
+  };
+}
+
 export function importFinanceState(jsonString: string): ImportFinanceResult {
   try {
     const parsed = JSON.parse(jsonString) as unknown;
@@ -220,6 +246,7 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
       goals: o.goals as FinanceState['goals'],
       challenges: o.challenges as FinanceState['challenges'],
       currentMonth: o.currentMonth,
+      monthlyInvestmentPlan: normalizeMonthlyInvestmentPlan(o.monthlyInvestmentPlan),
     };
     if (typeof o.wealthTarget === 'number' && Number.isFinite(o.wealthTarget)) {
       state.wealthTarget = o.wealthTarget;
@@ -230,7 +257,7 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
       state.preferences = getDefaultPreferences();
     }
 
-    return { ok: true, state: withPreferences(state) };
+    return { ok: true, state: withPreferences(withFinanceStateDefaults(state)) };
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'JSON inválido.';
     return { ok: false, error: `No se pudo importar: ${msg}` };

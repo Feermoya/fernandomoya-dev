@@ -53,7 +53,11 @@ export function normalizePreferences(raw?: FinancePreferences): FinancePreferenc
 }
 
 export function withPreferences(state: FinanceState): FinanceState {
-  return { ...state, preferences: normalizePreferences(state.preferences) };
+  return {
+    ...state,
+    preferences: normalizePreferences(state.preferences),
+    monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
+  };
 }
 
 function normalizeReminderDays(days: number[] | undefined): number[] {
