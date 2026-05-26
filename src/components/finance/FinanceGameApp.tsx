@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { FinanceEntry, FinanceGoal, FinanceState, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
+import type { FinanceEntry, FinanceGoal, FinanceState } from '@/lib/finance/types';
 import {
   getInitialFinanceState,
   saveFinanceState,
@@ -47,8 +47,13 @@ import { getEntriesByMonth, formatARS, getMonthlyInvested } from '@/lib/finance/
 import { getMonthlyMissionView, getMonthlyLevel, getLevelProgressPercent } from '@/lib/finance/levels';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
 import {
-  formatPlanMissingList,
+  copyMonthlyPlanItemsToMonth,
+  createMonthlyInvestmentPlanItems,
+  formatPlanMissingListForToast,
+  getMonthlyPlanItems,
   getMonthlyPlanProgress,
+  getNewlyCompletedPlanLabels,
+  getPreviousMonthKey,
 } from '@/lib/finance/monthlyInvestmentPlan';
 
 type SyncChip = 'loading' | 'synced' | 'saving' | 'error' | 'solo_local';
@@ -417,15 +422,50 @@ export default function FinanceGameApp() {
   const latestInvestments = useMemo(() => sortedMonthInvestments.slice(0, 3), [sortedMonthInvestments]);
   const moreInvestments = useMemo(() => sortedMonthInvestments.slice(3), [sortedMonthInvestments]);
 
-  const addMonthlyPlanItem = useCallback(
-    (item: MonthlyInvestmentPlanItem) => {
-      persist((prev) => ({
-        ...prev,
-        monthlyInvestmentPlan: [...(prev.monthlyInvestmentPlan ?? []), item],
-      }));
-    },
-    [persist],
+  const previousMonth = useMemo(() => getPreviousMonthKey(month), [month]);
+  const currentMonthPlan = useMemo(
+    () => getMonthlyPlanItems(state.monthlyInvestmentPlan, month),
+    [state.monthlyInvestmentPlan, month],
   );
+  const previousMonthPlan = useMemo(
+    () => getMonthlyPlanItems(state.monthlyInvestmentPlan, previousMonth),
+    [state.monthlyInvestmentPlan, previousMonth],
+  );
+  const hasPreviousMonthPlan =
+    currentMonthPlan.length === 0 && previousMonthPlan.length > 0;
+
+  const addMonthlyPlanItems = useCallback(
+    (rawInput: string) => {
+      persist((prev) => {
+        const newItems = createMonthlyInvestmentPlanItems({
+          month,
+          rawInput,
+          existingItems: prev.monthlyInvestmentPlan ?? [],
+        });
+        if (newItems.length === 0) return prev;
+        return {
+          ...prev,
+          monthlyInvestmentPlan: [...(prev.monthlyInvestmentPlan ?? []), ...newItems],
+        };
+      });
+    },
+    [month, persist],
+  );
+
+  const copyMonthlyPlanFromPreviousMonth = useCallback(() => {
+    persist((prev) => {
+      const copied = copyMonthlyPlanItemsToMonth({
+        plan: prev.monthlyInvestmentPlan,
+        fromMonth: previousMonth,
+        toMonth: month,
+      });
+      if (copied.length === 0) return prev;
+      return {
+        ...prev,
+        monthlyInvestmentPlan: [...(prev.monthlyInvestmentPlan ?? []), ...copied],
+      };
+    });
+  }, [month, previousMonth, persist]);
 
   const removeMonthlyPlanItem = useCallback(
     (id: string) => {
@@ -435,6 +475,25 @@ export default function FinanceGameApp() {
       }));
     },
     [persist],
+  );
+
+  const splitMergedMonthlyPlanItem = useCallback(
+    (itemId: string, rawLabel: string) => {
+      persist((prev) => {
+        const without = (prev.monthlyInvestmentPlan ?? []).filter((x) => x.id !== itemId);
+        const newItems = createMonthlyInvestmentPlanItems({
+          month,
+          rawInput: rawLabel,
+          existingItems: without,
+        });
+        if (newItems.length === 0) return prev;
+        return {
+          ...prev,
+          monthlyInvestmentPlan: [...without, ...newItems],
+        };
+      });
+    },
+    [month, persist],
   );
 
   const handleAddEntry = useCallback(
@@ -463,14 +522,19 @@ export default function FinanceGameApp() {
 
         const subParts: string[] = [`${formatARS(inv)} este mes · ${mv.percent.toFixed(0)}% del objetivo`];
         if (afterPlan.totalCount > 0 && afterPlan.completedCount > beforePlan.completedCount) {
-          if (afterPlan.completedCount >= afterPlan.totalCount) {
-            subParts.push('Plan mensual completo');
-          } else {
+          const newlyDone = getNewlyCompletedPlanLabels(beforePlan, afterPlan);
+          if (newlyDone.length > 0) {
             subParts.push(
-              `Plan mensual: ${afterPlan.completedCount}/${afterPlan.totalCount} cumplidos`,
+              newlyDone.length === 1
+                ? `Compraste ${newlyDone[0]}`
+                : `Compraste ${newlyDone.join(', ')}`,
             );
-            const missing = formatPlanMissingList(afterPlan.missingLabels);
-            if (missing) subParts.push(`Te falta: ${missing}`);
+          }
+          if (afterPlan.completedCount >= afterPlan.totalCount) {
+            subParts.push('Plan de foco completo');
+          } else {
+            const missing = formatPlanMissingListForToast(afterPlan.missingLabels);
+            if (missing) subParts.push(`Te falta ${missing}`);
           }
         }
 
@@ -716,8 +780,11 @@ export default function FinanceGameApp() {
             month={month}
             entries={state.entries}
             plan={state.monthlyInvestmentPlan}
-            onAddItem={addMonthlyPlanItem}
+            onAddItems={addMonthlyPlanItems}
             onRemoveItem={removeMonthlyPlanItem}
+            onSplitMergedItem={splitMergedMonthlyPlanItem}
+            hasPreviousMonthPlan={hasPreviousMonthPlan}
+            onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
           />
         </section>
 
