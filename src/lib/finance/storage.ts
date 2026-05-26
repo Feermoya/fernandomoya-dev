@@ -197,7 +197,11 @@ function isMonthlyInvestmentPlanItem(x: unknown): x is MonthlyInvestmentPlanItem
     typeof o.label === 'string' &&
     Array.isArray(o.matchTerms) &&
     o.matchTerms.every((t) => typeof t === 'string') &&
-    typeof o.createdAt === 'string'
+    typeof o.createdAt === 'string' &&
+    (o.referencePrice === undefined ||
+      (typeof o.referencePrice === 'number' && Number.isFinite(o.referencePrice))) &&
+    (o.targetUnits === undefined ||
+      (typeof o.targetUnits === 'number' && Number.isFinite(o.targetUnits) && o.targetUnits > 0))
   );
 }
 

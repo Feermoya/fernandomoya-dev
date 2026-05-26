@@ -7,6 +7,42 @@ import sitemap from '@astrojs/sitemap';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+function financePricesDevPlugin() {
+  return {
+    name: 'finance-prices-dev-api',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const urlPath = req.url?.split('?')[0] ?? '';
+        if (urlPath !== '/api/finance-prices') return next();
+
+        try {
+          const fullUrl = new URL(req.url ?? '/', 'http://localhost');
+          const tickers = fullUrl.searchParams.get('tickers') ?? '';
+          const { buildFinancePricesResponse, FINANCE_PRICES_CACHE_HEADERS } =
+            await server.ssrLoadModule('/src/lib/finance/financePricesServer.ts');
+          const body = await buildFinancePricesResponse(tickers);
+          res.statusCode = body.error === 'Parámetro tickers vacío' ? 400 : 200;
+          Object.entries(FINANCE_PRICES_CACHE_HEADERS).forEach(([k, v]) => {
+            res.setHeader(k, v);
+          });
+          res.end(JSON.stringify(body));
+        } catch (e) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(
+            JSON.stringify({
+              ok: false,
+              prices: {},
+              fetchedAt: new Date().toISOString(),
+              error: e instanceof Error ? e.message : 'Error interno',
+            }),
+          );
+        }
+      });
+    },
+  };
+}
+
 /**
  * Tailwind v4 se integra vía plugin de Vite (no hace falta @astrojs/tailwind).
  * `site` es obligatorio para URLs canónicas y el sitemap.
@@ -24,7 +60,7 @@ export default defineConfig({
   /** Landing de una sola vista: sin prefetch de otras rutas. */
   prefetch: false,
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), financePricesDevPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

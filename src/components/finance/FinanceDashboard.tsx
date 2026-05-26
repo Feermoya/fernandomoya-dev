@@ -257,9 +257,22 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
             />
           </div>
           {gap && gap.amountMissing > 0 ? (
-            <p className="mt-2.5 text-[1.25rem] font-black tabular-nums leading-none sm:text-[1.45rem]" style={{ color: theme.text }}>
-              Te faltan {formatARS(gap.amountMissing)} → Nivel {gap.nextLevel} · {gap.nextTitle}
-            </p>
+            <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+              <p
+                className="text-[10px] font-black uppercase tracking-[0.2em]"
+                style={{ color: theme.textMuted }}
+              >
+                Faltan para el próximo nivel
+              </p>
+              <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
+                <strong className="text-2xl font-black tabular-nums leading-none text-cyan-200 sm:text-[1.65rem]">
+                  {formatARS(gap.amountMissing)}
+                </strong>
+                <span className="text-xs font-bold leading-snug" style={{ color: theme.textMuted }}>
+                  Nivel {gap.nextLevel} · {gap.nextTitle}
+                </span>
+              </div>
+            </div>
           ) : gap?.hint ? (
             <p className="mt-2 text-xs font-semibold leading-snug" style={{ color: theme.textMuted }}>
               {gap.hint}

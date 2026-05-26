@@ -1,4 +1,5 @@
 import type { FinanceEntry, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
+import type { FinancePriceSource, FinancePricesMap } from '@/lib/finance/financePrices';
 
 const MAX_LABEL_LENGTH = 30;
 const MAX_ITEMS_PER_PARSE = 30;
@@ -31,6 +32,26 @@ export type MonthlyPlanProgressItem = {
   historicallyCompleted: boolean;
   matchedEntryIds: string[];
   historicalMatchedEntryIds: string[];
+  referenceAmount: number;
+  referencePrice: number;
+  referenceCurrency: string;
+  targetUnits: number;
+  hasReferencePrice: boolean;
+  priceSource: FinancePriceSource;
+};
+
+export type MonthlyPlanProgress = {
+  items: MonthlyPlanProgressItem[];
+  completedCount: number;
+  totalCount: number;
+  missingLabels: string[];
+  completedLabels: string[];
+  percent: number;
+  pendingReferenceTotal: number;
+  completedReferenceTotal: number;
+  totalReferenceAmount: number;
+  itemsWithoutReferencePrice: string[];
+  pendingWithPriceCount: number;
 };
 
 function stripAccents(value: string): string {
@@ -138,6 +159,78 @@ export function buildDefaultMatchTerms(label: string): string[] {
   return [norm];
 }
 
+export function getPlanTickersForPricing(
+  plan: MonthlyInvestmentPlanItem[] | undefined,
+  month: string,
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of getMonthlyPlanItems(plan, month)) {
+    const label = normalizePlanLabel(item.label);
+    const base = label.split(' ')[0] ?? label;
+    if (!looksLikeTickerToken(base)) continue;
+    if (seen.has(base)) continue;
+    seen.add(base);
+    out.push(base);
+  }
+  return out;
+}
+
+function resolveItemPrice(
+  item: MonthlyInvestmentPlanItem,
+  prices?: FinancePricesMap,
+): {
+  referencePrice: number;
+  referenceAmount: number;
+  referenceCurrency: string;
+  targetUnits: number;
+  hasReferencePrice: boolean;
+  priceSource: FinancePriceSource;
+} {
+  const targetUnits = item.targetUnits ?? 1;
+  const label = normalizePlanLabel(item.label);
+  const base = label.split(' ')[0] ?? label;
+
+  const external = prices?.[label] ?? prices?.[base];
+  if (
+    external &&
+    external.price > 0 &&
+    (external.source === 'google-finance' || external.source === 'yahoo-finance')
+  ) {
+    const referencePrice = external.price;
+    const referenceCurrency = external.currency ?? (external.source === 'yahoo-finance' ? 'USD' : 'ARS');
+    return {
+      referencePrice,
+      referenceAmount: referencePrice * targetUnits,
+      referenceCurrency,
+      targetUnits,
+      hasReferencePrice: true,
+      priceSource: external.source,
+    };
+  }
+
+  const stored = item.referencePrice ?? 0;
+  if (stored > 0) {
+    return {
+      referencePrice: stored,
+      referenceAmount: stored * targetUnits,
+      referenceCurrency: 'ARS',
+      targetUnits,
+      hasReferencePrice: true,
+      priceSource: 'fallback',
+    };
+  }
+
+  return {
+    referencePrice: 0,
+    referenceAmount: 0,
+    referenceCurrency: 'ARS',
+    targetUnits,
+    hasReferencePrice: false,
+    priceSource: 'missing',
+  };
+}
+
 export function getMonthlyPlanItems(
   plan: MonthlyInvestmentPlanItem[] | undefined,
   month: string,
@@ -235,17 +328,16 @@ export function getMonthlyPlanProgress(params: {
   plan: MonthlyInvestmentPlanItem[] | undefined;
   entries: FinanceEntry[];
   month: string;
-}): {
-  items: MonthlyPlanProgressItem[];
-  completedCount: number;
-  totalCount: number;
-  missingLabels: string[];
-  completedLabels: string[];
-  percent: number;
-} {
+  prices?: FinancePricesMap;
+}): MonthlyPlanProgress {
   const items = getMonthlyPlanItems(params.plan, params.month);
   const allInvestments = params.entries.filter((e) => e.type === 'investment');
   const monthEntries = allInvestments.filter((e) => e.month === params.month);
+
+  let pendingReferenceTotal = 0;
+  let completedReferenceTotal = 0;
+  let totalReferenceAmount = 0;
+  const itemsWithoutReferencePrice: string[] = [];
 
   const progressItems: MonthlyPlanProgressItem[] = items.map((item) => {
     const matchedEntryIds = monthEntries
@@ -256,6 +348,17 @@ export function getMonthlyPlanProgress(params: {
       .map((e) => e.id);
     const completed = matchedEntryIds.length > 0;
     const historicallyCompleted = historicalMatchedEntryIds.length > 0;
+    const ref = resolveItemPrice(item, params.prices);
+
+    totalReferenceAmount += ref.referenceCurrency === 'ARS' ? ref.referenceAmount : 0;
+    if (!ref.hasReferencePrice) {
+      itemsWithoutReferencePrice.push(item.label);
+    }
+    if (completed) {
+      if (ref.referenceCurrency === 'ARS') completedReferenceTotal += ref.referenceAmount;
+    } else if (ref.referenceCurrency === 'ARS') {
+      pendingReferenceTotal += ref.referenceAmount;
+    }
 
     return {
       item,
@@ -263,6 +366,12 @@ export function getMonthlyPlanProgress(params: {
       historicallyCompleted: completed || historicallyCompleted,
       matchedEntryIds,
       historicalMatchedEntryIds,
+      referenceAmount: ref.referenceAmount,
+      referencePrice: ref.referencePrice,
+      referenceCurrency: ref.referenceCurrency,
+      targetUnits: ref.targetUnits,
+      hasReferencePrice: ref.hasReferencePrice,
+      priceSource: ref.priceSource,
     };
   });
 
@@ -271,6 +380,7 @@ export function getMonthlyPlanProgress(params: {
   const missingLabels = progressItems.filter((p) => !p.completed).map((p) => p.item.label);
   const completedLabels = progressItems.filter((p) => p.completed).map((p) => p.item.label);
   const percent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const pendingWithPriceCount = progressItems.filter((p) => !p.completed && p.hasReferencePrice).length;
 
   return {
     items: progressItems,
@@ -279,12 +389,17 @@ export function getMonthlyPlanProgress(params: {
     missingLabels,
     completedLabels,
     percent,
+    pendingReferenceTotal,
+    completedReferenceTotal,
+    totalReferenceAmount,
+    itemsWithoutReferencePrice,
+    pendingWithPriceCount,
   };
 }
 
 export function getNewlyCompletedPlanLabels(
-  before: ReturnType<typeof getMonthlyPlanProgress>,
-  after: ReturnType<typeof getMonthlyPlanProgress>,
+  before: MonthlyPlanProgress,
+  after: MonthlyPlanProgress,
 ): string[] {
   const wasPending = new Set(
     before.items.filter((p) => !p.completed).map((p) => normalizePlanLabel(p.item.label)),
@@ -310,6 +425,7 @@ export function createMonthlyInvestmentPlanItem(params: {
     label,
     matchTerms: buildDefaultMatchTerms(label),
     createdAt: new Date().toISOString(),
+    targetUnits: 1,
   };
 }
 
@@ -349,7 +465,14 @@ export function copyMonthlyPlanItemsToMonth(params: {
       const norm = normalizePlanLabel(label);
       if (existingLabels.has(norm)) continue;
       existingLabels.add(norm);
-      copied.push(createMonthlyInvestmentPlanItem({ month: params.toMonth, label }));
+      const created = createMonthlyInvestmentPlanItem({ month: params.toMonth, label });
+      if (item.referencePrice !== undefined && item.referencePrice > 0) {
+        created.referencePrice = item.referencePrice;
+      }
+      if (item.targetUnits !== undefined && item.targetUnits > 0) {
+        created.targetUnits = item.targetUnits;
+      }
+      copied.push(created);
     }
   }
   return copied;

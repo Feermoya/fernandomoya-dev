@@ -65,6 +65,10 @@ export type MonthlyInvestmentPlanItem = {
   label: string;
   matchTerms: string[];
   createdAt: string;
+  /** Precio de referencia manual (ARS), ej. CEDEAR en BCBA. */
+  referencePrice?: number;
+  /** Cantidad objetivo mínima a cubrir (default 1). */
+  targetUnits?: number;
 };
 
 export type FinanceReminderSettings = {

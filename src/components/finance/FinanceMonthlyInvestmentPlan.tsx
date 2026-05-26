@@ -1,9 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { FinanceEntry, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
+import { formatARS } from '@/lib/finance/calculations';
+import type { FinancePricesMap } from '@/lib/finance/financePrices';
+import {
+  fetchFinancePrices,
+  formatFinancePrice,
+  formatPricesFetchedTime,
+} from '@/lib/finance/financePrices';
 import type { MonthlyPlanProgressItem } from '@/lib/finance/monthlyInvestmentPlan';
 import {
   createMonthlyInvestmentPlanItems,
   getMonthlyPlanProgress,
+  getPlanTickersForPricing,
+  normalizePlanLabel,
   parseInvestmentPlanInput,
   planItemLabelLooksLikeMergedTickers,
 } from '@/lib/finance/monthlyInvestmentPlan';
@@ -19,24 +28,75 @@ type Props = {
   hasPreviousMonthPlan?: boolean;
 };
 
+function tickerLogoUrl(ticker: string, prices: FinancePricesMap): string | undefined {
+  const label = normalizePlanLabel(ticker);
+  const base = label.split(' ')[0] ?? label;
+  return prices[label]?.logoUrl ?? prices[base]?.logoUrl;
+}
+
+function TickerAvatar({ ticker, logoUrl }: { ticker: string; logoUrl?: string }) {
+  const [failed, setFailed] = useState(false);
+  const initial = (ticker.trim().charAt(0) || '?').toUpperCase();
+
+  useEffect(() => {
+    setFailed(false);
+  }, [logoUrl]);
+
+  if (logoUrl && !failed) {
+    return (
+      <img
+        src={logoUrl}
+        alt=""
+        width={24}
+        height={24}
+        loading="lazy"
+        decoding="async"
+        className="h-6 w-6 shrink-0 rounded-full border border-white/10 bg-black/30 object-contain p-0.5"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
+  return (
+    <span
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/35 text-[10px] font-black text-slate-200"
+      aria-hidden
+    >
+      {initial}
+    </span>
+  );
+}
+
 function PlanChip({
   progressItem,
+  prices,
+  pricesLoading,
   onRemove,
   onSplit,
 }: {
   progressItem: MonthlyPlanProgressItem;
+  prices: FinancePricesMap;
+  pricesLoading: boolean;
   onRemove: () => void;
   onSplit?: () => void;
 }) {
-  const { item, completed, historicallyCompleted } = progressItem;
+  const {
+    item,
+    completed,
+    historicallyCompleted,
+    hasReferencePrice,
+    referencePrice,
+    referenceCurrency,
+    priceSource,
+  } = progressItem;
   const pendingOnly = !completed && !historicallyCompleted;
   const pendingWithHistory = !completed && historicallyCompleted;
 
   const shellClass = completed
-    ? 'border-emerald-500/40 bg-emerald-950/30'
+    ? 'border-emerald-500/30 bg-emerald-950/25'
     : pendingWithHistory
-      ? 'border-cyan-500/35 bg-cyan-950/25'
-      : 'border-amber-400/45 bg-gradient-to-br from-amber-950/55 to-slate-950/70 shadow-[0_0_20px_-10px_rgba(251,191,36,0.4)]';
+      ? 'border-cyan-500/25 bg-cyan-950/20'
+      : 'border-amber-400/35 bg-amber-950/30';
 
   const statusLabel = completed
     ? 'Comprado este mes'
@@ -45,59 +105,79 @@ function PlanChip({
       : 'Pendiente';
 
   const statusClass = completed
-    ? 'text-emerald-300/95'
+    ? 'text-emerald-300/85'
     : pendingWithHistory
-      ? 'text-cyan-300/90'
-      : 'text-amber-200/90';
+      ? 'text-cyan-300/80'
+      : 'text-amber-200/85';
 
   const checkMark = completed ? '✓' : pendingWithHistory ? '✓' : null;
 
+  let priceLine = 'Sin precio';
+  if (pricesLoading && !hasReferencePrice) {
+    priceLine = '…';
+  } else if (hasReferencePrice) {
+    priceLine = formatFinancePrice(referencePrice, referenceCurrency);
+  }
+
+  const priceMeta =
+    priceSource === 'google-finance'
+      ? 'BCBA · Google Finance'
+      : priceSource === 'yahoo-finance'
+        ? 'USD · Yahoo Finance'
+        : priceSource === 'fallback'
+          ? 'Precio guardado'
+          : '';
+
+  const logoUrl = tickerLogoUrl(item.label, prices);
+
   return (
     <article
-      className={`flex min-w-0 w-full flex-col gap-2 rounded-2xl border px-3 py-3 ${shellClass} ${
-        completed ? 'opacity-95' : ''
+      className={`flex min-h-0 w-full min-w-0 flex-col gap-0.5 rounded-xl border p-2.5 ${shellClass} ${
+        completed ? 'opacity-90' : ''
       }`}
     >
       <div className="flex min-w-0 items-center gap-1.5">
-        {checkMark ? (
-          <span
-            className={`shrink-0 text-sm font-black leading-none ${
-              completed ? 'text-emerald-400' : 'text-cyan-400/80'
-            }`}
-            aria-hidden
-          >
-            {checkMark}
-          </span>
-        ) : (
-          <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400/90" aria-hidden />
-        )}
+        <TickerAvatar ticker={item.label} logoUrl={logoUrl} />
         <span
-          className={`min-w-0 truncate text-lg font-black leading-tight tracking-tight ${
-            pendingOnly ? 'text-white' : completed ? 'text-emerald-50' : 'text-slate-100'
+          className={`min-w-0 truncate text-sm font-black leading-tight ${
+            pendingOnly ? 'text-white' : 'text-slate-100'
           }`}
         >
           {item.label}
         </span>
+        {checkMark ? (
+          <span
+            className={`ml-auto shrink-0 text-[10px] font-black ${completed ? 'text-emerald-400' : 'text-cyan-400/70'}`}
+            aria-hidden
+          >
+            {checkMark}
+          </span>
+        ) : null}
       </div>
 
-      <p className={`text-[9px] font-black uppercase leading-tight tracking-wider ${statusClass}`}>
+      <p className={`text-[9px] font-black uppercase tracking-[0.14em] leading-none ${statusClass}`}>
         {statusLabel}
       </p>
 
-      <div className="flex flex-wrap gap-2">
+      <p className="text-xs font-bold tabular-nums leading-tight text-slate-200">{priceLine}</p>
+      {priceMeta ? (
+        <p className="text-[9px] font-semibold leading-none text-slate-500">{priceMeta}</p>
+      ) : null}
+
+      <div className="mt-0.5 flex flex-wrap gap-x-2">
         {onSplit ? (
           <button
             type="button"
             onClick={onSplit}
-            className="finance-touch-target min-h-[36px] rounded-lg border border-indigo-400/35 bg-indigo-500/15 px-3 py-2 text-[11px] font-bold text-indigo-200"
+            className="min-h-[28px] text-[10px] font-bold text-indigo-300/90"
           >
-            Separar en tickers
+            Separar
           </button>
         ) : null}
         <button
           type="button"
           onClick={onRemove}
-          className="finance-touch-target min-h-[36px] rounded-lg border border-white/10 px-3 py-2 text-[11px] font-bold text-slate-400 transition hover:border-white/15 hover:bg-white/5 hover:text-rose-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+          className="min-h-[28px] text-[10px] font-bold text-slate-500 hover:text-rose-300"
         >
           Quitar
         </button>
@@ -110,24 +190,30 @@ function ChipGrid({
   title,
   titleClass,
   items,
+  prices,
+  pricesLoading,
   onRemoveItem,
   onSplitMergedItem,
 }: {
   title: string;
   titleClass: string;
   items: MonthlyPlanProgressItem[];
+  prices: FinancePricesMap;
+  pricesLoading: boolean;
   onRemoveItem: (id: string) => void;
   onSplitMergedItem?: (id: string, label: string) => void;
 }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <p className={`mb-2 text-[10px] font-black uppercase tracking-[0.16em] ${titleClass}`}>{title}</p>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <p className={`mb-1.5 text-[10px] font-black uppercase tracking-[0.16em] ${titleClass}`}>{title}</p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
         {items.map((progressItem) => (
           <PlanChip
             key={progressItem.item.id}
             progressItem={progressItem}
+            prices={prices}
+            pricesLoading={pricesLoading}
             onRemove={() => onRemoveItem(progressItem.item.id)}
             onSplit={
               planItemLabelLooksLikeMergedTickers(progressItem.item.label) && onSplitMergedItem
@@ -139,6 +225,116 @@ function ChipGrid({
       </div>
     </div>
   );
+}
+
+function ReferenceSummary({
+  progress,
+  allComplete,
+  pricesLoading,
+  pricesError,
+  pricesFetchedAt,
+  onRefresh,
+}: {
+  progress: ReturnType<typeof getMonthlyPlanProgress>;
+  allComplete: boolean;
+  pricesLoading: boolean;
+  pricesError: string | null;
+  pricesFetchedAt: string | null;
+  onRefresh: () => void;
+}) {
+  const missingPriceCount = progress.itemsWithoutReferencePrice.length;
+  const timeLabel = formatPricesFetchedTime(pricesFetchedAt);
+
+  if (pricesLoading && progress.pendingReferenceTotal === 0 && missingPriceCount > 0) {
+    return (
+      <div className="mt-2.5 rounded-xl border border-indigo-500/20 bg-indigo-950/15 px-3 py-2">
+        <p className="text-xs font-semibold text-indigo-200/90">Actualizando precios…</p>
+      </div>
+    );
+  }
+
+  if (pricesError && progress.pendingReferenceTotal === 0 && missingPriceCount > 0) {
+    return (
+      <div className="mt-2.5 rounded-xl border border-rose-500/25 bg-rose-950/20 px-3 py-2">
+        <p className="text-xs font-semibold text-rose-200/90">No se pudieron leer precios</p>
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="mt-1 text-[11px] font-bold text-rose-100 underline underline-offset-2"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  if (allComplete && progress.totalCount > 0) {
+    return (
+      <div className="mt-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-3 py-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300/80">
+          Plan cubierto este mes
+        </p>
+        {progress.completedReferenceTotal > 0 ? (
+          <p className="text-lg font-black tabular-nums text-emerald-100">
+            {formatARS(progress.completedReferenceTotal)}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (progress.pendingReferenceTotal > 0) {
+    return (
+      <div className="mt-2.5 flex items-end justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-950/20 px-3 py-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-200/75">
+            Pendiente estimado
+          </p>
+          <p className="text-xl font-black tabular-nums leading-tight text-amber-50">
+            {formatARS(progress.pendingReferenceTotal)}
+          </p>
+          <p className="text-[10px] font-semibold text-slate-500">
+            según Google Finance · BCBA (CEDEARs)
+            {timeLabel ? ` · ${timeLabel}` : ''}
+          </p>
+          {missingPriceCount > 0 ? (
+            <p className="text-[10px] font-semibold text-indigo-300/80">
+              Faltan precios para {missingPriceCount} activo{missingPriceCount === 1 ? '' : 's'}
+            </p>
+          ) : null}
+        </div>
+        <span className="shrink-0 text-[11px] font-black tabular-nums text-slate-300">
+          {progress.completedCount}/{progress.totalCount}
+        </span>
+      </div>
+    );
+  }
+
+  if (missingPriceCount > 0) {
+    return (
+      <div className="mt-2.5 rounded-xl border border-indigo-500/20 bg-indigo-950/15 px-3 py-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-200/80">
+          {pricesLoading ? 'Actualizando precios…' : 'Precios no disponibles'}
+        </p>
+        <p className="mt-1 text-[11px] font-semibold text-slate-400">
+          {pricesLoading
+            ? 'Consultando Google Finance…'
+            : `Faltan precios para ${missingPriceCount} activo${missingPriceCount === 1 ? '' : 's'}`}
+        </p>
+        {!pricesLoading && pricesError ? (
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="mt-1 text-[11px] font-bold text-indigo-200 underline underline-offset-2"
+          >
+            Reintentar
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
+  return null;
 }
 
 export function FinanceMonthlyInvestmentPlan({
@@ -155,9 +351,49 @@ export function FinanceMonthlyInvestmentPlan({
   const [addError, setAddError] = useState<string | null>(null);
   const [addInfo, setAddInfo] = useState<string | null>(null);
 
+  const [prices, setPrices] = useState<FinancePricesMap>({});
+  const [pricesLoading, setPricesLoading] = useState(false);
+  const [pricesError, setPricesError] = useState<string | null>(null);
+  const [pricesFetchedAt, setPricesFetchedAt] = useState<string | null>(null);
+
+  const tickersToFetch = useMemo(
+    () => getPlanTickersForPricing(plan, month),
+    [plan, month],
+  );
+  const tickersKey = tickersToFetch.join(',');
+
+  const loadPrices = useCallback(async (tickers: string[]) => {
+    if (tickers.length === 0) {
+      setPrices({});
+      setPricesError(null);
+      return;
+    }
+    setPricesLoading(true);
+    setPricesError(null);
+    const result = await fetchFinancePrices(tickers);
+    setPricesLoading(false);
+    setPrices(result.prices);
+    setPricesFetchedAt(result.fetchedAt);
+    if (import.meta.env.DEV) {
+      for (const [ticker, row] of Object.entries(result.prices)) {
+        console.info('[finance-prices] logo found', ticker, Boolean(row.logoUrl));
+      }
+    }
+    if (!result.ok) {
+      setPricesError(result.error ?? 'No se pudieron actualizar precios');
+    } else {
+      setPricesError(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tickersToFetch.length === 0) return;
+    void loadPrices(tickersToFetch);
+  }, [tickersKey, loadPrices, tickersToFetch]);
+
   const progress = useMemo(
-    () => getMonthlyPlanProgress({ plan, entries, month }),
-    [plan, entries, month],
+    () => getMonthlyPlanProgress({ plan, entries, month, prices }),
+    [plan, entries, month, prices],
   );
 
   const hasPlan = progress.totalCount > 0;
@@ -212,6 +448,11 @@ export function FinanceMonthlyInvestmentPlan({
   };
 
   const hasMergedItem = progress.items.some((p) => planItemLabelLooksLikeMergedTickers(p.item.label));
+  const refreshLabel = pricesLoading
+    ? 'Actualizando...'
+    : pricesFetchedAt
+      ? `Actualizar precios · ${formatPricesFetchedTime(pricesFetchedAt)}`
+      : 'Actualizar precios';
 
   return (
     <section
@@ -229,20 +470,17 @@ export function FinanceMonthlyInvestmentPlan({
           </h3>
           <p className="mt-0.5 text-xs font-semibold text-slate-400">Qué querés comprar este mes</p>
         </div>
-        {hasPlan ? (
-          <span
-            className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-black tabular-nums text-slate-200"
-            aria-label={`${progress.completedCount} de ${progress.totalCount} comprados este mes`}
-          >
+        {hasPlan && progress.pendingReferenceTotal === 0 && !allComplete ? (
+          <span className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-black tabular-nums text-slate-200">
             {progress.completedCount}/{progress.totalCount}
           </span>
         ) : null}
       </div>
 
       {hasPlan ? (
-        <div className="mt-3">
+        <div className="mt-2.5">
           <div
-            className="h-1.5 overflow-hidden rounded-full bg-black/35"
+            className="h-1 overflow-hidden rounded-full bg-black/35"
             role="progressbar"
             aria-valuenow={Math.round(progress.percent)}
             aria-valuemin={0}
@@ -259,11 +497,38 @@ export function FinanceMonthlyInvestmentPlan({
         </div>
       ) : null}
 
+      {hasPlan && tickersToFetch.length > 0 ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={pricesLoading}
+            onClick={() => void loadPrices(tickersToFetch)}
+            className="finance-touch-target min-h-[36px] rounded-lg border border-indigo-400/35 bg-indigo-500/15 px-3 text-[11px] font-bold text-indigo-100 disabled:opacity-50"
+          >
+            {refreshLabel}
+          </button>
+          {pricesError ? (
+            <span className="text-[10px] font-semibold text-rose-300/85">{pricesError}</span>
+          ) : null}
+        </div>
+      ) : null}
+
+      {hasPlan ? (
+        <ReferenceSummary
+          progress={progress}
+          allComplete={allComplete}
+          pricesLoading={pricesLoading}
+          pricesError={pricesError}
+          pricesFetchedAt={pricesFetchedAt}
+          onRefresh={() => void loadPrices(tickersToFetch)}
+        />
+      ) : null}
+
       {!hasPlan && hasPreviousMonthPlan && onCopyFromPreviousMonth ? (
         <button
           type="button"
           onClick={onCopyFromPreviousMonth}
-          className="finance-touch-target mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-indigo-400/35 bg-indigo-500/15 px-4 text-xs font-black text-indigo-100 transition hover:bg-indigo-500/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+          className="finance-touch-target mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-indigo-400/35 bg-indigo-500/15 px-4 text-xs font-black text-indigo-100"
         >
           Copiar plan del mes anterior
         </button>
@@ -281,40 +546,35 @@ export function FinanceMonthlyInvestmentPlan({
         </label>
         <textarea
           id="monthly-plan-input"
-          rows={4}
+          rows={3}
           value={rawInput}
           onChange={(e) => {
             setRawInput(e.target.value);
             if (addError) setAddError(null);
           }}
           placeholder="Pegá tickers o activos: GOOGL, MU, NVDA, AVGO, TSLA, TSM"
-          className="finance-input-mobile w-full resize-y rounded-2xl border border-white/15 bg-black/35 px-3 py-3 text-sm leading-relaxed text-white placeholder:text-slate-500 focus:border-indigo-400/40 focus:ring-2 focus:ring-indigo-400/15"
+          className="finance-input-mobile w-full resize-y rounded-2xl border border-white/15 bg-black/35 px-3 py-2.5 text-sm leading-relaxed text-white placeholder:text-slate-500 focus:border-indigo-400/40 focus:ring-2 focus:ring-indigo-400/15"
         />
         {previewLabels.length > 0 ? (
-          <div className="mt-2">
-            <p className="text-[10px] font-semibold text-indigo-300/80">
-              Se van a crear {previewLabels.length} tickers:
-            </p>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {previewLabels.map((t) => (
-                <span
-                  key={t}
-                  className="rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-2 py-0.5 text-[11px] font-black text-indigo-100"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {previewLabels.map((t) => (
+              <span
+                key={t}
+                className="rounded-md border border-indigo-400/30 bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-black text-indigo-100"
+              >
+                {t}
+              </span>
+            ))}
           </div>
         ) : (
-          <p className="mt-1.5 text-[10px] font-semibold leading-snug text-slate-500">
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">
             Podés pegar varios separados por coma, espacio o salto de línea.
           </p>
         )}
         <button
           type="button"
           onClick={handleAdd}
-          className="finance-touch-target mt-3 flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-indigo-400/40 bg-gradient-to-r from-indigo-600/80 to-violet-600/70 px-4 text-sm font-black text-white shadow-lg transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 active:scale-[0.99]"
+          className="finance-touch-target mt-2.5 flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-indigo-400/40 bg-gradient-to-r from-indigo-600/80 to-violet-600/70 px-4 text-sm font-black text-white shadow-lg transition hover:brightness-110 active:scale-[0.99]"
         >
           Agregar al plan
         </button>
@@ -333,16 +593,18 @@ export function FinanceMonthlyInvestmentPlan({
 
       {hasMergedItem ? (
         <p className="mt-2 text-[10px] font-semibold text-indigo-300/85">
-          Hay un ítem con varios tickers juntos. Usá «Separar en tickers» para dividirlo.
+          Hay un ítem con varios tickers juntos. Usá «Separar» para dividirlo.
         </p>
       ) : null}
 
       {hasPlan ? (
-        <div className="mt-4 space-y-4" aria-live="polite">
+        <div className="mt-3 space-y-3" aria-live="polite">
           <ChipGrid
             title="Pendientes"
             titleClass="text-amber-300/85"
             items={pendingItems}
+            prices={prices}
+            pricesLoading={pricesLoading}
             onRemoveItem={onRemoveItem}
             onSplitMergedItem={onSplitMergedItem}
           />
@@ -350,13 +612,15 @@ export function FinanceMonthlyInvestmentPlan({
             title="Comprados este mes"
             titleClass="text-emerald-400/70"
             items={completedThisMonth}
+            prices={prices}
+            pricesLoading={pricesLoading}
             onRemoveItem={onRemoveItem}
             onSplitMergedItem={onSplitMergedItem}
           />
         </div>
       ) : null}
 
-      <p className="mt-3 text-[10px] font-semibold text-slate-600">{month}</p>
+      <p className="mt-2 text-[10px] font-semibold text-slate-600">{month}</p>
     </section>
   );
 }
