@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "dev:clean": "rm -rf node_modules/.vite && astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/bundle-finance-api.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -29,6 +29,7 @@
     "@tailwindcss/vite": "^4.2.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "esbuild": "^0.25.0",
     "sharp": "^0.34.0",
     "typescript": "^5.9.0",
     "vite": "^7.3.0"

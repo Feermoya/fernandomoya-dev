@@ -34,6 +34,16 @@ function normalizeTickers(tickers: string[]): string[] {
   return out;
 }
 
+function toErrorMessage(value: unknown, fallback: string): string {
+  if (typeof value === 'string' && value.trim()) return value;
+  if (value && typeof value === 'object') {
+    const o = value as Record<string, unknown>;
+    if (typeof o.message === 'string' && o.message.trim()) return o.message;
+    if (typeof o.error === 'string' && o.error.trim()) return o.error;
+  }
+  return fallback;
+}
+
 export async function fetchFinancePrices(tickers: string[]): Promise<FetchFinancePricesResult> {
   const normalized = normalizeTickers(tickers);
   if (normalized.length === 0) {
@@ -45,14 +55,29 @@ export async function fetchFinancePrices(tickers: string[]): Promise<FetchFinanc
 
   try {
     const res = await fetch(url, { headers: { Accept: 'application/json' } });
-    const data = (await res.json()) as FetchFinancePricesResult;
+    let data: FetchFinancePricesResult & { code?: string; message?: string } = {
+      ok: false,
+      prices: {},
+      fetchedAt: new Date().toISOString(),
+    };
+
+    try {
+      data = (await res.json()) as typeof data;
+    } catch {
+      return {
+        ok: false,
+        prices: {},
+        fetchedAt: new Date().toISOString(),
+        error: res.ok ? 'Respuesta inválida del servidor' : `HTTP ${res.status}`,
+      };
+    }
 
     if (!res.ok) {
       return {
         ok: false,
         prices: data.prices ?? {},
         fetchedAt: data.fetchedAt ?? new Date().toISOString(),
-        error: data.error ?? `HTTP ${res.status}`,
+        error: toErrorMessage(data.error ?? data.message ?? data, `HTTP ${res.status}`),
       };
     }
 
@@ -60,7 +85,7 @@ export async function fetchFinancePrices(tickers: string[]): Promise<FetchFinanc
       ok: Boolean(data.ok),
       prices: data.prices ?? {},
       fetchedAt: data.fetchedAt ?? new Date().toISOString(),
-      error: data.error,
+      error: data.error ? toErrorMessage(data.error, 'No se pudieron leer precios') : undefined,
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error de red';

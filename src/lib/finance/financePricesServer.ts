@@ -5,7 +5,7 @@ import {
   parseGoogleFinancePrice,
 } from './googleFinanceParse';
 import type { FinancePrice } from './financePrices';
-import { isCryptoTicker } from './tickerPricing';
+import { isCryptoTicker, getCryptoLogoFallbackUrl } from './tickerPricing';
 import {
   buildYahooChartUrl,
   buildYahooFinanceQuoteUrl,
@@ -119,6 +119,8 @@ async function fetchYahooCryptoPrice(ticker: string, fetchedAt: string): Promise
     } catch {
       // Logo opcional: no afecta el precio.
     }
+
+    logoUrl ??= getCryptoLogoFallbackUrl(ticker);
 
     if (!parsed) {
       return {

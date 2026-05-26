@@ -16,6 +16,7 @@ import {
   parseInvestmentPlanInput,
   planItemLabelLooksLikeMergedTickers,
 } from '@/lib/finance/monthlyInvestmentPlan';
+import { getCryptoLogoFallbackUrl } from '@/lib/finance/tickerPricing';
 
 type Props = {
   month: string;
@@ -31,7 +32,7 @@ type Props = {
 function tickerLogoUrl(ticker: string, prices: FinancePricesMap): string | undefined {
   const label = normalizePlanLabel(ticker);
   const base = label.split(' ')[0] ?? label;
-  return prices[label]?.logoUrl ?? prices[base]?.logoUrl;
+  return prices[label]?.logoUrl ?? prices[base]?.logoUrl ?? getCryptoLogoFallbackUrl(base);
 }
 
 function TickerAvatar({ ticker, logoUrl }: { ticker: string; logoUrl?: string }) {
@@ -380,7 +381,9 @@ export function FinanceMonthlyInvestmentPlan({
       }
     }
     if (!result.ok) {
-      setPricesError(result.error ?? 'No se pudieron actualizar precios');
+      setPricesError(
+        typeof result.error === 'string' ? result.error : 'No se pudieron actualizar precios',
+      );
     } else {
       setPricesError(null);
     }

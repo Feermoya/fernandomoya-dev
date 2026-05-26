@@ -53,3 +53,13 @@ export function buildYahooFinanceQuoteUrl(ticker: string): string {
   const sym = toYahooCryptoSymbol(ticker);
   return `https://es.finance.yahoo.com/quote/${encodeURIComponent(sym)}/`;
 }
+
+/** Logos de referencia para cripto cuando Yahoo no devuelve imagen. No se persisten. */
+export const CRYPTO_LOGO_FALLBACKS: Record<string, string> = {
+  BTC: 'https://1000logos.net/wp-content/uploads/2018/05/Bitcoin-Logo.png',
+};
+
+export function getCryptoLogoFallbackUrl(ticker: string): string | undefined {
+  const base = ticker.trim().toUpperCase().replace(/-USD$/, '');
+  return CRYPTO_LOGO_FALLBACKS[base];
+}

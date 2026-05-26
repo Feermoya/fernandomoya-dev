@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/finance-prices.mjs": {
+      "maxDuration": 60
+    }
+  },
   "headers": [
     {
       "source": "/foco-financiero",

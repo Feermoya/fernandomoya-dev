@@ -76,7 +76,8 @@ Los logos **no se guardan** en ningún lado.
 
 | Archivo | Rol |
 |---------|-----|
-| `api/finance-prices.ts` | Endpoint serverless en Vercel (producción) |
+| `api/finance-prices.mjs` | Endpoint serverless en Vercel (bundle generado en `npm run build`) |
+| `api/finance-prices.entry.ts` | Fuente del handler para el bundle |
 | `src/lib/finance/financePricesServer.ts` | Lógica compartida del endpoint |
 | `src/lib/finance/googleFinanceParse.ts` | Parser Google Finance (precio + logo) |
 | `src/lib/finance/yahooFinanceParse.ts` | Parser Yahoo Finance (cripto) |
