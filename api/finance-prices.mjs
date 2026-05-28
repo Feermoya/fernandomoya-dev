@@ -190,6 +190,13 @@ function buildYahooFinanceQuoteUrl(ticker) {
   const sym = toYahooCryptoSymbol(ticker);
   return `https://es.finance.yahoo.com/quote/${encodeURIComponent(sym)}/`;
 }
+var CRYPTO_LOGO_FALLBACKS = {
+  BTC: "https://1000logos.net/wp-content/uploads/2018/05/Bitcoin-Logo.png"
+};
+function getCryptoLogoFallbackUrl(ticker) {
+  const base = ticker.trim().toUpperCase().replace(/-USD$/, "");
+  return CRYPTO_LOGO_FALLBACKS[base];
+}
 
 // src/lib/finance/yahooFinanceParse.ts
 var YAHOO_CHART_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
@@ -314,6 +321,7 @@ async function fetchYahooCryptoPrice(ticker, fetchedAt) {
       }
     } catch {
     }
+    logoUrl ??= getCryptoLogoFallbackUrl(ticker);
     if (!parsed) {
       return {
         ...missingPrice(ticker, "USD", url, fetchedAt, "No se pudo leer el precio", "USD"),

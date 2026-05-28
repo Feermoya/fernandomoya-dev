@@ -102,7 +102,6 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
             </span>
             <div>
               <h3 className="text-base font-black tracking-tight text-white">Sumar inversión</h3>
-              <p className="text-xs font-semibold text-emerald-200/70">Carga rápida del mes</p>
             </div>
           </div>
           {savedFlash ? (

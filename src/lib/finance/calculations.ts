@@ -63,6 +63,19 @@ export function getTotalInvested(entries: FinanceEntry[]): number {
   return entries.filter((e) => e.type === 'investment').reduce((s, e) => s + e.amount, 0);
 }
 
+export function getYearFromMonthKey(month: string): number {
+  const y = Number(month.split('-')[0]);
+  return Number.isFinite(y) ? y : new Date().getFullYear();
+}
+
+/** Suma de inversiones en meses `YYYY-MM` del año calendario indicado. */
+export function getYearInvested(entries: FinanceEntry[], year: number): number {
+  const prefix = `${year}-`;
+  return entries
+    .filter((e) => e.type === 'investment' && e.month.startsWith(prefix))
+    .reduce((s, e) => s + e.amount, 0);
+}
+
 export function getTotalSaved(entries: FinanceEntry[]): number {
   return entries.filter((e) => e.type === 'saving').reduce((s, e) => s + e.amount, 0);
 }

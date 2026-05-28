@@ -4,7 +4,6 @@ import {
   formatARS,
   getMonthlyInvested,
   getMonthlyInvestmentStreak,
-  MONTHLY_STREAK_MINIMUM_ARS,
 } from '@/lib/finance/calculations';
 import {
   addMonths,
@@ -33,20 +32,18 @@ function getMoodLine(
   level: number,
   deltaPct: number | null,
 ): { emoji: string; text: string } {
-  if (investedMonth === 0) return { emoji: '😴', text: 'Sin movimientos este mes todavía.' };
-  if (level >= 6) return { emoji: '🔥', text: 'Mes de alto rendimiento.' };
-  if (level >= 4 && deltaPct !== null && deltaPct > 0)
-    return { emoji: '📈', text: 'Mejor que el mes pasado. Seguí.' };
-  if (level >= 3) return { emoji: '💪', text: 'Bien. Cerrá el mes fuerte.' };
-  if (level >= 1) return { emoji: '🌱', text: 'Empezaste. Sumá más.' };
-  return { emoji: '⚡', text: 'Casi en nivel 1. Un movimiento más.' };
+  if (investedMonth === 0) return { emoji: '😴', text: 'Sin movimientos este mes' };
+  if (level >= 6) return { emoji: '🔥', text: 'Mes fuerte' };
+  if (level >= 4 && deltaPct !== null && deltaPct > 0) return { emoji: '📈', text: 'Mejor que el mes pasado' };
+  if (level >= 3) return { emoji: '💪', text: 'Buen ritmo' };
+  if (level >= 1) return { emoji: '🌱', text: 'En marcha' };
+  return { emoji: '⚡', text: 'Casi nivel 1' };
 }
 
 type Props = {
   state: FinanceState;
   mission: MonthlyMissionView;
   onMonthChange: (month: string) => void;
-  /** Pulso en la card y animación de barra al subir de nivel (mismo mes visible). */
   celebration?: FinanceDashboardCelebration | null;
 };
 
@@ -100,7 +97,6 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
     investedPrevMonth > 0 ? Math.round((deltaVsPrev / investedPrevMonth) * 100) : null;
   const mood = getMoodLine(investedMonth, levelInfo.level, deltaPct);
   const streak = getMonthlyInvestmentStreak(entries, month);
-  const streakUnit = streak.streakCount === 1 ? 'mes' : 'meses';
   const missionDone = mission.status === 'completed';
 
   const heroGlow = burst
@@ -132,101 +128,74 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
         aria-hidden
       />
 
-      <div className="pointer-events-none absolute right-6 top-6 hidden h-28 w-28 rounded-full border border-white/10 opacity-40 sm:block" aria-hidden />
-      <div className="pointer-events-none absolute right-12 top-12 hidden h-16 w-16 rounded-full border border-white/10 opacity-30 sm:block" aria-hidden />
-      <div
-        className="pointer-events-none absolute bottom-0 left-0 h-24 w-full bg-gradient-to-t from-black/20 to-transparent"
-        aria-hidden
-      />
-
-      <div className="relative z-[1] flex flex-col gap-4 p-3.5 sm:gap-5 sm:p-6">
-        <div className="mb-0.5 flex items-start gap-2.5 sm:items-center">
-          <span className="text-lg leading-none sm:text-xl" aria-hidden>
-            {mood.emoji}
-          </span>
-          <p className="text-xs font-bold leading-snug sm:text-[13px]" style={{ color: theme.textMuted }}>
-            {mood.text}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
-          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+      <div className="relative z-[1] flex flex-col gap-3 p-3 sm:gap-4 sm:p-5 lg:p-6">
+        {/* Fila superior: nivel + mes */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-4">
+          <div className="flex min-w-0 items-center gap-3">
             <div
-              className={`finance-level-pulse relative flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-[1.6rem] border-2 bg-black/20 shadow-2xl backdrop-blur-sm sm:h-28 sm:w-28 sm:rounded-[2rem] ${burst ? 'finance-dashboard-level-pop' : ''}`}
+              className={`finance-level-pulse relative flex h-[3.75rem] w-[3.75rem] shrink-0 items-center justify-center rounded-2xl border-2 bg-black/20 shadow-xl backdrop-blur-sm sm:h-24 sm:w-24 sm:rounded-[1.75rem] ${burst ? 'finance-dashboard-level-pop' : ''}`}
               style={{
                 borderColor: theme.border,
                 boxShadow: `inset 0 1px 0 rgba(255,255,255,0.18), 0 0 42px -10px ${theme.glow}`,
               }}
             >
               <span
-                className="text-[3rem] font-black leading-none tabular-nums tracking-tighter sm:text-[4.4rem]"
-                style={{
-                  color: theme.text,
-                  textShadow: `0 0 40px ${theme.glow}`,
-                }}
+                className="text-[2.35rem] font-black leading-none tabular-nums tracking-tighter sm:text-[3.5rem]"
+                style={{ color: theme.text, textShadow: `0 0 40px ${theme.glow}` }}
               >
                 {levelInfo.level}
               </span>
             </div>
-            <div className="min-w-0 pb-0.5">
-              <span
-                className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest transition-shadow duration-500 ${burst ? 'finance-dashboard-badge-shine' : ''}`}
-                style={{
-                  background: 'rgba(0,0,0,0.25)',
-                  color: theme.text,
-                  border: `1px solid ${theme.border}`,
-                }}
-              >
-                Nivel actual
-              </span>
-              <p className="mt-1 text-lg font-black tracking-tight sm:mt-1.5 sm:text-2xl" style={{ color: theme.text }}>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest sm:text-[10px] ${burst ? 'finance-dashboard-badge-shine' : ''}`}
+                  style={{
+                    background: 'rgba(0,0,0,0.25)',
+                    color: theme.text,
+                    border: `1px solid ${theme.border}`,
+                  }}
+                >
+                  Nivel {levelInfo.level}
+                </span>
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-semibold"
+                  style={{ color: theme.textMuted }}
+                >
+                  <span aria-hidden>{mood.emoji}</span>
+                  {mood.text}
+                </span>
+              </div>
+              <p className="mt-1 text-base font-black tracking-tight sm:text-xl" style={{ color: theme.text }}>
                 {levelInfo.title}
-              </p>
-              <p className="mt-0.5 text-base sm:text-xl" aria-hidden>
-                {theme.icon}
               </p>
             </div>
           </div>
 
-          <div className="flex w-full shrink-0 flex-col gap-1 sm:w-auto sm:items-end">
-            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: theme.textMuted }}>
+          <label className="flex flex-col gap-0.5 sm:items-end">
+            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: theme.textMuted }}>
               Mes
-            </label>
+            </span>
             <input
               type="month"
               value={month}
               onChange={(e) => onMonthChange(e.target.value)}
-              className="min-h-[44px] w-full rounded-xl border-2 bg-black/30 px-3 py-2 text-sm font-bold backdrop-blur-sm sm:w-auto"
+              className="min-h-[42px] w-full rounded-xl border-2 bg-black/30 px-3 py-2 text-sm font-bold backdrop-blur-sm sm:min-w-[10.5rem] sm:w-auto"
               style={{ borderColor: theme.border, color: theme.text }}
             />
-          </div>
+          </label>
         </div>
 
-        <div>
-          <p className="text-base font-bold sm:text-lg" style={{ color: theme.text }}>
-            Invertiste {formatARS(investedMonth)} este mes.
-          </p>
-          {investedPrevMonth > 0 && (
-            <div className="mt-1.5 flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-              <span
-                className="text-xs font-bold tabular-nums sm:text-[13px]"
-                style={{ color: deltaVsPrev >= 0 ? '#4ade80' : '#f87171' }}
-              >
-                {deltaVsPrev >= 0 ? '▲' : '▼'} {Math.abs(deltaPct ?? 0)}% vs {formatMonthLabel(prevMonth)}
-              </span>
-              <span className="text-[11px] sm:text-[12px]" style={{ color: theme.textMuted }}>
-                {deltaVsPrev >= 0 ? 'Mejor que el mes pasado' : 'Menos que el mes pasado'}
-              </span>
-            </div>
-          )}
-        </div>
-
+        {/* Objetivo del mes — único bloque de montos */}
         <div
-          className="rounded-xl px-3.5 py-3 sm:px-4"
+          className="rounded-xl px-3 py-2.5 sm:px-4 sm:py-3"
           style={{ background: 'rgba(0,0,0,0.28)', border: `1px solid ${theme.border}` }}
         >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] sm:text-[10px]" style={{ color: theme.textMuted }}>
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+            <p
+              className="text-[9px] font-black uppercase tracking-[0.16em] sm:text-[10px]"
+              style={{ color: theme.textMuted }}
+            >
               Objetivo del mes
             </p>
             <span
@@ -236,18 +205,30 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
               {missionDone ? 'Completada' : mission.status === 'in_progress' ? 'En curso' : 'Pendiente'}
             </span>
           </div>
-          <p className="mt-1.5 text-sm font-black leading-snug sm:text-base" style={{ color: theme.text }}>
+
+          <p className="mt-1 text-sm font-bold leading-snug sm:text-base" style={{ color: theme.text }}>
             {mission.headline}
           </p>
-          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
-            <span className="text-xl font-black tabular-nums sm:text-2xl" style={{ color: theme.text }}>
+
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0">
+            <span className="text-2xl font-black tabular-nums leading-none sm:text-[1.75rem]" style={{ color: theme.text }}>
               {formatARS(mission.currentAmount)}
             </span>
             <span className="text-xs font-bold tabular-nums" style={{ color: theme.textMuted }}>
               / {formatARS(mission.targetAmount)} · {mission.percent.toFixed(0)}%
             </span>
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full border border-white/10 bg-black/40">
+
+          {investedPrevMonth > 0 ? (
+            <p
+              className="mt-1 text-[11px] font-semibold tabular-nums"
+              style={{ color: deltaVsPrev >= 0 ? '#4ade80' : '#f87171' }}
+            >
+              {deltaVsPrev >= 0 ? '▲' : '▼'} {Math.abs(deltaPct ?? 0)}% vs {formatMonthLabel(prevMonth)}
+            </p>
+          ) : null}
+
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full border border-white/10 bg-black/40 sm:h-2">
             <div
               className="h-full rounded-full transition-[width] duration-700"
               style={{
@@ -256,54 +237,35 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
               }}
             />
           </div>
+
           {gap && gap.amountMissing > 0 ? (
-            <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3">
-              <p
-                className="text-[10px] font-black uppercase tracking-[0.2em]"
-                style={{ color: theme.textMuted }}
-              >
-                Faltan para el próximo nivel
-              </p>
-              <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
-                <strong className="text-2xl font-black tabular-nums leading-none text-cyan-200 sm:text-[1.65rem]">
+            <div className="mt-2.5 flex flex-wrap items-end justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-2.5 py-2 sm:px-3">
+              <div>
+                <p
+                  className="text-[9px] font-black uppercase tracking-[0.16em]"
+                  style={{ color: theme.textMuted }}
+                >
+                  Próximo nivel
+                </p>
+                <strong className="text-xl font-black tabular-nums leading-none text-cyan-200 sm:text-2xl">
                   {formatARS(gap.amountMissing)}
                 </strong>
-                <span className="text-xs font-bold leading-snug" style={{ color: theme.textMuted }}>
-                  Nivel {gap.nextLevel} · {gap.nextTitle}
-                </span>
               </div>
+              <span className="text-[11px] font-bold" style={{ color: theme.textMuted }}>
+                Nivel {gap.nextLevel} · {gap.nextTitle}
+              </span>
             </div>
-          ) : gap?.hint ? (
-            <p className="mt-2 text-xs font-semibold leading-snug" style={{ color: theme.textMuted }}>
-              {gap.hint}
-            </p>
-          ) : !missionDone ? (
-            <p className="mt-2 text-xs font-semibold" style={{ color: theme.textMuted }}>
-              Recompensa: Nivel {mission.rewardLevel} · {mission.rewardTitle}
-            </p>
           ) : null}
         </div>
 
-        <p
-          className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold leading-snug"
-          style={{ color: theme.textMuted }}
-        >
-          <span className="font-black text-white/90">Racha {streak.streakCount} {streakUnit}</span>
-          {' · '}
-          Nivel del mes {levelInfo.level}
-          {' · '}
-          La racha pide {formatARS(MONTHLY_STREAK_MINIMUM_ARS)}/mes; los niveles miden volumen (
-          {formatARS(investedMonth)} este mes).
-        </p>
+        <FinanceStreakCalendar entries={entries} streakCount={streak.streakCount} />
 
-        <FinanceStreakCalendar entries={entries} />
-
-        <div>
+        <div className="pt-0.5">
           <div
-            className="mb-2 flex justify-between text-[10px] font-bold uppercase tracking-widest sm:text-[11px]"
+            className="mb-1.5 flex justify-between text-[9px] font-bold uppercase tracking-widest sm:text-[10px]"
             style={{ color: theme.textMuted }}
           >
-            <span>Avance al próximo nivel</span>
+            <span>Avance de nivel</span>
             {showProgressPercent ? (
               <span className="tabular-nums">{rawProgress.toFixed(0)}%</span>
             ) : (
@@ -311,7 +273,7 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
             )}
           </div>
           <div
-            className="h-4 overflow-hidden rounded-full border-2 bg-black/35 sm:h-5"
+            className="h-3 overflow-hidden rounded-full border-2 bg-black/35 sm:h-3.5"
             style={{ borderColor: theme.border }}
           >
             <div

@@ -20,12 +20,14 @@ export function FinanceStreakCallout({ entries, contextMonth, className = '' }: 
     return getMonthlyInvestmentStreak(entries, today);
   }, [entries, contextMonth, today]);
 
+  if (copy.variant === 'protected') {
+    return null;
+  }
+
   const shell =
-    copy.variant === 'protected'
-      ? 'border-emerald-400/40 bg-emerald-950/35 text-emerald-50'
-      : copy.variant === 'pending_empty' || copy.variant === 'pending_gap'
-        ? 'border-amber-400/40 bg-amber-950/35 text-amber-50'
-        : 'border-slate-500/35 bg-slate-950/50 text-slate-200';
+    copy.variant === 'pending_empty' || copy.variant === 'pending_gap'
+      ? 'border-amber-400/40 bg-amber-950/35 text-amber-50'
+      : 'border-slate-500/35 bg-slate-950/50 text-slate-200';
 
   const countLabel = streakInfo && streakInfo.streakCount === 1 ? 'mes de racha' : 'meses de racha';
 

@@ -17,7 +17,8 @@ import {
   pullCanonicalFromCloud,
 } from '@/lib/finance/syncBootstrap';
 import { FinanceDashboard, type FinanceDashboardCelebration } from '@/components/finance/FinanceDashboard';
-import { FinanceQuickMetrics } from '@/components/finance/FinanceQuickMetrics';
+import { FinanceOverviewPanel } from '@/components/finance/FinanceOverviewPanel';
+import { FinanceRecentInvestments } from '@/components/finance/FinanceRecentInvestments';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
 import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
 import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
@@ -419,9 +420,6 @@ export default function FinanceGameApp() {
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }, [monthEntries]);
 
-  const latestInvestments = useMemo(() => sortedMonthInvestments.slice(0, 3), [sortedMonthInvestments]);
-  const moreInvestments = useMemo(() => sortedMonthInvestments.slice(3), [sortedMonthInvestments]);
-
   const previousMonth = useMemo(() => getPreviousMonthKey(month), [month]);
   const currentMonthPlan = useMemo(
     () => getMonthlyPlanItems(state.monthlyInvestmentPlan, month),
@@ -662,7 +660,7 @@ export default function FinanceGameApp() {
       />
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:24px_24px] opacity-30" aria-hidden />
 
-      <div className="container-page relative z-[1] mx-auto min-w-0 max-w-lg py-3 sm:max-w-2xl sm:py-6">
+      <div className="container-page relative z-[1] mx-auto min-w-0 max-w-lg py-4 sm:max-w-2xl sm:py-6 lg:max-w-3xl">
         {cloudErr && cloudReady ? (
           <div
             className="mb-2 flex flex-col gap-2 rounded-xl border border-rose-500/35 bg-rose-950/40 p-3 sm:mb-3"
@@ -679,10 +677,9 @@ export default function FinanceGameApp() {
           </div>
         ) : null}
 
-        <header className="finance-app-header mb-3 flex items-start justify-between gap-3 sm:mb-4">
+        <header className="finance-app-header mb-4 flex items-start justify-between gap-3 sm:mb-5">
           <div className="min-w-0">
             <h1 className="text-lg font-black tracking-tight text-white sm:text-xl">Foco financiero</h1>
-            <p className="text-xs font-semibold text-white/45">Cargá, mirá el nivel, seguí la racha</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {isFinanceCloudConfigured() ? (
@@ -766,6 +763,10 @@ export default function FinanceGameApp() {
           />
         </section>
 
+        <section className="mt-4 scroll-mt-20 sm:mt-5">
+          <FinanceOverviewPanel state={state} month={month} />
+        </section>
+
         <section id="inversion" className="mt-4 scroll-mt-24 min-w-0 sm:mt-5">
           <FinanceEntryForm
             month={month}
@@ -788,143 +789,16 @@ export default function FinanceGameApp() {
           />
         </section>
 
-        <section className="mt-5 md:mt-6">
-          {sortedMonthInvestments.length === 0 ? (
-            <p className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-400">
-              Todavía no cargaste inversiones este mes.
-            </p>
-          ) : (
-            <div className="rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-3 shadow-md backdrop-blur-md sm:px-5 sm:py-4">
-              <div className="mb-3">
-                <h3 className="text-sm font-black text-white sm:text-base">Últimas inversiones</h3>
-                <p className="mt-0.5 text-[11px] font-semibold text-slate-500">Lo cargado este mes</p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-600">{month}</p>
-              </div>
-              <ul className="flex flex-col gap-2">
-                {latestInvestments.map((e) => {
-                  const dateStr = new Date(e.createdAt).toLocaleString('es-AR', {
-                    day: '2-digit',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  });
-                  return (
-                    <li
-                      key={e.id}
-                      className="group flex items-start justify-between gap-3 border-l-2 border-emerald-400/70 bg-white/[0.025] px-3 py-3 transition hover:bg-white/[0.045]"
-                    >
-                      <div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
-                        <p className="text-lg font-black tabular-nums leading-tight text-white sm:text-xl">
-                          {formatARS(e.amount)}
-                        </p>
-                        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                          <div className="flex flex-wrap gap-1.5">
-                            {e.asset ? (
-                              <span className="rounded-full border border-white/12 bg-white/8 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">
-                                {e.asset}
-                              </span>
-                            ) : null}
-                            {e.platform ? (
-                              <span className="rounded-full border border-white/12 bg-white/8 px-2 py-0.5 text-[10px] font-bold text-slate-400">
-                                {e.platform}
-                              </span>
-                            ) : null}
-                          </div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{dateStr}</p>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 gap-1">
-                        <button
-                          type="button"
-                          className="finance-touch-target rounded-lg border border-transparent px-2 py-2 text-xs font-bold text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
-                          onClick={() => setEditingEntry(e)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          className="finance-touch-target rounded-lg border border-transparent px-2 py-2 text-xs font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-rose-300"
-                          onClick={() => removeEntry(e.id)}
-                        >
-                          Borrar
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-              {moreInvestments.length > 0 ? (
-                <details className="mt-2 border-t border-white/5 pt-2">
-                  <summary className="cursor-pointer list-none text-center text-xs font-bold text-indigo-300/90 hover:text-indigo-200 [&::-webkit-details-marker]:hidden">
-                    Ver todas las inversiones del mes ({sortedMonthInvestments.length})
-                  </summary>
-                  <ul className="mt-2 flex flex-col gap-2">
-                    {moreInvestments.map((e) => {
-                      const dateStr = new Date(e.createdAt).toLocaleString('es-AR', {
-                        day: '2-digit',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      });
-                      return (
-                        <li
-                          key={e.id}
-                          className="group flex items-start justify-between gap-3 border-l-2 border-emerald-400/70 bg-white/[0.025] px-3 py-3 transition hover:bg-white/[0.045]"
-                        >
-                          <div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
-                            <p className="text-base font-black tabular-nums text-white">{formatARS(e.amount)}</p>
-                            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                              <div className="flex flex-wrap gap-1.5">
-                                {e.asset ? (
-                                  <span className="rounded-full border border-white/12 bg-white/8 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">
-                                    {e.asset}
-                                  </span>
-                                ) : null}
-                                {e.platform ? (
-                                  <span className="rounded-full border border-white/12 bg-white/8 px-2 py-0.5 text-[10px] font-bold text-slate-400">
-                                    {e.platform}
-                                  </span>
-                                ) : null}
-                              </div>
-                              <p className="text-[10px] font-semibold text-slate-500">{dateStr}</p>
-                            </div>
-                          </div>
-                          <div className="flex shrink-0 gap-1">
-                            <button
-                              type="button"
-                              className="finance-touch-target rounded-lg border border-transparent px-2 py-2 text-xs font-bold text-slate-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
-                              onClick={() => setEditingEntry(e)}
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              className="finance-touch-target rounded-lg border border-transparent px-2 py-2 text-xs font-bold text-slate-500 transition hover:border-white/10 hover:bg-white/5 hover:text-rose-300"
-                              onClick={() => removeEntry(e.id)}
-                            >
-                              Borrar
-                            </button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </details>
-              ) : null}
-            </div>
-          )}
+        <section className="mt-4 sm:mt-5">
+          <FinanceRecentInvestments
+            month={month}
+            investments={sortedMonthInvestments}
+            onEdit={setEditingEntry}
+            onRemove={removeEntry}
+          />
         </section>
 
-        <div className="mt-5 flex min-w-0 flex-col gap-2.5 md:mt-6">
-          <details className="rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
-              Ver más métricas
-            </summary>
-            <div className="border-t border-white/10 px-3 pb-4 pt-3 sm:px-4">
-              <FinanceQuickMetrics state={state} month={month} compact />
-            </div>
-          </details>
-
+        <div className="mt-6 flex min-w-0 flex-col gap-2 sm:mt-8 sm:gap-2.5">
           <details className="group rounded-2xl border border-white/10 bg-slate-950/40 shadow-lg open:pb-1">
             <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-slate-200 transition hover:bg-white/[0.04] [&::-webkit-details-marker]:hidden">
               Ver ruta de niveles

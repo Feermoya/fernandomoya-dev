@@ -6,16 +6,18 @@ import {
 } from '@/lib/finance/calculations';
 import type { FinanceState, MonthlyLevelResult } from '@/lib/finance/types';
 
-const TH = {
-  L1: 300_000,
-  L2: 500_000,
-  L3: 700_000,
-  L4: 1_000_000,
-  L6: 1_500_000,
+export const LEVEL_THRESHOLDS = {
+  L1: 150_000,
+  L2: 300_000,
+  L3: 450_000,
+  L4: 650_000,
+  L6: 850_000,
   EMERGENCY: 3_000_000,
-  STREAK500: 500_000,
-  STREAK300: 300_000,
+  STREAK3: 400_000,
+  STREAK6: 250_000,
 } as const;
+
+const TH = LEVEL_THRESHOLDS;
 
 export function addMonths(ym: string, delta: number): string {
   const [ys, ms] = ym.split('-');
@@ -44,7 +46,6 @@ function monthInvestmentOps(state: FinanceState, month: string): number {
   return state.entries.filter((e) => e.month === month && e.type === 'investment').length;
 }
 
-/** Últimos `count` meses terminando en `month`, orden cronológico. */
 function endingMonths(month: string, count: number): string[] {
   const out: string[] = [];
   for (let i = count - 1; i >= 0; i--) {
@@ -71,17 +72,15 @@ function satisfiesLevel(level: number, state: FinanceState, month: string): bool
     case 4:
       return pipe >= TH.L4;
     case 5:
-      // Diversificación mínima: no es magia, pero evita que el “nivel alto” sea un solo tiro sin estructura.
       return pipe >= TH.L4 && monthDistinctInvestmentAssets(state, month) >= 2;
     case 6:
-      // Dominio: volumen + consistencia (más de una operación en el mes).
       return pipe >= TH.L6 && monthInvestmentOps(state, month) >= 2;
     case 7:
-      return streakMinPipe(state, month, 3, TH.STREAK500);
+      return streakMinPipe(state, month, 3, TH.STREAK3);
     case 8:
       return getEmergencyFundTotal(state.entries, state.goals) >= TH.EMERGENCY;
     case 9:
-      return streakMinPipe(state, month, 6, TH.STREAK300);
+      return streakMinPipe(state, month, 6, TH.STREAK6);
     case 10: {
       const t = state.wealthTarget;
       if (t === undefined || !Number.isFinite(t) || t <= 0) return false;
@@ -113,12 +112,12 @@ const LEVEL_TITLES: Record<number, string> = {
   10: 'Libertad',
 };
 
-function messageForLevel(level: number, _state: FinanceState, _month: string): string {
+function messageForLevel(level: number): string {
   if (level <= 0) return 'Metés plata este mes o no. No hay términos medios.';
   if (level === 1) return 'Entraste. Ahora no te quedés acá.';
   if (level === 2) return 'Buen mes. La distancia entre nivel 2 y 3 es constancia.';
   if (level === 3) return 'Esto ya es disciplina real. Casi nadie llega acá.';
-  if (level === 4) return 'Millón en el mes. Seguís o bajás — no hay punto muerto.';
+  if (level === 4) return 'Volumen fuerte. Seguís o bajás — no hay punto muerto.';
   if (level === 5) return 'Diversificado y en volumen. Esto es construcción.';
   if (level === 6) return 'Dominio del mes. Tres meses seguidos y cambia todo.';
   if (level === 7) return 'Racha de tres meses. El mercado te conoce.';
@@ -147,7 +146,7 @@ function nextTargetString(state: FinanceState, month: string, achieved: number):
   }
 
   if (achieved === 8) {
-    return 'Mantené seis meses seguidos con al menos $300.000 de inversión para subir al nivel 9.';
+    return `Mantené seis meses seguidos con al menos ${formatARS(TH.STREAK6)} de inversión para subir al nivel 9.`;
   }
 
   if (achieved === 7) {
@@ -159,17 +158,17 @@ function nextTargetString(state: FinanceState, month: string, achieved: number):
   }
 
   if (achieved === 6) {
-    return 'Tres meses seguidos con $500.000 o más invertidos: ahí va el nivel 7.';
+    return `Tres meses seguidos con ${formatARS(TH.STREAK3)} o más invertidos: ahí va el nivel 7.`;
   }
 
   if (achieved === 5) {
-    return `El nivel 6 exige ${formatARS(TH.L6)} invertidos y más de una operación en el mes. Estructura, no golpe de suerte.`;
+    return `El nivel 6 exige ${formatARS(TH.L6)} invertidos y más de una operación en el mes.`;
   }
 
   if (achieved === 4) {
     const distinct = monthDistinctInvestmentAssets(state, month);
     if (distinct < 2) {
-      return 'Para el nivel 5: mantené el millón, pero diversificá (mínimo 2 activos).';
+      return 'Para el nivel 5: mantené el volumen y diversificá (mínimo 2 activos).';
     }
     return `Sumá hasta ${formatARS(TH.L6)} invertidos y hacé más de una operación para el nivel 6.`;
   }
@@ -177,8 +176,8 @@ function nextTargetString(state: FinanceState, month: string, achieved: number):
   if (achieved === 3) {
     const gap = TH.L4 - pipe;
     return gap > 0
-      ? `Faltan ${formatARS(gap)} para cruzar el millón invertido (nivel 4).`
-      : 'Cruzaste el millón. Ahora diversificá para no depender de una sola jugada.';
+      ? `Faltan ${formatARS(gap)} para el nivel 4 (${formatARS(TH.L4)}).`
+      : 'Nivel 4 desbloqueado. Ahora diversificá para no depender de una sola jugada.';
   }
 
   if (achieved === 2) {
@@ -197,7 +196,6 @@ function nextTargetString(state: FinanceState, month: string, achieved: number):
     : 'Ya estás en nivel 1. Sumá ritmo.';
 }
 
-/** Progreso 0–100 hacia el siguiente umbral de “pipe” mensual (niveles 1–4). */
 export function getLevelProgressPercent(state: FinanceState, month: string, achieved: number): number {
   const pipe = pipeForMonth(state, month);
   const thresholds = [0, TH.L1, TH.L2, TH.L3, TH.L4, TH.L6];
@@ -226,7 +224,7 @@ export function getLevelProgressPercent(state: FinanceState, month: string, achi
 export function getMonthlyLevel(state: FinanceState, month: string): MonthlyLevelResult {
   const level = highestAchievedLevel(state, month);
   const title = LEVEL_TITLES[level] ?? 'Sin nivel';
-  const message = messageForLevel(level, state, month);
+  const message = messageForLevel(level);
   const nextTarget = nextTargetString(state, month, level);
 
   return {
@@ -241,7 +239,6 @@ export function isLevelUnlocked(level: number, state: FinanceState, month: strin
   return satisfiesLevel(level, state, month);
 }
 
-/** Gap en ARS hasta el próximo hito principal de inversión mensual (para copy del hero). */
 export function getGapToNextInvestmentMilestone(
   state: FinanceState,
   month: string,
@@ -289,14 +286,14 @@ export function getGapToNextInvestmentMilestone(
     };
   }
   if (achieved === 5) {
-    let missing = Math.max(0, TH.L6 - pipe);
+    const missing = Math.max(0, TH.L6 - pipe);
     if (monthInvestmentOps(state, month) < 2) {
       return { amountMissing: missing, nextLevel: 6, nextTitle: LEVEL_TITLES[6], hint: 'Dos operaciones en el mes.' };
     }
     return { amountMissing: missing, nextLevel: 6, nextTitle: LEVEL_TITLES[6] };
   }
 
-  return { amountMissing: 0, nextLevel: nextL, nextTitle, hint: 'Seguí la ruta: requisitos de racha o emergencia.' };
+  return { amountMissing: 0, nextLevel: nextL, nextTitle, hint: 'Seguí la ruta: racha o emergencia.' };
 }
 
 export type MonthlyMissionView = {
@@ -319,7 +316,6 @@ function monthLabelEs(ym: string): string {
   return cap(new Date(ys, ms - 1, 1).toLocaleDateString('es-AR', { month: 'long' }));
 }
 
-/** Misión mensual derivada del próximo umbral de inversión (y requisitos simples). */
 export function getMonthlyMissionView(state: FinanceState, month: string): MonthlyMissionView {
   const achieved = highestAchievedLevel(state, month);
   const pipe = pipeForMonth(state, month);
@@ -375,34 +371,34 @@ export function getMonthlyMissionView(state: FinanceState, month: string): Month
 }
 
 export const LEVEL_RULES: readonly { level: number; name: string; condition: string }[] = [
-  { level: 1, name: 'Semilla', condition: 'Inversión del mes ≥ $300.000' },
-  { level: 2, name: 'Ritmo', condition: 'Inversión del mes ≥ $500.000' },
-  { level: 3, name: 'Disciplina', condition: 'Inversión del mes ≥ $700.000' },
-  { level: 4, name: 'Constructor', condition: 'Inversión del mes ≥ $1.000.000' },
+  { level: 1, name: 'Semilla', condition: `Inversión del mes ≥ ${formatARS(TH.L1)}` },
+  { level: 2, name: 'Ritmo', condition: `Inversión del mes ≥ ${formatARS(TH.L2)}` },
+  { level: 3, name: 'Disciplina', condition: `Inversión del mes ≥ ${formatARS(TH.L3)}` },
+  { level: 4, name: 'Constructor', condition: `Inversión del mes ≥ ${formatARS(TH.L4)}` },
   {
     level: 5,
     name: 'Diversificación',
-    condition: 'Mismo umbral del nivel 4 y al menos 2 activos distintos en el mes',
+    condition: `≥ ${formatARS(TH.L4)} en el mes y al menos 2 activos distintos`,
   },
   {
     level: 6,
     name: 'Dominio',
-    condition: 'Inversión del mes ≥ $1.500.000 y más de una operación en el mes',
+    condition: `Inversión del mes ≥ ${formatARS(TH.L6)} y más de una operación`,
   },
   {
     level: 7,
     name: 'Constancia',
-    condition: 'Tres meses seguidos con inversión ≥ $500.000',
+    condition: `Tres meses seguidos con inversión ≥ ${formatARS(TH.STREAK3)}`,
   },
   {
     level: 8,
     name: 'Colchón',
-    condition: 'Fondo de emergencia ≥ $3.000.000 (objetivo categoría emergencia o aportes etiquetados como fondo)',
+    condition: `Fondo de emergencia ≥ ${formatARS(TH.EMERGENCY)}`,
   },
   {
     level: 9,
     name: 'Máquina',
-    condition: 'Seis meses seguidos con inversión ≥ $300.000',
+    condition: `Seis meses seguidos con inversión ≥ ${formatARS(TH.STREAK6)}`,
   },
   {
     level: 10,
