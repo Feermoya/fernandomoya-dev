@@ -5,12 +5,13 @@ import type { FinancePricesMap } from '@/lib/finance/financePrices';
 import {
   fetchFinancePrices,
   formatFinancePrice,
-  formatPricesFetchedTime,
 } from '@/lib/finance/financePrices';
 import type { MonthlyPlanProgressItem } from '@/lib/finance/monthlyInvestmentPlan';
 import {
   createMonthlyInvestmentPlanItems,
+  getMonthlyPlanAnchorDef,
   getMonthlyPlanProgress,
+  getMonthlyPlanUserItems,
   getPlanTickersForPricing,
   normalizePlanLabel,
   parseInvestmentPlanInput,
@@ -88,7 +89,6 @@ function PlanChip({
     hasReferencePrice,
     referencePrice,
     referenceCurrency,
-    priceSource,
   } = progressItem;
   const pendingOnly = !completed && !historicallyCompleted;
   const pendingWithHistory = !completed && historicallyCompleted;
@@ -120,32 +120,36 @@ function PlanChip({
     priceLine = formatFinancePrice(referencePrice, referenceCurrency);
   }
 
-  const priceMeta =
-    priceSource === 'google-finance'
-      ? 'BCBA · Google Finance'
-      : priceSource === 'yahoo-finance'
-        ? 'USD · Yahoo Finance'
-        : priceSource === 'fallback'
-          ? 'Precio guardado'
-          : '';
-
   const logoUrl = tickerLogoUrl(item.label, prices);
+  const anchor = getMonthlyPlanAnchorDef(item);
 
   return (
     <article
       className={`flex min-h-0 w-full min-w-0 flex-col gap-0.5 rounded-xl border p-2.5 ${shellClass} ${
         completed ? 'opacity-90' : ''
-      }`}
+      } ${anchor ? 'border-violet-400/25 bg-violet-950/15' : ''}`}
     >
       <div className="flex min-w-0 items-center gap-1.5">
         <TickerAvatar ticker={item.label} logoUrl={logoUrl} />
-        <span
-          className={`min-w-0 truncate text-sm font-black leading-tight ${
-            pendingOnly ? 'text-white' : 'text-slate-100'
-          }`}
-        >
-          {item.label}
-        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <span
+              className={`min-w-0 truncate text-sm font-black leading-tight ${
+                pendingOnly ? 'text-white' : 'text-slate-100'
+              }`}
+            >
+              {item.label}
+            </span>
+            {anchor ? (
+              <span className="shrink-0 rounded-md border border-violet-400/30 bg-violet-500/15 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.12em] text-violet-200/90">
+                {anchor.badge}
+              </span>
+            ) : null}
+          </div>
+          {anchor ? (
+            <p className="mt-0.5 text-[9px] font-semibold leading-tight text-violet-300/75">{anchor.hint}</p>
+          ) : null}
+        </div>
         {checkMark ? (
           <span
             className={`ml-auto shrink-0 text-[10px] font-black ${completed ? 'text-emerald-400' : 'text-cyan-400/70'}`}
@@ -161,28 +165,27 @@ function PlanChip({
       </p>
 
       <p className="text-xs font-bold tabular-nums leading-tight text-slate-200">{priceLine}</p>
-      {priceMeta ? (
-        <p className="text-[9px] font-semibold leading-none text-slate-500">{priceMeta}</p>
-      ) : null}
 
-      <div className="mt-0.5 flex flex-wrap gap-x-2">
-        {onSplit ? (
+      {!anchor ? (
+        <div className="mt-0.5 flex flex-wrap gap-x-2">
+          {onSplit ? (
+            <button
+              type="button"
+              onClick={onSplit}
+              className="min-h-[28px] text-[10px] font-bold text-indigo-300/90"
+            >
+              Separar
+            </button>
+          ) : null}
           <button
             type="button"
-            onClick={onSplit}
-            className="min-h-[28px] text-[10px] font-bold text-indigo-300/90"
+            onClick={onRemove}
+            className="min-h-[28px] text-[10px] font-bold text-slate-500 hover:text-rose-300"
           >
-            Separar
+            Quitar
           </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={onRemove}
-          className="min-h-[28px] text-[10px] font-bold text-slate-500 hover:text-rose-300"
-        >
-          Quitar
-        </button>
-      </div>
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -233,18 +236,15 @@ function ReferenceSummary({
   allComplete,
   pricesLoading,
   pricesError,
-  pricesFetchedAt,
   onRefresh,
 }: {
   progress: ReturnType<typeof getMonthlyPlanProgress>;
   allComplete: boolean;
   pricesLoading: boolean;
   pricesError: string | null;
-  pricesFetchedAt: string | null;
   onRefresh: () => void;
 }) {
   const missingPriceCount = progress.itemsWithoutReferencePrice.length;
-  const timeLabel = formatPricesFetchedTime(pricesFetchedAt);
 
   if (pricesLoading && progress.pendingReferenceTotal === 0 && missingPriceCount > 0) {
     return (
@@ -294,13 +294,9 @@ function ReferenceSummary({
           <p className="text-xl font-black tabular-nums leading-tight text-amber-50">
             {formatARS(progress.pendingReferenceTotal)}
           </p>
-          <p className="text-[10px] font-semibold text-slate-500">
-            según Google Finance · BCBA (CEDEARs)
-            {timeLabel ? ` · ${timeLabel}` : ''}
-          </p>
           {missingPriceCount > 0 ? (
-            <p className="text-[10px] font-semibold text-indigo-300/80">
-              Faltan precios para {missingPriceCount} activo{missingPriceCount === 1 ? '' : 's'}
+            <p className="mt-0.5 text-[10px] font-semibold text-indigo-300/80">
+              Sin precio en {missingPriceCount} activo{missingPriceCount === 1 ? '' : 's'}
             </p>
           ) : null}
         </div>
@@ -316,11 +312,6 @@ function ReferenceSummary({
       <div className="mt-2.5 rounded-xl border border-indigo-500/20 bg-indigo-950/15 px-3 py-2">
         <p className="text-[10px] font-black uppercase tracking-[0.16em] text-indigo-200/80">
           {pricesLoading ? 'Actualizando precios…' : 'Precios no disponibles'}
-        </p>
-        <p className="mt-1 text-[11px] font-semibold text-slate-400">
-          {pricesLoading
-            ? 'Consultando Google Finance…'
-            : `Faltan precios para ${missingPriceCount} activo${missingPriceCount === 1 ? '' : 's'}`}
         </p>
         {!pricesLoading && pricesError ? (
           <button
@@ -355,7 +346,6 @@ export function FinanceMonthlyInvestmentPlan({
   const [prices, setPrices] = useState<FinancePricesMap>({});
   const [pricesLoading, setPricesLoading] = useState(false);
   const [pricesError, setPricesError] = useState<string | null>(null);
-  const [pricesFetchedAt, setPricesFetchedAt] = useState<string | null>(null);
 
   const tickersToFetch = useMemo(
     () => getPlanTickersForPricing(plan, month),
@@ -374,7 +364,6 @@ export function FinanceMonthlyInvestmentPlan({
     const result = await fetchFinancePrices(tickers);
     setPricesLoading(false);
     setPrices(result.prices);
-    setPricesFetchedAt(result.fetchedAt);
     if (import.meta.env.DEV) {
       for (const [ticker, row] of Object.entries(result.prices)) {
         console.info('[finance-prices] logo found', ticker, Boolean(row.logoUrl));
@@ -400,6 +389,7 @@ export function FinanceMonthlyInvestmentPlan({
   );
 
   const hasPlan = progress.totalCount > 0;
+  const hasUserPlanItems = useMemo(() => getMonthlyPlanUserItems(plan, month).length > 0, [plan, month]);
   const allComplete = hasPlan && progress.completedCount === progress.totalCount;
 
   const pendingItems = useMemo(
@@ -451,11 +441,7 @@ export function FinanceMonthlyInvestmentPlan({
   };
 
   const hasMergedItem = progress.items.some((p) => planItemLabelLooksLikeMergedTickers(p.item.label));
-  const refreshLabel = pricesLoading
-    ? 'Actualizando...'
-    : pricesFetchedAt
-      ? `Actualizar precios · ${formatPricesFetchedTime(pricesFetchedAt)}`
-      : 'Actualizar precios';
+  const refreshLabel = pricesLoading ? 'Actualizando…' : 'Actualizar precios';
 
   return (
     <section
@@ -471,7 +457,7 @@ export function FinanceMonthlyInvestmentPlan({
           <h3 id="monthly-plan-heading" className="text-base font-black tracking-tight text-white">
             Plan de foco
           </h3>
-          <p className="mt-0.5 text-xs font-semibold text-slate-400">Qué querés comprar este mes</p>
+          <p className="mt-0.5 text-xs font-semibold text-slate-400">SPY fijo + tus tickers del mes</p>
         </div>
         {hasPlan && progress.pendingReferenceTotal === 0 && !allComplete ? (
           <span className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-black tabular-nums text-slate-200">
@@ -522,12 +508,11 @@ export function FinanceMonthlyInvestmentPlan({
           allComplete={allComplete}
           pricesLoading={pricesLoading}
           pricesError={pricesError}
-          pricesFetchedAt={pricesFetchedAt}
           onRefresh={() => void loadPrices(tickersToFetch)}
         />
       ) : null}
 
-      {!hasPlan && hasPreviousMonthPlan && onCopyFromPreviousMonth ? (
+      {!hasUserPlanItems && hasPreviousMonthPlan && onCopyFromPreviousMonth ? (
         <button
           type="button"
           onClick={onCopyFromPreviousMonth}
@@ -535,12 +520,6 @@ export function FinanceMonthlyInvestmentPlan({
         >
           Copiar plan del mes anterior
         </button>
-      ) : null}
-
-      {!hasPlan ? (
-        <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-400">
-          Pegá tu lista de CEDEARs, acciones o cripto para tener foco este mes.
-        </p>
       ) : null}
 
       <div className="mt-3">
@@ -570,9 +549,7 @@ export function FinanceMonthlyInvestmentPlan({
             ))}
           </div>
         ) : (
-          <p className="mt-1 text-[10px] font-semibold text-slate-500">
-            Podés pegar varios separados por coma, espacio o salto de línea.
-          </p>
+          <p className="mt-1 text-[10px] font-semibold text-slate-500">Separados por coma o espacio.</p>
         )}
         <button
           type="button"
@@ -622,8 +599,6 @@ export function FinanceMonthlyInvestmentPlan({
           />
         </div>
       ) : null}
-
-      <p className="mt-2 text-[10px] font-semibold text-slate-600">{month}</p>
     </section>
   );
 }

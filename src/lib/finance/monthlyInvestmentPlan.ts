@@ -24,7 +24,85 @@ const COMMON_TICKER_ALIASES: Record<string, string[]> = {
   AVGO: ['AVGO', 'BROADCOM'],
   TSM: ['TSM', 'TSMC', 'TAIWAN SEMICONDUCTOR'],
   MU: ['MU', 'MICRON'],
+  SPY: ['SPY', 'SPDR', 'SP500', 'S&P 500'],
 };
+
+/** Anclas fijas del plan mensual (siempre presentes, no se pueden quitar). */
+export type MonthlyPlanAnchorKind = 'retirement_spy';
+
+export type MonthlyPlanAnchorDef = {
+  kind: MonthlyPlanAnchorKind;
+  label: string;
+  targetUnits: number;
+  matchTerms: string[];
+  badge: string;
+  hint: string;
+  financeUrl: string;
+};
+
+export const MONTHLY_PLAN_ANCHORS: readonly MonthlyPlanAnchorDef[] = [
+  {
+    kind: 'retirement_spy',
+    label: 'SPY',
+    targetUnits: 1,
+    matchTerms: ['SPY', 'SPDR', 'SP500', 'S&P 500'],
+    badge: 'Jubilación',
+    hint: '1 nominal/mes',
+    financeUrl: 'https://g.co/finance/SPY:BCBA',
+  },
+] as const;
+
+export function getMonthlyPlanAnchorId(kind: MonthlyPlanAnchorKind, month: string): string {
+  return `anchor-${kind}-${month}`;
+}
+
+export function isMonthlyPlanAnchorItem(item: MonthlyInvestmentPlanItem): boolean {
+  return item.id.startsWith('anchor-');
+}
+
+export function getMonthlyPlanAnchorKindFromId(id: string): MonthlyPlanAnchorKind | undefined {
+  const match = id.match(/^anchor-(.+)-(\d{4}-\d{2})$/);
+  if (!match) return undefined;
+  return match[1] as MonthlyPlanAnchorKind;
+}
+
+export function getMonthlyPlanAnchorDef(
+  item: MonthlyInvestmentPlanItem,
+): MonthlyPlanAnchorDef | undefined {
+  if (!isMonthlyPlanAnchorItem(item)) return undefined;
+  const kind = getMonthlyPlanAnchorKindFromId(item.id);
+  if (!kind) return undefined;
+  return MONTHLY_PLAN_ANCHORS.find((a) => a.kind === kind);
+}
+
+function createMonthlyPlanAnchorItem(month: string, anchor: MonthlyPlanAnchorDef): MonthlyInvestmentPlanItem {
+  return {
+    id: getMonthlyPlanAnchorId(anchor.kind, month),
+    month,
+    label: anchor.label,
+    matchTerms: [...anchor.matchTerms],
+    createdAt: '1970-01-01T00:00:00.000Z',
+    targetUnits: anchor.targetUnits,
+  };
+}
+
+function planItemDuplicatesAnchor(item: MonthlyInvestmentPlanItem): boolean {
+  const norm = normalizePlanLabel(item.label);
+  const base = norm.split(' ')[0] ?? norm;
+  return MONTHLY_PLAN_ANCHORS.some((anchor) => {
+    const anchorNorm = normalizePlanLabel(anchor.label);
+    return norm === anchorNorm || base === anchorNorm;
+  });
+}
+
+export function getMonthlyPlanUserItems(
+  plan: MonthlyInvestmentPlanItem[] | undefined,
+  month: string,
+): MonthlyInvestmentPlanItem[] {
+  return (plan ?? [])
+    .filter((item) => item.month === month && !isMonthlyPlanAnchorItem(item))
+    .sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
+}
 
 export type MonthlyPlanProgressItem = {
   item: MonthlyInvestmentPlanItem;
@@ -235,9 +313,9 @@ export function getMonthlyPlanItems(
   plan: MonthlyInvestmentPlanItem[] | undefined,
   month: string,
 ): MonthlyInvestmentPlanItem[] {
-  return (plan ?? [])
-    .filter((item) => item.month === month)
-    .sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
+  const anchors = MONTHLY_PLAN_ANCHORS.map((anchor) => createMonthlyPlanAnchorItem(month, anchor));
+  const userItems = getMonthlyPlanUserItems(plan, month).filter((item) => !planItemDuplicatesAnchor(item));
+  return [...anchors, ...userItems];
 }
 
 export function getPreviousMonthKey(month: string): string {
@@ -459,6 +537,7 @@ export function copyMonthlyPlanItemsToMonth(params: {
 
   const copied: MonthlyInvestmentPlanItem[] = [];
   for (const item of source) {
+    if (planItemDuplicatesAnchor(item)) continue;
     const labels = parseInvestmentPlanInput(item.label);
     const toCreate = labels.length > 0 ? labels : [item.label];
     for (const label of toCreate) {

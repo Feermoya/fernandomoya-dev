@@ -1,4 +1,5 @@
 import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
+import { isMonthlyPlanAnchorItem } from '@/lib/finance/monthlyInvestmentPlan';
 import type { FinanceState, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
 import { getDefaultPreferences, normalizePreferences, withPreferences } from '@/lib/finance/preferences';
 
@@ -207,7 +208,7 @@ function isMonthlyInvestmentPlanItem(x: unknown): x is MonthlyInvestmentPlanItem
 
 function normalizeMonthlyInvestmentPlan(raw: unknown): MonthlyInvestmentPlanItem[] {
   if (!Array.isArray(raw)) return [];
-  return raw.filter(isMonthlyInvestmentPlanItem);
+  return raw.filter(isMonthlyInvestmentPlanItem).filter((item) => !isMonthlyPlanAnchorItem(item));
 }
 
 export function withFinanceStateDefaults(state: FinanceState): FinanceState {

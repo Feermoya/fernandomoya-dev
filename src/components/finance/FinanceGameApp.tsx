@@ -51,7 +51,7 @@ import {
   copyMonthlyPlanItemsToMonth,
   createMonthlyInvestmentPlanItems,
   formatPlanMissingListForToast,
-  getMonthlyPlanItems,
+  getMonthlyPlanUserItems,
   getMonthlyPlanProgress,
   getNewlyCompletedPlanLabels,
   getPreviousMonthKey,
@@ -422,11 +422,11 @@ export default function FinanceGameApp() {
 
   const previousMonth = useMemo(() => getPreviousMonthKey(month), [month]);
   const currentMonthPlan = useMemo(
-    () => getMonthlyPlanItems(state.monthlyInvestmentPlan, month),
+    () => getMonthlyPlanUserItems(state.monthlyInvestmentPlan, month),
     [state.monthlyInvestmentPlan, month],
   );
   const previousMonthPlan = useMemo(
-    () => getMonthlyPlanItems(state.monthlyInvestmentPlan, previousMonth),
+    () => getMonthlyPlanUserItems(state.monthlyInvestmentPlan, previousMonth),
     [state.monthlyInvestmentPlan, previousMonth],
   );
   const hasPreviousMonthPlan =

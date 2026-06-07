@@ -16,7 +16,7 @@ const FmLogoMark = forwardRef<HTMLSpanElement, FmLogoMarkProps>(function FmLogoM
   return (
     <motion.span
       ref={ref}
-      className={`site-logo-fm-wrap inline-flex h-9 min-w-[2.625rem] items-center justify-center overflow-hidden rounded-lg border border-white/[0.12] bg-white/[0.05] px-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] will-change-transform motion-reduce:will-change-auto ${className}`}
+      className={`site-logo-fm-wrap patch-icon patch-icon--fm inline-flex h-9 min-w-[2.625rem] items-center justify-center overflow-hidden rounded-lg border border-white/[0.12] bg-white/[0.05] px-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] will-change-transform motion-reduce:will-change-auto ${className}`}
       aria-hidden="true"
       whileHover={reduce ? undefined : { rotate: 4, scale: 1.04 }}
       transition={{ type: 'spring', stiffness: 420, damping: 22 }}
