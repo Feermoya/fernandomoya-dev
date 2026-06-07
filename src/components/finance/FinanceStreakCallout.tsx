@@ -26,8 +26,8 @@ export function FinanceStreakCallout({ entries, contextMonth, className = '' }: 
 
   const shell =
     copy.variant === 'pending_empty' || copy.variant === 'pending_gap'
-      ? 'border-amber-400/40 bg-amber-950/35 text-amber-50'
-      : 'border-slate-500/35 bg-slate-950/50 text-slate-200';
+      ? 'border-amber-200 bg-amber-50 text-amber-800'
+      : 'border-slate-200 bg-slate-50 text-slate-700';
 
   const countLabel = streakInfo && streakInfo.streakCount === 1 ? 'mes de racha' : 'meses de racha';
 
@@ -36,14 +36,14 @@ export function FinanceStreakCallout({ entries, contextMonth, className = '' }: 
       role="status"
       className={`rounded-2xl border px-3 py-2.5 sm:px-4 sm:py-3 ${shell} ${className}`.trim()}
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/50">{copy.statusLabel}</p>
+      <p className="finance-label">{copy.statusLabel}</p>
       {streakInfo ? (
-        <p className="mt-1 font-black tabular-nums leading-none tracking-tight text-white sm:text-lg">
+        <p className="mt-1 font-black tabular-nums leading-none tracking-tight text-slate-900 sm:text-lg">
           {streakInfo.streakCount}{' '}
-          <span className="text-sm font-semibold text-white/55">{countLabel}</span>
+          <span className="text-sm font-semibold text-slate-500">{countLabel}</span>
         </p>
       ) : null}
-      <p className={`text-xs font-medium leading-snug text-white/65 ${streakInfo ? 'mt-1.5' : 'mt-1'}`}>
+      <p className={`text-xs font-medium leading-snug text-slate-600 ${streakInfo ? 'mt-1.5' : 'mt-1'}`}>
         {copy.message}
       </p>
     </aside>

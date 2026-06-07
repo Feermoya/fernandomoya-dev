@@ -6,8 +6,8 @@
   "start_url": "/foco-financiero?pwa=3",
   "scope": "/foco-financiero",
   "display": "standalone",
-  "background_color": "#06111f",
-  "theme_color": "#06111f",
+  "background_color": "#F6F8FB",
+  "theme_color": "#F6F8FB",
   "icons": [
     {
       "src": "/icon-192.png",

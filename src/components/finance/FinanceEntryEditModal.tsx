@@ -66,7 +66,7 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-3 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-900/40 p-3 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-entry-title"
@@ -75,41 +75,41 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/15 bg-slate-950 p-4 shadow-2xl"
+        className="finance-card max-h-[90dvh] w-full max-w-md overflow-y-auto p-4"
       >
-        <h2 id="edit-entry-title" className="text-base font-black text-white">
+        <h2 id="edit-entry-title" className="text-base font-black text-slate-900">
           Editar inversión
         </h2>
-        <p className="mt-1 text-xs text-slate-400">Corregí monto, mes o detalles.</p>
+        <p className="mt-1 text-xs text-slate-500">Corregí monto, mes o detalles.</p>
 
         <label className="mt-4 flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold uppercase text-slate-400">Monto</span>
+          <span className="finance-label">Monto</span>
           <input
             type="number"
             inputMode="decimal"
             min={1}
             required
-            className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 text-lg font-black text-white"
+            className="finance-input-mobile min-h-[48px] rounded-xl px-3 text-lg font-black"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
         </label>
 
         <label className="mt-3 flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold uppercase text-slate-400">Mes</span>
+          <span className="finance-label">Mes</span>
           <input
             type="month"
             required
-            className="finance-input-mobile min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 text-sm font-bold text-white"
+            className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm font-bold"
             value={formMonth}
             onChange={(e) => setFormMonth(e.target.value)}
           />
         </label>
 
         <label className="mt-3 flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold uppercase text-slate-400">Activo</span>
+          <span className="finance-label">Activo</span>
           <select
-            className="finance-input-mobile min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 text-sm text-white"
+            className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm"
             value={asset}
             onChange={(e) => setAsset(e.target.value as FinanceAsset | '')}
           >
@@ -123,9 +123,9 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
         </label>
 
         <label className="mt-3 flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold uppercase text-slate-400">Plataforma</span>
+          <span className="finance-label">Plataforma</span>
           <select
-            className="finance-input-mobile min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 text-sm text-white"
+            className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm"
             value={platform}
             onChange={(e) => setPlatform(e.target.value as (typeof PLATFORM_OPTIONS)[number])}
           >
@@ -138,19 +138,19 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
         </label>
 
         <label className="mt-3 flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold uppercase text-slate-400">Etiqueta</span>
+          <span className="finance-label">Etiqueta</span>
           <input
-            className="finance-input-mobile min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 text-sm text-white"
+            className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
         </label>
 
         <label className="mt-3 flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold uppercase text-slate-400">Nota</span>
+          <span className="finance-label">Nota</span>
           <textarea
             rows={2}
-            className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white"
+            className="finance-input-mobile resize-y rounded-xl px-3 py-2 text-sm"
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
@@ -160,13 +160,13 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[48px] flex-1 rounded-xl border border-white/15 bg-white/5 text-sm font-bold text-slate-200"
+            className="min-h-[48px] flex-1 rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-600 hover:bg-slate-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="min-h-[48px] flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-black text-white"
+            className="finance-primary-button min-h-[48px] flex-1 text-sm"
           >
             Guardar
           </button>

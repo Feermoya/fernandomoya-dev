@@ -65,7 +65,7 @@ export type MonthlyInvestmentPlanItem = {
   label: string;
   matchTerms: string[];
   createdAt: string;
-  /** Precio de referencia manual (ARS), ej. CEDEAR en BCBA. */
+  /** Precio de referencia manual (ARS), ej. CEDEAR en BCBA. Legacy/fallback; el flujo principal usa precios dinámicos. */
   referencePrice?: number;
   /** Cantidad objetivo mínima a cubrir (default 1). */
   targetUnits?: number;

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { CircleDollarSign } from 'lucide-react';
 import { formatARS } from '@/lib/finance/calculations';
+import { normalizePlanLabel } from '@/lib/finance/monthlyInvestmentPlan';
 import { DEFAULT_QUICK_AMOUNTS } from '@/lib/finance/preferences';
 import type { FinanceAsset, FinanceEntry } from '@/lib/finance/types';
 import { FinanceStreakCallout } from '@/components/finance/FinanceStreakCallout';
@@ -8,6 +10,7 @@ type Props = {
   month: string;
   entries: FinanceEntry[];
   quickAmounts?: number[];
+  pendingPlanLabels?: string[];
   onAddEntry: (entry: FinanceEntry) => void;
   /** Tras persistir la entrada (útil para celebraciones en el padre). */
   onEntrySaved?: (entry: FinanceEntry) => void;
@@ -26,11 +29,40 @@ const ASSET_OPTIONS: { value: FinanceAsset; label: string }[] = [
 
 const PLATFORM_OPTIONS = ['Balanz', 'Exchange crypto', 'Banco', 'Otro'] as const;
 
-const BORDER = 'border-emerald-500/50';
-const RING = 'ring-emerald-500/30';
-const GRADIENT = 'from-emerald-600 to-teal-600';
+const MAX_PENDING_CHIPS = 8;
 
-export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onEntrySaved }: Props) {
+function applyPendingPlanLabel(
+  label: string,
+  currentAsset: FinanceAsset | '',
+  setAsset: (value: FinanceAsset | '') => void,
+  setCategory: (value: string) => void,
+  setPlatform: (value: (typeof PLATFORM_OPTIONS)[number]) => void,
+) {
+  const norm = normalizePlanLabel(label);
+  const base = norm.split(' ')[0] ?? norm;
+  setCategory(base);
+
+  if (base === 'BTC') {
+    setAsset('BTC');
+    setPlatform('Exchange crypto');
+    return;
+  }
+  if (base === 'ETH' || base === 'SOL') {
+    setAsset('OTHER');
+    setPlatform('Exchange crypto');
+    return;
+  }
+  if (!currentAsset) setAsset('CEDEAR');
+}
+
+export function FinanceEntryForm({
+  month,
+  entries,
+  quickAmounts,
+  pendingPlanLabels,
+  onAddEntry,
+  onEntrySaved,
+}: Props) {
   const quickList = quickAmounts?.length ? quickAmounts : [...DEFAULT_QUICK_AMOUNTS];
   const [formMonth, setFormMonth] = useState(month);
   const [amount, setAmount] = useState('');
@@ -47,6 +79,10 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
   const lastSameMonth = entries
     .filter((e) => e.type === 'investment' && e.month === formMonth)
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
+
+  const pendingLabels = pendingPlanLabels?.filter(Boolean) ?? [];
+  const visiblePending = pendingLabels.slice(0, MAX_PENDING_CHIPS);
+  const hiddenPendingCount = Math.max(0, pendingLabels.length - MAX_PENDING_CHIPS);
 
   const addQuick = (n: number) => {
     const cur = Number(amount.replace(',', '.'));
@@ -85,34 +121,32 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
   return (
     <form
       onSubmit={submit}
-      className={`relative scroll-mt-24 overflow-hidden rounded-2xl border-2 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.20),transparent_32%),linear-gradient(135deg,rgba(2,6,23,0.95),rgba(15,23,42,0.92))] p-3.5 shadow-xl backdrop-blur-md transition sm:p-4 ${BORDER} ${savedFlash ? `ring-2 ring-offset-2 ring-offset-slate-950 ${RING}` : ''}`}
+      className={`finance-card-compact relative scroll-mt-24 overflow-hidden p-3 transition sm:p-3.5 ${savedFlash ? 'ring-2 ring-blue-500/30 ring-offset-2 ring-offset-white' : ''}`}
     >
       {savedFlash ? (
         <div
-          className="pointer-events-none absolute inset-0 z-10 bg-emerald-500/15 motion-safe:animate-pulse"
+          className="pointer-events-none absolute inset-0 z-10 bg-emerald-100/40 motion-safe:animate-pulse"
           aria-live="polite"
         />
       ) : null}
 
       <div className="relative z-[1]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-300/25 bg-emerald-300/10 text-lg font-black text-emerald-100 shadow-[0_0_30px_-14px_rgba(52,211,153,0.9)]">
-              +
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600">
+              <CircleDollarSign size={18} strokeWidth={2.25} aria-hidden />
             </span>
-            <div>
-              <h3 className="text-base font-black tracking-tight text-white">Sumar inversión</h3>
-            </div>
+            <h3 className="text-base font-black tracking-tight text-slate-900">Sumar inversión</h3>
           </div>
           {savedFlash ? (
-            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-bold text-emerald-200">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-600">
               Listo
             </span>
           ) : null}
         </div>
 
-        <label className="mt-4 flex flex-col gap-1.5">
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Monto a invertir</span>
+        <label className="mt-3 flex flex-col gap-1">
+          <span className="finance-label">Monto a invertir</span>
           <input
             type="number"
             inputMode="decimal"
@@ -120,7 +154,7 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
             step={1}
             required
             placeholder="$ 0"
-            className="finance-input-mobile min-h-[52px] rounded-2xl border-2 border-emerald-300/20 bg-black/35 px-4 py-3 text-center text-2xl font-black tabular-nums text-white placeholder:text-slate-600 focus:border-emerald-300/50 focus:ring-4 focus:ring-emerald-400/10 sm:text-3xl"
+            className="finance-input-mobile min-h-[48px] rounded-xl px-3 py-2.5 text-center text-xl font-black tabular-nums sm:text-2xl"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
@@ -132,7 +166,7 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
               key={n}
               type="button"
               onClick={() => addQuick(n)}
-              className="min-h-[40px] rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 text-xs font-black tabular-nums text-emerald-100 transition hover:bg-emerald-500/20 active:scale-[0.98]"
+              className="finance-secondary-button min-h-[40px] px-3 text-xs font-black tabular-nums active:scale-[0.98]"
             >
               {n >= 1_000_000 ? `+${(n / 1_000_000).toFixed(1)}M` : `+${Math.round(n / 1000)}k`}
             </button>
@@ -141,7 +175,7 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
             <button
               type="button"
               onClick={() => setAmount(String(lastSameMonth.amount))}
-              className="min-h-[40px] rounded-xl border border-white/15 bg-white/5 px-3 text-xs font-bold text-slate-300 transition hover:bg-white/10 active:scale-[0.98]"
+              className="min-h-[40px] rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-100 active:scale-[0.98]"
             >
               Repetir {formatARS(lastSameMonth.amount)}
             </button>
@@ -150,32 +184,57 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
 
         <button
           type="submit"
-          className={`mt-3 flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-gradient-to-r px-4 py-3.5 text-base font-black text-white shadow-lg transition hover:brightness-110 active:scale-[0.99] sm:min-h-[48px] sm:text-sm ${GRADIENT}`}
+          className="finance-primary-button mt-3 flex w-full items-center justify-center px-4 py-3 text-sm sm:min-h-[48px]"
         >
           Cargar inversión
         </button>
 
-        <FinanceStreakCallout entries={entries} contextMonth={formMonth} className="mt-3" />
+        {visiblePending.length > 0 ? (
+          <div className="mt-2.5">
+            <p className="finance-label">Pendientes del plan</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {visiblePending.map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() =>
+                    applyPendingPlanLabel(label, asset, setAsset, setCategory, setPlatform)
+                  }
+                  className="finance-secondary-button finance-touch-target min-h-[36px] px-2.5 text-[11px] font-black active:scale-[0.98]"
+                >
+                  {normalizePlanLabel(label).split(' ')[0]}
+                </button>
+              ))}
+              {hiddenPendingCount > 0 ? (
+                <span className="inline-flex min-h-[36px] items-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-bold text-slate-500">
+                  +{hiddenPendingCount} más
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
 
-        <details className="mt-3 group">
-          <summary className="cursor-pointer list-none text-center text-xs font-bold text-emerald-300/90 underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+        <FinanceStreakCallout entries={entries} contextMonth={formMonth} className="mt-2.5 lg:hidden" />
+
+        <details className="finance-details mt-2.5 group">
+          <summary className="cursor-pointer list-none rounded-[18px] px-3 py-2 text-center text-xs font-bold text-blue-700 underline-offset-2 hover:bg-blue-50/50 [&::-webkit-details-marker]:hidden">
             Activo, plataforma y mes
           </summary>
-          <div className="mt-3 flex flex-col gap-3 rounded-xl border border-white/10 bg-black/25 p-3">
+          <div className="flex flex-col gap-3 p-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Mes</span>
+              <span className="finance-label">Mes</span>
               <input
                 type="month"
                 required
-                className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-bold text-white"
+                className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2 text-sm font-bold"
                 value={formMonth}
                 onChange={(e) => setFormMonth(e.target.value)}
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Activo</span>
+              <span className="finance-label">Activo</span>
               <select
-                className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-semibold text-white"
+                className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold"
                 value={asset}
                 onChange={(e) => setAsset(e.target.value as FinanceAsset | '')}
               >
@@ -188,9 +247,9 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
               </select>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Plataforma</span>
+              <span className="finance-label">Plataforma</span>
               <select
-                className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-semibold text-white"
+                className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold"
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value as (typeof PLATFORM_OPTIONS)[number])}
               >
@@ -202,9 +261,9 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
               </select>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Etiqueta</span>
+              <span className="finance-label">Etiqueta</span>
               <input
-                className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2 text-sm"
                 placeholder="Ej. CEDEARs, MEP"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -214,10 +273,10 @@ export function FinanceEntryForm({ month, entries, quickAmounts, onAddEntry, onE
               </p>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Nota</span>
+              <span className="finance-label">Nota</span>
               <textarea
                 rows={2}
-                className="resize-y rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                className="finance-input-mobile resize-y rounded-xl px-3 py-2 text-sm"
                 placeholder="Opcional"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}

@@ -16,15 +16,12 @@ export function FinanceProgressPath({ state, month, compact = false }: Props) {
   const titleSize = compact ? 'text-base' : 'text-xl';
 
   return (
-    <section className={`relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/55 shadow-lg backdrop-blur-md sm:rounded-3xl ${pad}`}>
-      <div
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] opacity-40"
-        aria-hidden
-      />
-
+    <section className={`finance-card-compact relative overflow-hidden ${pad}`}>
       <div className="relative z-[1]">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300/80 sm:text-[11px]">Ruta de niveles</p>
-        <h3 className={`mt-0.5 font-black tracking-tight text-white ${titleSize}`}>Cada nivel premia constancia, no improvisación.</h3>
+        <p className="finance-label">Ruta de niveles</p>
+        <h3 className={`mt-0.5 font-black tracking-tight text-slate-900 ${titleSize}`}>
+          Cada nivel premia constancia, no improvisación.
+        </h3>
 
         <ol className={`mt-4 flex flex-col gap-2 sm:gap-3 lg:flex-row lg:flex-wrap lg:gap-x-2 ${compact ? 'lg:gap-y-2' : 'lg:gap-y-4'}`}>
           {LEVEL_RULES.map((row, idx) => {
@@ -34,16 +31,13 @@ export function FinanceProgressPath({ state, month, compact = false }: Props) {
             return (
               <li
                 key={row.level}
-                className={`relative flex min-w-0 flex-1 flex-col rounded-xl border-2 sm:rounded-2xl ${nodePad} transition lg:max-w-[180px] ${
+                className={`relative flex min-w-0 flex-1 flex-col rounded-xl border sm:rounded-2xl ${nodePad} transition lg:max-w-[180px] ${
                   isCurrent
-                    ? 'border-white/35 shadow-[0_0_24px_rgba(99,102,241,0.35)] motion-reduce:shadow-none'
-                    : 'border-white/10'
-                } ${unlocked ? 'opacity-100' : 'opacity-55'}`}
-                style={{
-                  background: unlocked
-                    ? `linear-gradient(160deg, ${theme.from}99, rgba(15,23,42,0.92))`
-                    : 'rgba(15,23,42,0.75)',
-                }}
+                    ? 'border-blue-300 bg-blue-50 shadow-sm ring-1 ring-blue-200 motion-reduce:shadow-none'
+                    : unlocked
+                      ? 'border-slate-200 bg-white'
+                      : 'border-slate-200 bg-slate-50 opacity-70'
+                }`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span
@@ -51,7 +45,7 @@ export function FinanceProgressPath({ state, month, compact = false }: Props) {
                     style={{
                       borderColor: theme.border,
                       color: theme.text,
-                      boxShadow: isCurrent ? `0 0 12px ${theme.glow}` : undefined,
+                      background: unlocked ? `${theme.from}22` : '#f8fafc',
                     }}
                   >
                     {row.level}
@@ -60,19 +54,27 @@ export function FinanceProgressPath({ state, month, compact = false }: Props) {
                     {theme.icon}
                   </span>
                 </div>
-                <p className={`mt-1.5 truncate font-black text-white ${compact ? 'text-xs sm:text-sm' : 'text-sm'}`}>{row.name}</p>
+                <p className={`mt-1.5 truncate font-black text-slate-900 ${compact ? 'text-xs sm:text-sm' : 'text-sm'}`}>
+                  {row.name}
+                </p>
                 <p
-                  className={`mt-1 font-medium leading-snug text-slate-300 line-clamp-2 ${compact ? 'text-[10px] sm:text-[11px]' : 'text-[11px]'}`}
+                  className={`mt-1 font-medium leading-snug text-slate-500 line-clamp-2 ${compact ? 'text-[10px] sm:text-[11px]' : 'text-[11px]'}`}
                 >
                   {row.condition}
                 </p>
-                <span className="mt-1.5 inline-flex w-fit rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/90 ring-1 ring-white/15">
+                <span
+                  className={`mt-1.5 inline-flex w-fit rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                    unlocked
+                      ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200'
+                      : 'bg-slate-100 text-slate-500 ring-1 ring-slate-200'
+                  }`}
+                >
                   {unlocked ? 'Desbloqueado' : 'Pendiente'}
                   {isCurrent ? ' · Acá' : ''}
                 </span>
                 {idx < LEVEL_RULES.length - 1 ? (
                   <span
-                    className="absolute -right-1 top-1/2 hidden h-0.5 w-3 -translate-y-1/2 bg-white/15 lg:block"
+                    className="absolute -right-1 top-1/2 hidden h-0.5 w-3 -translate-y-1/2 bg-slate-200 lg:block"
                     aria-hidden
                   />
                 ) : null}

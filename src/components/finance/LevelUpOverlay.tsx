@@ -68,7 +68,7 @@ export function LevelUpOverlay({ open, level, title, icon, message, onClose }: L
 
   return (
     <div
-      className="finance-level-up-overlay fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-xl"
+      className="finance-level-up-overlay fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/30 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -91,11 +91,7 @@ export function LevelUpOverlay({ open, level, title, icon, message, onClose }: L
         />
 
         <div
-          className="relative overflow-hidden rounded-[2rem] border border-white/15 px-6 pb-7 pt-8 text-center shadow-[0_0_100px_-35px_rgba(34,211,238,0.95)] sm:px-8 sm:pb-8 sm:pt-10"
-          style={{
-            background:
-              'radial-gradient(circle at top, rgba(255,255,255,0.16), transparent 35%), linear-gradient(135deg, rgba(15,23,42,0.96), rgba(2,6,23,0.98))',
-          }}
+          className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white px-6 pb-7 pt-8 text-center shadow-xl sm:px-8 sm:pb-8 sm:pt-10"
         >
           <div className="pointer-events-none absolute inset-0 opacity-[0.07] motion-reduce:opacity-0" aria-hidden>
             <div
@@ -162,7 +158,7 @@ export function LevelUpOverlay({ open, level, title, icon, message, onClose }: L
             })}
           </div>
 
-          <p className="relative text-center text-[10px] font-black uppercase tracking-[0.28em] text-white/55 finance-lvl-stagger-1 sm:text-[11px]">
+          <p className="relative text-center text-[10px] font-black uppercase tracking-[0.28em] text-slate-500 finance-lvl-stagger-1 sm:text-[11px]">
             Nivel desbloqueado
           </p>
 
@@ -198,8 +194,7 @@ export function LevelUpOverlay({ open, level, title, icon, message, onClose }: L
 
           <h2
             id={titleId}
-            className="relative mt-5 text-center text-2xl font-black tracking-tight finance-lvl-stagger-2 sm:text-3xl"
-            style={{ color: theme.text }}
+            className="relative mt-5 text-center text-2xl font-black tracking-tight text-slate-900 finance-lvl-stagger-2 sm:text-3xl"
           >
             {title}
           </h2>
@@ -208,20 +203,14 @@ export function LevelUpOverlay({ open, level, title, icon, message, onClose }: L
             {icon}
           </p>
 
-          <p id={descId} className="relative mt-5 text-center text-sm font-medium leading-relaxed text-slate-300/95 finance-lvl-stagger-3 sm:text-[15px]">
+          <p id={descId} className="relative mt-5 text-center text-sm font-medium leading-relaxed text-slate-600 finance-lvl-stagger-3 sm:text-[15px]">
             {copy}
           </p>
 
           <button
             ref={closeBtnRef}
             type="button"
-            className="relative mt-8 w-full rounded-xl border py-3 text-sm font-bold transition hover:brightness-110 finance-lvl-stagger-3 sm:mt-9"
-            style={{
-              borderColor: theme.border,
-              color: theme.text,
-              background: `linear-gradient(135deg, ${theme.from}99, rgba(15,23,42,0.9))`,
-              boxShadow: `0 0 24px -4px ${theme.glow}`,
-            }}
+            className="finance-primary-button relative mt-8 w-full py-3 text-sm finance-lvl-stagger-3 sm:mt-9"
             onClick={handleClose}
           >
             Continuar

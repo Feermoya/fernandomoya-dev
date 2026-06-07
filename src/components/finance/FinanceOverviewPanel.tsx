@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
+import { WalletCards } from 'lucide-react';
 import {
   formatARS,
+  getMonthlyInvested,
   getTotalInvested,
   getYearFromMonthKey,
   getYearInvested,
@@ -10,6 +12,7 @@ import type { FinanceState } from '@/lib/finance/types';
 type Props = {
   state: FinanceState;
   month: string;
+  variant?: 'full' | 'compact';
 };
 
 function StatCell({
@@ -17,34 +20,44 @@ function StatCell({
   value,
   sub,
   accent,
+  compact,
 }: {
   label: string;
   value: string;
   sub?: string;
   accent?: 'emerald' | 'violet' | 'sky' | 'amber';
+  compact?: boolean;
 }) {
   const border =
     accent === 'emerald'
-      ? 'border-emerald-500/30 bg-emerald-950/25'
+      ? 'border-emerald-200 bg-emerald-50'
       : accent === 'violet'
-        ? 'border-violet-500/30 bg-violet-950/25'
+        ? 'border-violet-200 bg-violet-50'
         : accent === 'amber'
-          ? 'border-amber-500/30 bg-amber-950/25'
-          : 'border-sky-500/30 bg-sky-950/25';
+          ? 'border-amber-200 bg-amber-50'
+          : 'border-sky-200 bg-sky-50';
 
   return (
-    <article className={`rounded-xl border px-3 py-2.5 ${border}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="mt-0.5 text-lg font-black tabular-nums leading-none text-white sm:text-xl">{value}</p>
-      {sub ? <p className="mt-1 text-[10px] font-medium text-slate-500">{sub}</p> : null}
+    <article className={`rounded-xl border px-2.5 py-2 ${border} ${compact ? '' : 'sm:px-3 sm:py-2.5'}`}>
+      <p className="finance-label">{label}</p>
+      <p
+        className={`mt-0.5 font-black tabular-nums leading-none text-slate-900 ${
+          compact ? 'text-base' : 'text-lg sm:text-xl'
+        }`}
+      >
+        {value}
+      </p>
+      {sub ? <p className="mt-0.5 text-[10px] font-medium text-slate-500">{sub}</p> : null}
     </article>
   );
 }
 
-export function FinanceOverviewPanel({ state, month }: Props) {
+export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) {
+  const compact = variant === 'compact';
   const entries = state.entries;
   const year = getYearFromMonthKey(month);
   const yearInvested = useMemo(() => getYearInvested(entries, year), [entries, year]);
+  const monthInvested = useMemo(() => getMonthlyInvested(entries, month), [entries, month]);
   const total = useMemo(() => getTotalInvested(entries), [entries]);
   const opsThisMonth = useMemo(
     () => entries.filter((e) => e.month === month && e.type === 'investment').length,
@@ -58,32 +71,51 @@ export function FinanceOverviewPanel({ state, month }: Props) {
 
   return (
     <section
-      className="rounded-2xl border border-white/10 bg-slate-950/50 p-3 shadow-md sm:p-4"
+      className={`finance-card ${compact ? 'p-3' : 'p-3 sm:p-4'}`}
       aria-labelledby="finance-overview-heading"
     >
-      <h2 id="finance-overview-heading" className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
+      <h2 id="finance-overview-heading" className="finance-label flex items-center gap-1.5">
+        <WalletCards size={14} strokeWidth={2.25} className="text-blue-600" aria-hidden />
         Resumen
       </h2>
 
-      <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5">
+      <div
+        className={`mt-2 grid gap-2 ${compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}
+      >
+        <StatCell
+          label="Mes actual"
+          value={formatARS(monthInvested)}
+          sub="Este mes"
+          accent="emerald"
+          compact={compact}
+        />
+        <StatCell
+          label="Promedio"
+          value={formatARS(avgMonthly)}
+          sub={activeMonths > 0 ? `${activeMonths} meses` : 'Sin datos'}
+          accent="sky"
+          compact={compact}
+        />
+        <StatCell
+          label="Operaciones"
+          value={String(opsThisMonth)}
+          sub="En el mes"
+          accent="amber"
+          compact={compact}
+        />
         <StatCell
           label={`Año ${year}`}
           value={formatARS(yearInvested)}
-          sub="Inversión acumulada"
-          accent="sky"
-        />
-        <StatCell label="Total histórico" value={formatARS(total)} sub="Desde el inicio" accent="violet" />
-        <StatCell
-          label="Promedio mensual"
-          value={formatARS(avgMonthly)}
-          sub={activeMonths > 0 ? `${activeMonths} meses activos` : 'Sin meses activos'}
-          accent="emerald"
+          sub="Acumulado"
+          accent="violet"
+          compact={compact}
         />
         <StatCell
-          label="Actividad"
-          value={String(opsThisMonth)}
-          sub={opsThisMonth === 1 ? 'operación este mes' : 'operaciones este mes'}
-          accent="amber"
+          label="Total histórico"
+          value={formatARS(total)}
+          sub="Desde el inicio"
+          accent="violet"
+          compact={compact}
         />
       </div>
     </section>

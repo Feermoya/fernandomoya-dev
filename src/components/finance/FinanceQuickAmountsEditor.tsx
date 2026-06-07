@@ -33,7 +33,7 @@ export function FinanceQuickAmountsEditor({ preferences, onChange }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-semibold text-slate-300">Botones de monto al cargar inversión (se guardan en tu cuenta).</p>
+      <p className="text-sm font-semibold text-slate-600">Botones de monto al cargar inversión (se guardan en tu cuenta).</p>
       <ul className="space-y-2">
         {amounts.map((n, i) => (
           <li key={`${i}-${n}`} className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export function FinanceQuickAmountsEditor({ preferences, onChange }: Props) {
               inputMode="numeric"
               min={1000}
               step={1000}
-              className="finance-input-mobile min-h-[44px] flex-1 rounded-xl border border-white/15 bg-black/40 px-3 text-sm font-bold tabular-nums text-white"
+              className="finance-input-mobile min-h-[44px] flex-1 rounded-xl px-3 text-sm font-bold tabular-nums"
               value={n}
               onChange={(e) => updateAt(i, e.target.value)}
             />
@@ -50,7 +50,7 @@ export function FinanceQuickAmountsEditor({ preferences, onChange }: Props) {
             <button
               type="button"
               onClick={() => removeAt(i)}
-              className="finance-touch-target rounded-lg px-2 text-xs font-bold text-slate-500 hover:text-rose-300"
+              className="finance-touch-target rounded-lg px-2 text-xs font-bold text-slate-500 hover:text-red-600"
             >
               Quitar
             </button>
@@ -62,14 +62,14 @@ export function FinanceQuickAmountsEditor({ preferences, onChange }: Props) {
           type="button"
           onClick={addSlot}
           disabled={amounts.length >= 8}
-          className="min-h-[40px] rounded-xl border border-white/15 bg-white/5 px-3 text-xs font-bold text-white disabled:opacity-40"
+          className="finance-secondary-button min-h-[40px] px-3 text-xs font-bold disabled:opacity-40"
         >
           + Agregar monto
         </button>
         <button
           type="button"
           onClick={reset}
-          className="min-h-[40px] rounded-xl border border-white/15 px-3 text-xs font-bold text-slate-400"
+          className="min-h-[40px] rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-500 hover:bg-slate-50"
         >
           Restaurar predeterminados
         </button>

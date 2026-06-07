@@ -1,38 +1,41 @@
 import { formatARS, getStreakCalendarCells, MONTHLY_STREAK_MINIMUM_ARS } from '@/lib/finance/calculations';
 import type { FinanceEntry } from '@/lib/finance/types';
+import { Flame } from 'lucide-react';
 
 type Props = {
   entries: FinanceEntry[];
   monthCount?: number;
   streakCount?: number;
+  compact?: boolean;
 };
 
-export function FinanceStreakCalendar({ entries, monthCount = 12, streakCount }: Props) {
+export function FinanceStreakCalendar({ entries, monthCount = 12, streakCount, compact = false }: Props) {
   const cells = getStreakCalendarCells(entries, monthCount);
   const streakUnit = streakCount === 1 ? 'mes' : 'meses';
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/25 px-2.5 py-2 sm:px-3 sm:py-2.5">
-      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/50">
+    <div className={compact ? 'rounded-xl border border-slate-200 bg-slate-50/80 px-2 py-2' : 'finance-card-compact px-2.5 py-2 sm:px-3 sm:py-2.5'}>
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <p className="finance-label flex items-center gap-1">
+          <Flame size={12} strokeWidth={2.25} className="text-amber-600" aria-hidden />
           Racha
           {typeof streakCount === 'number' ? (
-            <span className="ml-1.5 font-black tabular-nums text-white/75">
+            <span className="ml-1.5 font-black tabular-nums text-slate-700">
               · {streakCount} {streakUnit}
             </span>
           ) : null}
         </p>
-        <p className="text-[9px] font-medium text-white/40">Mín. {formatARS(MONTHLY_STREAK_MINIMUM_ARS)}</p>
+        <p className="text-[9px] font-medium text-slate-500">Mín. {formatARS(MONTHLY_STREAK_MINIMUM_ARS)}</p>
       </div>
-      <div className="grid grid-cols-6 gap-1 sm:grid-cols-12 sm:gap-1.5">
+      <div className="grid grid-cols-4 gap-0.5 sm:grid-cols-6 sm:gap-1 lg:grid-cols-12">
         {cells.map((c) => {
           const bg = c.isFuture
-            ? 'bg-white/5 border-white/10'
+            ? 'bg-slate-50 border-slate-200'
             : c.qualified
-              ? 'bg-emerald-500/25 border-emerald-400/45'
+              ? 'bg-emerald-100 border-emerald-300'
               : c.invested > 0
-                ? 'bg-amber-500/15 border-amber-400/35'
-                : 'bg-rose-950/40 border-rose-500/25';
+                ? 'bg-amber-50 border-amber-300'
+                : 'bg-red-50 border-red-200';
           const title = c.isFuture
             ? `${c.label}: mes futuro`
             : c.qualified
@@ -45,27 +48,27 @@ export function FinanceStreakCalendar({ entries, monthCount = 12, streakCount }:
             <div
               key={c.month}
               title={title}
-              className={`flex flex-col items-center rounded-md border px-0.5 py-1.5 sm:py-2 ${bg} ${c.isCurrent ? 'ring-1 ring-cyan-400/60' : ''}`}
+              className={`flex flex-col items-center rounded border px-0.5 py-1 ${bg} ${c.isCurrent ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
             >
-              <span className="text-[8px] font-bold uppercase tracking-wide text-white/55 sm:text-[9px]">
+              <span className="text-[7px] font-bold uppercase tracking-wide text-slate-500 sm:text-[8px]">
                 {c.label}
               </span>
-              <span className="mt-0.5 text-xs leading-none sm:text-sm" aria-hidden>
+              <span className="mt-0.5 text-[10px] leading-none sm:text-xs" aria-hidden>
                 {c.isFuture ? '·' : c.qualified ? '✓' : c.invested > 0 ? '!' : '—'}
               </span>
             </div>
           );
         })}
       </div>
-      <div className="mt-1.5 hidden flex-wrap gap-2 text-[9px] font-medium text-white/40 sm:flex">
+      <div className="mt-1 flex flex-wrap gap-2 text-[9px] font-medium text-slate-500">
         <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-sm bg-emerald-400/80" /> OK
+          <span className="h-1.5 w-1.5 rounded-sm bg-emerald-500" /> OK
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-sm bg-amber-400/60" /> Bajo
+          <span className="h-1.5 w-1.5 rounded-sm bg-amber-500" /> Bajo
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-sm bg-rose-500/50" /> Vacío
+          <span className="h-1.5 w-1.5 rounded-sm bg-red-500" /> Vacío
         </span>
       </div>
     </div>

@@ -28,17 +28,17 @@ function InvestmentRow({
 
   return (
     <li
-      className={`group flex items-center justify-between gap-2 border-l-2 border-emerald-400/70 bg-white/[0.025] transition hover:bg-white/[0.04] ${
+      className={`group flex items-center justify-between gap-2 border-l-2 border-emerald-400 bg-slate-50 transition hover:bg-slate-100 ${
         compact ? 'px-2.5 py-2' : 'px-3 py-2.5'
       }`}
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <p className={`font-black tabular-nums text-white ${compact ? 'text-base' : 'text-lg'}`}>
+          <p className={`font-black tabular-nums text-slate-900 ${compact ? 'text-base' : 'text-lg'}`}>
             {formatARS(entry.amount)}
           </p>
           {entry.asset ? (
-            <span className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-400">
+            <span className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-500">
               {entry.asset}
             </span>
           ) : null}
@@ -49,14 +49,14 @@ function InvestmentRow({
         <button
           type="button"
           onClick={onEdit}
-          className="finance-touch-target rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-400 hover:text-white"
+          className="finance-touch-target rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-500 hover:text-blue-600"
         >
           Editar
         </button>
         <button
           type="button"
           onClick={onRemove}
-          className="finance-touch-target rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-500 hover:text-rose-300"
+          className="finance-touch-target rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-500 hover:text-red-600"
         >
           Borrar
         </button>
@@ -71,27 +71,27 @@ export function FinanceRecentInvestments({ month, investments, onEdit, onRemove 
 
   if (count === 0) {
     return (
-      <p className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-slate-400">
+      <p className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
         Todavía no cargaste inversiones este mes.
       </p>
     );
   }
 
   return (
-    <details className="group rounded-2xl border border-white/10 bg-slate-950/45 shadow-md">
-      <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3.5 py-3 transition hover:bg-white/[0.03] sm:px-4 [&::-webkit-details-marker]:hidden">
-        <span className="text-sm font-black text-white">Últimas inversiones</span>
-        <span className="ml-auto text-right text-[11px] font-bold tabular-nums text-slate-400">
+    <details className="finance-details group">
+      <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3.5 py-3 sm:px-4 [&::-webkit-details-marker]:hidden">
+        <span className="text-sm font-black text-slate-900">Últimas inversiones</span>
+        <span className="ml-auto text-right text-[11px] font-bold tabular-nums text-slate-500">
           {count} · {formatARS(total)}
         </span>
         <span
-          className="text-slate-500 transition group-open:rotate-180"
+          className="text-slate-400 transition group-open:rotate-180"
           aria-hidden
         >
           ▾
         </span>
       </summary>
-      <div className="border-t border-white/10 px-2 pb-2 pt-1 sm:px-3">
+      <div className="px-2 pb-2 pt-1 sm:px-3">
         <ul className="flex flex-col gap-1">
           {investments.map((e) => (
             <InvestmentRow

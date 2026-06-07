@@ -24,14 +24,14 @@ const CAT_STYLE: Record<
   FinanceGoalCategory,
   { icon: string; card: string; bar: string }
 > = {
-  emergency: { icon: '🛡️', card: 'border-emerald-500/40 from-emerald-950/90 to-slate-950', bar: 'from-emerald-400 to-teal-500' },
-  investment: { icon: '📊', card: 'border-violet-500/40 from-violet-950/90 to-slate-950', bar: 'from-violet-400 to-fuchsia-500' },
-  freedom: { icon: '✨', card: 'border-amber-500/40 from-amber-950/90 to-slate-950', bar: 'from-amber-400 to-yellow-500' },
-  car: { icon: '🚗', card: 'border-sky-500/40 from-sky-950/90 to-slate-950', bar: 'from-sky-400 to-blue-600' },
-  home: { icon: '🏠', card: 'border-orange-500/40 from-orange-950/90 to-slate-950', bar: 'from-orange-400 to-amber-600' },
-  business: { icon: '⚙️', card: 'border-cyan-500/40 from-cyan-950/90 to-slate-950', bar: 'from-cyan-400 to-indigo-600' },
-  travel: { icon: '✈️', card: 'border-pink-500/40 from-fuchsia-950/90 to-slate-950', bar: 'from-pink-400 to-rose-500' },
-  other: { icon: '◎', card: 'border-slate-500/40 from-slate-900 to-slate-950', bar: 'from-slate-400 to-slate-600' },
+  emergency: { icon: '🛡️', card: 'border-emerald-200 bg-emerald-50', bar: 'from-emerald-500 to-teal-500' },
+  investment: { icon: '📊', card: 'border-violet-200 bg-violet-50', bar: 'from-violet-500 to-fuchsia-500' },
+  freedom: { icon: '✨', card: 'border-amber-200 bg-amber-50', bar: 'from-amber-500 to-yellow-500' },
+  car: { icon: '🚗', card: 'border-sky-200 bg-sky-50', bar: 'from-sky-500 to-blue-600' },
+  home: { icon: '🏠', card: 'border-orange-200 bg-orange-50', bar: 'from-orange-500 to-amber-600' },
+  business: { icon: '⚙️', card: 'border-cyan-200 bg-cyan-50', bar: 'from-cyan-500 to-indigo-600' },
+  travel: { icon: '✈️', card: 'border-pink-200 bg-pink-50', bar: 'from-pink-500 to-rose-500' },
+  other: { icon: '◎', card: 'border-slate-200 bg-slate-50', bar: 'from-slate-400 to-slate-600' },
 };
 
 export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
@@ -70,35 +70,35 @@ export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
   const st = CAT_STYLE[category];
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-slate-950/50 p-3 shadow-md backdrop-blur-md sm:p-4">
-      <p className="text-xs font-medium text-slate-400">Creá o editá metas cuando quieras planificar un monto destino.</p>
+    <section className="finance-card p-3 sm:p-4">
+      <p className="text-xs font-medium text-slate-500">Creá o editá metas cuando quieras planificar un monto destino.</p>
 
       <form
         onSubmit={submit}
-        className={`mt-4 grid grid-cols-1 gap-2.5 rounded-xl border-2 bg-gradient-to-br p-3 sm:grid-cols-2 sm:gap-3 ${st.card}`}
+        className={`mt-4 grid grid-cols-1 gap-2.5 rounded-xl border-2 p-3 sm:grid-cols-2 sm:gap-3 ${st.card}`}
       >
         <label className="flex flex-col gap-1.5 sm:col-span-2">
-          <span className="text-[11px] font-bold uppercase text-slate-400">Nombre</span>
+          <span className="finance-label">Nombre</span>
           <input
             required
-            className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-semibold text-white placeholder:text-slate-600"
+            className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold"
             placeholder="Ej. Colchón 6 meses"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-bold uppercase text-slate-400">Objetivo ARS</span>
-          <input type="number" min={1} required className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white" value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} />
+          <span className="finance-label">Objetivo ARS</span>
+          <input type="number" min={1} required className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2" value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-bold uppercase text-slate-400">Actual ARS</span>
-          <input type="number" min={0} required className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white" value={currentAmount} onChange={(e) => setCurrentAmount(e.target.value)} />
+          <span className="finance-label">Actual ARS</span>
+          <input type="number" min={0} required className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2" value={currentAmount} onChange={(e) => setCurrentAmount(e.target.value)} />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-bold uppercase text-slate-400">Categoría</span>
+          <span className="finance-label">Categoría</span>
           <select
-            className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm font-semibold text-white"
+            className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold"
             value={category}
             onChange={(e) => setCategory(e.target.value as FinanceGoalCategory)}
           >
@@ -110,11 +110,11 @@ export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
           </select>
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-bold uppercase text-slate-400">Deadline</span>
-          <input type="date" className="min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-white" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+          <span className="finance-label">Deadline</span>
+          <input type="date" className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
         </label>
         <div className="sm:col-span-2">
-          <button type="submit" className="w-full rounded-xl bg-white/15 py-3 text-sm font-black text-white transition hover:bg-white/25 sm:w-auto sm:px-6">
+          <button type="submit" className="finance-primary-button w-full py-3 text-sm sm:w-auto sm:px-6">
             Crear meta
           </button>
         </div>
@@ -130,30 +130,30 @@ export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
             return (
               <li
                 key={g.id}
-                className={`relative overflow-hidden rounded-2xl border-2 bg-gradient-to-br p-4 shadow-lg ${cs.card}`}
+                className={`relative overflow-hidden rounded-2xl border-2 p-4 shadow-sm ${cs.card}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-2">
                     <span className="text-2xl">{cs.icon}</span>
                     <div className="min-w-0">
-                      <p className="truncate text-base font-black text-white">{g.name}</p>
-                      <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                      <p className="truncate text-base font-black text-slate-900">{g.name}</p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
                         {CATEGORIES.find((c) => c.value === g.category)?.label}
                         {g.deadline ? ` · ${g.deadline}` : ''}
                       </p>
                     </div>
                   </div>
-                  <button type="button" className="shrink-0 text-xs font-bold text-slate-500 hover:text-rose-400" onClick={() => onRemove(g.id)}>
+                  <button type="button" className="shrink-0 text-xs font-bold text-slate-500 hover:text-red-600" onClick={() => onRemove(g.id)}>
                     Quitar
                   </button>
                 </div>
                 <div className="mt-3 flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-bold tabular-nums text-slate-300">
+                  <span className="text-sm font-bold tabular-nums text-slate-600">
                     {formatARS(g.currentAmount)} / {formatARS(g.targetAmount)}
                   </span>
-                  <span className="text-lg font-black tabular-nums text-white">{pct.toFixed(0)}%</span>
+                  <span className="text-lg font-black tabular-nums text-slate-900">{pct.toFixed(0)}%</span>
                 </div>
-                <div className="mt-2 h-3 overflow-hidden rounded-full bg-black/40">
+                <div className="mt-2 h-3 overflow-hidden rounded-full bg-white/60">
                   <div className={`h-full rounded-full bg-gradient-to-r ${cs.bar}`} style={{ width: `${pct}%` }} />
                 </div>
                 <label className="mt-3 flex flex-col gap-1 text-[11px] font-bold uppercase text-slate-500">
@@ -161,7 +161,7 @@ export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
                   <input
                     type="number"
                     min={0}
-                    className="min-h-[40px] rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-sm font-bold text-white"
+                    className="finance-input-mobile min-h-[40px] rounded-lg px-2 py-1.5 text-sm font-bold"
                     defaultValue={g.currentAmount}
                     key={`${g.id}-${g.currentAmount}`}
                     onBlur={(e) => {

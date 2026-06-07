@@ -73,27 +73,27 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
 
   return (
     <div className="space-y-4">
-      <p className="text-sm font-semibold leading-relaxed text-slate-300">
+      <p className="text-sm font-semibold leading-relaxed text-slate-600">
         Recordatorios por WhatsApp: abrís un chat con el mensaje listo, o envío automático con CallMeBot.
       </p>
 
-      <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/25 px-3 py-3">
+      <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
         <input
           type="checkbox"
           checked={reminder.enabled}
           onChange={(e) => patchReminder({ enabled: e.target.checked })}
-          className="h-5 w-5 rounded border-white/20"
+          className="h-5 w-5 rounded border-slate-300 text-blue-600"
         />
-        <span className="text-sm font-bold text-white">Activar recordatorios</span>
+        <span className="text-sm font-bold text-slate-900">Activar recordatorios</span>
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-bold uppercase text-slate-400">Tu WhatsApp (con código país)</span>
+        <span className="finance-label">Tu WhatsApp (con código país)</span>
         <input
           type="tel"
           inputMode="numeric"
           placeholder="5491123456789"
-          className="finance-input-mobile min-h-[48px] rounded-xl border border-white/15 bg-black/40 px-3 text-sm font-bold text-white"
+          className="finance-input-mobile min-h-[48px] rounded-xl px-3 text-sm font-bold"
           value={reminder.phoneDigits}
           onChange={(e) => patchReminder({ phoneDigits: e.target.value.replace(/\D/g, '') })}
         />
@@ -101,7 +101,7 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
       </label>
 
       <div>
-        <p className="text-[10px] font-bold uppercase text-slate-400">Días del mes</p>
+        <p className="finance-label">Días del mes</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {DAY_OPTIONS.map((d) => {
             const on = reminder.daysOfMonth.includes(d);
@@ -112,8 +112,8 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
                 onClick={() => toggleDay(d)}
                 className={`min-h-[40px] min-w-[44px] rounded-xl border px-3 text-sm font-black transition ${
                   on
-                    ? 'border-emerald-400/50 bg-emerald-500/20 text-emerald-100'
-                    : 'border-white/15 bg-white/5 text-slate-400'
+                    ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
                 }`}
               >
                 {d}
@@ -128,20 +128,20 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-bold uppercase text-slate-400">
+        <span className="finance-label">
           Mensaje ({'{mes}'}, {'{invertido}'}, {'{falta}'})
         </span>
         <textarea
           rows={3}
-          className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-white"
+          className="finance-input-mobile rounded-xl px-3 py-2 text-sm"
           value={reminder.messageTemplate ?? DEFAULT_REMINDER_MESSAGE}
           onChange={(e) => patchReminder({ messageTemplate: e.target.value })}
         />
       </label>
 
-      <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-3">
-        <p className="text-[10px] font-bold uppercase text-emerald-200/70">Vista previa</p>
-        <p className="mt-1 text-xs leading-relaxed text-emerald-50/90">{previewText}</p>
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+        <p className="finance-label text-emerald-600">Vista previa</p>
+        <p className="mt-1 text-xs leading-relaxed text-emerald-800">{previewText}</p>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -150,23 +150,23 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-[48px] items-center justify-center rounded-xl bg-[#25D366] text-sm font-black text-white shadow-md active:scale-[0.99]"
+            className="flex min-h-[48px] items-center justify-center rounded-2xl bg-[#25D366] text-sm font-black text-white shadow-md active:scale-[0.99]"
           >
             Abrir WhatsApp con este mensaje
           </a>
         ) : (
-          <p className="text-xs text-amber-200/90">Cargá tu número para habilitar WhatsApp.</p>
+          <p className="text-xs text-amber-600">Cargá tu número para habilitar WhatsApp.</p>
         )}
 
         <label className="mt-2 flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold uppercase text-slate-400">
+          <span className="finance-label">
             API key CallMeBot (opcional, envío automático)
           </span>
           <input
             type="password"
             autoComplete="off"
             placeholder="Pegá la key de callmebot.com"
-            className="finance-input-mobile min-h-[44px] rounded-xl border border-white/15 bg-black/40 px-3 text-sm text-white"
+            className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm"
             value={reminder.callMeBotApiKey ?? ''}
             onChange={(e) => patchReminder({ callMeBotApiKey: e.target.value })}
           />
@@ -176,21 +176,21 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
           type="button"
           disabled={sending || !reminder.phoneDigits}
           onClick={() => void sendAuto()}
-          className="min-h-[48px] rounded-xl border border-white/15 bg-white/10 text-sm font-bold text-white transition hover:bg-white/15 disabled:opacity-50"
+          className="finance-secondary-button min-h-[48px] text-sm disabled:opacity-50"
         >
           {sending ? 'Enviando…' : 'Enviar por WhatsApp ahora (CallMeBot)'}
         </button>
 
-        {sendResult ? <p className="text-xs font-semibold text-slate-400">{sendResult}</p> : null}
+        {sendResult ? <p className="text-xs font-semibold text-slate-500">{sendResult}</p> : null}
 
         <p className="text-[10px] leading-relaxed text-slate-500">
           CallMeBot es gratuito: vinculá tu número en{' '}
-          <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" className="text-cyan-400 underline" target="_blank" rel="noreferrer">
+          <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" className="text-blue-600 underline" target="_blank" rel="noreferrer">
             callmebot.com
           </a>
           . En producción, un cron de Vercel puede enviar el recordatorio solo los días que elijas (5, 15, 25…)
-          si configurás <code className="text-slate-400">CALLMEBOT_API_KEY</code> y{' '}
-          <code className="text-slate-400">CRON_SECRET</code> en el hosting (sin costo extra en hobby).
+          si configurás <code className="rounded bg-slate-100 px-1 text-slate-600">CALLMEBOT_API_KEY</code> y{' '}
+          <code className="rounded bg-slate-100 px-1 text-slate-600">CRON_SECRET</code> en el hosting (sin costo extra en hobby).
         </p>
       </div>
     </div>
