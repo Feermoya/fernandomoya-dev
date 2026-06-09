@@ -64,6 +64,28 @@ export function parseGoogleFinancePrice(html: string): number | null {
   return parseFromVisibleAmounts(html);
 }
 
+/** Best-effort: variación diaria desde HTML embebido de Google Finance. */
+export function parseGoogleFinanceDailyChange(html: string): {
+  changeValue?: number;
+  changePercent?: number;
+} {
+  const pctMatch =
+    html.match(/"changePercent"\s*:\s*(-?\d+(?:\.\d+)?)/i) ??
+    html.match(/"percentChange"\s*:\s*(-?\d+(?:\.\d+)?)/i);
+  if (pctMatch?.[1]) {
+    const changePercent = Number(pctMatch[1]);
+    if (Number.isFinite(changePercent)) return { changePercent };
+  }
+
+  const absMatch = html.match(/"change"\s*:\s*(-?\d+(?:\.\d+)?)/i);
+  if (absMatch?.[1]) {
+    const changeValue = Number(absMatch[1]);
+    if (Number.isFinite(changeValue)) return { changeValue };
+  }
+
+  return {};
+}
+
 const LOGO_BLOCKLIST =
   /finance\/favicon|finance_v2_|favicon\.png|FINANCE_HUB|tradersunion|investing\.com|yahoo\.com|marketscreener|fxstreet|msn\.com|bloomberg/i;
 

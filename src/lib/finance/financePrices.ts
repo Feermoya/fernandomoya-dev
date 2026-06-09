@@ -10,6 +10,12 @@ export type FinancePrice = {
   url: string;
   logoUrl?: string;
   error?: string;
+  /** Cambio absoluto diario si la fuente lo permite. */
+  changeValue?: number;
+  /** Cambio porcentual diario si la fuente lo permite. Ej: -3.12 */
+  changePercent?: number;
+  /** Texto o timeframe de referencia, ej. 1D. */
+  changePeriod?: '1D' | 'UNKNOWN';
 };
 
 export type FinancePricesMap = Record<string, FinancePrice>;

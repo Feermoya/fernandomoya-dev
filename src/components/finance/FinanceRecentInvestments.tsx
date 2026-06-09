@@ -1,5 +1,8 @@
 import { formatARS } from '@/lib/finance/calculations';
+import { formatFinancePrice } from '@/lib/finance/financePrices';
+import { getEntryTicker } from '@/lib/finance/entryTicker';
 import type { FinanceEntry } from '@/lib/finance/types';
+import { FinanceTickerBadge } from '@/components/finance/FinanceTickerBadge';
 
 type Props = {
   month: string;
@@ -7,6 +10,14 @@ type Props = {
   onEdit: (entry: FinanceEntry) => void;
   onRemove: (id: string) => void;
 };
+
+function formatBuyPrice(entry: FinanceEntry): string | null {
+  if (!entry.buyPrice || entry.buyPrice <= 0) return null;
+  const ticker = getEntryTicker(entry) ?? entry.ticker;
+  if (!ticker) return null;
+  const priceStr = formatFinancePrice(entry.buyPrice, entry.buyCurrency ?? 'ARS');
+  return `Compra registrada: ${ticker} a ${priceStr}`;
+}
 
 function InvestmentRow({
   entry,
@@ -26,6 +37,12 @@ function InvestmentRow({
     minute: '2-digit',
   });
 
+  const ticker = getEntryTicker(entry);
+  const buyLine = formatBuyPrice(entry);
+  const metaParts = [entry.platform, entry.category && !ticker ? entry.category : null]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <li
       className={`group flex items-center justify-between gap-2 border-l-2 border-emerald-400 bg-slate-50 transition hover:bg-slate-100 ${
@@ -33,17 +50,29 @@ function InvestmentRow({
       }`}
     >
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <p className={`font-black tabular-nums text-slate-900 ${compact ? 'text-base' : 'text-lg'}`}>
             {formatARS(entry.amount)}
           </p>
-          {entry.asset ? (
+          {ticker ? <FinanceTickerBadge ticker={ticker} tone="blue" /> : null}
+          {!ticker && entry.asset ? (
             <span className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-500">
               {entry.asset}
             </span>
           ) : null}
         </div>
-        <p className="text-[10px] text-slate-500">{dateStr}</p>
+        {buyLine ? (
+          <p className="mt-0.5 text-[10px] font-semibold text-slate-600">{buyLine}</p>
+        ) : null}
+        {entry.estimatedUnits && entry.estimatedUnits > 0 ? (
+          <p className="text-[10px] font-medium text-slate-500">
+            Estimado: {entry.estimatedUnits.toLocaleString('es-AR', { maximumFractionDigits: 2 })} nominales
+          </p>
+        ) : null}
+        {metaParts ? (
+          <p className="mt-0.5 text-[10px] font-medium text-slate-500">{metaParts}</p>
+        ) : null}
+        <p className="text-[10px] text-slate-400">{dateStr}</p>
       </div>
       <div className="flex shrink-0 gap-0.5">
         <button
@@ -84,10 +113,7 @@ export function FinanceRecentInvestments({ month, investments, onEdit, onRemove 
         <span className="ml-auto text-right text-[11px] font-bold tabular-nums text-slate-500">
           {count} · {formatARS(total)}
         </span>
-        <span
-          className="text-slate-400 transition group-open:rotate-180"
-          aria-hidden
-        >
+        <span className="text-slate-400 transition group-open:rotate-180" aria-hidden>
           ▾
         </span>
       </summary>

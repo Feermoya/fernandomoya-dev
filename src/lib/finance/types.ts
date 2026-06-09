@@ -17,6 +17,24 @@ export type FinanceAsset =
   | 'PROJECT'
   | 'OTHER';
 
+export type FinanceEntryMarketSnapshot = {
+  ticker: string;
+  price: number;
+  currency: string;
+  source: 'google-finance' | 'yahoo-finance' | 'fallback' | 'missing';
+  fetchedAt: string;
+  exchange?: string;
+  url?: string;
+};
+
+export type FinanceEntryMarketData = {
+  ticker?: string;
+  buyPrice?: number;
+  buyCurrency?: string;
+  estimatedUnits?: number;
+  buySnapshot?: FinanceEntryMarketSnapshot;
+};
+
 export type FinanceEntry = {
   id: string;
   month: string;
@@ -27,6 +45,16 @@ export type FinanceEntry = {
   category?: string;
   note?: string;
   createdAt: string;
+  /** Ticker normalizado comprado en esta entrada, ej. SPY, GOOGL, BTC. */
+  ticker?: string;
+  /** Precio de mercado al momento de cargar la compra. No es precio en vivo. */
+  buyPrice?: number;
+  /** Moneda del precio de compra, ej. ARS o USD. */
+  buyCurrency?: string;
+  /** Cantidad estimada comprada: amount / buyPrice (solo si moneda compatible). */
+  estimatedUnits?: number;
+  /** Snapshot opcional del precio al cargar la compra. */
+  buySnapshot?: FinanceEntryMarketSnapshot;
 };
 
 export type FinanceGoalCategory =

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { CircleDollarSign } from 'lucide-react';
 import { formatARS } from '@/lib/finance/calculations';
+import { getEntryTicker } from '@/lib/finance/entryTicker';
+import { fetchFinancePrices } from '@/lib/finance/financePrices';
 import { normalizePlanLabel } from '@/lib/finance/monthlyInvestmentPlan';
 import { DEFAULT_QUICK_AMOUNTS } from '@/lib/finance/preferences';
 import type { FinanceAsset, FinanceEntry } from '@/lib/finance/types';
@@ -71,6 +73,7 @@ export function FinanceEntryForm({
   const [category, setCategory] = useState('');
   const [note, setNote] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setFormMonth(month);
@@ -90,8 +93,9 @@ export function FinanceEntryForm({
     setAmount(String(base + n));
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     const n = Number(amount.replace(',', '.'));
     if (!Number.isFinite(n) || n <= 0) return;
 
@@ -110,12 +114,42 @@ export function FinanceEntryForm({
     if (category.trim()) entry.category = category.trim();
     if (note.trim()) entry.note = note.trim();
 
-    onAddEntry(entry);
-    onEntrySaved?.(entry);
-    setAmount('');
-    setNote('');
-    setSavedFlash(true);
-    window.setTimeout(() => setSavedFlash(false), 2200);
+    const ticker = getEntryTicker(entry);
+    if (ticker) entry.ticker = ticker;
+
+    setSubmitting(true);
+    try {
+      if (ticker) {
+        const result = await fetchFinancePrices([ticker]);
+        const row = result.prices[ticker];
+        if (row && row.price > 0) {
+          const currency = row.currency ?? 'ARS';
+          entry.buyPrice = row.price;
+          entry.buyCurrency = currency;
+          entry.buySnapshot = {
+            ticker,
+            price: row.price,
+            currency,
+            source: row.source,
+            fetchedAt: row.fetchedAt,
+            exchange: row.exchange,
+            url: row.url,
+          };
+          if (currency === 'ARS') {
+            entry.estimatedUnits = Math.round((entry.amount / row.price) * 1000) / 1000;
+          }
+        }
+      }
+
+      onAddEntry(entry);
+      onEntrySaved?.(entry);
+      setAmount('');
+      setNote('');
+      setSavedFlash(true);
+      window.setTimeout(() => setSavedFlash(false), 2200);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -184,9 +218,10 @@ export function FinanceEntryForm({
 
         <button
           type="submit"
-          className="finance-primary-button mt-3 flex w-full items-center justify-center px-4 py-3 text-sm sm:min-h-[48px]"
+          disabled={submitting}
+          className="finance-primary-button mt-3 flex w-full items-center justify-center px-4 py-3 text-sm disabled:opacity-60 sm:min-h-[48px]"
         >
-          Cargar inversión
+          {submitting ? 'Cargando precio…' : 'Cargar inversión'}
         </button>
 
         {visiblePending.length > 0 ? (

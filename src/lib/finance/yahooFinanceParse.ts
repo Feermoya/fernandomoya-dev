@@ -11,6 +11,9 @@ export function buildYahooChartUrl(ticker: string): string {
 
 type YahooChartMeta = {
   regularMarketPrice?: number;
+  previousClose?: number;
+  chartPreviousClose?: number;
+  regularMarketPreviousClose?: number;
   currency?: string;
 };
 
@@ -21,13 +24,39 @@ type YahooChartResponse = {
   };
 };
 
-export function parseYahooChartPrice(payload: unknown): { price: number; currency: string } | null {
+export type YahooChartQuote = {
+  price: number;
+  currency: string;
+  changeValue?: number;
+  changePercent?: number;
+  changePeriod?: '1D' | 'UNKNOWN';
+};
+
+function computeDailyChange(
+  price: number,
+  previousClose: number | undefined,
+): Pick<YahooChartQuote, 'changeValue' | 'changePercent' | 'changePeriod'> {
+  if (typeof previousClose !== 'number' || !Number.isFinite(previousClose) || previousClose <= 0) {
+    return {};
+  }
+  const changeValue = price - previousClose;
+  const changePercent = (changeValue / previousClose) * 100;
+  return { changeValue, changePercent, changePeriod: '1D' };
+}
+
+export function parseYahooChartPrice(payload: unknown): YahooChartQuote | null {
   const data = payload as YahooChartResponse;
   const meta = data.chart?.result?.[0]?.meta;
   const price = meta?.regularMarketPrice;
   if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return null;
   const currency = typeof meta?.currency === 'string' && meta.currency ? meta.currency : 'USD';
-  return { price, currency };
+  const previousClose =
+    meta?.previousClose ?? meta?.chartPreviousClose ?? meta?.regularMarketPreviousClose;
+  return {
+    price,
+    currency,
+    ...computeDailyChange(price, previousClose),
+  };
 }
 
 const LOGO_BLOCKLIST =

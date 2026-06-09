@@ -1,6 +1,7 @@
 import {
   buildGoogleFinanceUrl,
   normalizeFinanceTickers,
+  parseGoogleFinanceDailyChange,
   parseGoogleFinanceLogoUrl,
   parseGoogleFinancePrice,
 } from './googleFinanceParse';
@@ -64,6 +65,7 @@ async function fetchGoogleBcbaPrice(ticker: string, fetchedAt: string): Promise<
     const html = await res.text();
     const price = parseGoogleFinancePrice(html);
     const logoUrl = parseGoogleFinanceLogoUrl(html) ?? undefined;
+    const dailyChange = parseGoogleFinanceDailyChange(html);
 
     if (price === null || price <= 0) {
       return {
@@ -81,6 +83,9 @@ async function fetchGoogleBcbaPrice(ticker: string, fetchedAt: string): Promise<
       fetchedAt,
       url,
       logoUrl,
+      changeValue: dailyChange.changeValue,
+      changePercent: dailyChange.changePercent,
+      changePeriod: dailyChange.changePercent !== undefined ? '1D' : undefined,
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error al consultar Google Finance';
@@ -138,6 +143,9 @@ async function fetchYahooCryptoPrice(ticker: string, fetchedAt: string): Promise
       fetchedAt,
       url,
       logoUrl,
+      changeValue: parsed.changeValue,
+      changePercent: parsed.changePercent,
+      changePeriod: parsed.changePeriod,
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error al consultar Yahoo Finance';

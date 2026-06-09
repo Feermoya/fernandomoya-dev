@@ -16,6 +16,7 @@ import { FinanceTickerHistoryPanel } from '@/components/finance/FinanceTickerHis
 import { FinanceRecentInvestments } from '@/components/finance/FinanceRecentInvestments';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
 import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
+import { FinanceMarketAlerts } from '@/components/finance/FinanceMarketAlerts';
 import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
 import { FinanceMicroToast } from '@/components/finance/FinanceMicroToast';
 import { FinanceConfettiBurst } from '@/components/finance/FinanceConfettiBurst';
@@ -395,7 +396,11 @@ export default function FinanceGameApp() {
               />
             </section>
 
-            <section className="order-6 min-w-0 lg:order-none">
+            <section className="order-3 min-w-0 scroll-mt-20 lg:order-none lg:hidden">
+              <FinanceMarketAlerts entries={state.entries} />
+            </section>
+
+            <section className="order-7 min-w-0 lg:order-none">
               <FinanceRecentInvestments
                 month={month}
                 investments={sortedMonthInvestments}
@@ -410,7 +415,7 @@ export default function FinanceGameApp() {
           </div>
 
           <aside className="finance-side-column">
-            <section id="inversion" className="order-3 scroll-mt-24 min-w-0 lg:order-none">
+            <section id="inversion" className="order-4 scroll-mt-24 min-w-0 lg:order-none">
               <FinanceEntryForm
                 month={month}
                 entries={state.entries}
@@ -420,15 +425,19 @@ export default function FinanceGameApp() {
               />
             </section>
 
-            <section className="order-4 min-w-0 lg:order-none">
-              <FinanceMonthlyInsightPanel state={state} month={month} mission={mission} />
+            <section className="order-3 hidden min-w-0 lg:order-none lg:block">
+              <FinanceMarketAlerts entries={state.entries} />
             </section>
 
             <section className="order-5 min-w-0 lg:order-none">
+              <FinanceMonthlyInsightPanel state={state} month={month} mission={mission} />
+            </section>
+
+            <section className="order-6 min-w-0 lg:order-none">
               <FinanceConcentrationPanel entries={state.entries} month={month} />
             </section>
 
-            <section className="order-7 scroll-mt-20 lg:order-none">
+            <section className="order-8 scroll-mt-20 lg:order-none">
               <FinanceOverviewPanel state={state} month={month} variant="compact" />
             </section>
           </aside>

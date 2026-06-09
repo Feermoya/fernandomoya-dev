@@ -47,6 +47,19 @@ function parseGoogleFinancePrice(html) {
   if (attr !== null) return attr;
   return parseFromVisibleAmounts(html);
 }
+function parseGoogleFinanceDailyChange(html) {
+  const pctMatch = html.match(/"changePercent"\s*:\s*(-?\d+(?:\.\d+)?)/i) ?? html.match(/"percentChange"\s*:\s*(-?\d+(?:\.\d+)?)/i);
+  if (pctMatch?.[1]) {
+    const changePercent = Number(pctMatch[1]);
+    if (Number.isFinite(changePercent)) return { changePercent };
+  }
+  const absMatch = html.match(/"change"\s*:\s*(-?\d+(?:\.\d+)?)/i);
+  if (absMatch?.[1]) {
+    const changeValue = Number(absMatch[1]);
+    if (Number.isFinite(changeValue)) return { changeValue };
+  }
+  return {};
+}
 var LOGO_BLOCKLIST = /finance\/favicon|finance_v2_|favicon\.png|FINANCE_HUB|tradersunion|investing\.com|yahoo\.com|marketscreener|fxstreet|msn\.com|bloomberg/i;
 var COMPANY_LOGO_CLASS_RE = /\b(?:iESaid|lZYhjf)\b/;
 var MAX_DATA_IMAGE_LENGTH = 12e4;
@@ -204,13 +217,26 @@ function buildYahooChartUrl(ticker) {
   const sym = toYahooCryptoSymbol(ticker);
   return `${YAHOO_CHART_BASE}/${encodeURIComponent(sym)}?interval=1d&range=1d`;
 }
+function computeDailyChange(price, previousClose) {
+  if (typeof previousClose !== "number" || !Number.isFinite(previousClose) || previousClose <= 0) {
+    return {};
+  }
+  const changeValue = price - previousClose;
+  const changePercent = changeValue / previousClose * 100;
+  return { changeValue, changePercent, changePeriod: "1D" };
+}
 function parseYahooChartPrice(payload) {
   const data = payload;
   const meta = data.chart?.result?.[0]?.meta;
   const price = meta?.regularMarketPrice;
   if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) return null;
   const currency = typeof meta?.currency === "string" && meta.currency ? meta.currency : "USD";
-  return { price, currency };
+  const previousClose = meta?.previousClose ?? meta?.chartPreviousClose ?? meta?.regularMarketPreviousClose;
+  return {
+    price,
+    currency,
+    ...computeDailyChange(price, previousClose)
+  };
 }
 var LOGO_BLOCKLIST2 = /finance\/favicon|finance_v2_|favicon\.png|analytics-logo|yahoo-finance-logo/i;
 function normalizeSecureHttpsUrl2(raw, base = "https://www.google.com") {
@@ -274,6 +300,7 @@ async function fetchGoogleBcbaPrice(ticker, fetchedAt) {
     const html = await res.text();
     const price = parseGoogleFinancePrice(html);
     const logoUrl = parseGoogleFinanceLogoUrl(html) ?? void 0;
+    const dailyChange = parseGoogleFinanceDailyChange(html);
     if (price === null || price <= 0) {
       return {
         ...missingPrice(ticker, "BCBA", url, fetchedAt, "No se pudo leer el precio"),
@@ -288,7 +315,10 @@ async function fetchGoogleBcbaPrice(ticker, fetchedAt) {
       source: "google-finance",
       fetchedAt,
       url,
-      logoUrl
+      logoUrl,
+      changeValue: dailyChange.changeValue,
+      changePercent: dailyChange.changePercent,
+      changePeriod: dailyChange.changePercent !== void 0 ? "1D" : void 0
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error al consultar Google Finance";
@@ -336,7 +366,10 @@ async function fetchYahooCryptoPrice(ticker, fetchedAt) {
       source: "yahoo-finance",
       fetchedAt,
       url,
-      logoUrl
+      logoUrl,
+      changeValue: parsed.changeValue,
+      changePercent: parsed.changePercent,
+      changePeriod: parsed.changePeriod
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error al consultar Yahoo Finance";

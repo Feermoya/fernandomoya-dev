@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
+import { formatFinancePrice } from '@/lib/finance/financePrices';
+import { getEntryTicker } from '@/lib/finance/entryTicker';
 import type { FinanceAsset, FinanceEntry } from '@/lib/finance/types';
+import { FinanceTickerBadge } from '@/components/finance/FinanceTickerBadge';
 
 const ASSET_OPTIONS: { value: FinanceAsset; label: string }[] = [
   { value: 'ARS', label: 'ARS' },
@@ -40,6 +43,8 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
 
   if (!entry) return null;
 
+  const displayTicker = getEntryTicker(entry) ?? entry.ticker;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const n = Number(amount.replace(',', '.'));
@@ -59,6 +64,10 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
     else delete updated.category;
     if (note.trim()) updated.note = note.trim();
     else delete updated.note;
+
+    const ticker = getEntryTicker(updated);
+    if (ticker) updated.ticker = ticker;
+    else delete updated.ticker;
 
     onSave(updated);
     onClose();
@@ -81,6 +90,23 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
           Editar inversión
         </h2>
         <p className="mt-1 text-xs text-slate-500">Corregí monto, mes o detalles.</p>
+
+        {displayTicker || entry.buyPrice ? (
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            {displayTicker ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase text-slate-500">Ticker</span>
+                <FinanceTickerBadge ticker={displayTicker} />
+              </div>
+            ) : null}
+            {entry.buyPrice && entry.buyPrice > 0 ? (
+              <p className="mt-1 text-[11px] font-semibold text-slate-600">
+                Precio registrado al cargar:{' '}
+                {formatFinancePrice(entry.buyPrice, entry.buyCurrency ?? 'ARS')}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <label className="mt-4 flex flex-col gap-1.5">
           <span className="finance-label">Monto</span>
