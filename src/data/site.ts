@@ -22,7 +22,6 @@ export const site = {
    * Métricas para count-up en “Sobre mí” (editá valores reales antes de publicar).
    */
   metrics: [
-    { value: 7, suffix: '+', label: 'Sitios\npublicados' },
     { value: 5, suffix: '+', label: 'Años\nhaciendo webs' },
     { value: 2, suffix: ' sem', label: 'Para una\nprimera versión' },
   ],
