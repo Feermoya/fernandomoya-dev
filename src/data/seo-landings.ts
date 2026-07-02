@@ -15,6 +15,167 @@ export type SeoLanding = {
 
 export const seoLandings: SeoLanding[] = [
   {
+    path: '/diseno-web-mendoza',
+    keyword: 'diseño web Mendoza',
+    title: 'Diseño web en Mendoza para negocios | FermoyaDev',
+    description:
+      'Diseño y desarrollo web en Mendoza para negocios, profesionales y marcas. Sitios claros, rápidos y pensados para generar consultas por WhatsApp.',
+    h1: 'Diseño web en Mendoza para negocios que quieren verse profesionales',
+    intro:
+      'Trabajo con negocios, profesionales y marcas que necesitan una web clara, rápida y fácil de entender. La idea no es llenar la página de efectos, sino ordenar el mensaje: qué ofrecés, para quién es, por qué confiar y cómo contactarte. Estoy en Mendoza y también tomo proyectos de otras provincias o del exterior en español.',
+    bullets: [
+      'Diseño y desarrollo web para negocios locales',
+      'Landing pages, sitios institucionales y catálogos online',
+      'Textos y estructura pensados para que el visitante entienda rápido',
+      'Contacto visible por WhatsApp, formulario o mail',
+      'Base técnica preparada para SEO, velocidad y buena lectura en celular',
+    ],
+    faqs: [
+      {
+        q: '¿Trabajás solo con negocios de Mendoza?',
+        a: 'No. Estoy en Mendoza, pero puedo tomar proyectos de otras provincias o del exterior si la comunicación es en español. Coordinamos por WhatsApp, mail o videollamada.',
+      },
+      {
+        q: '¿La web incluye ayuda con los textos?',
+        a: 'Sí. Trabajo la estructura y los textos principales para que el sitio explique bien qué ofrecés y cómo contactarte.',
+      },
+      {
+        q: '¿También hacés diseño para imprimir?',
+        a: 'En algunos proyectos puedo sumar piezas simples —tarjetas, calcos, etiquetas— si encaja con el trabajo de la web.',
+      },
+    ],
+  },
+  {
+    path: '/desarrollo-web-mendoza',
+    keyword: 'desarrollo web Mendoza',
+    title: 'Desarrollo web en Mendoza | FermoyaDev',
+    description:
+      'Desarrollo sitios web en Mendoza: código ordenado, buena carga en celular y base lista para crecer. Para negocios que necesitan un sitio nuevo y estable.',
+    h1: 'Desarrollo web en Mendoza para sitios que tienen que funcionar bien',
+    intro:
+      'Un sitio no alcanza con verse bien: tiene que cargar rápido, abrir bien en el teléfono y ser fácil de mantener. Desde Mendoza desarrollo sitios nuevos con esa base desde el arranque —sin parches encima de algo viejo que ya no sirve.',
+    bullets: [
+      'Sitios nuevos desarrollados desde cero',
+      'Buen rendimiento en celular y escritorio',
+      'Código ordenado para sumar páginas después',
+      'Enlaces a WhatsApp, formularios o mail cuando haga falta',
+    ],
+    faqs: [
+      {
+        q: '¿Hacés solo el desarrollo o también el diseño?',
+        a: 'Lo habitual es diseño y desarrollo juntos. Así el sitio queda coherente de punta a punta.',
+      },
+      {
+        q: '¿Cuánto tarda un sitio nuevo?',
+        a: 'Depende del alcance. En proyectos acotados se puede tener una primera versión en pocas semanas.',
+      },
+    ],
+  },
+  {
+    path: '/paginas-web-para-negocios',
+    keyword: 'páginas web para negocios',
+    title: 'Páginas web para negocios | FermoyaDev',
+    description:
+      'Páginas web para negocios que necesitan explicar qué venden, generar confianza y dejar claro cómo consultar. Estructura simple y contacto visible.',
+    h1: 'Páginas web para negocios que necesitan ordenar su mensaje',
+    intro:
+      'Muchos negocios llegan con el mismo problema: tienen buen producto o servicio, pero en internet no se entiende rápido qué hacen ni cómo contactarlos. Armo páginas con secciones concretas —qué ofrecés, para quién, cómo trabajás, contacto— sin llenar todo de texto que nadie lee.',
+    bullets: [
+      'Estructura pensada para quien entra sin conocerte',
+      'Servicios y propuesta explicados con claridad',
+      'Contacto visible sin esconder el botón',
+      'Lectura cómoda en celular',
+    ],
+    faqs: [
+      {
+        q: '¿Sirve para un comercio chico?',
+        a: 'Sí. Muchos proyectos son para negocios locales que necesitan una página seria sin complicarse.',
+      },
+      {
+        q: '¿Puedo sumar más secciones después?',
+        a: 'Sí. La base queda preparada para agregar servicios, fotos o landings cuando lo necesites.',
+      },
+    ],
+  },
+  {
+    path: '/diseno-web-para-negocios',
+    keyword: 'diseño web para negocios',
+    title: 'Diseño web para negocios | FermoyaDev',
+    description:
+      'Diseño web para negocios: jerarquía clara, buena lectura y un aspecto profesional sin recargar la página. Pensado para convertir visitas en consultas.',
+    h1: 'Diseño web para negocios que quieren verse en serio',
+    intro:
+      'El diseño no es decoración: ordena la información para que alguien entienda tu negocio en segundos. Trabajo tipografía, espaciado y recorrido visual para que lo importante —qué hacés y cómo escribirte— quede a la vista sin gritar.',
+    bullets: [
+      'Jerarquía visual clara en cada sección',
+      'Estilo acorde a tu rubro, sin plantillas genéricas',
+      'Diseño responsive desde el inicio',
+      'Preparación para el desarrollo sin sorpresas',
+    ],
+    faqs: [
+      {
+        q: '¿Necesito tener todo el contenido listo?',
+        a: 'No hace falta tener todo cerrado. Podemos armar la estructura y ajustar textos en el proceso.',
+      },
+      {
+        q: '¿Incluye logo o identidad completa?',
+        a: 'El foco es el sitio. Si necesitás piezas simples de apoyo, lo vemos según el proyecto.',
+      },
+    ],
+  },
+  {
+    path: '/landing-page-para-negocios',
+    keyword: 'landing page para negocios',
+    title: 'Landing page para negocios | FermoyaDev',
+    description:
+      'Landing pages para negocios: una oferta, un mensaje directo y un contacto claro. Útil para campañas, servicios puntuales o anuncios.',
+    h1: 'Landing page para negocios con un solo objetivo',
+    intro:
+      'Cuando necesitás presentar una oferta concreta —un servicio, una promo, una campaña— una landing concentra todo en una sola página. Menos distracciones, mensaje directo y un botón de contacto que se ve.',
+    bullets: [
+      'Mensaje principal arriba, sin dar vueltas',
+      'Beneficios en pocas líneas',
+      'Contacto repetido donde tiene sentido',
+      'Carga rápida para no perder visitas de anuncios',
+    ],
+    faqs: [
+      {
+        q: '¿Es distinto de un sitio completo?',
+        a: 'Sí. Una landing va a un solo objetivo. Un sitio completo tiene más secciones y recorridos.',
+      },
+      {
+        q: '¿Puedo usarla para Google Ads o Meta?',
+        a: 'Sí. Está pensada para recibir tráfico de campañas y que el visitante entienda rápido qué hacer.',
+      },
+    ],
+  },
+  {
+    path: '/desarrollo-web-en-espanol',
+    keyword: 'desarrollo web en español',
+    title: 'Desarrollo web en español | FermoyaDev',
+    description:
+      'Desarrollo web en español para negocios que necesitan coordinar a distancia. Comunicación clara, entregas ordenadas y sitios pensados para su mercado.',
+    h1: 'Desarrollo web en español, con comunicación directa',
+    intro:
+      'Trabajo con negocios que están en distintas ciudades o países y necesitan un sitio en español, bien explicado y fácil de coordinar. La comunicación es por WhatsApp, mail o videollamada —sin vueltas ni jerga innecesaria.',
+    bullets: [
+      'Proyectos coordinados a distancia sin problema',
+      'Sitios en español, con textos claros para tu público',
+      'Entregas por etapas con feedback en cada paso',
+      'Horarios de Argentina, con flexibilidad según el proyecto',
+    ],
+    faqs: [
+      {
+        q: '¿Trabajás con clientes fuera de Argentina?',
+        a: 'Sí, siempre que el proyecto sea en español y podamos coordinar por los canales habituales.',
+      },
+      {
+        q: '¿Cómo se manejan los pagos?',
+        a: 'Lo definimos al inicio según el alcance. Transferencia o el método que acordemos.',
+      },
+    ],
+  },
+  {
     path: '/diseno-web',
     keyword: 'diseño web',
     title: 'Diseño web profesional para negocios | FermoyaDev',

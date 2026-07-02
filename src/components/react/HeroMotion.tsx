@@ -60,7 +60,27 @@ function ShimmerPill({ children }: { children: React.ReactNode }) {
   );
 }
 
-function HeroServiceBadges({ className }: { className?: string }) {
+function HeroServiceBadges({ className, plain = false }: { className?: string; plain?: boolean }) {
+  const badges = SERVICE_BADGES.map(({ label, icon }) => (
+    <span
+      key={label}
+      className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.10] bg-white/[0.05] px-3 py-1 text-[11px] font-medium tracking-wide text-white/55 backdrop-blur-sm transition-colors duration-200 hover:border-[rgba(96,165,250,0.35)] hover:bg-[rgba(96,165,250,0.08)] hover:text-[rgba(196,181,253,0.9)]"
+    >
+      <span className="text-[10px] text-[#60a5fa]/70" aria-hidden>
+        {icon}
+      </span>
+      {label}
+    </span>
+  ));
+
+  if (plain) {
+    return (
+      <div className={['flex flex-wrap gap-2', className].filter(Boolean).join(' ')}>
+        {badges}
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className={['flex flex-wrap gap-2', className].filter(Boolean).join(' ')}
@@ -153,48 +173,55 @@ export default function HeroMotion({
 
   if (useStaticHero) {
     return (
-      <motion.div
-        className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-5xl -translate-y-6 flex-col items-center justify-center px-5 pb-16 pt-20 text-center max-md:min-h-0 max-md:-translate-y-4 max-md:pb-10 max-md:pt-8 sm:min-h-[calc(100svh-4rem)] sm:px-6 sm:pb-16 md:-translate-y-10 lg:-translate-y-16 xl:-translate-y-20"
-        variants={staggerContainer}
-        initial={reduce ? 'visible' : 'hidden'}
-        animate="visible"
+      <div
+        className="hero-static relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-5xl -translate-y-6 flex-col items-center justify-center px-5 pb-16 pt-20 text-center max-md:min-h-0 max-md:-translate-y-4 max-md:pb-10 max-md:pt-8 sm:min-h-[calc(100svh-4rem)] sm:px-6 sm:pb-16 md:-translate-y-10 lg:-translate-y-16 xl:-translate-y-20"
+        data-static-hero
       >
-        <HeroServiceBadges className="justify-center" />
+        <HeroServiceBadges plain className="hero-static__item justify-center" />
 
-        <motion.h1
+        <h1
           id="hero-heading"
-          className="mt-4 max-w-3xl text-balance whitespace-pre-line text-[clamp(3rem,13vw,4.7rem)] font-bold leading-[0.92] tracking-[-0.055em] text-white sm:mt-5 sm:max-w-4xl sm:text-[clamp(4rem,8vw,7rem)]"
-          variants={staggerItem}
+          className="hero-static__headline hero-static__item mt-4 max-w-3xl text-balance text-[clamp(3rem,13vw,4.7rem)] font-bold leading-[0.92] tracking-[-0.055em] text-white sm:mt-5 sm:max-w-4xl sm:text-[clamp(4rem,8vw,7rem)]"
         >
-          {staticHeadline!.trim()}
-        </motion.h1>
+          {staticHeadline!
+            .trim()
+            .split('\n')
+            .filter(Boolean)
+            .map((line, lineIndex, lines) => (
+              <span
+                key={`line-${lineIndex}`}
+                className={[
+                  'hero-headline__line',
+                  lineIndex === lines.length - 1 ? 'hero-headline__line--accent' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                {line.split(/\s+/).filter(Boolean).map((word, wordIndex) => (
+                  <span key={`word-${lineIndex}-${wordIndex}`} className="hero-headline__word">
+                    {word}
+                  </span>
+                ))}
+              </span>
+            ))}
+        </h1>
 
-        <motion.div
-          variants={staggerItem}
-          className="mx-auto mt-5 h-px w-16 rounded-full bg-gradient-to-r from-transparent via-[#60a5fa]/50 to-transparent"
+        <div
+          className="hero-static__item mx-auto mt-5 h-px w-16 rounded-full bg-gradient-to-r from-transparent via-[#60a5fa]/50 to-transparent"
           aria-hidden
         />
 
-        <motion.p
-          className="mt-4 mx-auto max-w-[42rem] text-center text-[1rem] font-normal leading-[1.68] text-white/55 sm:text-[1.05rem]"
-          variants={staggerItem}
-        >
+        <p className="hero-static__item mt-4 mx-auto max-w-[42rem] text-center text-[1rem] font-normal leading-[1.68] text-white/55 sm:text-[1.05rem]">
           {lead}
-        </motion.p>
+        </p>
 
         {hasService ? (
-          <motion.p
-            className="mx-auto mt-3 max-w-[30rem] text-pretty text-sm leading-6 text-white/45 sm:text-base"
-            variants={staggerItem}
-          >
+          <p className="hero-static__item mx-auto mt-3 max-w-[30rem] text-pretty text-sm leading-6 text-white/45 sm:text-base">
             {serviceLine!.trim()}
-          </motion.p>
+          </p>
         ) : null}
 
-        <motion.div
-          className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4"
-          variants={staggerItem}
-        >
+        <div className="hero-static__item mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <MagneticButton
             href={ctaPrimaryHref || '/'}
             shimmer
@@ -221,16 +248,13 @@ export default function HeroMotion({
           >
             {ctaSecondary}
           </MagneticButton>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="mt-7 flex flex-col items-center gap-2 sm:mt-8"
-          variants={staggerItem}
-        >
+        <div className="hero-static__item mt-7 flex flex-col items-center gap-2 sm:mt-8">
           <ShimmerPill>{pillA}</ShimmerPill>
           {pillB?.trim() ? <ShimmerPill>{pillB.trim()}</ShimmerPill> : null}
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     );
   }
 

@@ -1,0 +1,217 @@
+---
+import { getImage } from 'astro:assets';
+import tarjetasImg from '@/assets/tarjetas.png';
+import calcosImg from '@/assets/calcos.png';
+import qrImg from '@/assets/qr.png';
+import detallesImg from '@/assets/detalles.png';
+
+const items = [
+  {
+    title: 'Tarjetas',
+    image: tarjetasImg,
+    alt: 'Tarjetas personales diseñadas para clientes',
+  },
+  {
+    title: 'Calcos',
+    image: calcosImg,
+    alt: 'Calcos y stickers personalizados para marcas',
+  },
+  {
+    title: 'QR',
+    image: qrImg,
+    alt: 'Piezas con código QR para negocios',
+  },
+  {
+    title: 'DETALLES EMPRESARIALES',
+    image: detallesImg,
+    alt: 'Detalles de marca aplicados en piezas impresas',
+  },
+] as const;
+
+const cards = await Promise.all(
+  items.map(async (item) => ({
+    ...item,
+    src: (await getImage({ src: item.image, width: 1000 })).src,
+  })),
+);
+---
+
+<section
+  id="piezas-marca"
+  class="relative border-t border-white/[0.08] py-10 sm:py-14"
+  aria-labelledby="brand-pieces-heading"
+>
+  <div class="container-page">
+    <div class="brand-pieces__intro max-w-2xl">
+      <p class="home-section-eyebrow">También diseño</p>
+      <h2 id="brand-pieces-heading" class="home-section-title mt-3">
+        Piezas que acompañan la web.
+      </h2>
+      <div class="home-section-accent-line" aria-hidden="true"></div>
+      <p class="home-section-lead">
+        Tarjetas, calcos, QR y detalles de marca.
+      </p>
+    </div>
+
+    <div class="brand-pieces__grid mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4">
+      {
+        cards.map((item) => (
+          <figure class="brand-piece">
+            <div class="brand-piece__frame" tabindex="0">
+              <img
+                src={item.src}
+                alt={item.alt}
+                width="1000"
+                height="750"
+                loading="lazy"
+                decoding="async"
+                class="brand-piece__image"
+              />
+              <figcaption class="brand-piece__label">{item.title}</figcaption>
+            </div>
+          </figure>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .brand-piece {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .brand-piece__frame {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 1.125rem;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: rgb(255 255 255 / 0.03);
+    cursor: pointer;
+    transition:
+      transform 0.28s ease,
+      border-color 0.28s ease,
+      background 0.28s ease,
+      box-shadow 0.28s ease;
+  }
+
+  .brand-piece__frame::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 42%;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent);
+    opacity: 0.75;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 0.28s ease;
+  }
+
+  @media (hover: hover) {
+    .brand-piece:hover .brand-piece__frame,
+    .brand-piece:focus-within .brand-piece__frame {
+      transform: translateY(-4px);
+      border-color: rgb(255 255 255 / 0.18);
+      background: rgb(255 255 255 / 0.05);
+      box-shadow: 0 20px 44px rgb(0 0 0 / 0.28);
+    }
+
+    .brand-piece:hover .brand-piece__frame::after,
+    .brand-piece:focus-within .brand-piece__frame::after {
+      opacity: 0.92;
+    }
+
+    .brand-piece:hover .brand-piece__image,
+    .brand-piece:focus-within .brand-piece__image {
+      transform: scale(1.04);
+      filter: brightness(1.08) contrast(1.04);
+    }
+
+    .brand-piece:hover .brand-piece__label,
+    .brand-piece:focus-within .brand-piece__label {
+      color: rgb(255 255 255 / 0.95);
+      transform: translateY(-2px);
+    }
+  }
+
+  .brand-piece__frame:focus {
+    outline: none;
+  }
+
+  .brand-piece__frame:focus-visible {
+    outline: 1px dashed rgb(96 165 250 / 0.55);
+    outline-offset: 2px;
+  }
+
+  .brand-piece__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition:
+      transform 0.35s ease,
+      filter 0.35s ease;
+  }
+
+  .brand-piece__label {
+    position: absolute;
+    left: 0.875rem;
+    bottom: 0.75rem;
+    z-index: 2;
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.68);
+    transition:
+      color 0.28s ease,
+      transform 0.28s ease;
+  }
+
+  @media (min-width: 640px) {
+    .brand-piece__label {
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .brand-pieces__grid {
+      gap: 0.65rem;
+    }
+
+    .brand-piece__label {
+      left: 0.625rem;
+      bottom: 0.55rem;
+      font-size: 0.6875rem;
+      color: rgb(255 255 255 / 0.82);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand-piece__frame,
+    .brand-piece__image,
+    .brand-piece__label {
+      transition: none;
+    }
+
+    .brand-piece:hover .brand-piece__frame,
+    .brand-piece:focus-within .brand-piece__frame {
+      transform: none;
+    }
+
+    .brand-piece:hover .brand-piece__image,
+    .brand-piece:focus-within .brand-piece__image {
+      transform: none;
+      filter: none;
+    }
+
+    .brand-piece:hover .brand-piece__label,
+    .brand-piece:focus-within .brand-piece__label {
+      transform: none;
+    }
+  }
+</style>

@@ -2,9 +2,9 @@
 
 export const site = {
   name: 'Fernando Moya',
-  title: 'Fernando Moya — Diseño y desarrollo web para negocios',
+  title: 'Diseño y desarrollo web para negocios | Fernando Moya',
   description:
-    'Diseño y desarrollo sitios web claros, rápidos y profesionales para negocios, marcas y profesionales. Mendoza, Argentina.',
+    'Diseño y desarrollo sitios web claros, rápidos y profesionales para negocios, marcas y profesionales. Trabajo desde Mendoza para proyectos en español.',
   url: 'https://www.fermoyadev.com.ar',
   locale: 'es-AR',
   author: 'Fernando Moya',

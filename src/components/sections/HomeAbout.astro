@@ -5,19 +5,18 @@ import { getImage } from 'astro:assets';
 import profilePhoto from '@/assets/profile.png';
 
 const profileSrc = (await getImage({ src: profilePhoto, width: 640, height: 640 })).src;
-const aboutBody =
-  'Antes de diseñar, necesito entender qué ofrecés, a quién le hablás y qué debería hacer una persona cuando entra a tu sitio. Con eso armo una web clara, ordenada y fácil de usar, pensada para presentar tu negocio de forma profesional desde el primer contacto.';
 ---
 
-<section id="sobre-mi" class="relative border-t border-white/[0.08] py-10 sm:py-12" aria-label="Sobre mí">
+<section id="sobre-mi" class="relative border-t border-white/[0.08]" aria-label="Sobre mí">
+  <div class="container-page">
   <AboutSectionClient
     client:visible
     profileSrc={profileSrc}
     profileAlt={`Retrato de ${site.name}`}
     heading="Diseño webs que explican mejor tu negocio"
-    body={aboutBody}
     whatsappUrl={site.social.whatsapp}
     email={site.email}
     metrics={[...site.metrics]}
   />
+  </div>
 </section>

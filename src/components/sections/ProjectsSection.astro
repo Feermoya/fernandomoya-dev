@@ -1,5 +1,4 @@
 ---
-import AnimatedText from '@/components/AnimatedText.astro';
 import { getImage } from 'astro:assets';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { getProjectCover } from '@/utils/images';
@@ -19,7 +18,6 @@ type ProjectCardData = {
   live: string;
   kindLabel: string;
   kind: Kind;
-  year: string;
 };
 
 async function toCardData(p: CollectionEntry<'projects'>): Promise<ProjectCardData> {
@@ -37,7 +35,6 @@ async function toCardData(p: CollectionEntry<'projects'>): Promise<ProjectCardDa
     live: p.data.links.live,
     kindLabel: p.data.kind === 'client' ? 'Cliente' : 'Propio',
     kind: p.data.kind,
-    year: String(new Date(p.data.publishDate).getFullYear()),
   };
 }
 
@@ -47,32 +44,16 @@ const ownCards = await Promise.all(own.map(toCardData));
 
 <section id="proyectos" class="relative border-t border-white/[0.08] py-10 sm:py-12" aria-labelledby="projects-heading">
   <div class="container-page" data-projects-section>
-    <div class="max-w-lg">
-      <AnimatedText
-        tag="p"
-        class="text-[11px] font-medium uppercase tracking-wide text-white/55"
-        splitBy="chars"
-        delay={0}
-      >
-        Sitios
-      </AnimatedText>
-      <AnimatedText
-        tag="h2"
-        id="projects-heading"
-        class="mt-1.5 text-xl font-bold tracking-[-0.02em] text-white sm:text-2xl"
-        splitBy="lines"
-        delay={0.04}
-      >
-        Proyectos
-      </AnimatedText>
-      <p class="mt-2 text-sm leading-relaxed text-white/55">
-        Son sitios con los que trabajo hoy. Podés verlos en vivo.
-      </p>
+    <div class="max-w-2xl">
+      <h2 id="projects-heading" class="home-section-title">
+        Sitios publicados
+      </h2>
+      <div class="home-section-accent-line" aria-hidden="true"></div>
     </div>
 
     <div class="projects-list mt-8" data-projects-list>
       <div class="group-divider" aria-hidden="true">
-        <span>CLIENTES</span>
+        <span>Clientes</span>
         <i></i>
       </div>
 
@@ -92,7 +73,6 @@ const ownCards = await Promise.all(own.map(toCardData));
             <p class="row-number">{String(idx + 1).padStart(2, '0')}</p>
             <h3 class="row-title">{item.title}</h3>
             <p class="row-type">{item.projectType}</p>
-            <p class="row-year">{item.year}</p>
             <span class="row-arrow" aria-hidden="true">→</span>
           </div>
           <div class="row-mobile-panel" data-row-panel>
@@ -135,7 +115,6 @@ const ownCards = await Promise.all(own.map(toCardData));
             <p class="row-number">{String(idx + clientCards.length + 1).padStart(2, '0')}</p>
             <h3 class="row-title">{item.title}</h3>
             <p class="row-type">{item.projectType}</p>
-            <p class="row-year">{item.year}</p>
             <span class="row-arrow" aria-hidden="true">→</span>
           </div>
           <div class="row-mobile-panel" data-row-panel>
@@ -291,10 +270,10 @@ const ownCards = await Promise.all(own.map(toCardData));
 
   .group-divider span {
     color: rgb(255 255 255 / 0.5);
-    font-size: 0.66rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
     white-space: nowrap;
   }
 
@@ -334,7 +313,7 @@ const ownCards = await Promise.all(own.map(toCardData));
 
   .row-top {
     display: grid;
-    grid-template-columns: minmax(32px, auto) 1fr auto auto auto;
+    grid-template-columns: minmax(32px, auto) 1fr auto auto;
     align-items: center;
     gap: 0.9rem;
   }
@@ -377,13 +356,6 @@ const ownCards = await Promise.all(own.map(toCardData));
     padding: 0.28rem 0.6rem;
     font-size: 0.7rem;
     color: rgb(255 255 255 / 0.55);
-    white-space: nowrap;
-  }
-
-  .row-year {
-    margin: 0;
-    font-size: 0.74rem;
-    color: rgb(255 255 255 / 0.45);
     white-space: nowrap;
   }
 
@@ -506,10 +478,6 @@ const ownCards = await Promise.all(own.map(toCardData));
       padding: 0;
       border: 0;
       color: rgb(255 255 255 / 0.5);
-    }
-
-    .row-year {
-      display: none;
     }
 
     .row-arrow {

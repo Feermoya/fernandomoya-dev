@@ -443,20 +443,20 @@ export default function ResultsChart() {
       />
 
       {/* Header */}
-      <div className="relative z-10 max-w-2xl">
+      <div className="relative z-10 w-full max-w-none">
         <p className="inline-flex items-center rounded-full border border-[#60a5fa]/20 bg-[#60a5fa]/[0.07] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#c4b5fd]/90">
           Lo importante
         </p>
-        <h3 className="mt-4 text-[1.35rem] font-semibold leading-tight tracking-tight text-white sm:text-2xl">
+        <h3 className="mt-4 max-w-3xl text-[1.35rem] font-semibold leading-tight tracking-tight text-white sm:text-2xl lg:text-[1.65rem]">
           Una web tiene que hacer cuatro cosas bien.
         </h3>
-        <p className="mt-2 text-sm leading-relaxed text-white/50 sm:text-[0.95rem]">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50 sm:text-[0.95rem]">
           Pasá el mouse por cada punto para verlo en acción.
         </p>
       </div>
 
       {/* Cards */}
-      <div className="relative z-10 mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4">
+      <div className="relative z-10 mt-6 grid w-full gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-5">
         {ITEMS.map((item, idx) => (
           <Card
             key={item.title}

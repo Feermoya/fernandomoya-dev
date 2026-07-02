@@ -8,10 +8,10 @@ const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1];
 const view = { once: true as const, margin: '-72px' as const };
 
 const PROMPTS = [
-  'Tengo un negocio y no tengo web todavía...',
-  'Mi web actual está desactualizada...',
-  'Quiero vender más desde mi sitio...',
-  'Necesito mostrar mi trabajo online...',
+  'Necesito una web para mi negocio...',
+  'Quiero mejorar mi web actual...',
+  'Necesito mostrar mis servicios...',
+  'Quiero una página clara para recibir consultas...',
 ];
 
 export default function ContactSectionClient({ whatsappUrl, email }: Props) {
@@ -123,7 +123,7 @@ export default function ContactSectionClient({ whatsappUrl, email }: Props) {
               viewport={view}
               transition={{ duration: DURATION_ENTER, delay: 0.14, ease: EASE_OUT_SOFT }}
             >
-              Contame el nombre de tu negocio y qué necesitás. 
+              Contame qué negocio tenés y qué querés mostrar mejor.
             </motion.p>
 
             {/* Prompts rotantes — muestra casos de uso */}

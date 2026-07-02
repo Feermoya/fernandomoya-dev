@@ -8,7 +8,7 @@ type Props = {
   profileSrc: string;
   profileAlt: string;
   heading: string;
-  body: string;
+  body?: string;
   email: string;
   whatsappUrl: string;
   metrics: readonly Metric[];
@@ -75,7 +75,7 @@ function MetricIcon({ index }: { index: number }) {
 const METRIC_COLORS = ['#60a5fa','#a78bfa','#34d399','#f472b6'];
 
 export default function AboutSectionClient({
-  profileSrc, profileAlt, heading, body,
+  profileSrc, profileAlt, heading, body = '',
   email, whatsappUrl, metrics,
 }: Props) {
   const reduce = useReducedMotion();
@@ -88,12 +88,8 @@ export default function AboutSectionClient({
   const after    = idx >= 0 ? heading.slice(idx + needle.length) : '';
 
   return (
-    <section
-      id="sobre-mi"
-      className="container-page py-10 sm:py-14"
-      aria-labelledby="about-home-heading"
-    >
-      <div className="glass-panel relative overflow-hidden rounded-2xl border border-white/[0.08] !p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:!p-7 lg:!p-8">
+    <div className="w-full py-10 sm:py-14" aria-labelledby="about-home-heading">
+      <div className="glass-panel relative w-full overflow-hidden rounded-2xl border border-white/[0.08] !p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:!p-7 lg:!p-9">
 
         {/* Blob decorativo */}
         <div aria-hidden className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full opacity-50 blur-3xl"
@@ -103,28 +99,30 @@ export default function AboutSectionClient({
           style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.12), transparent 70%)' }}
         />
 
-        {/* ── HEADER: badge + foto en la misma fila ── */}
-        <div className="relative z-10 flex items-start justify-between gap-4">
+        {/* ── HEADER ── */}
+        <div className="relative z-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-10 xl:gap-12">
 
-          {/* Texto izquierda */}
+          {/* Texto */}
           <motion.div
-            className="min-w-0 flex-1"
+            className="min-w-0 w-full"
             variants={staggerWrap}
             initial={reduce ? 'visible' : 'hidden'}
             whileInView="visible"
             viewport={view}
           >
-            {/* Heading — acento con mismo gradiente que el monograma FM del header */}
             <motion.div variants={fadeUp}>
               <h2
                 id="about-home-heading"
-                className="max-w-[26rem] text-balance font-['Nunito',system-ui,sans-serif] text-[clamp(1.55rem,1.2rem+1.4vw,2.1rem)] font-black leading-[1.08] tracking-[-0.04em]"
+                className="w-full max-w-none text-pretty text-[clamp(1.85rem,1.1rem+2.8vw,2.85rem)] font-bold leading-[1.06] tracking-[-0.03em] text-white lg:max-w-[38rem] xl:max-w-[44rem]"
               >
                 {accent ? (
                   <>
-                    <span className="text-white">{before}</span>
-                    <span className="site-logo-fm__letter">{accent}</span>
-                    <span className="text-white">{after}</span>
+                    <span className="text-white">{before.trimEnd()}</span>
+                    <br className="hidden sm:block" />
+                    <span className="bg-gradient-to-r from-[#60a5fa] to-[#a78bfa] bg-clip-text text-transparent">
+                      {accent}
+                    </span>
+                    {after ? <span className="text-white">{after}</span> : null}
                   </>
                 ) : (
                   <span className="text-white">{heading}</span>
@@ -134,30 +132,31 @@ export default function AboutSectionClient({
 
             <motion.div
               variants={fadeUp}
-              className="mt-3 h-px w-10 rounded-full"
+              className="mt-4 h-px w-12 rounded-full sm:mt-5"
               style={{
                 background: 'linear-gradient(90deg, #60a5fa 0%, #a78bfa 100%)',
               }}
               aria-hidden
             />
 
-            {/* Body */}
-            <motion.div variants={fadeUp}>
-              <p className="mt-2 max-w-[36rem] text-[13px] leading-relaxed text-white/45 sm:text-[14px] lg:text-[15px]">
-                {body}
-              </p>
-            </motion.div>
+            {body.trim() ? (
+              <motion.div variants={fadeUp}>
+                <p className="mt-3 max-w-[40rem] text-[13px] leading-relaxed text-white/45 sm:text-[14px] lg:text-[15px]">
+                  {body}
+                </p>
+              </motion.div>
+            ) : null}
           </motion.div>
 
-          {/* Foto derecha — alineada con el badge */}
+          {/* Foto */}
           <motion.div
-            className="shrink-0"
+            className="flex justify-start lg:justify-end"
             variants={fadeRight}
             initial={reduce ? 'visible' : 'hidden'}
             whileInView="visible"
             viewport={view}
           >
-            <div className="relative">
+            <div className="relative shrink-0">
               {/* Anillo animado */}
               <motion.div
                 aria-hidden
@@ -176,7 +175,7 @@ export default function AboutSectionClient({
                 src={profileSrc}
                 alt={profileAlt}
                 width={160} height={160}
-                className="relative z-10 h-[72px] w-[72px] rounded-full object-cover brightness-[1.05] contrast-[1.06] sm:h-[100px] sm:w-[100px] md:h-[128px] md:w-[128px]"
+                className="relative z-10 h-[88px] w-[88px] rounded-full object-cover brightness-[1.05] contrast-[1.06] sm:h-[108px] sm:w-[108px] lg:h-[132px] lg:w-[132px]"
               />
 
               {/* Ping de disponibilidad */}
@@ -198,7 +197,7 @@ export default function AboutSectionClient({
         {/* ── MÉTRICAS — 4 en fila en desktop, 2x2 en mobile ── */}
         {metrics.length > 0 && (
           <motion.div
-            className="relative z-10 mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4"
+            className="relative z-10 mt-8 grid grid-cols-2 gap-3 sm:mt-9 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4"
             variants={staggerWrap}
             initial={reduce ? 'visible' : 'hidden'}
             whileInView="visible"
@@ -281,6 +280,6 @@ export default function AboutSectionClient({
         </motion.div>
 
       </div>
-    </section>
+    </div>
   );
 }

@@ -2,15 +2,40 @@
 import Layout from '@/layouts/Layout.astro';
 import Hero from '@/components/sections/Hero.astro';
 import HomeAbout from '@/components/sections/HomeAbout.astro';
+import IntegratedSolutionSection from '@/components/sections/IntegratedSolutionSection.astro';
 import ProjectsSection from '@/components/sections/ProjectsSection.astro';
 import HomeContactSection from '@/components/sections/HomeContactSection.astro';
 import { site } from '@/data/site';
 import { pageTitle } from '@/utils/seo';
+
+const professionalServiceSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  name: 'Fernando Moya',
+  url: site.url,
+  description: 'Diseño y desarrollo web para negocios, profesionales y marcas.',
+  areaServed: ['Mendoza', 'Argentina', 'proyectos en español'],
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Mendoza',
+    addressCountry: 'AR',
+  },
+  sameAs: [],
+  serviceType: [
+    'Diseño web',
+    'Desarrollo web',
+    'Landing pages',
+    'Sitios institucionales',
+    'Catálogos online',
+  ],
+};
 ---
 
 <Layout title={pageTitle()} description={site.description} path="/">
+  <script type="application/ld+json" set:html={JSON.stringify(professionalServiceSchema)} />
   <Hero />
   <HomeAbout />
+  <IntegratedSolutionSection />
   <ProjectsSection />
   <HomeContactSection />
 </Layout>
