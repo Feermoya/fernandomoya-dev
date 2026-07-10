@@ -9,9 +9,41 @@ export type SeoLanding = {
   description: string;
   h1: string;
   intro: string;
+  /** Dolor o situación que reconoce el visitante (sección “El problema”). */
+  problem?: string;
+  /** Resultado concreto que busca el visitante (sección “Qué logramos”). */
+  outcome?: string;
   bullets?: string[];
   faqs?: FaqItem[];
+  /** Guías relacionadas en el footer de la landing. */
+  relatedPaths?: readonly `/${string}`[];
 };
+
+export const seoProcessSteps = [
+  {
+    title: 'Entendemos tu negocio',
+    text: 'Qué vendés, a quién le hablás y qué tiene que entender alguien en los primeros segundos.',
+  },
+  {
+    title: 'Ordenamos mensaje y secciones',
+    text: 'Estructura, textos y recorrido visual para que lo importante quede a la vista sin ruido.',
+  },
+  {
+    title: 'Desarrollamos y publicamos',
+    text: 'Sitio rápido en celular, contacto visible y base lista para sumar contenido después.',
+  },
+] as const;
+
+export function getRelatedLandings(currentPath: string, limit = 3): SeoLanding[] {
+  const current = seoLandings.find((l) => l.path === currentPath);
+  if (current?.relatedPaths?.length) {
+    return current.relatedPaths
+      .map((p) => seoLandings.find((l) => l.path === p))
+      .filter((l): l is SeoLanding => Boolean(l))
+      .slice(0, limit);
+  }
+  return seoLandings.filter((l) => l.path !== currentPath).slice(0, limit);
+}
 
 export const seoLandings: SeoLanding[] = [
   {
@@ -23,6 +55,11 @@ export const seoLandings: SeoLanding[] = [
     h1: 'Diseño web en Mendoza para negocios que quieren verse profesionales',
     intro:
       'Trabajo con negocios, profesionales y marcas que necesitan una web clara, rápida y fácil de entender. La idea no es llenar la página de efectos, sino ordenar el mensaje: qué ofrecés, para quién es, por qué confiar y cómo contactarte. Estoy en Mendoza y también tomo proyectos de otras provincias o del exterior en español.',
+    problem:
+      'Muchos negocios en Mendoza tienen buen servicio, pero en la web no se entiende rápido qué hacen, para quién es ni cómo contactarlos. Eso genera desconfianza y consultas que nunca llegan.',
+    outcome:
+      'Un sitio que se ve profesional, explica tu propuesta en segundos y deja el contacto —WhatsApp, mail o formulario— donde el visitante lo espera.',
+    relatedPaths: ['/paginas-web-para-negocios', '/landing-page-para-negocios', '/desarrollo-web-en-espanol'],
     bullets: [
       'Diseño y desarrollo web para negocios locales',
       'Landing pages, sitios institucionales y catálogos online',
@@ -80,6 +117,11 @@ export const seoLandings: SeoLanding[] = [
     h1: 'Páginas web para negocios que necesitan ordenar su mensaje',
     intro:
       'Muchos negocios llegan con el mismo problema: tienen buen producto o servicio, pero en internet no se entiende rápido qué hacen ni cómo contactarlos. Armo páginas con secciones concretas —qué ofrecés, para quién, cómo trabajás, contacto— sin llenar todo de texto que nadie lee.',
+    problem:
+      'Si alguien entra a tu web y tiene que adivinar qué vendés o buscar el botón de contacto, lo más probable es que se vaya antes de escribirte.',
+    outcome:
+      'Una página que responde lo esencial en orden: qué ofrecés, para quién, por qué confiar y cómo avanzar —con lectura cómoda desde el celular.',
+    relatedPaths: ['/diseno-web-mendoza', '/landing-page-para-negocios', '/diseno-web-para-negocios'],
     bullets: [
       'Estructura pensada para quien entra sin conocerte',
       'Servicios y propuesta explicados con claridad',
@@ -132,6 +174,11 @@ export const seoLandings: SeoLanding[] = [
     h1: 'Landing page para negocios con un solo objetivo',
     intro:
       'Cuando necesitás presentar una oferta concreta —un servicio, una promo, una campaña— una landing concentra todo en una sola página. Menos distracciones, mensaje directo y un botón de contacto que se ve.',
+    problem:
+      'Mandar tráfico de anuncios o redes a una web genérica diluye el mensaje: el visitante no sabe qué hacer y la campaña pierde fuerza.',
+    outcome:
+      'Una sola página con oferta clara, beneficios concretos y contacto repetido donde tiene sentido —pensada para convertir visitas en consultas.',
+    relatedPaths: ['/paginas-web-para-negocios', '/diseno-web-mendoza', '/seo-tecnico'],
     bullets: [
       'Mensaje principal arriba, sin dar vueltas',
       'Beneficios en pocas líneas',
@@ -158,6 +205,11 @@ export const seoLandings: SeoLanding[] = [
     h1: 'Desarrollo web en español, con comunicación directa',
     intro:
       'Trabajo con negocios que están en distintas ciudades o países y necesitan un sitio en español, bien explicado y fácil de coordinar. La comunicación es por WhatsApp, mail o videollamada —sin vueltas ni jerga innecesaria.',
+    problem:
+      'Coordinar un sitio a distancia puede ser confuso si nadie te explica en claro qué se hace en cada etapa o si la comunicación se complica con tecnicismos.',
+    outcome:
+      'Un proyecto en español, con entregas por etapas, feedback en cada paso y un sitio pensado para tu mercado —sin depender de estar en la misma ciudad.',
+    relatedPaths: ['/diseno-web-mendoza', '/desarrollo-web-mendoza', '/paginas-web-para-negocios'],
     bullets: [
       'Proyectos coordinados a distancia sin problema',
       'Sitios en español, con textos claros para tu público',

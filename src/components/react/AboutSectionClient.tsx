@@ -12,6 +12,7 @@ type Props = {
   email: string;
   whatsappUrl: string;
   metrics: readonly Metric[];
+  lightSurface?: boolean;
 };
 
 const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1];
@@ -76,7 +77,7 @@ const METRIC_COLORS = ['#60a5fa','#a78bfa','#34d399','#f472b6'];
 
 export default function AboutSectionClient({
   profileSrc, profileAlt, heading, body = '',
-  email, whatsappUrl, metrics,
+  email, whatsappUrl, metrics, lightSurface = false,
 }: Props) {
   const reduce = useReducedMotion();
 
@@ -89,7 +90,13 @@ export default function AboutSectionClient({
 
   return (
     <div className="w-full py-10 sm:py-14" aria-labelledby="about-home-heading">
-      <div className="glass-panel relative w-full overflow-hidden rounded-2xl border border-white/[0.08] !p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:!p-7 lg:!p-9">
+      <div
+        className={
+          lightSurface
+            ? 'relative w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-7 lg:p-9'
+            : 'glass-panel relative w-full overflow-hidden rounded-2xl border border-white/[0.08] !p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:!p-7 lg:!p-9'
+        }
+      >
 
         {/* Blob decorativo */}
         <div aria-hidden className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full opacity-50 blur-3xl"
@@ -113,19 +120,21 @@ export default function AboutSectionClient({
             <motion.div variants={fadeUp}>
               <h2
                 id="about-home-heading"
-                className="w-full max-w-none text-pretty text-[clamp(1.85rem,1.1rem+2.8vw,2.85rem)] font-bold leading-[1.06] tracking-[-0.03em] text-white lg:max-w-[38rem] xl:max-w-[44rem]"
+                className={`about-home-heading w-full max-w-none text-pretty text-[clamp(1.85rem,1.1rem+2.8vw,2.85rem)] font-bold leading-[1.06] tracking-[-0.03em] lg:max-w-[38rem] xl:max-w-[44rem] ${
+                  lightSurface ? 'text-slate-950' : 'text-white'
+                }`}
               >
                 {accent ? (
                   <>
-                    <span className="text-white">{before.trimEnd()}</span>
+                    <span className={lightSurface ? 'text-slate-950' : 'text-white'}>{before.trimEnd()}</span>
                     <br className="hidden sm:block" />
                     <span className="bg-gradient-to-r from-[#60a5fa] to-[#a78bfa] bg-clip-text text-transparent">
                       {accent}
                     </span>
-                    {after ? <span className="text-white">{after}</span> : null}
+                    {after ? <span className={lightSurface ? 'text-slate-950' : 'text-white'}>{after}</span> : null}
                   </>
                 ) : (
-                  <span className="text-white">{heading}</span>
+                  <span className={lightSurface ? 'text-slate-950' : 'text-white'}>{heading}</span>
                 )}
               </h2>
             </motion.div>
@@ -141,7 +150,7 @@ export default function AboutSectionClient({
 
             {body.trim() ? (
               <motion.div variants={fadeUp}>
-                <p className="mt-3 max-w-[40rem] text-[13px] leading-relaxed text-white/45 sm:text-[14px] lg:text-[15px]">
+                <p className={`mt-3 max-w-[40rem] text-[13px] leading-relaxed sm:text-[14px] lg:text-[15px] ${lightSurface ? 'text-slate-600' : 'text-white/45'}`}>
                   {body}
                 </p>
               </motion.div>
@@ -168,7 +177,7 @@ export default function AboutSectionClient({
                 animate={reduce ? undefined : { rotate: 360 }}
                 transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
               >
-                <div className="h-full w-full rounded-full bg-[#050818]" />
+                <div className={`h-full w-full rounded-full ${lightSurface ? 'bg-white' : 'bg-[#050818]'}`} />
               </motion.div>
 
               <img
@@ -207,7 +216,11 @@ export default function AboutSectionClient({
               <motion.div
                 key={`${m.label}-${m.value}`}
                 variants={fadeUp}
-                className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 transition-colors duration-300 hover:border-white/[0.14] hover:bg-white/[0.06]"
+                className={
+                  lightSurface
+                    ? 'group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 transition-colors duration-300 hover:border-slate-300 hover:bg-white'
+                    : 'group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 transition-colors duration-300 hover:border-white/[0.14] hover:bg-white/[0.06]'
+                }
               >
                 {/* Glow en hover */}
                 <div aria-hidden
@@ -216,7 +229,7 @@ export default function AboutSectionClient({
                 />
 
                 {/* Ícono */}
-                <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                <div className={`mb-2 flex h-7 w-7 items-center justify-center rounded-lg border ${lightSurface ? 'border-slate-200/80 bg-white' : 'border-white/[0.08] bg-white/[0.04]'}`}>
                   <MetricIcon index={i} />
                 </div>
 
@@ -225,7 +238,7 @@ export default function AboutSectionClient({
                   suffix={m.suffix}
                   label={m.label}
                   valueClassName="bg-gradient-to-r from-[#60a5fa] to-[#a78bfa] bg-clip-text text-[1.9rem] font-extrabold leading-none tabular-nums tracking-tight text-transparent sm:text-[2.1rem]"
-                  labelClassName="mt-1.5 whitespace-pre-line text-[10px] font-semibold uppercase leading-snug tracking-[0.12em] text-white/40"
+                  labelClassName={`mt-1.5 whitespace-pre-line text-[10px] font-semibold uppercase leading-snug tracking-[0.12em] ${lightSurface ? 'text-slate-500' : 'text-white/40'}`}
                 />
 
                 {/* Barra de color al fondo */}
@@ -251,7 +264,7 @@ export default function AboutSectionClient({
           whileInView="visible"
           viewport={view}
         >
-          <ResultsChart />
+          <ResultsChart lightSurface={lightSurface} />
         </motion.div>
 
         {/* ── LINKS ── */}
@@ -273,7 +286,7 @@ export default function AboutSectionClient({
           </a>
           <a
             href={`mailto:${email}`}
-            className="text-[13px] text-white/40 transition hover:text-white/75"
+            className={`text-[13px] transition ${lightSurface ? 'text-slate-500 hover:text-slate-800' : 'text-white/40 hover:text-white/75'}`}
           >
             Escribime un mail
           </a>

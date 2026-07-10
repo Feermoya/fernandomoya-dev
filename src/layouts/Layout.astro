@@ -20,16 +20,29 @@ interface Props {
   skipSplash?: boolean;
   /** Shell de app: sin nav del sitio, manifest PWA dedicado, fondo foco financiero. */
   appShell?: boolean;
+  /** Home pública: estética light premium (solo `/`). */
+  marketingLight?: boolean;
 }
 
-const { title, description, path = '/', ogImagePath, noindex = false, skipSplash = false, appShell = false } =
-  Astro.props;
+const {
+  title,
+  description,
+  path = '/',
+  ogImagePath,
+  noindex = false,
+  skipSplash = false,
+  appShell = false,
+  marketingLight = false,
+} = Astro.props;
 const canonical = absoluteUrl(path);
 const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
 ---
 
 <!doctype html>
-<html lang={site.locale} class:list={['bg-bg-base text-text', appShell && 'finance-app-html']}>
+<html
+  lang={site.locale}
+  class:list={['bg-bg-base text-text', appShell && 'finance-app-html', marketingLight && 'marketing-light-html']}
+>
   <head>
     {
       !skipSplash ? (
@@ -41,7 +54,7 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     }
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet" />
     <meta charset="utf-8" />
     <meta
       name="viewport"
@@ -50,7 +63,7 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
         : 'width=device-width, initial-scale=1'}
     />
     <meta name="generator" content={Astro.generator} />
-    <meta name="theme-color" content={appShell ? '#F6F8FB' : '#0d0f14'} />
+    <meta name="theme-color" content={appShell ? '#F6F8FB' : marketingLight ? '#f6f7fb' : '#0d0f14'} />
     {
       appShell ? (
         <>
@@ -92,7 +105,7 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
   <body
     class:list={[
       'relative min-h-dvh overflow-x-clip text-text',
-      appShell ? 'bg-[#F6F8FB]' : 'bg-bg-base',
+      appShell ? 'bg-[#F6F8FB]' : marketingLight ? 'marketing-light' : 'bg-bg-base',
     ]}
   >
     {

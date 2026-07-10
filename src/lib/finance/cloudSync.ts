@@ -48,6 +48,45 @@ export type RemoteFinanceRow = {
   updatedAt: string;
 };
 
+export class FinanceCloudNetworkError extends Error {
+  constructor(message = 'No se pudo conectar con Supabase.') {
+    super(message);
+    this.name = 'FinanceCloudNetworkError';
+  }
+}
+
+export function isFinanceCloudNetworkError(error: unknown): boolean {
+  return error instanceof FinanceCloudNetworkError || isNetworkFetchError(error);
+}
+
+function isNetworkFetchError(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  if (error instanceof FinanceCloudNetworkError) return true;
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    return (
+      msg.includes('failed to fetch') ||
+      msg.includes('network') ||
+      msg.includes('load failed') ||
+      msg.includes('err_name_not_resolved')
+    );
+  }
+  return false;
+}
+
+async function financeCloudFetch(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.debug('[finance-sync] network error', { url, error });
+    }
+    throw new FinanceCloudNetworkError(
+      'No se pudo conectar con Supabase. Revisá PUBLIC_FINANCE_SUPABASE_URL en .env.local o tu conexión.',
+    );
+  }
+}
+
 export async function fetchFinanceRemote(
   syncId: string = DEFAULT_FINANCE_SYNC_ID,
 ): Promise<RemoteFinanceRow | null> {
@@ -58,7 +97,7 @@ export async function fetchFinanceRemote(
 
   const url = financeGameStateSelectUrl(restBase(), syncId);
 
-  const res = await fetch(url, {
+  const res = await financeCloudFetch(url, {
     headers: {
       ...headersRead(),
       'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -112,7 +151,7 @@ export async function upsertFinanceRemote(
   if (import.meta.env.DEV) {
     console.debug('[finance-sync] upsert start', { syncId });
   }
-  const res = await fetch(`${restBase()}/${TABLE}`, {
+  const res = await financeCloudFetch(`${restBase()}/${TABLE}`, {
     method: 'POST',
     headers: {
       ...headersWriteMinimal(),

@@ -307,12 +307,14 @@ function Card({
   reduce,
   isMobileLayout,
   cardViewport,
+  lightSurface = false,
 }: {
   item: Item;
   index: number;
   reduce: boolean;
   isMobileLayout: boolean;
   cardViewport: { once: boolean; amount: number | 'some'; margin: string };
+  lightSurface?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const [spot, setSpot] = useState({ x: 50, y: 50 });
@@ -328,7 +330,11 @@ function Card({
   return (
     <motion.article
       ref={articleRef}
-      className="group relative cursor-default overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] transition-colors duration-300 hover:border-white/[0.14] hover:bg-white/[0.055]"
+      className={
+        lightSurface
+          ? 'group relative cursor-default overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-colors duration-300 hover:border-slate-300 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]'
+          : 'group relative cursor-default overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] transition-colors duration-300 hover:border-white/[0.14] hover:bg-white/[0.055]'
+      }
       initial={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={cardViewport}
@@ -372,21 +378,23 @@ function Card({
           </p>
         </div>
 
-        <h4 className="mt-3 text-[1.05rem] font-semibold leading-snug text-white sm:text-[1.12rem]">
+        <h4 className={`mt-3 text-[1.05rem] font-semibold leading-snug sm:text-[1.12rem] ${lightSurface ? 'text-slate-950' : 'text-white'}`}>
           {item.headline}
         </h4>
 
-        <p className="mt-2 text-[12.5px] leading-relaxed text-white/45 sm:text-[13px]">
+        <p className={`mt-2 text-[12.5px] leading-relaxed sm:text-[13px] ${lightSurface ? 'text-slate-600' : 'text-white/45'}`}>
           {item.text}
         </p>
 
         {/* Demo animada */}
         <motion.div
           className="mt-4 overflow-hidden rounded-xl border"
-          style={{ borderColor: active ? item.color + '30' : 'rgba(255,255,255,0.06)' }}
+          style={{
+            borderColor: active ? item.color + '30' : lightSurface ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)',
+          }}
           animate={{
-            borderColor: active ? item.color + '30' : 'rgba(255,255,255,0.06)',
-            background: active ? item.colorMuted : 'rgba(255,255,255,0.02)',
+            borderColor: active ? item.color + '30' : lightSurface ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)',
+            background: active ? item.colorMuted : lightSurface ? 'rgba(248,250,252,0.9)' : 'rgba(255,255,255,0.02)',
           }}
           transition={{ duration: 0.3 }}
         >
@@ -394,7 +402,7 @@ function Card({
         </motion.div>
 
         {/* Barra de progreso */}
-        <motion.div className="relative mt-4 h-px w-full overflow-hidden rounded-full bg-white/[0.06]">
+        <motion.div className={`relative mt-4 h-px w-full overflow-hidden rounded-full ${lightSurface ? 'bg-slate-200/80' : 'bg-white/[0.06]'}`}>
           <motion.div
             className="h-full rounded-full"
             style={{ background: `linear-gradient(90deg, ${item.color}, ${item.color}88)` }}
@@ -413,7 +421,7 @@ function Card({
   );
 }
 
-export default function ResultsChart() {
+export default function ResultsChart({ lightSurface = false }: { lightSurface?: boolean }) {
   const reduceMotion = useReducedMotion();
   const reduce = Boolean(reduceMotion);
   const isMobileLayout = useIsMobileResultsLayout();
@@ -424,7 +432,11 @@ export default function ResultsChart() {
 
   return (
     <motion.div
-      className="glass-panel relative mt-6 w-full overflow-hidden rounded-2xl border border-white/[0.08] !p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:!p-7"
+      className={
+        lightSurface
+          ? 'relative mt-6 w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50/70 p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] sm:p-7'
+          : 'glass-panel relative mt-6 w-full overflow-hidden rounded-2xl border border-white/[0.08] !p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:!p-7'
+      }
       initial={reduce ? { opacity: 1 } : { opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px 0px' }}
@@ -447,10 +459,10 @@ export default function ResultsChart() {
         <p className="inline-flex items-center rounded-full border border-[#60a5fa]/20 bg-[#60a5fa]/[0.07] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#c4b5fd]/90">
           Lo importante
         </p>
-        <h3 className="mt-4 max-w-3xl text-[1.35rem] font-semibold leading-tight tracking-tight text-white sm:text-2xl lg:text-[1.65rem]">
+        <h3 className={`mt-4 max-w-3xl text-[1.35rem] font-semibold leading-tight tracking-tight sm:text-2xl lg:text-[1.65rem] ${lightSurface ? 'text-slate-950' : 'text-white'}`}>
           Una web tiene que hacer cuatro cosas bien.
         </h3>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50 sm:text-[0.95rem]">
+        <p className={`mt-2 max-w-2xl text-sm leading-relaxed sm:text-[0.95rem] ${lightSurface ? 'text-slate-600' : 'text-white/50'}`}>
           Pasá el mouse por cada punto para verlo en acción.
         </p>
       </div>
@@ -465,6 +477,7 @@ export default function ResultsChart() {
             reduce={reduce}
             isMobileLayout={isMobileLayout}
             cardViewport={cardViewport}
+            lightSurface={lightSurface}
           />
         ))}
       </div>

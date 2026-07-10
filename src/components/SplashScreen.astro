@@ -1,4 +1,4 @@
-<div id="fm-splash" class="fm-splash" role="status" aria-label="Cargando" aria-live="polite">
+<div id="fm-splash" class="fm-splash" transition:persist="fm-splash" role="status" aria-label="Cargando" aria-live="polite">
   <div class="fm-splash-glow" aria-hidden="true"></div>
 
   <div class="fm-splash-inner">
@@ -120,13 +120,15 @@
   const MIN_VISIBLE_MS = 720;
   const MAX_WAIT_MS = 1300;
   const startTime = performance.now();
+  let initialSplashBooted = false;
+  let pageLoadCount = 0;
 
-  function closeSplash() {
+  function closeSplash(immediate = false) {
     const splash = document.getElementById('fm-splash');
     if (!splash || splash.classList.contains('fm-hidden')) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = immediate || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     splash.classList.add('fm-hidden');
-    setTimeout(() => splash.classList.add('fm-gone'), reduce ? 80 : 440);
+    setTimeout(() => splash.classList.add('fm-gone'), reduce ? 0 : 440);
     document.documentElement.style.overflow = '';
   }
 
@@ -136,20 +138,32 @@
     setTimeout(closeSplash, remaining);
   }
 
-  if ('fonts' in document) {
-    document.fonts.load('900 1em Nunito').catch(() => {});
+  function bootInitialSplash() {
+    if (initialSplashBooted) return;
+    initialSplashBooted = true;
+
+    if ('fonts' in document) {
+      document.fonts.load('900 1em Nunito').catch(() => {});
+    }
+
+    if (document.readyState === 'complete') {
+      scheduleClose();
+    } else {
+      window.addEventListener('load', scheduleClose, { once: true });
+      setTimeout(closeSplash, MAX_WAIT_MS);
+    }
   }
 
-  if (document.readyState === 'complete') {
-    scheduleClose();
-  } else {
-    window.addEventListener('load', scheduleClose, { once: true });
-    setTimeout(closeSplash, MAX_WAIT_MS);
-  }
+  bootInitialSplash();
 
   document.addEventListener('astro:before-preparation', () => {
-    const splash = document.getElementById('fm-splash');
-    if (splash) splash.classList.add('fm-gone');
-    document.documentElement.style.overflow = '';
+    closeSplash(true);
+  });
+
+  document.addEventListener('astro:page-load', () => {
+    pageLoadCount += 1;
+    if (pageLoadCount > 1) {
+      closeSplash(true);
+    }
   });
 </script>

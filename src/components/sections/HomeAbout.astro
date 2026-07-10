@@ -7,13 +7,15 @@ import profilePhoto from '@/assets/profile.png';
 const profileSrc = (await getImage({ src: profilePhoto, width: 640, height: 640 })).src;
 ---
 
-<section id="sobre-mi" class="relative border-t border-white/[0.08]" aria-label="Sobre mí">
+<section id="sobre-mi" class="home-section-light relative border-t border-slate-200/70" aria-label="Sobre mí">
   <div class="container-page">
   <AboutSectionClient
     client:visible
     profileSrc={profileSrc}
     profileAlt={`Retrato de ${site.name}`}
-    heading="Diseño webs que explican mejor tu negocio"
+    heading="Diseño webs que se entienden rápido"
+    body="Ordeno lo importante y lo llevo a una web clara, simple y fácil de usar."
+    lightSurface
     whatsappUrl={site.social.whatsapp}
     email={site.email}
     metrics={[...site.metrics]}

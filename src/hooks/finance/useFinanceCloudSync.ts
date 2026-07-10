@@ -13,6 +13,7 @@ import {
   DEFAULT_FINANCE_SYNC_ID,
   getFinanceLocalSavedAt,
   getFinanceSyncId,
+  loadFinanceState,
   resetFinanceSyncIdToDefault,
   saveFinanceState,
   setFinanceLocalSavedAt,
@@ -75,8 +76,12 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       const result = await pullCanonicalFromCloud();
       if (result.ok) {
         applyCloudState(result.state, result.updatedAt);
+        if (result.warning) {
+          setCloudErr(result.warning);
+          setSyncChip('error');
+        }
         if (import.meta.env.DEV) {
-          console.debug('[finance-sync] pull ok', { updated_at: result.updatedAt });
+          console.debug('[finance-sync] pull ok', { updated_at: result.updatedAt, warning: result.warning });
         }
         return;
       }
@@ -158,8 +163,12 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
 
         if (result.ok) {
           applyCloudState(result.state, result.updatedAt);
+          if (result.warning) {
+            setCloudErr(result.warning);
+            setSyncChip('error');
+          }
           if (import.meta.env.DEV) {
-            console.debug('[finance-sync] boot ok', { updated_at: result.updatedAt });
+            console.debug('[finance-sync] boot ok', { updated_at: result.updatedAt, warning: result.warning });
           }
           return;
         }
@@ -174,6 +183,8 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
 
         setCloudErr(result.message ?? 'Error al leer la nube.');
         setSyncChip('error');
+        const local = loadFinanceState();
+        applyCloudState(local, getFinanceLocalSavedAt() ?? new Date().toISOString());
       } finally {
         if (gen === bootGenRef.current) {
           setCloudReady(true);

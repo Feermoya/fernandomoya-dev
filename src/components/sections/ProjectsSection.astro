@@ -8,41 +8,38 @@ const all = await getCollection('projects');
 const clients = all.filter((p) => p.data.kind === 'client').sort(byOrderThenDate);
 const own = all.filter((p) => p.data.kind === 'own').sort(byOrderThenDate);
 
-type Kind = 'client' | 'own';
 type ProjectCardData = {
   id: string;
   title: string;
-  description: string;
   projectType: string;
   coverSrc: string | null;
   live: string;
-  kindLabel: string;
-  kind: Kind;
 };
 
 async function toCardData(p: CollectionEntry<'projects'>): Promise<ProjectCardData> {
   const cover = getProjectCover(p.data.cover);
   let coverSrc: string | null = null;
   if (cover) {
-    coverSrc = (await getImage({ src: cover, width: 1400 })).src;
+    coverSrc = (await getImage({ src: cover, width: 1200 })).src;
   }
   return {
     id: p.id,
     title: p.data.title,
-    description: p.data.description,
     projectType: p.data.projectType,
     coverSrc,
     live: p.data.links.live,
-    kindLabel: p.data.kind === 'client' ? 'Cliente' : 'Propio',
-    kind: p.data.kind,
   };
 }
 
-const clientCards = await Promise.all(clients.map(toCardData));
-const ownCards = await Promise.all(own.map(toCardData));
+const ordered = [...clients, ...own];
+const projectCards = await Promise.all(ordered.map(toCardData));
 ---
 
-<section id="proyectos" class="relative border-t border-white/[0.08] py-10 sm:py-12" aria-labelledby="projects-heading">
+<section
+  id="proyectos"
+  class="home-section-light relative border-t border-slate-200/70 py-10 sm:py-14"
+  aria-labelledby="projects-heading"
+>
   <div class="container-page" data-projects-section>
     <div class="max-w-2xl">
       <h2 id="projects-heading" class="home-section-title">
@@ -51,99 +48,45 @@ const ownCards = await Promise.all(own.map(toCardData));
       <div class="home-section-accent-line" aria-hidden="true"></div>
     </div>
 
-    <div class="projects-list mt-8" data-projects-list>
-      <div class="group-divider" aria-hidden="true">
-        <span>Clientes</span>
-        <i></i>
-      </div>
+    <div class="projects-showcase mt-6 sm:mt-8">
+      {
+        projectCards.map((item, idx) => (
+          <a
+            href={item.live}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="project-showcase-card"
+            data-reveal
+            style={`--stagger-index:${idx};`}
+          >
+            <div class="project-showcase-card__media">
+              {item.coverSrc ? (
+                <img
+                  src={item.coverSrc}
+                  alt={`Captura de ${item.title}`}
+                  width="1200"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                  class="project-showcase-card__image"
+                  sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 320px"
+                />
+              ) : (
+                <div class="project-showcase-card__placeholder" aria-hidden="true" />
+              )}
+            </div>
 
-      {clientCards.map((item, idx) => (
-        <a
-          href={item.live}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="project-row"
-          data-reveal
-          data-row
-          data-cover={item.coverSrc ?? ''}
-          data-title={item.title}
-          style={`--stagger-index:${idx};`}
-        >
-          <div class="row-top" data-row-toggle>
-            <p class="row-number">{String(idx + 1).padStart(2, '0')}</p>
-            <h3 class="row-title">{item.title}</h3>
-            <p class="row-type">{item.projectType}</p>
-            <span class="row-arrow" aria-hidden="true">→</span>
-          </div>
-          <div class="row-mobile-panel" data-row-panel>
-            {item.coverSrc ? (
-              <img
-                src={item.coverSrc}
-                alt={item.title}
-                width="1400"
-                height="900"
-                loading="lazy"
-                decoding="async"
-                class="row-mobile-image"
-                sizes="(max-width: 767px) 100vw, 0px"
-              />
-            ) : null}
-            <p class="row-mobile-description">{item.description}</p>
-            <span class="row-mobile-cta-wrap" data-row-visit>
-              <span class="row-mobile-cta">
-                Ver sitio
-                <span aria-hidden="true">→</span>
+            <div class="project-showcase-card__body">
+              <span class="project-showcase-card__badge">{item.projectType}</span>
+              <h3 class="project-showcase-card__title">{item.title}</h3>
+              <span class="project-showcase-card__cta">
+                Ver proyecto
+                <span class="project-showcase-card__cta-arrow" aria-hidden="true">→</span>
               </span>
-            </span>
-          </div>
-        </a>
-      ))}
-
-      {ownCards.map((item, idx) => (
-        <a
-          href={item.live}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="project-row"
-          data-reveal
-          data-row
-          data-cover={item.coverSrc ?? ''}
-          data-title={item.title}
-          style={`--stagger-index:${idx + clientCards.length};`}
-        >
-          <div class="row-top" data-row-toggle>
-            <p class="row-number">{String(idx + clientCards.length + 1).padStart(2, '0')}</p>
-            <h3 class="row-title">{item.title}</h3>
-            <p class="row-type">{item.projectType}</p>
-            <span class="row-arrow" aria-hidden="true">→</span>
-          </div>
-          <div class="row-mobile-panel" data-row-panel>
-            {item.coverSrc ? (
-              <img
-                src={item.coverSrc}
-                alt={item.title}
-                width="1400"
-                height="900"
-                loading="lazy"
-                decoding="async"
-                class="row-mobile-image"
-                sizes="(max-width: 767px) 100vw, 0px"
-              />
-            ) : null}
-            <p class="row-mobile-description">{item.description}</p>
-            <span class="row-mobile-cta-wrap" data-row-visit>
-              <span class="row-mobile-cta">
-                Ver sitio
-                <span aria-hidden="true">→</span>
-              </span>
-            </span>
-          </div>
-        </a>
-      ))}
-    </div>
-
-    <div class="hover-preview" data-hover-preview aria-hidden="true">
-      <img src="" alt="" class="hover-preview-image" data-hover-preview-image />
+            </div>
+          </a>
+        ))
+      }
     </div>
   </div>
 </section>
@@ -152,14 +95,10 @@ const ownCards = await Promise.all(own.map(toCardData));
   const section = document.querySelector('[data-projects-section]');
   if (section) {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const desktop = window.matchMedia('(min-width: 768px)').matches;
-    const mobile = window.matchMedia('(max-width: 767px)').matches;
-    const rows = Array.from(section.querySelectorAll('[data-row]'));
-    const preview = section.querySelector('[data-hover-preview]');
-    const previewImage = section.querySelector('[data-hover-preview-image]');
+    const cards = Array.from(section.querySelectorAll('[data-reveal]'));
 
     if (reduceMotion) {
-      rows.forEach((row) => row.classList.add('is-visible'));
+      cards.forEach((card) => card.classList.add('is-visible'));
     } else {
       const observer = new IntersectionObserver(
         (entries, obs) => {
@@ -169,393 +108,200 @@ const ownCards = await Promise.all(own.map(toCardData));
             obs.unobserve(entry.target);
           });
         },
-        { threshold: 0.2, rootMargin: '0px 0px -40px 0px' },
+        { threshold: 0.12, rootMargin: '0px 0px -32px 0px' },
       );
-      rows.forEach((row) => observer.observe(row));
-    }
-
-    if (desktop && preview && previewImage) {
-      const maxXOffset = 72;
-      const maxYOffset = 40;
-      let targetX = 0;
-      let targetY = 0;
-      let currentX = 0;
-      let currentY = 0;
-      let raf = 0;
-
-      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-      const updatePreviewRatio = () => {
-        if (!previewImage.naturalWidth || !previewImage.naturalHeight) return;
-        const ratio = previewImage.naturalWidth / previewImage.naturalHeight;
-        preview.style.setProperty('--preview-ratio', String(clamp(ratio, 1.35, 2.2)));
-      };
-
-      const animate = () => {
-        currentX += (targetX - currentX) * 0.12;
-        currentY += (targetY - currentY) * 0.12;
-        preview.style.setProperty('--tx', `${currentX}px`);
-        preview.style.setProperty('--ty', `${currentY}px`);
-        raf = requestAnimationFrame(animate);
-      };
-
-      const onMove = (event) => {
-        const rect = section.getBoundingClientRect();
-        const previewWidth = preview.offsetWidth || 390;
-        const previewHeight = preview.offsetHeight || 220;
-        const relX = event.clientX - rect.left;
-        const relY = event.clientY - rect.top;
-        const baseX = rect.width - previewWidth - 20;
-        const baseY = relY - previewHeight * 0.5;
-        targetX = clamp(baseX + (relX - rect.width * 0.5) * 0.08, 0, Math.max(0, rect.width - previewWidth));
-        targetY = clamp(baseY + (relY - rect.height * 0.5) * 0.06, 0, Math.max(0, rect.height - previewHeight));
-        targetX = clamp(targetX, baseX - maxXOffset, baseX + maxXOffset);
-        targetY = clamp(targetY, baseY - maxYOffset, baseY + maxYOffset);
-      };
-
-      section.addEventListener('mousemove', onMove);
-      raf = requestAnimationFrame(animate);
-
-      rows.forEach((row) => {
-        row.addEventListener('mouseenter', () => {
-          const cover = row.dataset.cover;
-          const title = row.dataset.title ?? '';
-          if (!cover) return;
-          previewImage.src = cover;
-          previewImage.alt = title;
-          if (previewImage.complete) updatePreviewRatio();
-          preview.classList.add('is-active');
-        });
-        row.addEventListener('mouseleave', () => {
-          preview.classList.remove('is-active');
-        });
-      });
-
-      previewImage.addEventListener('load', updatePreviewRatio);
-      section.addEventListener('mouseleave', () => preview.classList.remove('is-active'));
-      window.addEventListener('beforeunload', () => cancelAnimationFrame(raf), { once: true });
-    }
-
-    if (mobile) {
-      rows.forEach((row) => {
-        row.addEventListener('click', (event) => {
-          const visitTarget = event.target.closest('[data-row-visit]');
-          if (visitTarget && row.classList.contains('is-open')) {
-            window.open(row.href, '_blank', 'noopener,noreferrer');
-            return;
-          }
-
-          event.preventDefault();
-          const alreadyOpen = row.classList.contains('is-open');
-          rows.forEach((r) => r.classList.remove('is-open'));
-          if (!alreadyOpen) row.classList.add('is-open');
-        });
-      });
+      cards.forEach((card) => observer.observe(card));
     }
   }
 </script>
 
 <style>
-  .projects-list {
-    position: relative;
-    width: min(100%, 900px);
-    margin-inline: auto;
-  }
-
-  .group-divider {
-    display: flex;
-    align-items: center;
+  .projects-showcase {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 0.85rem;
-    padding: 1.2rem 0 0.55rem;
   }
 
-  .group-divider span {
-    color: rgb(255 255 255 / 0.5);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: none;
-    white-space: nowrap;
+  @media (min-width: 640px) {
+    .projects-showcase {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
   }
 
-  .group-divider i {
-    display: block;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(90deg, rgb(96 165 250 / 0.45), transparent 70%);
+  @media (min-width: 1024px) {
+    .projects-showcase {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
   }
 
-  .project-row {
-    position: relative;
-    display: block;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--border, rgb(255 255 255 / 0.14));
+  @media (min-width: 1280px) {
+    .projects-showcase {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .project-showcase-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid rgb(15 23 42 / 0.08);
+    background: #ffffff;
     color: inherit;
     text-decoration: none;
     cursor: pointer;
+    box-shadow: 0 10px 28px rgb(15 23 42 / 0.05);
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(18px);
     transition:
-      opacity 0.5s ease,
-      transform 0.5s ease,
-      border-color 0.25s ease;
-    transition-delay: calc(var(--stagger-index, 0) * 60ms);
+      opacity 0.45s ease,
+      transform 0.45s ease,
+      border-color 0.25s ease,
+      box-shadow 0.25s ease;
+    transition-delay: calc(var(--stagger-index, 0) * 45ms);
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .project-row.is-visible {
+  .project-showcase-card.is-visible {
     opacity: 1;
     transform: translateY(0);
   }
 
-  .project-row:hover,
-  .project-row:focus-visible {
-    border-color: rgb(96 165 250 / 0.45);
-  }
-
-  .row-top {
-    display: grid;
-    grid-template-columns: minmax(32px, auto) 1fr auto auto;
-    align-items: center;
-    gap: 0.9rem;
-  }
-
-  .row-number {
-    margin: 0;
-    font-size: 0.74rem;
-    font-weight: 500;
-    color: rgb(255 255 255 / 0.45);
-  }
-
-  .row-title {
-    margin: 0;
-    font-size: clamp(1.75rem, 1.3rem + 1.8vw, 3rem);
-    font-weight: 700;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
-    color: rgb(248 250 252);
-    transition:
-      color 0.25s ease,
-      background-position 0.25s ease;
-    background-image: linear-gradient(90deg, rgb(96 165 250), rgb(167 139 250));
-    background-size: 100%;
-    background-repeat: no-repeat;
-    background-position: 0 130%;
-    -webkit-background-clip: text;
-    background-clip: text;
-  }
-
-  .project-row:hover .row-title,
-  .project-row:focus-visible .row-title {
-    color: transparent;
-    background-position: 0 50%;
-  }
-
-  .row-type {
-    margin: 0;
-    border: 1px solid rgb(255 255 255 / 0.12);
-    border-radius: 999px;
-    padding: 0.28rem 0.6rem;
-    font-size: 0.7rem;
-    color: rgb(255 255 255 / 0.55);
-    white-space: nowrap;
-  }
-
-  .row-arrow {
-    display: inline-flex;
+  .project-showcase-card__media {
+    display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.3rem;
-    opacity: 0;
-    transform: translateX(-8px);
-    transition:
-      opacity 0.22s ease,
-      transform 0.22s ease;
-    color: rgb(96 165 250);
+    height: 9.5rem;
+    padding: 0.5rem 0.65rem;
+    background: rgb(248 250 252);
+    border-bottom: 1px solid rgb(15 23 42 / 0.05);
   }
 
-  .project-row:hover .row-arrow,
-  .project-row:focus-visible .row-arrow {
-    opacity: 1;
-    transform: translateX(0);
+  @media (min-width: 640px) {
+    .project-showcase-card__media {
+      height: 10rem;
+      padding: 0.55rem 0.7rem;
+    }
   }
 
-  .project-row:focus-visible {
-    outline: 1px dashed rgb(96 165 250 / 0.55);
-    outline-offset: 2px;
-  }
-
-  .row-mobile-image {
-    display: none;
-    margin-top: 0.85rem;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    border-radius: 10px;
-  }
-
-  .hover-preview {
-    --tx: 0px;
-    --ty: 0px;
-    --preview-ratio: 1.77;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: clamp(360px, calc(var(--preview-ratio) * 220px), 500px);
-    height: 220px;
-    padding-inline: 14px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: rgb(2 6 23 / 0.72);
-    pointer-events: none;
-    opacity: 0;
-    transform: translate3d(var(--tx), var(--ty), 0) scale(0.92);
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-    z-index: 4;
-  }
-
-  .hover-preview.is-active {
-    opacity: 1;
-    transform: translate3d(var(--tx), var(--ty), 0) scale(1);
-  }
-
-  .hover-preview-image {
+  .project-showcase-card__image {
     display: block;
     width: 100%;
     height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
+    object-position: center;
   }
 
-  .row-mobile-panel {
-    display: none;
+  .project-showcase-card__placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, rgb(226 232 240), rgb(241 245 249));
   }
 
-  @media (max-width: 767px) {
-    .project-row {
-      padding: 0;
-      min-height: 56px;
-      transition-delay: calc(var(--stagger-index, 0) * 50ms);
-      background: var(--surface, rgb(15 23 42 / 0.35));
-      -webkit-tap-highlight-color: transparent;
+  .project-showcase-card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding: 0.75rem 0.85rem 0.85rem;
+  }
+
+  .project-showcase-card__badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid rgb(226 232 240);
+    padding: 0.18rem 0.45rem;
+    font-size: 0.5625rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: rgb(100 116 139);
+    transition: border-color 0.25s ease, color 0.25s ease;
+  }
+
+  .project-showcase-card__title {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', var(--font-primary);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: rgb(15 23 42);
+    transition: color 0.25s ease;
+  }
+
+  .project-showcase-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: auto;
+    padding-top: 0.15rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: rgb(100 116 139);
+    transition: color 0.25s ease, gap 0.25s ease;
+  }
+
+  .project-showcase-card__cta-arrow {
+    display: inline-block;
+    transition: transform 0.25s ease;
+  }
+
+  .project-showcase-card:focus-visible {
+    outline: 2px solid rgb(45 91 227 / 0.45);
+    outline-offset: 3px;
+  }
+
+  @media (hover: hover) {
+    .project-showcase-card:hover {
+      transform: translateY(-3px);
+      border-color: rgb(15 23 42 / 0.12);
+      box-shadow: 0 16px 36px rgb(15 23 42 / 0.08);
     }
 
-    .row-top {
-      grid-template-columns: auto 1fr auto;
-      grid-template-areas:
-        'number title arrow'
-        '. type arrow';
-      align-items: start;
-      gap: 0.45rem 0.65rem;
-      min-height: 56px;
-      padding: 0.65rem 0.1rem;
+    .project-showcase-card.is-visible:hover {
+      transform: translateY(-3px);
     }
 
-    .row-number {
-      grid-area: number;
-      margin-top: 0.2rem;
-      font-size: 0.66rem;
+    .project-showcase-card:hover .project-showcase-card__badge {
+      border-color: rgb(45 91 227 / 0.22);
+      color: rgb(71 85 105);
     }
 
-    .row-title {
-      grid-area: title;
-      font-size: 0.94rem;
-      line-height: 1.2;
-      color: rgb(248 250 252);
-      background-image: none;
+    .project-showcase-card:hover .project-showcase-card__title {
+      color: rgb(45 91 227);
     }
 
-    .project-row:hover .row-title,
-    .project-row:focus-visible .row-title {
-      color: rgb(248 250 252);
-      background-image: none;
-      background-position: initial;
+    .project-showcase-card:hover .project-showcase-card__cta {
+      color: rgb(45 91 227);
+      gap: 0.4rem;
     }
 
-    .row-type {
-      grid-area: type;
-      width: auto;
-      font-size: 0.69rem;
-      padding: 0;
-      border: 0;
-      color: rgb(255 255 255 / 0.5);
-    }
-
-    .row-arrow {
-      grid-area: arrow;
-      opacity: 1;
-      transform: none;
-      justify-self: end;
-      align-self: center;
-      transition: transform 0.3s ease;
-    }
-
-    .project-row.is-open .row-arrow {
-      transform: rotate(90deg);
-    }
-
-    .row-mobile-panel {
-      display: block;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      padding: 0 0.1rem;
-    }
-
-    .project-row.is-open .row-mobile-panel {
-      max-height: 400px;
-      padding-bottom: 0.75rem;
-    }
-
-    .project-row.is-open .row-title {
-      color: rgb(167 139 250);
-    }
-
-    .row-mobile-image {
-      display: block;
-      margin-top: 0.2rem;
-      border-radius: 8px;
-    }
-
-    .row-mobile-description {
-      margin: 0.7rem 0 0;
-      font-size: 0.84rem;
-      line-height: 1.5;
-      color: rgb(255 255 255 / 0.55);
-    }
-
-    .row-mobile-cta-wrap {
-      display: block;
-      margin-top: 0.75rem;
-      width: 100%;
-    }
-
-    .row-mobile-cta {
-      display: inline-flex;
-      width: 100%;
-      justify-content: center;
-      align-items: center;
-      gap: 0.45rem;
-      border-radius: 8px;
-      padding: 0.62rem 0.9rem;
-      background: rgb(255 255 255 / 0.1);
-      border: 1px solid rgb(255 255 255 / 0.14);
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: rgb(241 245 249);
-    }
-
-    .hover-preview {
-      display: none;
+    .project-showcase-card:hover .project-showcase-card__cta-arrow {
+      transform: translateX(2px);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .project-row,
-    .row-title,
-    .row-arrow,
-    .hover-preview {
-      transition-duration: 0s !important;
+    .project-showcase-card,
+    .project-showcase-card__badge,
+    .project-showcase-card__title,
+    .project-showcase-card__cta,
+    .project-showcase-card__cta-arrow {
+      transition: none !important;
       transition-delay: 0s !important;
+    }
+
+    .project-showcase-card:hover {
+      transform: none;
     }
   }
 </style>

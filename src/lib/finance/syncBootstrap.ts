@@ -1,6 +1,8 @@
 import {
   fetchFinanceRemote,
+  FinanceCloudNetworkError,
   isFinanceCloudConfigured,
+  isFinanceCloudNetworkError,
   upsertFinanceRemote,
   type RemoteFinanceRow,
 } from '@/lib/finance/cloudSync';
@@ -10,6 +12,7 @@ import {
   DEFAULT_FINANCE_SYNC_ID,
   captureLegacySyncId,
   ensureFinanceAppDataVersion,
+  getFinanceLocalSavedAt,
   getInitialFinanceState,
   loadFinanceState,
   resetFinanceSyncIdToDefault,
@@ -19,7 +22,14 @@ import {
 } from '@/lib/finance/storage';
 
 export type CloudPullResult =
-  | { ok: true; state: FinanceState; updatedAt: string; sourceId: string; migrated: boolean }
+  | {
+      ok: true;
+      state: FinanceState;
+      updatedAt: string;
+      sourceId: string;
+      migrated: boolean;
+      warning?: string;
+    }
   | { ok: false; reason: 'not_configured' | 'empty' | 'error'; message?: string };
 
 function investmentCount(state: FinanceState): number {
@@ -38,19 +48,27 @@ function scoreRemote(row: RemoteFinanceRow): number {
 
 async function fetchBestCloudRow(): Promise<{ id: string; remote: RemoteFinanceRow } | null> {
   const ids = listCloudSyncCandidateIds();
+  let networkFailures = 0;
+
   const results = await Promise.all(
     ids.map(async (id) => {
       try {
         const remote = await fetchFinanceRemote(id);
         return remote ? { id, remote } : null;
-      } catch {
+      } catch (error) {
+        if (isFinanceCloudNetworkError(error)) networkFailures += 1;
         return null;
       }
     }),
   );
 
   const rows = results.filter((r): r is { id: string; remote: RemoteFinanceRow } => r !== null);
-  if (rows.length === 0) return null;
+  if (rows.length === 0) {
+    if (networkFailures > 0) {
+      throw new FinanceCloudNetworkError();
+    }
+    return null;
+  }
 
   let best = rows[0];
   for (const row of rows.slice(1)) {
@@ -122,17 +140,26 @@ export async function pullCanonicalFromCloud(): Promise<CloudPullResult> {
     return { ok: true, state, updatedAt, sourceId: best.id, migrated };
   } catch (e) {
     const local = loadFinanceState();
-    if (hasMeaningfulData(local)) {
-      const state = withPreferences(local);
-      saveFinanceState(state);
+    const state = withPreferences(local);
+    saveFinanceState(state);
+    const warning =
+      e instanceof FinanceCloudNetworkError || isFinanceCloudNetworkError(e)
+        ? e instanceof Error
+          ? e.message
+          : 'No se pudo conectar con Supabase.'
+        : undefined;
+
+    if (hasMeaningfulData(state) || warning) {
       return {
         ok: true,
         state,
-        updatedAt: new Date().toISOString(),
+        updatedAt: getFinanceLocalSavedAt() ?? new Date().toISOString(),
         sourceId: 'local-cache',
         migrated: false,
+        warning,
       };
     }
+
     const message = e instanceof Error ? e.message : 'Error al leer la nube.';
     return { ok: false, reason: 'error', message };
   }

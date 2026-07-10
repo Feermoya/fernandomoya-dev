@@ -52,6 +52,7 @@
     color-scheme: dark;
     --accent-1: #2d5be3;
     --accent-2: #e3842d;
+    --font-primary: var(--font-sans);
   }
 
   html {
@@ -95,6 +96,10 @@
 @layer utilities {
   .container-page {
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .about-home-heading {
+    font-family: 'Plus Jakarta Sans', var(--font-primary);
   }
 
   /** Foco financiero — fintech light (PWA / mobile) */
@@ -1807,4 +1812,149 @@
   to {
     clip-path: inset(100% 0% 0% 0%);
   }
+}
+
+/* =============================================================================
+ * Home pública — estética light premium (solo `body.marketing-light` en `/`)
+ * ============================================================================= */
+
+body.marketing-light {
+  --page-bg: #f6f7fb;
+  --page-bg-soft: #eef2f7;
+  --page-surface: rgba(255, 255, 255, 0.82);
+  --page-surface-solid: #ffffff;
+  --page-text: #0f172a;
+  --page-muted: #64748b;
+  --page-muted-strong: #475569;
+  --page-border: rgba(15, 23, 42, 0.08);
+  --page-border-strong: rgba(15, 23, 42, 0.14);
+  --page-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+
+  color: var(--page-text);
+  background-color: var(--page-bg);
+  background-image:
+    radial-gradient(circle at 12% 0%, rgba(45, 91, 227, 0.12), transparent 32%),
+    radial-gradient(circle at 90% 18%, rgba(167, 139, 250, 0.1), transparent 30%),
+    linear-gradient(180deg, #f8fafc 0%, #f3f6fb 42%, #eef2f7 100%);
+}
+
+html.marketing-light-html {
+  color-scheme: light;
+  background-color: var(--page-bg, #f6f7fb);
+}
+
+body.marketing-light .home-section-eyebrow {
+  color: rgb(100 116 139);
+}
+
+body.marketing-light .home-section-title {
+  color: rgb(15 23 42);
+}
+
+body.marketing-light .home-section-lead {
+  color: rgb(71 85 105);
+}
+
+body.marketing-light .home-section-accent-line {
+  background: linear-gradient(90deg, rgb(45 91 227 / 0.55), rgb(124 58 237 / 0.35));
+}
+
+body.marketing-light .home-section-light {
+  background: transparent;
+}
+
+/* Hero oscuro premium → transición suave al fondo claro */
+body.marketing-light .hero-root--light-page {
+  background:
+    radial-gradient(1100px 520px at 22% 6%, rgba(96, 165, 250, 0.2), transparent 58%),
+    radial-gradient(900px 480px at 78% 14%, rgba(167, 139, 250, 0.16), transparent 60%),
+    linear-gradient(180deg, #0a1020 0%, #101a33 52%, #121f3d 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 28px 72px rgba(15, 23, 42, 0.14);
+}
+
+body.marketing-light .hero-root--light-page::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 120px;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(180deg, transparent, rgb(248 250 252 / 0.92));
+}
+
+body.marketing-light .hero-immersive {
+  background:
+    radial-gradient(1200px 520px at 25% 10%, rgba(96, 165, 250, 0.16), transparent 58%),
+    radial-gradient(920px 520px at 75% 18%, rgba(167, 139, 250, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.45) 70%, rgba(2, 6, 23, 0.62) 100%);
+}
+
+/* Header claro en home */
+body.marketing-light .site-header-glass {
+  background-color: rgba(255, 255, 255, 0.78);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+body.marketing-light .site-header-glass[data-scrolled='true'] {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+body.marketing-light .site-header-glass .text-text,
+body.marketing-light .site-header-glass a.group {
+  color: #0f172a;
+}
+
+body.marketing-light .site-header-glass nav a,
+body.marketing-light .site-header-glass .text-muted {
+  color: #64748b;
+}
+
+body.marketing-light .site-header-glass nav a:hover {
+  color: #0f172a;
+}
+
+body.marketing-light .site-header-glass .glass-surface-sm {
+  border-color: rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+/* Ambient más suave */
+body.marketing-light .ambient-blob {
+  opacity: 0.16;
+  filter: blur(120px);
+}
+
+body.marketing-light .ambient-blob--1 {
+  background: rgba(45, 91, 227, 0.18);
+}
+
+body.marketing-light .ambient-blob--2 {
+  background: rgba(167, 139, 250, 0.14);
+}
+
+body.marketing-light .ambient-blob--3 {
+  background: rgba(59, 130, 246, 0.1);
+  opacity: 0.12;
+}
+
+/* Contacto — isla oscura de cierre */
+body.marketing-light #contacto > div > div {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(160deg, #0f172a 0%, #121a2e 48%, #0d1324 100%) !important;
+  box-shadow: 0 28px 72px rgba(15, 23, 42, 0.18) !important;
+}
+
+/* Footer oscuro como cierre */
+body.marketing-light .footer-glass {
+  margin-top: 0.5rem;
+  border-top-color: rgba(15, 23, 42, 0.12);
+  background: linear-gradient(180deg, #070b18 0%, #050818 100%);
+  box-shadow: 0 -16px 48px rgba(15, 23, 42, 0.08);
 }

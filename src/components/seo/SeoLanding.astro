@@ -1,5 +1,8 @@
 ---
 import Layout from '@/layouts/Layout.astro';
+import ButtonLink from '@/components/ui/ButtonLink.astro';
+import { site } from '@/data/site';
+import { getRelatedLandings, seoLandings, seoProcessSteps } from '@/data/seo-landings';
 import { absoluteUrl } from '@/utils/seo';
 
 export type Props = {
@@ -8,13 +11,34 @@ export type Props = {
   path: string;
   h1: string;
   intro: string;
+  problem?: string;
+  outcome?: string;
   bullets?: string[];
   faqs?: { q: string; a: string }[];
 };
 
-const { title, description, path, h1, intro, bullets = [], faqs = [] } = Astro.props;
+const {
+  title,
+  description,
+  path,
+  h1,
+  intro,
+  problem,
+  outcome,
+  bullets = [],
+  faqs = [],
+} = Astro.props;
+
+const defaultProblem =
+  'Si tu web no explica bien qué hacés, para quién es o cómo contactarte, muchas visitas se van antes de convertirse en consulta.';
+const defaultOutcome =
+  'Un sitio claro, profesional y fácil de recorrer —con el mensaje ordenado y el contacto visible donde el visitante lo espera.';
 
 const canonical = absoluteUrl(path);
+const landingData = seoLandings.find((l) => l.path === path);
+const problemText = problem ?? landingData?.problem ?? defaultProblem;
+const outcomeText = outcome ?? landingData?.outcome ?? defaultOutcome;
+const related = getRelatedLandings(path, 3);
 
 const faqSchema =
   faqs.length > 0
@@ -37,100 +61,357 @@ const breadcrumbSchema = {
     { '@type': 'ListItem', position: 2, name: h1, item: canonical },
   ],
 };
+
+const CheckIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
 ---
 
 <Layout title={title} description={description} path={path}>
-  <section class="container-page pb-16 pt-20 sm:pt-24">
-    <div class="max-w-3xl">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">Servicios</p>
-      <h1 class="mt-3 text-balance text-[clamp(2.0rem,4.2vw+0.9rem,3.4rem)] font-semibold leading-[1.08] tracking-[-0.035em] text-text">
-        {h1}
-      </h1>
-      <p class="mt-5 text-pretty text-[1.05rem] leading-[1.75] text-white/74 sm:text-[1.1rem]">
-        {intro}
-      </p>
+  <article class="seo-landing">
+    <header class="seo-landing__hero border-b border-white/[0.08]">
+      <div class="container-page pb-12 pt-20 sm:pb-16 sm:pt-24">
+        <nav class="seo-landing__breadcrumb" aria-label="Miga de pan">
+          <ol>
+            <li><a href="/">Inicio</a></li>
+            <li aria-current="page">{h1}</li>
+          </ol>
+        </nav>
 
-      {bullets.length > 0 ? (
-        <ul class="mt-6 grid gap-2.5 sm:grid-cols-2">
-          {bullets.map((b) => (
-            <li class="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-[13px] leading-snug text-white/78">
-              {b}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+        <div class="mt-6 max-w-3xl">
+          <p class="home-section-eyebrow">Servicios · {site.location}</p>
+          <h1 class="mt-3 text-balance text-[clamp(2rem,4.2vw+0.9rem,3.4rem)] font-semibold leading-[1.08] tracking-[-0.035em] text-text">
+            {h1}
+          </h1>
+          <p class="mt-5 max-w-2xl text-pretty text-[1.05rem] leading-[1.75] text-white/78 sm:text-[1.1rem]">
+            {intro}
+          </p>
 
-      <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <a class="btn-primary" href="/#contacto">Quiero una web para mi negocio</a>
-        <a class="btn-ghost" href="/#proyectos">Ver trabajos</a>
-        <a class="btn-ghost" href="/#sobre-mi">Cómo trabajo</a>
-      </div>
-
-      {faqs.length > 0 ? (
-        <div class="mt-12">
-          <h2 class="text-[12px] font-semibold uppercase tracking-[0.14em] text-muted">Preguntas frecuentes</h2>
-          <div class="mt-4 grid gap-3">
-            {faqs.map((f) => (
-              <details class="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
-                <summary class="cursor-pointer list-none text-[14px] font-semibold text-text">
-                  {f.q}
-                </summary>
-                <p class="mt-2 text-[13px] leading-relaxed text-white/72">{f.a}</p>
-              </details>
-            ))}
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <ButtonLink href="/#contacto">Quiero una web para mi negocio</ButtonLink>
+            <ButtonLink href={site.social.whatsapp} variant="ghost" external>
+              Escribir por WhatsApp
+            </ButtonLink>
+            <ButtonLink href="/#proyectos" variant="ghost">Ver trabajos publicados</ButtonLink>
           </div>
         </div>
-      ) : null}
-    </div>
-  </section>
+      </div>
+    </header>
+
+    <section class="seo-landing__story border-b border-white/[0.08] py-10 sm:py-14" aria-labelledby="seo-problem-heading">
+      <div class="container-page">
+        <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
+          <div class="glass-surface-sm seo-landing__panel p-5 sm:p-6">
+            <p class="home-section-eyebrow">El problema</p>
+            <h2 id="seo-problem-heading" class="home-section-title mt-3 text-[clamp(1.35rem,2vw+0.5rem,1.75rem)]">
+              Lo que suele pasar hoy
+            </h2>
+            <p class="mt-4 text-[0.9375rem] leading-[1.7] text-white/74">
+              {problemText}
+            </p>
+          </div>
+
+          <div class="glass-surface-sm seo-landing__panel p-5 sm:p-6">
+            <p class="home-section-eyebrow">Qué buscamos</p>
+            <h2 class="home-section-title mt-3 text-[clamp(1.35rem,2vw+0.5rem,1.75rem)]">
+              Cómo debería funcionar tu web
+            </h2>
+            <p class="mt-4 text-[0.9375rem] leading-[1.7] text-white/74">
+              {outcomeText}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {
+      bullets.length > 0 ? (
+        <section class="border-b border-white/[0.08] py-10 sm:py-14" aria-labelledby="seo-includes-heading">
+          <div class="container-page">
+            <div class="max-w-2xl">
+              <p class="home-section-eyebrow">Qué incluye</p>
+              <h2 id="seo-includes-heading" class="home-section-title mt-3">
+                Lo que trabajamos en cada proyecto
+              </h2>
+              <div class="home-section-accent-line" aria-hidden="true" />
+            </div>
+
+            <ul class="mt-8 grid gap-3 sm:grid-cols-2 lg:gap-4">
+              {bullets.map((b) => (
+                <li class="seo-landing__benefit glass-surface-sm flex gap-3 p-4 sm:p-5">
+                  <span class="seo-landing__check shrink-0" set:html={CheckIcon} />
+                  <span class="text-[0.9375rem] leading-[1.65] text-white/80">{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : null
+    }
+
+    <section class="border-b border-white/[0.08] py-10 sm:py-14" aria-labelledby="seo-process-heading">
+      <div class="container-page">
+        <div class="max-w-2xl">
+          <p class="home-section-eyebrow">Cómo trabajo</p>
+          <h2 id="seo-process-heading" class="home-section-title mt-3">
+            Tres pasos, sin sorpresas
+          </h2>
+          <p class="home-section-lead">
+            Comunicación directa en español y entregas ordenadas —desde Mendoza o a distancia.
+          </p>
+        </div>
+
+        <ol class="mt-8 grid gap-4 sm:grid-cols-3">
+          {
+            seoProcessSteps.map((step, i) => (
+              <li class="seo-landing__step glass-surface-sm p-5 sm:p-6">
+                <span class="seo-landing__step-num" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <h3 class="mt-4 text-[1rem] font-semibold leading-snug text-text">{step.title}</h3>
+                <p class="mt-2 text-[0.875rem] leading-[1.65] text-white/68">{step.text}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <section class="border-b border-white/[0.08] py-10 sm:py-14" aria-labelledby="seo-trust-heading">
+      <div class="container-page">
+        <div class="seo-landing__trust glass-surface-sm grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-8 sm:p-8">
+          <div>
+            <p class="home-section-eyebrow">Confianza</p>
+            <h2 id="seo-trust-heading" class="home-section-title mt-3 text-[clamp(1.35rem,2vw+0.5rem,1.85rem)]">
+              Sitios publicados para negocios reales
+            </h2>
+            <p class="mt-3 max-w-xl text-[0.9375rem] leading-[1.7] text-white/72">
+              Laboratorios, productores de seguros, concesionarias, profesionales de la salud y más. Cada proyecto
+              prioriza claridad, contacto visible y buena lectura en celular.
+            </p>
+            <div class="mt-5 flex flex-wrap gap-4">
+              {
+                site.metrics.map((m) => (
+                  <div class="seo-landing__metric">
+                    <span class="seo-landing__metric-value">
+                      {m.value}
+                      {m.suffix}
+                    </span>
+                    <span class="seo-landing__metric-label">{m.label.replace('\n', ' ')}</span>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+          <ButtonLink href="/#proyectos" variant="ghost" class="w-full sm:w-auto">
+            Ver proyectos
+          </ButtonLink>
+        </div>
+      </div>
+    </section>
+
+    {
+      faqs.length > 0 ? (
+        <section class="border-b border-white/[0.08] py-10 sm:py-14" aria-labelledby="seo-faq-heading">
+          <div class="container-page max-w-3xl">
+            <p class="home-section-eyebrow">Dudas frecuentes</p>
+            <h2 id="seo-faq-heading" class="home-section-title mt-3">
+              Preguntas que suelen hacer
+            </h2>
+            <div class="home-section-accent-line" aria-hidden="true" />
+
+            <div class="mt-6 grid gap-3">
+              {faqs.map((f) => (
+                <details class="seo-landing__faq glass-surface-sm group">
+                  <summary class="flex cursor-pointer list-none items-start justify-between gap-4 px-4 py-3.5 text-[0.9375rem] font-semibold text-text sm:px-5 sm:py-4">
+                    <span>{f.q}</span>
+                    <span class="seo-landing__faq-icon shrink-0 text-muted" aria-hidden="true">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <p class="border-t border-white/[0.06] px-4 pb-4 pt-3 text-[0.875rem] leading-[1.7] text-white/72 sm:px-5 sm:pb-5">
+                    {f.a}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null
+    }
+
+    {
+      related.length > 0 ? (
+        <section class="border-b border-white/[0.08] py-10 sm:py-14" aria-labelledby="seo-related-heading">
+          <div class="container-page max-w-3xl">
+            <p class="home-section-eyebrow">Seguí leyendo</p>
+            <h2 id="seo-related-heading" class="home-section-title mt-3">
+              Guías relacionadas
+            </h2>
+            <ul class="mt-5 grid gap-2 sm:grid-cols-3">
+              {related.map((r) => (
+                <li>
+                  <a class="seo-landing__related glass-surface-sm block p-4" href={r.path}>
+                    <span class="text-[0.8125rem] font-semibold leading-snug text-text">{r.h1}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ) : null
+    }
+
+    <section class="py-12 sm:py-16" aria-labelledby="seo-cta-heading">
+      <div class="container-page">
+        <div class="seo-landing__cta glass-surface mx-auto max-w-3xl p-6 text-center sm:p-10">
+          <p class="home-section-eyebrow">Próximo paso</p>
+          <h2 id="seo-cta-heading" class="home-section-title mt-3">
+            Contame qué negocio tenés
+          </h2>
+          <p class="mx-auto mt-3 max-w-lg text-[0.9375rem] leading-[1.7] text-white/72">
+            Escribime por WhatsApp o mail. Te respondo con una idea clara de alcance y tiempos —sin compromiso.
+          </p>
+          <div class="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <ButtonLink href={site.social.whatsapp} external>
+              Escribir por WhatsApp
+            </ButtonLink>
+            <ButtonLink href={`mailto:${site.email}`} variant="ghost">
+              {site.email}
+            </ButtonLink>
+          </div>
+        </div>
+      </div>
+    </section>
+  </article>
 
   <script type="application/ld+json" is:inline>
     {JSON.stringify(breadcrumbSchema)}
   </script>
-  {faqSchema ? (
-    <script type="application/ld+json" is:inline>
-      {JSON.stringify(faqSchema)}
-    </script>
-  ) : null}
+  {
+    faqSchema ? (
+      <script type="application/ld+json" is:inline>
+        {JSON.stringify(faqSchema)}
+      </script>
+    ) : null
+  }
 </Layout>
 
 <style>
-  .btn-primary {
+  .seo-landing__breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.75rem;
+    color: rgb(255 255 255 / 0.45);
+  }
+
+  .seo-landing__breadcrumb li:not(:last-child)::after {
+    content: '/';
+    margin-left: 0.5rem;
+    color: rgb(255 255 255 / 0.22);
+  }
+
+  .seo-landing__breadcrumb a {
+    color: rgb(255 255 255 / 0.62);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .seo-landing__breadcrumb a:hover {
+    color: var(--color-accent);
+  }
+
+  .seo-landing__panel,
+  .seo-landing__benefit,
+  .seo-landing__step,
+  .seo-landing__faq,
+  .seo-landing__related {
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .seo-landing__check {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
-    padding: 0.7rem 1.1rem;
-    border-radius: 0.9rem;
-    background: #3b4fd8;
-    color: white;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    box-shadow: 0 16px 44px rgba(59, 79, 216, 0.35);
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.65rem;
+    background: rgb(96 165 250 / 0.12);
+    color: #93c5fd;
   }
 
-  .btn-primary:hover {
-    background: #4f5fe8;
-  }
-
-  .btn-ghost {
+  .seo-landing__step-num {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    padding: 0.7rem 1.1rem;
-    border-radius: 0.9rem;
-    color: rgba(255, 255, 255, 0.92);
-    text-decoration: none;
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
-    background: transparent;
-    font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: rgb(255 255 255 / 0.38);
   }
 
-  .btn-ghost:hover {
-    border-color: rgba(255, 255, 255, 0.5);
+  .seo-landing__metric-value {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: rgb(255 255 255 / 0.95);
+  }
+
+  .seo-landing__metric-label {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: rgb(255 255 255 / 0.5);
+  }
+
+  .seo-landing__faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .seo-landing__faq summary:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 65%, white);
+    outline-offset: 2px;
+    border-radius: 0.75rem;
+  }
+
+  .seo-landing__faq-icon {
+    transition: transform 0.2s ease;
+  }
+
+  .seo-landing__faq[open] .seo-landing__faq-icon {
+    transform: rotate(180deg);
+  }
+
+  .seo-landing__related {
+    cursor: pointer;
+    text-decoration: none;
+    min-height: 44px;
+  }
+
+  .seo-landing__related:hover {
+    border-color: var(--color-glass-border-hover);
+    background: rgb(255 255 255 / 0.05);
+  }
+
+  .seo-landing__related:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 65%, white);
+    outline-offset: 2px;
+  }
+
+  .seo-landing__cta {
+    border-radius: 1.25rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .seo-landing__faq-icon {
+      transition: none;
+    }
   }
 </style>
-
