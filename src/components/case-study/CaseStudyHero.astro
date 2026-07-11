@@ -8,7 +8,6 @@ export type CaseStudyHeroProps = {
   phrase: string;
   projectType: string;
   year: number;
-  stack: string[];
   domain: string;
   live: string;
   coverSrc: string;
@@ -24,7 +23,6 @@ const {
   phrase,
   projectType,
   year,
-  stack,
   domain,
   live,
   coverSrc,
@@ -52,10 +50,6 @@ const {
         <div class="cs-hero__meta-item">
           <dt>Año</dt>
           <dd>{year}</dd>
-        </div>
-        <div class="cs-hero__meta-item">
-          <dt>Tecnologías</dt>
-          <dd>{stack.join(' · ')}</dd>
         </div>
         <div class="cs-hero__meta-item">
           <dt>Dominio</dt>

@@ -1,0 +1,63 @@
+---
+import '@/styles/process.css';
+import ProcessMotion from '@/components/react/ProcessMotion';
+
+const steps = [
+  {
+    number: '01',
+    label: 'ORDENAR',
+    title: 'Entender qué importa.',
+    body: 'Definimos qué necesita comunicar el negocio y qué debería encontrar primero la persona que entra.',
+  },
+  {
+    number: '02',
+    label: 'DISEÑAR',
+    title: 'Encontrar una dirección propia.',
+    body: 'Transformo esa información en una experiencia clara, reconocible y coherente con la marca.',
+  },
+  {
+    number: '03',
+    label: 'CONSTRUIR',
+    title: 'Llevarlo a una web real.',
+    body: 'La propuesta se convierte en una página rápida, simple de usar y preparada para recibir consultas.',
+  },
+] as const;
+---
+
+<section id="proceso" class="process-section" aria-labelledby="process-heading">
+  <div class="container-page process-section__grid">
+    <div class="process-section__intro">
+      <p class="process-section__eyebrow">CÓMO TRABAJO</p>
+      <h2 id="process-heading" class="process-section__title">
+        Primero entiendo.<br aria-hidden="true" />
+        Después diseño.
+      </h2>
+      <p class="process-section__lead">
+        No hay una solución igual para todos.<br aria-hidden="true" />
+        Cada web se construye alrededor de un negocio real.
+      </p>
+    </div>
+
+    <div class="process-section__flow">
+      <span class="process-section__divider" data-process-divider aria-hidden="true"></span>
+      <ol class="process-section__steps">
+        {
+          steps.map((step) => (
+            <li class="process-section__step" data-process-step>
+              <span class="process-section__number" aria-hidden="true">
+                {step.number}
+              </span>
+              <div>
+                <p class="process-section__eyebrow">{step.label}</p>
+                <h3 class="process-section__step-title">{step.title}</h3>
+                <p class="process-section__step-body">{step.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+
+  <ProcessMotion client:visible />
+</section>

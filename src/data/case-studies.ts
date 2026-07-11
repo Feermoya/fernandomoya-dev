@@ -169,7 +169,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
     direction: {
       estructura: [
-        'Se organizó el contenido por tipo de servicio y necesidad, evitando párrafos largos donde bastan listas claras y titulares directos. El frontend es estático y liviano, alojado en Firebase Hosting.',
+        'Se organizó el contenido por tipo de servicio y necesidad, evitando párrafos largos donde bastan listas claras y titulares directos. El sitio es estático y liviano, pensado para cargar rápido incluso desde obra.',
         'El diseño responsive asegura que fotos de equipamiento, tablas resumidas o bloques de texto se apilen en un orden lógico en pantallas chicas. Donde aplica, se enfatizó la cobertura geográfica o modalidad de trabajo.',
       ],
       identidad: [

@@ -61,7 +61,6 @@ const live = entry.data.links.live;
 const domain = domainFromLive(live);
 const year = entry.data.publishDate.getFullYear();
 const projectType = entry.data.projectType;
-const stack = entry.data.stack;
 const description = entry.data.description;
 const alt = `Captura del sitio web de ${client}`;
 
@@ -97,7 +96,7 @@ const schema = {
 >
   <script type="application/ld+json" set:html={JSON.stringify(schema)} />
 
-  <main class={`case-study-page case-study-page--${editorial.theme}`}>
+  <div class={`case-study-page case-study-page--${editorial.theme}`}>
     <CaseStudyHero
       theme={editorial.theme}
       number={editorial.number}
@@ -105,7 +104,6 @@ const schema = {
       phrase={editorial.phrase}
       projectType={projectType}
       year={year}
-      stack={stack}
       domain={domain}
       live={live}
       coverSrc={optimized.src}
@@ -153,5 +151,5 @@ const schema = {
     <CaseStudyCta />
 
     <CaseStudyMotion client:load />
-  </main>
+  </div>
 </Layout>

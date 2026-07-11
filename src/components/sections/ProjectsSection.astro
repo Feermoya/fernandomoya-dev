@@ -16,7 +16,6 @@ const FEATURED_COPY: Record<
     number: string;
     typeLine: string;
     phrase: string;
-    stack: string[];
     theme: FeaturedProjectData['theme'];
     mediaPosition: 'left' | 'right';
   }
@@ -25,7 +24,6 @@ const FEATURED_COPY: Record<
     number: '01',
     typeLine: 'Laboratorio genético · Sitio institucional',
     phrase: 'Complejidad médica, explicada con claridad.',
-    stack: ['HTML', 'CSS', 'JavaScript'],
     theme: 'hema',
     mediaPosition: 'right',
   },
@@ -33,7 +31,6 @@ const FEATURED_COPY: Record<
     number: '02',
     typeLine: 'Seguros · Sitio institucional',
     phrase: 'Una empresa familiar, llevada al presente.',
-    stack: ['Astro', 'TypeScript', 'CSS'],
     theme: 'giacomelli',
     mediaPosition: 'left',
   },
@@ -41,7 +38,6 @@ const FEATURED_COPY: Record<
     number: '03',
     typeLine: 'Industria · Servicios y maquinaria',
     phrase: 'Maquinaria real. Comunicación directa.',
-    stack: ['HTML', 'CSS', 'Firebase'],
     theme: 'poletino',
     mediaPosition: 'right',
   },
@@ -72,7 +68,6 @@ async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<Featur
     client,
     typeLine: copy.typeLine,
     phrase: copy.phrase,
-    stack: copy.stack,
     domain: domainFromLive(live),
     live,
     caseUrl: `/proyectos/${id}`,

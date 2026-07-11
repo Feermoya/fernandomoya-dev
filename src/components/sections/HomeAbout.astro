@@ -1,24 +1,55 @@
 ---
-import AboutSectionClient from '@/components/react/AboutSectionClient';
-import { site } from '@/data/site';
+import '@/styles/about.css';
 import { getImage } from 'astro:assets';
 import profilePhoto from '@/assets/profile.png';
+import { site } from '@/data/site';
 
-const profileSrc = (await getImage({ src: profilePhoto, width: 640, height: 640 })).src;
+const profile = await getImage({ src: profilePhoto, width: 900, height: 1125, format: 'webp' });
 ---
 
-<section id="sobre-mi" class="home-section-light relative border-t border-slate-200/70" aria-label="Sobre mí">
-  <div class="container-page">
-  <AboutSectionClient
-    client:visible
-    profileSrc={profileSrc}
-    profileAlt={`Retrato de ${site.name}`}
-    heading="Diseño webs que se entienden rápido"
-    body="Ordeno lo importante y lo llevo a una web clara, simple y fácil de usar."
-    lightSurface
-    whatsappUrl={site.social.whatsapp}
-    email={site.email}
-    metrics={[...site.metrics]}
-  />
+<section id="sobre-mi" class="about-section" aria-labelledby="about-heading">
+  <div class="container-page about-section__inner">
+    <p class="about-section__eyebrow">SOBRE MÍ</p>
+
+    <h2 id="about-heading" class="about-section__title">
+      Una web puede verse bien y seguir sin decir nada.
+    </h2>
+
+    <figure class="about-section__photo">
+      <div class="about-section__photo-frame">
+        <img
+          src={profile.src}
+          alt={`Retrato de ${site.name}`}
+          width={profile.attributes.width ?? 900}
+          height={profile.attributes.height ?? 1125}
+          loading="lazy"
+          decoding="async"
+          sizes="(min-width: 1024px) 38vw, 100vw"
+          class="about-section__photo-image"
+        />
+      </div>
+    </figure>
+
+    <div class="about-section__body">
+      <p class="about-section__text">
+        Soy Fernando. Diseño y desarrollo webs desde Mendoza para negocios que necesitan comunicar
+        mejor lo que hacen.
+      </p>
+      <p class="about-section__text about-section__text--muted">
+        Trabajo de forma directa con cada proyecto: ordeno la información, encuentro una dirección
+        visual y la convierto en una experiencia fácil de entender.
+      </p>
+    </div>
+
+    <ul class="about-section__highlights">
+      <li class="about-section__highlight">Trabajo directo, sin intermediarios</li>
+      <li class="about-section__highlight">Mendoza, Argentina</li>
+      <li class="about-section__highlight">Proyectos para negocios y profesionales</li>
+    </ul>
+
+    <div class="about-section__actions">
+      <a href="#contacto" class="about-section__cta">Hablemos</a>
+      <a href="#proyectos" class="about-section__link">Ver trabajo</a>
+    </div>
   </div>
 </section>

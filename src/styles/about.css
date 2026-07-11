@@ -1,0 +1,218 @@
+/* ETAPA 5 — Sobre mí editorial */
+
+.about-section {
+  background: var(--fm-bg-base, #070707);
+  color: var(--fm-text-primary);
+  overflow-x: clip;
+}
+
+.about-section__inner {
+  display: grid;
+  gap: clamp(2rem, 5vw, 3rem);
+  padding: clamp(4rem, 9vw, 6.5rem) 0;
+}
+
+.about-section__eyebrow {
+  margin: 0;
+  font-family: var(--fm-font-body);
+  font-size: clamp(0.625rem, 0.55rem + 0.3vw, 0.6875rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fm-text-secondary);
+}
+
+.about-section__title {
+  margin: clamp(0.9rem, 2vw, 1.2rem) 0 0;
+  max-width: 16ch;
+  font-family: var(--fm-font-display);
+  font-size: clamp(2rem, 4.5vw + 0.5rem, 3.25rem);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--fm-text-primary);
+  text-wrap: balance;
+}
+
+.about-section__photo {
+  margin: 0;
+  min-width: 0;
+}
+
+.about-section__photo-frame {
+  overflow: hidden;
+  border: 1px solid var(--fm-border-light);
+  border-radius: var(--fm-radius-lg);
+  aspect-ratio: 4 / 5;
+  max-width: 28rem;
+}
+
+.about-section__photo-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.about-section__body {
+  max-width: 36rem;
+}
+
+.about-section__text {
+  margin: 0;
+  font-family: var(--fm-font-body);
+  font-size: clamp(1rem, 0.95rem + 0.15vw, 1.125rem);
+  line-height: 1.7;
+  color: var(--fm-text-primary);
+}
+
+.about-section__text + .about-section__text {
+  margin-top: 1.15rem;
+}
+
+.about-section__text--muted {
+  color: var(--fm-text-secondary);
+}
+
+.about-section__highlights {
+  list-style: none;
+  margin: clamp(1.5rem, 3vw, 2rem) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--fm-border-light);
+}
+
+.about-section__highlight {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--fm-border-light);
+  font-family: var(--fm-font-body);
+  font-size: clamp(0.9375rem, 0.9rem + 0.1vw, 1rem);
+  line-height: 1.5;
+  color: var(--fm-text-secondary);
+}
+
+.about-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-top: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+.about-section__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 1.35rem;
+  border-radius: var(--fm-radius-pill);
+  border: 1px solid var(--fm-text-primary);
+  background: var(--fm-text-primary);
+  color: var(--fm-bg-base);
+  font-family: var(--fm-font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.about-section__cta:hover {
+  opacity: 0.88;
+}
+
+.about-section__cta:focus-visible {
+  outline: 2px solid var(--fm-text-primary);
+  outline-offset: 3px;
+}
+
+.about-section__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.25rem;
+  font-family: var(--fm-font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fm-text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.about-section__link:hover {
+  color: var(--fm-text-primary);
+}
+
+.about-section__link:focus-visible {
+  outline: 2px solid var(--fm-text-primary);
+  outline-offset: 3px;
+}
+
+@media (min-width: 1024px) {
+  .about-section__inner {
+    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+    gap: clamp(2.5rem, 5vw, 4rem);
+    align-items: start;
+  }
+
+  .about-section__photo {
+    grid-row: 1 / span 6;
+  }
+
+  .about-section__photo-frame {
+    max-width: none;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .about-section__inner {
+    grid-template-areas:
+      'eyebrow'
+      'title'
+      'photo'
+      'body'
+      'highlights'
+      'actions';
+  }
+
+  .about-section__eyebrow {
+    grid-area: eyebrow;
+  }
+
+  .about-section__title {
+    grid-area: title;
+    max-width: none;
+  }
+
+  .about-section__photo {
+    grid-area: photo;
+  }
+
+  .about-section__body {
+    grid-area: body;
+  }
+
+  .about-section__highlights {
+    grid-area: highlights;
+  }
+
+  .about-section__actions {
+    grid-area: actions;
+  }
+
+  .about-section__photo-frame {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .about-section__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .about-section__cta,
+  .about-section__link {
+    justify-content: center;
+  }
+}

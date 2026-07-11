@@ -1,0 +1,95 @@
+---
+import '@/styles/brand-work.css';
+import { getImage } from 'astro:assets';
+import tarjetasImg from '@/assets/tarjetas.png';
+import calcosImg from '@/assets/calcos.png';
+import qrImg from '@/assets/qr.png';
+import detallesImg from '@/assets/detalles.png';
+
+const tarjetas = await getImage({ src: tarjetasImg, width: 1400, format: 'webp' });
+const calcos = await getImage({ src: calcosImg, width: 1000, format: 'webp' });
+const qr = await getImage({ src: qrImg, width: 800, format: 'webp' });
+const material = await getImage({ src: detallesImg, width: 900, format: 'webp' });
+---
+
+<section id="piezas-marca" class="brand-work" aria-labelledby="brand-work-heading">
+  <div class="container-page brand-work__inner">
+    <header class="brand-work__header">
+      <p class="brand-work__eyebrow">MÁS ALLÁ DE LA PANTALLA</p>
+      <h2 id="brand-work-heading" class="brand-work__title">
+        La identidad no termina<br aria-hidden="true" />
+        en la web.
+      </h2>
+      <p class="brand-work__lead">
+        También diseño piezas físicas y digitales<br aria-hidden="true" />
+        que ayudan a que una marca se vea consistente.
+      </p>
+    </header>
+
+    <div class="brand-work__gallery">
+      <figure class="brand-work__piece brand-work__piece--lead">
+        <div class="brand-work__frame">
+          <img
+            src={tarjetas.src}
+            alt="Diseño de tarjetas personales para clientes"
+            width={tarjetas.attributes.width ?? 1400}
+            height={tarjetas.attributes.height ?? 1750}
+            loading="lazy"
+            decoding="async"
+            sizes="(min-width: 1024px) 52vw, (min-width: 768px) 50vw, 100vw"
+            class="brand-work__image"
+          />
+        </div>
+        <figcaption class="brand-work__label">Tarjetas</figcaption>
+      </figure>
+
+      <figure class="brand-work__piece brand-work__piece--calcos">
+        <div class="brand-work__frame">
+          <img
+            src={calcos.src}
+            alt="Calcomanías y stickers personalizados para marcas"
+            width={calcos.attributes.width ?? 1000}
+            height={calcos.attributes.height ?? 800}
+            loading="lazy"
+            decoding="async"
+            sizes="(min-width: 1024px) 34vw, (min-width: 768px) 50vw, 50vw"
+            class="brand-work__image"
+          />
+        </div>
+        <figcaption class="brand-work__label">Calcomanías</figcaption>
+      </figure>
+
+      <figure class="brand-work__piece brand-work__piece--qr">
+        <div class="brand-work__frame">
+          <img
+            src={qr.src}
+            alt="Piezas impresas con código QR para negocios"
+            width={qr.attributes.width ?? 800}
+            height={qr.attributes.height ?? 800}
+            loading="lazy"
+            decoding="async"
+            sizes="(min-width: 1024px) 28vw, (min-width: 768px) 50vw, 50vw"
+            class="brand-work__image"
+          />
+        </div>
+        <figcaption class="brand-work__label">Piezas con QR</figcaption>
+      </figure>
+
+      <figure class="brand-work__piece brand-work__piece--material">
+        <div class="brand-work__frame">
+          <img
+            src={material.src}
+            alt="Material de marca aplicado en piezas impresas"
+            width={material.attributes.width ?? 900}
+            height={material.attributes.height ?? 675}
+            loading="lazy"
+            decoding="async"
+            sizes="(min-width: 1024px) 30vw, (min-width: 768px) 50vw, 50vw"
+            class="brand-work__image"
+          />
+        </div>
+        <figcaption class="brand-work__label">Material de marca</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>

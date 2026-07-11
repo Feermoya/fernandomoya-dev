@@ -12,7 +12,6 @@ export type FeaturedProjectData = {
   client: string;
   typeLine: string;
   phrase: string;
-  stack: string[];
   domain: string;
   live: string;
   caseUrl: string;
@@ -103,11 +102,6 @@ export default function FeaturedProject({ project }: Props) {
             <p className="featured-project__type" data-featured-copy>
               {project.typeLine}
             </p>
-            <ul className="featured-project__stack" data-featured-copy>
-              {project.stack.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
             <div className="featured-project__links" data-featured-copy>
               <a href={project.caseUrl} className="featured-project__cta">
                 Ver caso
