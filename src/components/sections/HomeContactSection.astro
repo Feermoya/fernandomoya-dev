@@ -1,12 +1,83 @@
 ---
-import ContactSectionClient from '@/components/react/ContactSectionClient';
+import '@/styles/contact.css';
 import { site } from '@/data/site';
+
+const mailto = `mailto:${site.email}`;
 ---
 
-<section class="home-section-contact relative border-t border-slate-200/70 pt-6 sm:pt-10">
-  <ContactSectionClient
-    client:visible
-    whatsappUrl={site.social.whatsapp}
-    email={site.email}
-  />
+<section id="contacto" class="contact-section" aria-labelledby="contact-heading">
+  <div class="container-page contact-section__inner">
+    <div class="contact-section__grid">
+      <div class="contact-section__copy">
+        <p class="contact-section__eyebrow" data-contact-reveal="eyebrow">CONTACTO</p>
+        <h2 id="contact-heading" class="contact-section__title" data-contact-reveal="title">
+          Hagamos algo que<br aria-hidden="true" />
+          valga la pena mostrar.
+        </h2>
+        <p class="contact-section__lead" data-contact-reveal="lead">
+          Contame qué necesitás resolver.<br aria-hidden="true" />
+          Te respondo yo, sin formularios ni vueltas.
+        </p>
+      </div>
+
+      <div class="contact-section__actions">
+        <a
+          href={site.social.whatsapp}
+          class="contact-section__whatsapp"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-contact-reveal="whatsapp"
+        >
+          <span>Escribime por WhatsApp</span>
+          <span class="contact-section__arrow" aria-hidden="true">↗</span>
+        </a>
+        <a href={mailto} class="contact-section__email" data-contact-reveal="email">
+          {site.email}
+        </a>
+        <p class="contact-section__location" data-contact-reveal="location">
+          {site.location}
+        </p>
+      </div>
+    </div>
+  </div>
 </section>
+
+<script>
+  function initContactReveal() {
+    const section = document.querySelector('.contact-section');
+    if (!section) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      section.classList.add('is-visible');
+      return;
+    }
+
+    if (section.dataset.observed === 'true') return;
+    section.dataset.observed = 'true';
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            section.classList.add('is-visible');
+            observer.disconnect();
+          }
+        });
+      },
+      { rootMargin: '-10% 0px -10% 0px', threshold: 0.15 },
+    );
+
+    observer.observe(section);
+  }
+
+  initContactReveal();
+  document.addEventListener('astro:page-load', () => {
+    const section = document.querySelector('.contact-section');
+    if (section) {
+      section.dataset.observed = '';
+      section.classList.remove('is-visible');
+    }
+    initContactReveal();
+  });
+</script>

@@ -1604,13 +1604,6 @@
     }
   }
 
-  /** Footer editorial */
-  .footer-glass {
-    border-top: 1px solid var(--fm-border-light);
-    background: var(--fm-bg-surface);
-    box-shadow: inset 0 1px 0 rgba(245, 240, 232, 0.03);
-  }
-
   /** Underline: scaleX (sin animar width → menos reflow). */
   .link-underline-grow {
     position: relative;

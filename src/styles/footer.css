@@ -1,0 +1,192 @@
+/* ETAPA 6 — Footer editorial */
+
+.site-footer {
+  background: var(--fm-bg-base, #070707);
+  color: var(--fm-text-primary, #f5f0e8);
+  border-top: 1px solid var(--fm-border-light);
+  overflow-x: clip;
+}
+
+.site-footer__inner {
+  padding: clamp(3.5rem, 8vw, 5.5rem) 0 clamp(1.75rem, 4vw, 2.5rem);
+}
+
+.site-footer__top {
+  display: grid;
+  gap: clamp(2rem, 5vw, 3.5rem);
+}
+
+@media (min-width: 1024px) {
+  .site-footer__top {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: clamp(2.5rem, 5vw, 4rem);
+    align-items: start;
+  }
+}
+
+.site-footer__brand-mark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  font-family: var(--fm-font-display);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--fm-text-primary);
+  text-decoration: none;
+}
+
+.site-footer__brand-monogram {
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  letter-spacing: -0.04em;
+}
+
+.site-footer__brand-name {
+  font-family: var(--fm-font-body);
+  font-size: clamp(0.9375rem, 0.9rem + 0.1vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--fm-text-secondary);
+}
+
+.site-footer__tagline {
+  margin: clamp(1rem, 2vw, 1.25rem) 0 0;
+  max-width: 28rem;
+  font-family: var(--fm-font-body);
+  font-size: clamp(0.9375rem, 0.9rem + 0.1vw, 1.0625rem);
+  line-height: 1.65;
+  color: var(--fm-text-secondary);
+}
+
+.site-footer__columns {
+  display: grid;
+  gap: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+@media (min-width: 640px) {
+  .site-footer__columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3vw, 2rem);
+  }
+}
+
+.site-footer__label {
+  margin: 0;
+  font-family: var(--fm-font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fm-text-tertiary);
+}
+
+.site-footer__list {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.site-footer__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--fm-font-body);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--fm-text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.site-footer__link:hover {
+  color: var(--fm-text-primary);
+}
+
+.site-footer__link:focus-visible {
+  outline: 2px solid var(--fm-text-primary);
+  outline-offset: 3px;
+}
+
+.site-footer__meta {
+  display: block;
+  font-family: var(--fm-font-body);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--fm-text-secondary);
+}
+
+.site-footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  padding-top: clamp(1.25rem, 3vw, 1.75rem);
+  border-top: 1px solid var(--fm-border-light);
+}
+
+.site-footer__copyright {
+  margin: 0;
+  font-family: var(--fm-font-body);
+  font-size: 0.8125rem;
+  color: var(--fm-text-tertiary);
+}
+
+.site-footer__top-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--fm-font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fm-text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.site-footer__top-link:hover {
+  color: var(--fm-text-primary);
+}
+
+.site-footer__top-link:focus-visible {
+  outline: 2px solid var(--fm-text-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 639.98px) {
+  .site-footer__columns {
+    border-top: 1px solid var(--fm-border-light);
+    padding-top: 1.75rem;
+  }
+
+  .site-footer__column + .site-footer__column {
+    border-top: 1px solid var(--fm-border-light);
+    padding-top: 1.5rem;
+  }
+
+  .site-footer__link {
+    min-height: 40px;
+  }
+
+  .site-footer__bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .site-footer__brand-mark {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+}
