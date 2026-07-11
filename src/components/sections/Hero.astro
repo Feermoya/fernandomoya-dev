@@ -1,30 +1,50 @@
 ---
-import HeroCanvas from '@/components/react/HeroCanvas';
-import HeroMotion from '@/components/react/HeroMotion';
-import { site } from '@/data/site';
+import '@/styles/hero.css';
+import { getImage } from 'astro:assets';
+import HeroShowcase from '@/components/react/HeroShowcase';
+import type { HeroProject } from '@/components/react/HeroShowcase';
+
+import hemaCover from '@/assets/projects/hema.webp';
+import giacomelliCover from '@/assets/projects/giacomelli.webp';
+import poletinoCover from '@/assets/projects/poletino.webp';
+
+const hemaImage = await getImage({ src: hemaCover, width: 1400, format: 'webp' });
+const giacomelliImage = await getImage({ src: giacomelliCover, width: 1200, format: 'webp' });
+const poletinoImage = await getImage({ src: poletinoCover, width: 1200, format: 'webp' });
+
+const projects: HeroProject[] = [
+  {
+    name: 'HEMA',
+    domain: 'hema.com.ar',
+    imageSrc: hemaImage.src,
+    imageWidth: hemaImage.attributes.width ?? 1400,
+    imageHeight: hemaImage.attributes.height ?? 875,
+    alt: 'Captura del sitio web de HEMA, laboratorio de diagnóstico genético',
+    priority: true,
+    slotClass: 'hero-editorial__window-slot--hema',
+    depth: 0,
+  },
+  {
+    name: 'Giacomelli Seguros',
+    domain: 'giacomelliseguros.com',
+    imageSrc: giacomelliImage.src,
+    imageWidth: giacomelliImage.attributes.width ?? 1200,
+    imageHeight: giacomelliImage.attributes.height ?? 750,
+    alt: 'Captura del sitio web de Giacomelli Seguros, productor de seguros en Mendoza',
+    slotClass: 'hero-editorial__window-slot--giacomelli',
+    depth: 2,
+  },
+  {
+    name: 'Poletino Servicios',
+    domain: 'poletinosg.com.ar',
+    imageSrc: poletinoImage.src,
+    imageWidth: poletinoImage.attributes.width ?? 1200,
+    imageHeight: poletinoImage.attributes.height ?? 750,
+    alt: 'Captura del sitio web de Poletino Servicios, alquiler de hidrogrúas y transporte',
+    slotClass: 'hero-editorial__window-slot--poletino',
+    depth: 1,
+  },
+];
 ---
 
-<section
-  id="inicio"
-  class="hero-root hero-immersive hero-root--tight hero-root--light-page relative flex min-h-[calc(100svh-4.5rem)] flex-col overflow-hidden border-b border-white/[0.08] pb-8 pt-12 sm:min-h-[calc(100svh-4rem)] sm:pb-14 sm:pt-16 lg:pb-16 lg:pt-14"
-  aria-labelledby="hero-heading"
->
-  <HeroCanvas client:load />
-
-  <div class="container-page relative z-10 flex min-h-0 w-full flex-1 flex-col justify-center">
-    <div class="hero-text-scrim hero-text-scrim--center" aria-hidden="true"></div>
-    <div class="hero-content-wrap hero-content-wrap--center">
-      <HeroMotion
-        client:load
-        staticHeadline={`Una web clara
-vende mejor.`}
-        lead="Diseño webs claras para negocios que necesitan mostrar mejor lo que hacen."
-        pillA="Webs nuevas para negocios reales"
-        ctaPrimary="Quiero mi web"
-        ctaSecondary="Ver proyectos"
-        ctaPrimaryHref={site.social?.whatsapp || '/'}
-        ctaSecondaryHref="#proyectos"
-      />
-    </div>
-  </div>
-</section>
+<HeroShowcase client:load projects={projects} />
