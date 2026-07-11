@@ -174,7 +174,7 @@ export default function HeroMotion({
   if (useStaticHero) {
     return (
       <div
-        className="hero-static relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-5xl -translate-y-6 flex-col items-center justify-center px-5 pb-16 pt-20 text-center max-md:min-h-0 max-md:-translate-y-4 max-md:pb-10 max-md:pt-8 sm:min-h-[calc(100svh-4rem)] sm:px-6 sm:pb-16 md:-translate-y-10 lg:-translate-y-16 xl:-translate-y-20"
+        className="hero-static relative z-10 mx-auto flex min-h-[calc(100svh-4.5rem)] w-full max-w-5xl -translate-y-4 flex-col items-center justify-center px-5 pb-14 pt-16 text-center max-md:min-h-[calc(100svh-4.5rem)] sm:min-h-[calc(100svh-4rem)] sm:-translate-y-6 sm:px-6 sm:pb-16 sm:pt-20 md:-translate-y-10 lg:-translate-y-16 xl:-translate-y-20"
         data-static-hero
       >
         <HeroServiceBadges plain className="hero-static__item justify-center" />

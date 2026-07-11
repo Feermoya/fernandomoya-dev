@@ -3,8 +3,10 @@ import ContactSectionClient from '@/components/react/ContactSectionClient';
 import { site } from '@/data/site';
 ---
 
-<ContactSectionClient
-  client:visible
-  whatsappUrl={site.social.whatsapp}
-  email={site.email}
-/>
+<section class="home-section-contact relative border-t border-slate-200/70 pt-6 sm:pt-10">
+  <ContactSectionClient
+    client:visible
+    whatsappUrl={site.social.whatsapp}
+    email={site.email}
+  />
+</section>

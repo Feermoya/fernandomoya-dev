@@ -1,10 +1,7 @@
 import {
   animate,
   useInView,
-  useMotionValue,
-  useMotionValueEvent,
   useReducedMotion,
-  useTransform,
 } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { DURATION_MAX, EASE_OUT_SOFT } from '@/motion/easing';
@@ -19,8 +16,8 @@ type Props = {
 };
 
 /**
- * Count-up al entrar en viewport: useMotionValue + useTransform + useMotionValueEvent.
- * Sin backdrop-filter en el contenedor (texto legible sobre glass).
+ * Count-up al entrar en viewport.
+ * Usa animate + onUpdate para evitar quedar en 0 si el motion value no propaga el evento.
  */
 export default function AnimatedMetric({
   end,
@@ -32,23 +29,29 @@ export default function AnimatedMetric({
 }: Props) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (v) => Math.round(v));
+  const inView = useInView(ref, { once: true, amount: 0.45, margin: '0px 0px -48px 0px' });
   const [display, setDisplay] = useState(0);
-
-  useMotionValueEvent(rounded, 'change', (v) => setDisplay(v));
+  const hasAnimatedRef = useRef(false);
 
   useEffect(() => {
-    if (!inView) return;
+    if (!inView || hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+
     if (reduce) {
-      count.set(end);
       setDisplay(end);
       return;
     }
-    const ctrl = animate(count, end, { duration: DURATION_MAX, ease: EASE_OUT_SOFT });
+
+    setDisplay(0);
+    const ctrl = animate(0, end, {
+      duration: DURATION_MAX,
+      ease: EASE_OUT_SOFT,
+      onUpdate: (v) => setDisplay(Math.round(v)),
+      onComplete: () => setDisplay(end),
+    });
+
     return () => ctrl.stop();
-  }, [inView, end, count, reduce]);
+  }, [inView, end, reduce]);
 
   return (
     <div

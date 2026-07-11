@@ -865,10 +865,11 @@
    * ============================ */
   .hero-immersive {
     position: relative;
+    isolation: isolate;
     background:
-      radial-gradient(1200px 520px at 25% 10%, rgba(96, 165, 250, 0.12), transparent 58%),
-      radial-gradient(920px 520px at 75% 18%, rgba(167, 139, 250, 0.1), transparent 60%),
-      linear-gradient(180deg, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.55) 70%, rgba(2, 6, 23, 0.72) 100%);
+      radial-gradient(circle at 78% 42%, rgba(79, 70, 229, 0.28), transparent 38%),
+      radial-gradient(circle at 18% 18%, rgba(96, 165, 250, 0.16), transparent 34%),
+      linear-gradient(180deg, #050818 0%, #070b1f 58%, #0b1028 100%);
   }
 
   .hero-canvas {
@@ -1085,12 +1086,15 @@
 
   @media (max-width: 640px) {
     .hero-text-scrim.hero-text-scrim--center {
-      background: radial-gradient(
-        ellipse 110% 65% at 50% 38%,
-        rgba(5, 8, 24, 0.58),
-        transparent 68%
-      );
-      opacity: 0.92;
+      inset: 4% -10% 18%;
+      background:
+        radial-gradient(
+          ellipse 92% 58% at 50% 42%,
+          rgba(5, 8, 24, 0.72),
+          rgba(5, 8, 24, 0.32) 48%,
+          transparent 76%
+        );
+      opacity: 1;
     }
   }
 
@@ -1819,11 +1823,11 @@
  * ============================================================================= */
 
 body.marketing-light {
-  --page-bg: #f6f7fb;
-  --page-bg-soft: #eef2f7;
-  --page-surface: rgba(255, 255, 255, 0.82);
-  --page-surface-solid: #ffffff;
-  --page-text: #0f172a;
+  --page-bg: #f4f7fb;
+  --page-bg-soft: #eef3f8;
+  --page-surface: rgba(255, 255, 255, 0.72);
+  --page-surface-solid: #f8fafc;
+  --page-text: #07111f;
   --page-muted: #64748b;
   --page-muted-strong: #475569;
   --page-border: rgba(15, 23, 42, 0.08);
@@ -1833,9 +1837,9 @@ body.marketing-light {
   color: var(--page-text);
   background-color: var(--page-bg);
   background-image:
-    radial-gradient(circle at 12% 0%, rgba(45, 91, 227, 0.12), transparent 32%),
-    radial-gradient(circle at 90% 18%, rgba(167, 139, 250, 0.1), transparent 30%),
-    linear-gradient(180deg, #f8fafc 0%, #f3f6fb 42%, #eef2f7 100%);
+    radial-gradient(circle at 10% 0%, rgba(45, 91, 227, 0.09), transparent 28%),
+    radial-gradient(circle at 90% 16%, rgba(167, 139, 250, 0.07), transparent 30%),
+    linear-gradient(180deg, #f4f7fb 0%, #eef3f8 52%, #e8edf4 100%);
 }
 
 html.marketing-light-html {
@@ -1848,11 +1852,15 @@ body.marketing-light .home-section-eyebrow {
 }
 
 body.marketing-light .home-section-title {
-  color: rgb(15 23 42);
+  color: rgb(7 17 31);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
 }
 
 body.marketing-light .home-section-lead {
   color: rgb(71 85 105);
+  line-height: 1.65;
 }
 
 body.marketing-light .home-section-accent-line {
@@ -1860,15 +1868,40 @@ body.marketing-light .home-section-accent-line {
 }
 
 body.marketing-light .home-section-light {
-  background: transparent;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(96, 165, 250, 0.07), transparent 28%),
+    radial-gradient(circle at 90% 22%, rgba(167, 139, 250, 0.06), transparent 30%),
+    linear-gradient(180deg, #f4f7fb 0%, #eef3f8 100%);
+}
+
+/* Shell oscuro de piezas de marca */
+body.marketing-light .brand-pieces-shell .home-section-eyebrow {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+body.marketing-light .brand-pieces-shell .home-section-title {
+  color: #ffffff;
+  max-width: 680px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+body.marketing-light .brand-pieces-shell .home-section-lead {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+body.marketing-light .brand-pieces-shell .home-section-accent-line {
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.75), rgba(167, 139, 250, 0.55));
 }
 
 /* Hero oscuro premium → transición suave al fondo claro */
 body.marketing-light .hero-root--light-page {
+  isolation: isolate;
   background:
-    radial-gradient(1100px 520px at 22% 6%, rgba(96, 165, 250, 0.2), transparent 58%),
-    radial-gradient(900px 480px at 78% 14%, rgba(167, 139, 250, 0.16), transparent 60%),
-    linear-gradient(180deg, #0a1020 0%, #101a33 52%, #121f3d 100%);
+    radial-gradient(circle at 78% 42%, rgba(79, 70, 229, 0.28), transparent 38%),
+    radial-gradient(circle at 18% 18%, rgba(96, 165, 250, 0.16), transparent 34%),
+    linear-gradient(180deg, #050818 0%, #070b1f 58%, #0b1028 100%);
   border-bottom-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 28px 72px rgba(15, 23, 42, 0.14);
 }
@@ -1879,29 +1912,29 @@ body.marketing-light .hero-root--light-page::after {
   left: 0;
   right: 0;
   bottom: -1px;
-  height: 120px;
+  height: 100px;
   pointer-events: none;
   z-index: 2;
-  background: linear-gradient(180deg, transparent, rgb(248 250 252 / 0.92));
+  background: linear-gradient(180deg, transparent, rgb(248 250 252 / 0.88));
 }
 
 body.marketing-light .hero-immersive {
-  background:
-    radial-gradient(1200px 520px at 25% 10%, rgba(96, 165, 250, 0.16), transparent 58%),
-    radial-gradient(920px 520px at 75% 18%, rgba(167, 139, 250, 0.12), transparent 60%),
-    linear-gradient(180deg, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.45) 70%, rgba(2, 6, 23, 0.62) 100%);
+  background: transparent;
 }
 
 /* Header claro en home */
 body.marketing-light .site-header-glass {
-  background-color: rgba(255, 255, 255, 0.78);
+  background-color: rgba(255, 255, 255, 0.82);
   border-bottom-color: rgba(15, 23, 42, 0.08);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
 }
 
 body.marketing-light .site-header-glass[data-scrolled='true'] {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.94);
   border-bottom-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
 }
 
 body.marketing-light .site-header-glass .text-text,
@@ -1927,8 +1960,14 @@ body.marketing-light .site-header-glass .glass-surface-sm {
 
 /* Ambient más suave */
 body.marketing-light .ambient-blob {
-  opacity: 0.16;
+  opacity: 0.1;
   filter: blur(120px);
+}
+
+@media (max-width: 767.98px) {
+  body.marketing-light .ambient-backdrop {
+    opacity: 0.35;
+  }
 }
 
 body.marketing-light .ambient-blob--1 {
@@ -1945,6 +1984,12 @@ body.marketing-light .ambient-blob--3 {
 }
 
 /* Contacto — isla oscura de cierre */
+body.marketing-light .home-section-contact {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(96, 165, 250, 0.05), transparent 32%),
+    linear-gradient(180deg, #e8edf4 0%, #dfe6ef 100%);
+}
+
 body.marketing-light #contacto > div > div {
   border-color: rgba(255, 255, 255, 0.1) !important;
   background: linear-gradient(160deg, #0f172a 0%, #121a2e 48%, #0d1324 100%) !important;

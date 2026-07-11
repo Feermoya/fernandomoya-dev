@@ -97,6 +97,9 @@ export default function HeroCanvas() {
       const reduce = prefersReducedMotion();
       const t = ((now - start) / 1000) * (Math.PI * 2) / 14;
       const isMobile = w < 768;
+      const mobileWaveShift = isMobile ? -0.08 : 0;
+      const mobileAlphaBoost = isMobile ? 0.1 : 0;
+      const mobileStrokeBlur = isMobile ? 14 : 18;
 
       // Fondo base
       ctx.clearRect(0, 0, w, h);
@@ -104,9 +107,9 @@ export default function HeroCanvas() {
       ctx.fillRect(0, 0, w, h);
 
       // Glow azul eléctrico — zona centro-derecha
-      const gx = w * (isMobile ? 0.88 : 0.78);
-      const gy = h * (isMobile ? 0.60 : 0.58);
-      const gr = w * (isMobile ? 0.55 : 0.42);
+      const gx = w * (isMobile ? 0.72 : 0.78);
+      const gy = h * (isMobile ? 0.52 : 0.58);
+      const gr = w * (isMobile ? 0.62 : 0.42);
       const glow = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
       glow.addColorStop(0,    'rgba(80,  100, 255, 0.28)');
       glow.addColorStop(0.35, 'rgba(110,  60, 230, 0.18)');
@@ -116,7 +119,7 @@ export default function HeroCanvas() {
       ctx.fillRect(0, 0, w, h);
 
       // Glow violeta esquina derecha
-      const g2 = ctx.createRadialGradient(w, h * 0.7, 0, w, h * 0.7, w * 0.35);
+      const g2 = ctx.createRadialGradient(w, h * (isMobile ? 0.58 : 0.7), 0, w, h * (isMobile ? 0.58 : 0.7), w * (isMobile ? 0.42 : 0.35));
       g2.addColorStop(0,   'rgba(147, 51, 234, 0.32)');
       g2.addColorStop(0.5, 'rgba(109, 40, 217, 0.12)');
       g2.addColorStop(1,   'rgba(5,    8,  24, 0.0)');
@@ -144,7 +147,7 @@ export default function HeroCanvas() {
       // Onda de fondo — oscura, da profundidad
       const b0t = (nx: number) => {
         const ramp = 0.15 + nx * 0.85;
-        return 0.66 + ramp * (
+        return 0.66 + mobileWaveShift + ramp * (
           0.10 * Math.sin(nx * Math.PI * 1.6 + t * 0.8)
         + 0.03 * Math.sin(nx * Math.PI * 3.0 + t * 1.2)
         );
@@ -153,13 +156,13 @@ export default function HeroCanvas() {
       drawBand(ctx, b0t, b0b,
         'rgba(20, 18, 60, 0.55)',
         'rgba(10,  8, 40, 0.30)',
-        '#1e1b5e', 0, 0.55
+        '#1e1b5e', 0, 0.55 + mobileAlphaBoost * 0.3
       );
 
       // Onda principal — azul eléctrico
       const b1t = (nx: number) => {
         const ramp = 0.12 + nx * 0.88;
-        return 0.58 + ramp * (
+        return 0.58 + mobileWaveShift + ramp * (
           0.13 * Math.sin(nx * Math.PI * 1.9 + t)
         + 0.04 * Math.sin(nx * Math.PI * 3.4 + t * 1.4)
         );
@@ -168,13 +171,13 @@ export default function HeroCanvas() {
       drawBand(ctx, b1t, b1b,
         'rgba(50,  80, 240, 0.30)',
         'rgba(90,  50, 220, 0.18)',
-        '#5b7fff', 18, 0.80
+        '#5b7fff', isMobile ? mobileStrokeBlur : 18, 0.80 + mobileAlphaBoost
       );
 
       // Onda media — azul más claro
       const b2t = (nx: number) => {
         const ramp = 0.10 + nx * 0.90;
-        return 0.53 + ramp * (
+        return 0.53 + mobileWaveShift + ramp * (
           0.12 * Math.sin(nx * Math.PI * 2.1 + t * 1.05 + 0.6)
         + 0.04 * Math.sin(nx * Math.PI * 3.8 + t * 1.5)
         );
@@ -183,13 +186,13 @@ export default function HeroCanvas() {
       drawBand(ctx, b2t, b2b,
         'rgba(70,  110, 255, 0.22)',
         'rgba(130,  70, 240, 0.14)',
-        '#7eb8ff', 22, 0.70
+        '#7eb8ff', isMobile ? mobileStrokeBlur + 4 : 22, 0.70 + mobileAlphaBoost
       );
 
       // Onda superior — violeta brillante, la más fina
       const b3t = (nx: number) => {
         const ramp = 0.08 + nx * 0.92;
-        return 0.49 + ramp * (
+        return 0.49 + mobileWaveShift + ramp * (
           0.11 * Math.sin(nx * Math.PI * 2.3 + t * 1.1 + 1.0)
         + 0.035 * Math.sin(nx * Math.PI * 4.2 + t * 1.7)
         );
@@ -198,14 +201,15 @@ export default function HeroCanvas() {
       drawBand(ctx, b3t, b3b,
         'rgba(100, 80, 255, 0.18)',
         'rgba(160, 80, 250, 0.12)',
-        '#a78bfa', 26, 0.65
+        '#a78bfa', isMobile ? mobileStrokeBlur + 8 : 26, 0.65 + mobileAlphaBoost
       );
 
-      // Máscara izquierda — mantiene el texto legible
-      const lm = ctx.createLinearGradient(0, 0, w * 0.42, 0);
-      lm.addColorStop(0,    'rgba(5, 8, 24, 0.88)');
-      lm.addColorStop(0.30, 'rgba(5, 8, 24, 0.55)');
-      lm.addColorStop(0.60, 'rgba(5, 8, 24, 0.18)');
+      // Máscara izquierda — legibilidad del texto (más suave en mobile centrado)
+      const lmWidth = isMobile ? w * 0.72 : w * 0.42;
+      const lm = ctx.createLinearGradient(0, 0, lmWidth, 0);
+      lm.addColorStop(0,    isMobile ? 'rgba(5, 8, 24, 0.55)' : 'rgba(5, 8, 24, 0.88)');
+      lm.addColorStop(0.30, isMobile ? 'rgba(5, 8, 24, 0.28)' : 'rgba(5, 8, 24, 0.55)');
+      lm.addColorStop(0.60, isMobile ? 'rgba(5, 8, 24, 0.08)' : 'rgba(5, 8, 24, 0.18)');
       lm.addColorStop(1,    'rgba(5, 8, 24, 0.0)');
       ctx.fillStyle = lm;
       ctx.fillRect(0, 0, w, h);

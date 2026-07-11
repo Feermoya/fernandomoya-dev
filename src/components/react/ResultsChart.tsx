@@ -69,7 +69,9 @@ const ITEMS: Item[] = [
 
 /* ── Mini demos animadas ── */
 
-function DemoMessage({ active, color }: { active: boolean; color: string }) {
+function DemoMessage({ active, color, lightSurface = false }: { active: boolean; color: string; lightSurface?: boolean }) {
+  const lineBg = lightSurface ? 'bg-slate-300/70' : 'bg-white/20';
+  const avatarBg = lightSurface ? 'bg-slate-200/80' : 'bg-white/10';
   const lines = [
     { w: '75%', delay: 0 },
     { w: '55%', delay: 0.08 },
@@ -92,7 +94,7 @@ function DemoMessage({ active, color }: { active: boolean; color: string }) {
           {lines.map((l, i) => (
             <motion.div
               key={i}
-              className="h-2 rounded-full bg-white/20"
+              className={`h-2 rounded-full ${lineBg}`}
               style={{ width: l.w }}
               initial={{ scaleX: 0, originX: 0 }}
               animate={active ? { scaleX: 1 } : { scaleX: 0 }}
@@ -113,7 +115,7 @@ function DemoMessage({ active, color }: { active: boolean; color: string }) {
           style={{ background: color, opacity: 0.5 }}
         />
         <div
-          className="h-6 w-6 shrink-0 rounded-full bg-white/10"
+          className={`h-6 w-6 shrink-0 rounded-full ${avatarBg}`}
         />
       </motion.div>
     </div>
@@ -193,35 +195,40 @@ function DemoShield({ active, color }: { active: boolean; color: string }) {
   );
 }
 
-function DemoSend({ active, color }: { active: boolean; color: string }) {
+function DemoSend({ active, color, lightSurface = false }: { active: boolean; color: string; lightSurface?: boolean }) {
+  const idleBorder = lightSurface ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.1)';
+  const lineBg = lightSurface ? 'bg-slate-400/60' : 'bg-white/30';
+  const cursorBg = lightSurface ? 'bg-slate-500/70' : 'bg-white/60';
   return (
     <div className="flex flex-col gap-2 px-3 py-1">
       {/* Input simulado */}
       <motion.div
         className="flex h-7 items-center gap-2 rounded-lg border px-3"
-        style={{ borderColor: active ? color : 'rgba(255,255,255,0.1)' }}
-        animate={{ borderColor: active ? color : 'rgba(255,255,255,0.1)' }}
+        style={{ borderColor: active ? color : idleBorder }}
+        animate={{ borderColor: active ? color : idleBorder }}
         transition={{ duration: 0.3 }}
       >
         <motion.div
-          className="h-1.5 rounded-full bg-white/30"
+          className={`h-1.5 rounded-full ${lineBg}`}
           initial={{ width: 0 }}
           animate={active ? { width: '70%' } : { width: 0 }}
           transition={{ duration: 0.5, ease: EASE }}
         />
         {/* Cursor parpadeante */}
         <motion.div
-          className="h-3 w-px bg-white/60"
+          className={`h-3 w-px ${cursorBg}`}
           animate={active ? { opacity: [1, 0, 1] } : { opacity: 0 }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
       </motion.div>
-      {/* Botón enviar */}
+      {/* Botón enviar — demo ilustrativa, no interactiva */}
       <motion.div
-        className="flex h-7 items-center justify-center gap-2 rounded-lg text-xs font-semibold text-white"
+        role="presentation"
+        aria-hidden="true"
+        className="flex h-7 cursor-default select-none items-center justify-center gap-2 rounded-lg text-xs font-semibold text-white opacity-90 pointer-events-none"
         style={{ background: color }}
         initial={{ opacity: 0, y: 6 }}
-        animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+        animate={active ? { opacity: 0.9, y: 0 } : { opacity: 0, y: 6 }}
         transition={{ duration: 0.35, delay: 0.25, ease: EASE }}
       >
         <span style={{ fontSize: '11px' }}>Enviar mensaje</span>
@@ -232,18 +239,23 @@ function DemoSend({ active, color }: { active: boolean; color: string }) {
           →
         </motion.span>
       </motion.div>
+      <p className="px-1 text-center text-[9px] font-medium uppercase tracking-[0.14em] text-white/30 pointer-events-none select-none" aria-hidden="true">
+        Vista previa
+      </p>
     </div>
   );
 }
 
-function DemoPhone({ active, color }: { active: boolean; color: string }) {
+function DemoPhone({ active, color, lightSurface = false }: { active: boolean; color: string; lightSurface?: boolean }) {
   const rows = ['85%', '65%', '75%', '50%'];
+  const rowBg = lightSurface ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.15)';
+  const borderColor = lightSurface ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.15)';
   return (
     <div className="flex items-center justify-center gap-4">
       {/* Silueta mobile */}
       <motion.div
         className="relative flex h-16 w-9 flex-col gap-1 overflow-hidden rounded-lg border p-1.5"
-        style={{ borderColor: 'rgba(255,255,255,0.15)' }}
+        style={{ borderColor }}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={active ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.4, ease: EASE }}
@@ -252,7 +264,7 @@ function DemoPhone({ active, color }: { active: boolean; color: string }) {
           <motion.div
             key={i}
             className="h-1.5 rounded-full"
-            style={{ background: i === 0 ? color : 'rgba(255,255,255,0.15)', opacity: 0.8 }}
+            style={{ background: i === 0 ? color : rowBg, opacity: 0.8 }}
             initial={{ scaleX: 0, originX: 0 }}
             animate={active ? { scaleX: 1 } : { scaleX: 0 }}
             transition={{ duration: 0.3, delay: 0.1 + i * 0.07, ease: EASE }}
@@ -293,12 +305,12 @@ function DemoPhone({ active, color }: { active: boolean; color: string }) {
 }
 
 function Demo({
-  type, active, color,
-}: { type: Item['demo']; active: boolean; color: string }) {
-  if (type === 'message') return <DemoMessage active={active} color={color} />;
+  type, active, color, lightSurface = false,
+}: { type: Item['demo']; active: boolean; color: string; lightSurface?: boolean }) {
+  if (type === 'message') return <DemoMessage active={active} color={color} lightSurface={lightSurface} />;
   if (type === 'shield')  return <DemoShield  active={active} color={color} />;
-  if (type === 'send')    return <DemoSend    active={active} color={color} />;
-  return <DemoPhone active={active} color={color} />;
+  if (type === 'send')    return <DemoSend    active={active} color={color} lightSurface={lightSurface} />;
+  return <DemoPhone active={active} color={color} lightSurface={lightSurface} />;
 }
 
 function Card({
@@ -307,14 +319,14 @@ function Card({
   reduce,
   isMobileLayout,
   cardViewport,
-  lightSurface = false,
+  isDark = true,
 }: {
   item: Item;
   index: number;
   reduce: boolean;
   isMobileLayout: boolean;
   cardViewport: { once: boolean; amount: number | 'some'; margin: string };
-  lightSurface?: boolean;
+  isDark?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const [spot, setSpot] = useState({ x: 50, y: 50 });
@@ -331,9 +343,9 @@ function Card({
     <motion.article
       ref={articleRef}
       className={
-        lightSurface
-          ? 'group relative cursor-default overflow-hidden rounded-2xl border border-slate-200/80 bg-white transition-colors duration-300 hover:border-slate-300 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]'
-          : 'group relative cursor-default overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] transition-colors duration-300 hover:border-white/[0.14] hover:bg-white/[0.055]'
+        isDark
+          ? 'group relative cursor-default overflow-hidden rounded-xl border border-white/[0.10] bg-white/[0.045] transition-all duration-300 hover:border-white/[0.18] hover:bg-white/[0.07] sm:rounded-2xl'
+          : 'group relative cursor-default overflow-hidden rounded-2xl border border-slate-200/70 bg-white/[0.82] shadow-[0_8px_28px_rgba(15,23,42,0.05),inset_0_1px_0_rgba(255,255,255,0.85)] transition-all duration-300 hover:border-slate-300/80 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]'
       }
       initial={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -378,11 +390,11 @@ function Card({
           </p>
         </div>
 
-        <h4 className={`mt-3 text-[1.05rem] font-semibold leading-snug sm:text-[1.12rem] ${lightSurface ? 'text-slate-950' : 'text-white'}`}>
+        <h4 className={`mt-3 text-[1.05rem] font-semibold leading-snug sm:text-[1.12rem] ${isDark ? 'text-white' : 'text-slate-950'}`}>
           {item.headline}
         </h4>
 
-        <p className={`mt-2 text-[12.5px] leading-relaxed sm:text-[13px] ${lightSurface ? 'text-slate-600' : 'text-white/45'}`}>
+        <p className={`mt-2 text-[12.5px] leading-relaxed sm:text-[13px] ${isDark ? 'text-white/55' : 'text-slate-600'}`}>
           {item.text}
         </p>
 
@@ -390,19 +402,19 @@ function Card({
         <motion.div
           className="mt-4 overflow-hidden rounded-xl border"
           style={{
-            borderColor: active ? item.color + '30' : lightSurface ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)',
+            borderColor: active ? item.color + '30' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)',
           }}
           animate={{
-            borderColor: active ? item.color + '30' : lightSurface ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)',
-            background: active ? item.colorMuted : lightSurface ? 'rgba(248,250,252,0.9)' : 'rgba(255,255,255,0.02)',
+            borderColor: active ? item.color + '30' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)',
+            background: active ? item.colorMuted : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(248,250,252,0.9)',
           }}
           transition={{ duration: 0.3 }}
         >
-          <Demo type={item.demo} active={active} color={item.color} />
+          <Demo type={item.demo} active={active} color={item.color} lightSurface={!isDark} />
         </motion.div>
 
         {/* Barra de progreso */}
-        <motion.div className={`relative mt-4 h-px w-full overflow-hidden rounded-full ${lightSurface ? 'bg-slate-200/80' : 'bg-white/[0.06]'}`}>
+        <motion.div className={`relative mt-4 h-px w-full overflow-hidden rounded-full ${isDark ? 'bg-white/[0.08]' : 'bg-slate-200/80'}`}>
           <motion.div
             className="h-full rounded-full"
             style={{ background: `linear-gradient(90deg, ${item.color}, ${item.color}88)` }}
@@ -421,10 +433,17 @@ function Card({
   );
 }
 
-export default function ResultsChart({ lightSurface = false }: { lightSurface?: boolean }) {
+export default function ResultsChart({
+  lightSurface = false,
+  darkSurface = false,
+}: {
+  lightSurface?: boolean;
+  darkSurface?: boolean;
+}) {
   const reduceMotion = useReducedMotion();
   const reduce = Boolean(reduceMotion);
   const isMobileLayout = useIsMobileResultsLayout();
+  const isDark = darkSurface || !lightSurface;
 
   const cardViewport = isMobileLayout
     ? { once: true as const, amount: 0.5 as const, margin: '0px 0px -28% 0px' as const }
@@ -433,9 +452,20 @@ export default function ResultsChart({ lightSurface = false }: { lightSurface?: 
   return (
     <motion.div
       className={
-        lightSurface
-          ? 'relative mt-6 w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50/70 p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] sm:p-7'
-          : 'glass-panel relative mt-6 w-full overflow-hidden rounded-2xl border border-white/[0.08] !p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:!p-7'
+        isDark
+          ? 'relative mt-6 w-full overflow-hidden rounded-[1.25rem] border border-white/[0.10] bg-white/[0.045] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:rounded-[1.5rem] sm:p-6 lg:p-7'
+          : 'relative mt-6 w-full overflow-hidden rounded-[1.5rem] border border-slate-200/70 p-5 shadow-[0_20px_56px_rgba(15,23,42,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] sm:p-7'
+      }
+      style={
+        isDark
+          ? {
+              background:
+                'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), radial-gradient(circle at 4% 0%, rgba(96,165,250,0.14), transparent 30%), radial-gradient(circle at 96% 16%, rgba(167,139,250,0.10), transparent 28%)',
+            }
+          : {
+              background:
+                'linear-gradient(135deg, rgba(255,255,255,0.88), rgba(248,250,252,0.82)), radial-gradient(circle at 6% 0%, rgba(96,165,250,0.10), transparent 32%), radial-gradient(circle at 98% 18%, rgba(167,139,250,0.08), transparent 28%)',
+            }
       }
       initial={reduce ? { opacity: 1 } : { opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -459,16 +489,16 @@ export default function ResultsChart({ lightSurface = false }: { lightSurface?: 
         <p className="inline-flex items-center rounded-full border border-[#60a5fa]/20 bg-[#60a5fa]/[0.07] px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#c4b5fd]/90">
           Lo importante
         </p>
-        <h3 className={`mt-4 max-w-3xl text-[1.35rem] font-semibold leading-tight tracking-tight sm:text-2xl lg:text-[1.65rem] ${lightSurface ? 'text-slate-950' : 'text-white'}`}>
+        <h3 className={`mt-4 max-w-3xl text-[1.25rem] font-semibold leading-[1.12] tracking-tight sm:text-2xl lg:text-[1.6rem] ${isDark ? 'text-white' : 'text-slate-950'}`}>
           Una web tiene que hacer cuatro cosas bien.
         </h3>
-        <p className={`mt-2 max-w-2xl text-sm leading-relaxed sm:text-[0.95rem] ${lightSurface ? 'text-slate-600' : 'text-white/50'}`}>
+        <p className={`mt-2 max-w-2xl text-sm leading-relaxed sm:text-[0.95rem] ${isDark ? 'text-white/55' : 'text-slate-600'}`}>
           Pasá el mouse por cada punto para verlo en acción.
         </p>
       </div>
 
       {/* Cards */}
-      <div className="relative z-10 mt-6 grid w-full gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-5">
+      <div className="relative z-10 mt-6 grid w-full gap-4 sm:grid-cols-2 sm:gap-4 lg:gap-5">
         {ITEMS.map((item, idx) => (
           <Card
             key={item.title}
@@ -477,7 +507,7 @@ export default function ResultsChart({ lightSurface = false }: { lightSurface?: 
             reduce={reduce}
             isMobileLayout={isMobileLayout}
             cardViewport={cardViewport}
-            lightSurface={lightSurface}
+            isDark={isDark}
           />
         ))}
       </div>
