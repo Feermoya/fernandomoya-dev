@@ -5,7 +5,6 @@ import AmbientBackdrop from '@/components/layout/AmbientBackdrop.astro';
 import Header from '@/components/layout/Header.astro';
 import CaseStudyHeader from '@/components/layout/CaseStudyHeader.astro';
 import Footer from '@/components/layout/Footer.astro';
-import ScrollMotion from '@/components/layout/ScrollMotion.astro';
 import { site } from '@/data/site';
 import { absoluteUrl } from '@/utils/seo';
 
@@ -42,13 +41,18 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
   <head>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap"
+    />
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <meta charset="utf-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="generator" content={Astro.generator} />
+
     <meta name="theme-color" content={appShell ? '#F6F8FB' : '#070707'} />
     {
       appShell ? (
@@ -85,7 +89,6 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     {!appShell ? <link rel="manifest" href="/site.webmanifest" /> : null}
     <link rel="sitemap" href="/sitemap-index.xml" />
 
-    <!-- Astro 6: transiciones de vista vía `ClientRouter` (antes `ViewTransitions` en guías antiguas). -->
     <ClientRouter />
   </head>
   <body
@@ -112,8 +115,14 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     }
 
     {!appShell ? <AmbientBackdrop /> : null}
+    {
+      !appShell ? (
+        <a href="#main" class="skip-link">
+          Saltar al contenido
+        </a>
+      ) : null
+    }
     <div class="relative z-[1] flex min-h-dvh flex-col">
-      {!appShell ? <ScrollMotion /> : null}
       {!appShell ? (caseStudyHeader ? <CaseStudyHeader /> : <Header />) : null}
       <main
         id="main"
@@ -129,7 +138,6 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
         <script>
           import '@/scripts/fm-page-transition.ts';
           import '@/scripts/fm-lenis.ts';
-          import '@/scripts/fm-split-text.ts';
         </script>
       )
     }

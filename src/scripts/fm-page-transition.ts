@@ -1,14 +1,12 @@
-import { animate } from 'motion';
-
 const CLIP_HIDDEN = 'inset(0% 0% 100% 0%)';
 const CLIP_FULL = 'inset(0% 0% 0% 0%)';
 const CLIP_OUT = 'inset(100% 0% 0% 0%)';
 
-const EASE_EXIT: [number, number, number, number] = [0.76, 0, 0.24, 1];
-const EASE_ENTER: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const EASE_EXIT = 'cubic-bezier(0.76, 0, 0.24, 1)';
+const EASE_ENTER = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
-let overlayCtl: ReturnType<typeof animate> | null = null;
-let logoCtl: ReturnType<typeof animate> | null = null;
+let overlayAnim: Animation | null = null;
+let logoAnim: Animation | null = null;
 let listenersBound = false;
 
 function reducedMotion(): boolean {
@@ -27,10 +25,10 @@ function getEls(): { overlay: HTMLElement; logo: HTMLElement } | null {
 }
 
 function stopRunning(): void {
-  overlayCtl?.stop();
-  logoCtl?.stop();
-  overlayCtl = null;
-  logoCtl = null;
+  overlayAnim?.cancel();
+  logoAnim?.cancel();
+  overlayAnim = null;
+  logoAnim = null;
 }
 
 function resetHard(overlay: HTMLElement, logo: HTMLElement): void {
@@ -54,16 +52,17 @@ function bindPageTransitionUi(): void {
       const { overlay, logo } = next;
       resetHard(overlay, logo);
 
-      overlayCtl = animate(
-        overlay,
-        { clipPath: [CLIP_HIDDEN, CLIP_FULL] },
-        { duration: 0.4, easing: EASE_EXIT },
+      overlayAnim = overlay.animate(
+        [{ clipPath: CLIP_HIDDEN }, { clipPath: CLIP_FULL }],
+        { duration: 400, easing: EASE_EXIT, fill: 'forwards' },
       );
 
-      logoCtl = animate(
-        logo,
-        { opacity: [0, 1], filter: ['blur(12px)', 'blur(0px)'] },
-        { duration: 0.3, delay: 0.06, easing: EASE_ENTER },
+      logoAnim = logo.animate(
+        [
+          { opacity: 0, filter: 'blur(12px)' },
+          { opacity: 1, filter: 'blur(0px)' },
+        ],
+        { duration: 300, delay: 60, easing: EASE_ENTER, fill: 'forwards' },
       );
     },
     { passive: true },
@@ -84,16 +83,19 @@ function bindPageTransitionUi(): void {
 
       void (async () => {
         try {
-          await animate(
-            logo,
-            { opacity: [1, 0], filter: ['blur(0px)', 'blur(8px)'] },
-            { duration: 0.14, easing: [0.4, 0, 0.2, 1] },
-          );
-          await animate(
-            overlay,
-            { clipPath: [CLIP_FULL, CLIP_OUT] },
-            { duration: 0.5, delay: 0.05, easing: EASE_ENTER },
-          );
+          await logo.animate(
+            [
+              { opacity: 1, filter: 'blur(0px)' },
+              { opacity: 0, filter: 'blur(8px)' },
+            ],
+            { duration: 140, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' },
+          ).finished;
+          await overlay
+            .animate(
+              [{ clipPath: CLIP_FULL }, { clipPath: CLIP_OUT }],
+              { duration: 500, delay: 50, easing: EASE_ENTER, fill: 'forwards' },
+            )
+            .finished;
         } finally {
           resetHard(overlay, logo);
         }

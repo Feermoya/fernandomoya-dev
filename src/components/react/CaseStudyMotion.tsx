@@ -5,7 +5,7 @@ import { useLayoutEffect } from 'react';
 
 gsap.registerPlugin(ScrollTrigger);
 
-function resetMotionTargets(elements: ElementList) {
+function resetMotionTargets(elements: Element[]) {
   gsap.set(elements, {
     clearProps: 'all',
     opacity: 1,

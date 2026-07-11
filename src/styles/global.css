@@ -49,6 +49,34 @@
     }
   }
 
+  .skip-link {
+    position: fixed;
+    top: max(0.75rem, env(safe-area-inset-top, 0px));
+    left: max(0.75rem, env(safe-area-inset-left, 0px));
+    z-index: 300;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    background: var(--fm-bg-ivory);
+    color: var(--fm-text-on-ivory);
+    font-family: var(--fm-font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-decoration: none;
+    transform: translateY(-200%);
+    transition: transform 0.18s ease;
+  }
+
+  .skip-link:not(:focus-visible) {
+    transform: translateY(-200%);
+  }
+
+  .skip-link:focus-visible {
+    outline: 2px solid var(--fm-bg-ivory);
+    outline-offset: 2px;
+    transform: translateY(0);
+  }
+
   body {
     @apply text-text antialiased min-h-dvh;
     font-family: var(--fm-font-body);

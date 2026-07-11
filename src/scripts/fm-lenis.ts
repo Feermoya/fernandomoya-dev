@@ -38,24 +38,9 @@ export function initFmLenis() {
   lenis.on('scroll', syncMotionScroll);
 }
 
-function bootWhenSplashReady() {
-  const splash = document.getElementById('fm-splash');
-  if (!splash || splash.classList.contains('fm-gone') || splash.classList.contains('fm-hidden')) {
-    initFmLenis();
-    return;
-  }
-  const obs = new MutationObserver(() => {
-    if (splash.classList.contains('fm-hidden') || splash.classList.contains('fm-gone')) {
-      obs.disconnect();
-      requestAnimationFrame(() => initFmLenis());
-    }
-  });
-  obs.observe(splash, { attributes: true, attributeFilter: ['class'] });
-  window.setTimeout(() => {
-    obs.disconnect();
-    if (!window.__fmLenis) initFmLenis();
-  }, 3600);
+function boot() {
+  initFmLenis();
 }
 
-bootWhenSplashReady();
-document.addEventListener('astro:page-load', () => bootWhenSplashReady());
+boot();
+document.addEventListener('astro:page-load', boot);

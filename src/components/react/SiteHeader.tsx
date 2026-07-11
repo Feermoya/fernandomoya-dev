@@ -28,6 +28,7 @@ export default function SiteHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRootRef = useRef<HTMLDivElement>(null);
   const menuPanelRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuButtonId = 'site-header-menu-btn';
   const menuPanelId = 'site-header-menu-panel';
 
@@ -35,21 +36,26 @@ export default function SiteHeader({
     setIsScrolled(y > 24);
   });
 
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const closeMenu = useCallback((returnFocus = false) => {
+    setMenuOpen(false);
+    if (returnFocus) {
+      requestAnimationFrame(() => menuButtonRef.current?.focus());
+    }
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeMenu();
+      if (e.key === 'Escape') closeMenu(true);
     };
     const onPointerDown = (e: PointerEvent) => {
       const t = e.target;
       if (!(t instanceof Node)) return;
       if (menuRootRef.current?.contains(t)) return;
       if (menuPanelRef.current?.contains(t)) return;
-      closeMenu();
+      closeMenu(true);
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('pointerdown', onPointerDown, true);
@@ -67,7 +73,7 @@ export default function SiteHeader({
           className="site-header-bar"
           data-scrolled={isScrolled ? 'true' : 'false'}
         >
-          <a href={logoHref} className="site-header-logo">
+          <a href={logoHref} className="site-header-logo" aria-label={`${siteName} — Inicio`}>
             <span className="site-header-logo-mark" aria-hidden="true">
               FM
             </span>
@@ -97,6 +103,7 @@ export default function SiteHeader({
 
             <div ref={menuRootRef} className="site-header-menu-btn-wrap shrink-0">
               <button
+                ref={menuButtonRef}
                 id={menuButtonId}
                 type="button"
                 className="site-header-menu-btn motion-reduce:transition-none"
@@ -118,7 +125,7 @@ export default function SiteHeader({
                 type="button"
                 className="absolute inset-0 bg-black/60 motion-reduce:transition-none"
                 aria-label="Cerrar menú"
-                onClick={closeMenu}
+                onClick={() => closeMenu(true)}
               />
               <nav
                 ref={menuPanelRef}
@@ -134,7 +141,7 @@ export default function SiteHeader({
                   <a
                     href={backHref}
                     className="site-header-mobile-link motion-reduce:transition-none"
-                    onClick={closeMenu}
+                    onClick={() => closeMenu()}
                   >
                     {backLabel}
                   </a>
@@ -144,7 +151,7 @@ export default function SiteHeader({
                       key={link.href}
                       href={link.href}
                       className="site-header-mobile-link motion-reduce:transition-none"
-                      onClick={closeMenu}
+                      onClick={() => closeMenu()}
                     >
                       {link.label}
                     </a>
@@ -154,7 +161,7 @@ export default function SiteHeader({
                   <a
                     href={ctaHref}
                     className="site-header-cta motion-reduce:transition-none"
-                    onClick={closeMenu}
+                    onClick={() => closeMenu()}
                   >
                     {ctaLabel}
                   </a>

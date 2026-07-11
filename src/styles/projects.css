@@ -95,7 +95,7 @@
   font-size: clamp(3.5rem, 8vw, 6.5rem);
   line-height: 0.9;
   letter-spacing: -0.04em;
-  opacity: 0.14;
+  opacity: 0.22;
 }
 
 .featured-project__name {
@@ -447,7 +447,7 @@
 .projects-archive__number {
   font-family: var(--fm-font-display);
   font-size: 0.9375rem;
-  color: var(--fm-text-tertiary, rgba(245, 240, 232, 0.42));
+  color: var(--fm-text-secondary);
   min-width: 1.75rem;
 }
 

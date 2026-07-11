@@ -37,13 +37,15 @@ export default function HeroShowcase({ projects }: Props) {
 
     const slots = slotRefs.current.filter(Boolean) as HTMLDivElement[];
     const parallaxLayers = parallaxRefs.current.filter(Boolean) as HTMLDivElement[];
-    const titleLines = titleRef.current?.querySelectorAll('.hero-editorial__title-line');
+    const titleLineEls = titleRef.current
+      ? ([...titleRef.current.querySelectorAll('.hero-editorial__title-line')] as HTMLElement[])
+      : [];
     const eyebrow = eyebrowRef.current;
     const lead = leadRef.current;
     const actions = actionsRef.current;
 
     if (reduceMotion) {
-      gsap.set([copy, stage, eyebrow, titleLines, lead, actions, ...slots], {
+      gsap.set([copy, stage, eyebrow, ...titleLineEls, lead, actions, ...slots], {
         clearProps: 'all',
         opacity: 1,
         y: 0,
@@ -62,7 +64,7 @@ export default function HeroShowcase({ projects }: Props) {
     const ctx = gsap.context(() => {
       gsap.set(copy, { opacity: 1 });
       gsap.set(stage, { opacity: 1 });
-      gsap.set([eyebrow, titleLines, lead, actions], { opacity: 0, y: 18 });
+      gsap.set([eyebrow, titleLineEls, lead, actions], { opacity: 0, y: 18 });
       gsap.set(centerSlot, { opacity: 0, y: 56, scale: 0.94 });
       gsap.set(sideSlots, { opacity: 0, y: 40, scale: 0.96 });
 
@@ -71,7 +73,7 @@ export default function HeroShowcase({ projects }: Props) {
       tl.to(centerSlot, { opacity: 1, y: 0, scale: 1, duration: 0.42 }, 0)
         .to(sideSlots, { opacity: 1, y: 0, scale: 1, duration: 0.32, stagger: 0.08 }, 0.14)
         .to(eyebrow, { opacity: 1, y: 0, duration: 0.24 }, 0.36)
-        .to(titleLines, { opacity: 1, y: 0, duration: 0.28, stagger: 0.06 }, 0.46)
+        .to(titleLineEls, { opacity: 1, y: 0, duration: 0.28, stagger: 0.06 }, 0.46)
         .to(lead, { opacity: 1, y: 0, duration: 0.24 }, 0.68)
         .to(actions, { opacity: 1, y: 0, duration: 0.24 }, 0.76);
 

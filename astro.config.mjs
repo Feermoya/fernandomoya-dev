@@ -67,5 +67,10 @@ export default defineConfig({
       },
     },
   },
-  integrations: [react(), sitemap()],
+  integrations: [
+    react(),
+    sitemap({
+      filter: (page) => !page.includes('/precios') && !page.includes('/foco-financiero'),
+    }),
+  ],
 });

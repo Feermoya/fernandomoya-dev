@@ -341,7 +341,7 @@
 }
 
 .hero-project-window__domain {
-  opacity: 0.72;
+  color: rgba(245, 240, 232, 0.78);
 }
 
 .hero-project-window__viewport {
