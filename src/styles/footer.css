@@ -1,4 +1,4 @@
-/* ETAPA 6 — Footer editorial */
+/* ETAPA 6 + 8 — Footer editorial */
 
 .site-footer {
   background: var(--fm-bg-base, #070707);
@@ -8,7 +8,7 @@
 }
 
 .site-footer__inner {
-  padding: clamp(3.5rem, 8vw, 5.5rem) 0 clamp(1.75rem, 4vw, 2.5rem);
+  padding-block: clamp(3.5rem, 8vw, 5.5rem) clamp(1.75rem, 4vw, 2.5rem);
 }
 
 .site-footer__top {
@@ -113,6 +113,14 @@
   outline-offset: 3px;
 }
 
+.site-footer__email-short {
+  display: none;
+}
+
+.site-footer__email-full {
+  display: inline;
+}
+
 .site-footer__meta {
   display: block;
   font-family: var(--fm-font-body);
@@ -162,28 +170,103 @@
   outline-offset: 3px;
 }
 
+/* Mobile compact — ETAPA 8 */
 @media (max-width: 639.98px) {
-  .site-footer__columns {
-    border-top: 1px solid var(--fm-border-light);
-    padding-top: 1.75rem;
+  .site-footer__inner {
+    padding-block: 2.5rem 1.5rem;
   }
 
-  .site-footer__column + .site-footer__column {
+  .site-footer__top {
+    gap: 1.5rem;
+  }
+
+  .site-footer__tagline {
+    margin-top: 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+
+  .site-footer__columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 1rem;
     border-top: 1px solid var(--fm-border-light);
     padding-top: 1.5rem;
   }
 
+  .site-footer__column--navigation {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .site-footer__column--contact {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .site-footer__column--services {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    border-top: 1px solid var(--fm-border-light);
+    padding-top: 1.25rem;
+  }
+
+  .site-footer__list {
+    margin-top: 0.65rem;
+    gap: 0.2rem;
+  }
+
+  .site-footer__list--services {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.2rem 0.75rem;
+  }
+
   .site-footer__link {
-    min-height: 40px;
+    min-height: 0;
+    padding: 0.35rem 0;
+    font-size: 0.875rem;
+    line-height: 1.35;
+  }
+
+  .site-footer__email-short {
+    display: inline;
+  }
+
+  .site-footer__email-full {
+    display: none;
+  }
+
+  .site-footer__meta {
+    font-size: 0.875rem;
+    line-height: 1.35;
   }
 
   .site-footer__bottom {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+  }
+
+  .site-footer__top-link {
+    min-height: 0;
+    padding: 0.35rem 0;
   }
 }
 
 @media (max-width: 359.98px) {
+  .site-footer__columns {
+    gap: 1rem 0.65rem;
+  }
+
+  .site-footer__link {
+    font-size: 0.8125rem;
+  }
+
+  .site-footer__list--services {
+    grid-template-columns: 1fr;
+  }
+
   .site-footer__brand-mark {
     flex-direction: column;
     align-items: flex-start;

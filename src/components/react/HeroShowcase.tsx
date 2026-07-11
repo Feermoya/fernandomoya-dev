@@ -17,6 +17,10 @@ type Props = {
 
 const TITLE_LINES = ['Hagamos algo', 'difícil de ignorar.'] as const;
 
+function isMobileViewport(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+}
+
 export default function HeroShowcase({ projects }: Props) {
   const reduceMotion = useReducedMotion();
   const sectionRef = useRef<HTMLElement>(null);
@@ -50,6 +54,7 @@ export default function HeroShowcase({ projects }: Props) {
         opacity: 1,
         y: 0,
         scale: 1,
+        x: 0,
       });
       parallaxLayers.forEach((layer) => {
         layer.style.transform = 'translate3d(0,0,0)';
@@ -57,6 +62,7 @@ export default function HeroShowcase({ projects }: Props) {
       return;
     }
 
+    const mobile = isMobileViewport();
     const centerIndex = projects.findIndex((p) => p.slotClass.includes('hema'));
     const centerSlot = centerIndex >= 0 ? slots[centerIndex] : slots[0];
     const sideSlots = slots.filter((_, i) => i !== centerIndex);
@@ -77,21 +83,23 @@ export default function HeroShowcase({ projects }: Props) {
         .to(lead, { opacity: 1, y: 0, duration: 0.24 }, 0.68)
         .to(actions, { opacity: 1, y: 0, duration: 0.24 }, 0.76);
 
-      ScrollTrigger.create({
-        trigger: section,
-        start: 'top top',
-        end: 'bottom top+=120',
-        scrub: 0.45,
-        onUpdate: (self) => {
-          const p = self.progress;
-          gsap.set(stage, { y: -p * 28 });
-          gsap.set(copy, { opacity: 1 - p * 0.28 });
-          slots.forEach((slot, index) => {
-            const spread = (index - 1) * p * 10;
-            gsap.set(slot, { x: spread, y: -p * (6 + index * 2) });
-          });
-        },
-      });
+      if (!mobile) {
+        ScrollTrigger.create({
+          trigger: section,
+          start: 'top top',
+          end: 'bottom top+=120',
+          scrub: 0.45,
+          onUpdate: (self) => {
+            const p = self.progress;
+            gsap.set(stage, { y: -p * 28 });
+            gsap.set(copy, { opacity: 1 - p * 0.28 });
+            slots.forEach((slot, index) => {
+              const spread = (index - 1) * p * 10;
+              gsap.set(slot, { x: spread, y: -p * (6 + index * 2) });
+            });
+          },
+        });
+      }
     }, section);
 
     return () => ctx.revert();
@@ -99,7 +107,7 @@ export default function HeroShowcase({ projects }: Props) {
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
-    if (!section || reduceMotion) return;
+    if (!section || reduceMotion || isMobileViewport()) return;
 
     const parallaxLayers = parallaxRefs.current.filter(Boolean) as HTMLDivElement[];
     if (parallaxLayers.length === 0) return;

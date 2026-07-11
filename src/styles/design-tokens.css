@@ -60,6 +60,16 @@
   --fm-header-offset: calc(env(safe-area-inset-top, 0px) + 5.25rem);
   --fm-container-max: 72rem;
   --fm-header-blur: 12px;
+
+  /* Gutter lateral mobile — 320px: 16px · 360px: 18px · 390–430px: ~20px */
+  --fm-mobile-gutter: clamp(1rem, 5vw, 1.25rem);
+}
+
+@media (max-width: 767px) {
+  :root {
+    /* shell padding (0.625rem) + bar real (~3.875rem) + respiro (0.375rem) */
+    --fm-header-offset: calc(env(safe-area-inset-top, 0px) + 4.875rem);
+  }
 }
 
 @theme {

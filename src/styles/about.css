@@ -9,7 +9,7 @@
 .about-section__inner {
   display: grid;
   gap: clamp(2rem, 5vw, 3rem);
-  padding: clamp(4rem, 9vw, 6.5rem) 0;
+  padding-block: clamp(4rem, 9vw, 6.5rem);
 }
 
 .about-section__eyebrow {
@@ -37,6 +37,12 @@
 .about-section__photo {
   margin: 0;
   min-width: 0;
+  max-width: 100%;
+}
+
+.about-section__photo-frame,
+.about-section__photo-image {
+  max-width: 100%;
 }
 
 .about-section__photo-frame {
@@ -202,6 +208,17 @@
   .about-section__photo-frame {
     max-width: none;
     width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .about-section__inner {
+    gap: 1.5rem;
+    padding-block: 3rem;
+  }
+
+  .about-section__highlights {
+    margin-top: 1rem;
   }
 }
 

@@ -9,7 +9,7 @@
 .process-section__grid {
   display: grid;
   gap: clamp(2.5rem, 6vw, 4.5rem);
-  padding: clamp(4rem, 9vw, 6.5rem) 0;
+  padding-block: clamp(4rem, 9vw, 6.5rem);
 }
 
 @media (min-width: 1024px) {
@@ -77,6 +77,18 @@
   background: var(--fm-border-light);
   transform-origin: left center;
   transform: scaleX(1);
+}
+
+@media (max-width: 767px) {
+  .process-section__grid {
+    gap: 2rem;
+    padding-block: 3rem;
+  }
+
+  .process-section__step {
+    padding: 1.25rem 0;
+    gap: 0.85rem;
+  }
 }
 
 .process-section__number {

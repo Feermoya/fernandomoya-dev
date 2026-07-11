@@ -7,7 +7,7 @@
 }
 
 .contact-section__inner {
-  padding: clamp(4.5rem, 10vw, 7rem) 0;
+  padding-block: clamp(4.5rem, 10vw, 7rem);
 }
 
 .contact-section__grid {
@@ -186,6 +186,31 @@
 
 .contact-section.is-visible [data-contact-reveal='location'] {
   transition-delay: 0.3s;
+}
+
+@media (max-width: 767px) {
+  .contact-section__inner {
+    padding-block: 3rem;
+  }
+
+  .contact-section__grid {
+    gap: 1.5rem;
+  }
+
+  .contact-section__title {
+    font-size: clamp(2rem, 9vw, 2.5rem);
+    line-height: 1.02;
+    max-width: none;
+  }
+
+  .contact-section__lead {
+    margin-top: 0.75rem;
+  }
+
+  .contact-section__actions {
+    gap: 0.85rem;
+    padding-top: 0;
+  }
 }
 
 @media (max-width: 1023.98px) {

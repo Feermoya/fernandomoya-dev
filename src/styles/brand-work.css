@@ -7,7 +7,7 @@
 }
 
 .brand-work__inner {
-  padding: clamp(4rem, 9vw, 6.5rem) 0;
+  padding-block: clamp(4rem, 9vw, 6.5rem);
 }
 
 .brand-work__header {
@@ -53,6 +53,12 @@
 .brand-work__piece {
   margin: 0;
   min-width: 0;
+  max-width: 100%;
+}
+
+.brand-work__frame,
+.brand-work__image {
+  max-width: 100%;
 }
 
 .brand-work__frame {
@@ -172,6 +178,16 @@
 
   .brand-work__piece--lead {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .brand-work__inner {
+    padding-block: 3rem;
+  }
+
+  .brand-work__header {
+    margin-bottom: 1.75rem;
   }
 }
 

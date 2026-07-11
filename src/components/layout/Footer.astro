@@ -41,7 +41,7 @@ const seoLinks = [
       </div>
 
       <div class="site-footer__columns">
-        <nav class="site-footer__column" aria-label="Navegación del sitio">
+        <nav class="site-footer__column site-footer__column--navigation" aria-label="Navegación del sitio">
           <p class="site-footer__label">Navegación</p>
           <ul class="site-footer__list">
             {
@@ -56,22 +56,7 @@ const seoLinks = [
           </ul>
         </nav>
 
-        <nav class="site-footer__column" aria-label="Servicios">
-          <p class="site-footer__label">Servicios</p>
-          <ul class="site-footer__list">
-            {
-              seoLinks.map((link) => (
-                <li>
-                  <a href={link.href} class="site-footer__link">
-                    {link.label}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </nav>
-
-        <div class="site-footer__column">
+        <div class="site-footer__column site-footer__column--contact">
           <p class="site-footer__label">Contacto</p>
           <ul class="site-footer__list">
             <li>
@@ -85,8 +70,9 @@ const seoLinks = [
               </a>
             </li>
             <li>
-              <a href={mailto} class="site-footer__link">
-                {site.email}
+              <a href={mailto} class="site-footer__link" aria-label={`Enviar correo a ${site.email}`}>
+                <span class="site-footer__email-short">Email</span>
+                <span class="site-footer__email-full">{site.email}</span>
               </a>
             </li>
             <li>
@@ -94,6 +80,21 @@ const seoLinks = [
             </li>
           </ul>
         </div>
+
+        <nav class="site-footer__column site-footer__column--services" aria-label="Servicios">
+          <p class="site-footer__label">Servicios</p>
+          <ul class="site-footer__list site-footer__list--services">
+            {
+              seoLinks.map((link) => (
+                <li>
+                  <a href={link.href} class="site-footer__link">
+                    {link.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
       </div>
     </div>
 

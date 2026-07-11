@@ -6,7 +6,7 @@
 }
 
 .projects-editorial__intro {
-  padding: clamp(3.5rem, 8vw, 5.5rem) 0 clamp(2.5rem, 5vw, 3.75rem);
+  padding-block: clamp(3.5rem, 8vw, 5.5rem) clamp(2.5rem, 5vw, 3.75rem);
   background: var(--fm-bg-base, #070707);
   color: var(--fm-text-primary);
 }
@@ -164,6 +164,13 @@
   position: relative;
   z-index: 1;
   min-width: 0;
+  max-width: 100%;
+}
+
+.featured-project__reveal,
+.featured-project__scale,
+.project-showcase-window {
+  max-width: 100%;
 }
 
 .featured-project__reveal {
@@ -338,42 +345,56 @@
 
 /* Mobile stack order */
 @media (max-width: 1023.98px) {
+  .projects-editorial__intro {
+    padding-block: 2rem;
+  }
+
   .featured-project {
     min-height: auto;
+    padding: 2rem 0;
   }
 
   .featured-project__grid {
+    display: flex;
+    flex-direction: column;
     min-height: auto;
+    gap: 1.25rem;
   }
 
   .featured-project__copy {
-    display: contents;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-width: none;
+    width: 100%;
   }
 
   .featured-project__number {
-    order: 1;
-    font-size: clamp(2.75rem, 14vw, 4rem);
-  }
-
-  .featured-project__name {
-    order: 2;
-  }
-
-  .featured-project__phrase {
-    order: 3;
-  }
-
-  .featured-project__type {
-    order: 4;
+    font-size: clamp(2.25rem, 12vw, 3.25rem);
   }
 
   .featured-project__links {
-    order: 5;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+    margin-top: 0.35rem;
+  }
+
+  .featured-project__cta {
+    width: 100%;
+    padding-inline: 0.85rem;
+    font-size: 0.8125rem;
+  }
+
+  .featured-project__domain {
+    grid-column: 1 / -1;
+    margin-top: 0.15rem;
   }
 
   .featured-project__media {
-    order: 6;
-    margin-top: 0.5rem;
+    margin-top: 0.35rem;
+    width: 100%;
+    max-width: 100%;
   }
 
   .featured-project__scale {
@@ -386,8 +407,18 @@
     font-size: clamp(1.55rem, 9vw, 1.85rem);
   }
 
+  .featured-project__links {
+    grid-template-columns: 1fr;
+  }
+
   .project-showcase-window__meta {
     font-size: 0.625rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .projects-archive {
+    padding: 2rem 0 2.5rem;
   }
 }
 
