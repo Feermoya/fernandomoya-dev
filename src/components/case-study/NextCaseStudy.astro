@@ -1,0 +1,19 @@
+---
+const { theme, nextClient, nextPhrase, nextHref } = Astro.props as {
+  theme: string;
+  nextClient: string;
+  nextPhrase: string;
+  nextHref: string;
+};
+---
+
+<section class={`cs-section cs-next cs-next--${theme}`} aria-labelledby="cs-next-title">
+  <div class="container-page">
+    <h2 id="cs-next-title" class="cs-next__label">Siguiente caso</h2>
+    <a href={nextHref} class="cs-next__link" data-cs-reveal="up">
+      <span class="cs-next__name">{nextClient}</span>
+      <span class="cs-next__phrase">{nextPhrase}</span>
+      <span class="cs-next__arrow" aria-hidden="true">→</span>
+    </a>
+  </div>
+</section>

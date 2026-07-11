@@ -1,0 +1,15 @@
+---
+import SiteHeader from '@/components/react/SiteHeader';
+import { site } from '@/data/site';
+---
+
+<SiteHeader
+  client:load
+  siteName={site.name}
+  links={[]}
+  backHref="/#proyectos"
+  backLabel="Volver al trabajo"
+  logoHref="/"
+  ctaHref="/#contacto"
+  ctaLabel="Hablemos"
+/>

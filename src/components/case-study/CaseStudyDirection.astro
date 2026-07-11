@@ -1,0 +1,29 @@
+---
+const { theme, estructura, identidad } = Astro.props as {
+  theme: string;
+  estructura: string[];
+  identidad: string[];
+};
+---
+
+<section class={`cs-section cs-direction cs-direction--${theme}`} aria-labelledby="cs-direction-title">
+  <div class="container-page">
+    <h2 id="cs-direction-title" class="cs-direction__title" data-cs-reveal="up">
+      Dirección elegida
+    </h2>
+    <div class="cs-direction__grid">
+      <article class="cs-direction__block" data-cs-reveal="up">
+        <h3 class="cs-direction__label">Estructura</h3>
+        {estructura.map((p) => (
+          <p>{p}</p>
+        ))}
+      </article>
+      <article class="cs-direction__block" data-cs-reveal="up">
+        <h3 class="cs-direction__label">Identidad</h3>
+        {identidad.map((p) => (
+          <p>{p}</p>
+        ))}
+      </article>
+    </div>
+  </div>
+</section>

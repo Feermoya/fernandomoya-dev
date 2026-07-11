@@ -75,6 +75,7 @@ async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<Featur
     stack: copy.stack,
     domain: domainFromLive(live),
     live,
+    caseUrl: `/proyectos/${id}`,
     coverSrc: optimized.src,
     coverWidth: optimized.attributes.width ?? 1600,
     coverHeight: optimized.attributes.height ?? 1000,

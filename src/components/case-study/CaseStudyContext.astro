@@ -1,0 +1,17 @@
+---
+const { theme, paragraphs } = Astro.props as {
+  theme: string;
+  paragraphs: string[];
+};
+---
+
+<section class={`cs-section cs-context cs-context--${theme}`} aria-labelledby="cs-context-title">
+  <div class="container-page cs-context__grid">
+    <h2 id="cs-context-title" class="cs-section-label" data-cs-reveal="fade">Contexto</h2>
+    <div class="cs-context__body" data-cs-reveal="up">
+      {paragraphs.map((p) => (
+        <p>{p}</p>
+      ))}
+    </div>
+  </div>
+</section>

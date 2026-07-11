@@ -272,6 +272,18 @@
   opacity: 0.88;
 }
 
+.featured-project__cta--secondary {
+  background: transparent;
+  border-color: currentColor;
+  color: inherit;
+  opacity: 0.92;
+}
+
+.featured-project__cta--secondary:hover {
+  opacity: 1;
+  background: transparent;
+}
+
 /* Ventana showcase */
 .project-showcase-window {
   margin: 0;

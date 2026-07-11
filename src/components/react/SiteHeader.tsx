@@ -9,6 +9,9 @@ type Props = {
   links: readonly NavLink[];
   ctaHref?: string;
   ctaLabel?: string;
+  backHref?: string;
+  backLabel?: string;
+  logoHref?: string;
 };
 
 export default function SiteHeader({
@@ -16,6 +19,9 @@ export default function SiteHeader({
   links,
   ctaHref = '#contacto',
   ctaLabel = 'Hablemos',
+  backHref,
+  backLabel = 'Volver al trabajo',
+  logoHref = '#inicio',
 }: Props) {
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -61,20 +67,28 @@ export default function SiteHeader({
           className="site-header-bar"
           data-scrolled={isScrolled ? 'true' : 'false'}
         >
-          <a href="#inicio" className="site-header-logo">
+          <a href={logoHref} className="site-header-logo">
             <span className="site-header-logo-mark" aria-hidden="true">
               FM
             </span>
             <span className="site-header-logo-name">{siteName}</span>
           </a>
 
-          <nav className="site-header-nav" aria-label="Principal">
-            {links.map((l) => (
-              <a key={l.href} href={l.href} className="site-header-nav-link">
-                {l.label}
+          {backHref ? (
+            <nav className="site-header-nav site-header-nav--case" aria-label="Caso de estudio">
+              <a href={backHref} className="site-header-nav-link">
+                {backLabel}
               </a>
-            ))}
-          </nav>
+            </nav>
+          ) : (
+            <nav className="site-header-nav" aria-label="Principal">
+              {links.map((l) => (
+                <a key={l.href} href={l.href} className="site-header-nav-link">
+                  {l.label}
+                </a>
+              ))}
+            </nav>
+          )}
 
           <div className="flex shrink-0 items-center gap-2">
             <a href={ctaHref} className="site-header-cta">
@@ -116,16 +130,26 @@ export default function SiteHeader({
                 role="navigation"
                 aria-label="Móvil"
               >
-                {links.map((link) => (
+                {backHref ? (
                   <a
-                    key={link.href}
-                    href={link.href}
+                    href={backHref}
                     className="site-header-mobile-link motion-reduce:transition-none"
                     onClick={closeMenu}
                   >
-                    {link.label}
+                    {backLabel}
                   </a>
-                ))}
+                ) : (
+                  links.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="site-header-mobile-link motion-reduce:transition-none"
+                      onClick={closeMenu}
+                    >
+                      {link.label}
+                    </a>
+                  ))
+                )}
                 <div className="site-header-mobile-cta">
                   <a
                     href={ctaHref}

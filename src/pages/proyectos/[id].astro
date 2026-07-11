@@ -1,0 +1,157 @@
+---
+import '@/styles/case-study.css';
+import { getImage } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import CaseStudyCta from '@/components/case-study/CaseStudyCta.astro';
+import CaseStudyContext from '@/components/case-study/CaseStudyContext.astro';
+import CaseStudyDecisions from '@/components/case-study/CaseStudyDecisions.astro';
+import CaseStudyDirection from '@/components/case-study/CaseStudyDirection.astro';
+import CaseStudyGallery from '@/components/case-study/CaseStudyGallery.astro';
+import CaseStudyHero from '@/components/case-study/CaseStudyHero.astro';
+import CaseStudyObjectives from '@/components/case-study/CaseStudyObjectives.astro';
+import CaseStudyResult from '@/components/case-study/CaseStudyResult.astro';
+import NextCaseStudy from '@/components/case-study/NextCaseStudy.astro';
+import CaseStudyMotion from '@/components/react/CaseStudyMotion';
+import Layout from '@/layouts/Layout.astro';
+import {
+  CASE_STUDY_EDITORIAL,
+  CASE_STUDY_IDS,
+  domainFromLive,
+  isCaseStudyId,
+} from '@/data/case-studies';
+import { getProjectCover } from '@/utils/images';
+
+export async function getStaticPaths() {
+  return CASE_STUDY_IDS.map((id) => ({
+    params: { id },
+  }));
+}
+
+const { id } = Astro.params;
+
+if (!id || !isCaseStudyId(id)) {
+  return Astro.redirect('/404');
+}
+
+const projects = await getCollection('projects');
+const entry = projects.find((project) => project.id === id);
+
+if (!entry) {
+  return Astro.redirect('/404');
+}
+
+const editorial = CASE_STUDY_EDITORIAL[id];
+const nextEntry = projects.find((project) => project.id === editorial.nextId);
+const nextEditorial = CASE_STUDY_EDITORIAL[editorial.nextId];
+
+if (!nextEntry || !nextEditorial) {
+  throw new Error(`Proyecto siguiente no encontrado para caso: ${id}`);
+}
+
+const cover = getProjectCover(entry.data.cover);
+if (!cover) {
+  throw new Error(`Portada no encontrada para caso: ${id}`);
+}
+
+const optimized = await getImage({ src: cover, width: 1600, format: 'webp' });
+const ogImage = await getImage({ src: cover, width: 1200, height: 630, format: 'jpg' });
+
+const client = entry.data.client ?? entry.data.title;
+const live = entry.data.links.live;
+const domain = domainFromLive(live);
+const year = entry.data.publishDate.getFullYear();
+const projectType = entry.data.projectType;
+const stack = entry.data.stack;
+const description = entry.data.description;
+const alt = `Captura del sitio web de ${client}`;
+
+const pageTitle = `${client} — Caso de estudio | Fernando Moya`;
+const pagePath = `/proyectos/${id}`;
+const nextClient = nextEntry.data.client ?? nextEntry.data.title;
+const nextHref = `/proyectos/${editorial.nextId}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: `${client} — Caso de estudio`,
+  description,
+  url: `https://www.fermoyadev.com.ar${pagePath}`,
+  author: {
+    '@type': 'Person',
+    name: 'Fernando Moya',
+  },
+  about: {
+    '@type': 'WebSite',
+    name: client,
+    url: live,
+  },
+};
+---
+
+<Layout
+  title={pageTitle}
+  description={description}
+  path={pagePath}
+  ogImagePath={ogImage.src}
+  caseStudyHeader
+>
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <main class={`case-study-page case-study-page--${editorial.theme}`}>
+    <CaseStudyHero
+      theme={editorial.theme}
+      number={editorial.number}
+      client={client}
+      phrase={editorial.phrase}
+      projectType={projectType}
+      year={year}
+      stack={stack}
+      domain={domain}
+      live={live}
+      coverSrc={optimized.src}
+      coverWidth={optimized.attributes.width ?? 1600}
+      coverHeight={optimized.attributes.height ?? 1000}
+      alt={alt}
+    />
+
+    <CaseStudyContext theme={editorial.theme} paragraphs={editorial.context} />
+
+    <CaseStudyObjectives theme={editorial.theme} objectives={editorial.objectives} />
+
+    <CaseStudyDirection
+      theme={editorial.theme}
+      estructura={editorial.direction.estructura}
+      identidad={editorial.direction.identidad}
+    />
+
+    <CaseStudyDecisions theme={editorial.theme} decisions={editorial.decisions} />
+
+    <CaseStudyGallery
+      theme={editorial.theme}
+      client={client}
+      coverSrc={optimized.src}
+      coverWidth={optimized.attributes.width ?? 1600}
+      coverHeight={optimized.attributes.height ?? 1000}
+      alt={alt}
+      frames={editorial.gallery}
+    />
+
+    <CaseStudyResult
+      theme={editorial.theme}
+      paragraphs={editorial.result}
+      live={live}
+      domain={domain}
+    />
+
+    <NextCaseStudy
+      theme={editorial.theme}
+      nextClient={nextClient}
+      nextPhrase={nextEditorial.phrase}
+      nextHref={nextHref}
+    />
+
+    <CaseStudyCta />
+
+    <CaseStudyMotion client:load />
+  </main>
+</Layout>

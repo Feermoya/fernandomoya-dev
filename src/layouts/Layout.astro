@@ -3,6 +3,7 @@ import '@/styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import AmbientBackdrop from '@/components/layout/AmbientBackdrop.astro';
 import Header from '@/components/layout/Header.astro';
+import CaseStudyHeader from '@/components/layout/CaseStudyHeader.astro';
 import Footer from '@/components/layout/Footer.astro';
 import ScrollMotion from '@/components/layout/ScrollMotion.astro';
 import { site } from '@/data/site';
@@ -16,6 +17,8 @@ interface Props {
   noindex?: boolean;
   /** Shell de app: sin nav del sitio, manifest PWA dedicado, fondo foco financiero. */
   appShell?: boolean;
+  /** Caso de estudio: header con volver al trabajo. */
+  caseStudyHeader?: boolean;
 }
 
 const {
@@ -25,6 +28,7 @@ const {
   ogImagePath,
   noindex = false,
   appShell = false,
+  caseStudyHeader = false,
 } = Astro.props;
 const canonical = absoluteUrl(path);
 const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
@@ -110,7 +114,7 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     {!appShell ? <AmbientBackdrop /> : null}
     <div class="relative z-[1] flex min-h-dvh flex-col">
       {!appShell ? <ScrollMotion /> : null}
-      {!appShell ? <Header /> : null}
+      {!appShell ? (caseStudyHeader ? <CaseStudyHeader /> : <Header />) : null}
       <main
         id="main"
         class:list={['flex min-h-0 flex-1 flex-col justify-start !pt-0', !appShell && 'site-shell-main']}

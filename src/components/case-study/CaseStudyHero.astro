@@ -1,0 +1,93 @@
+---
+import ProjectShowcaseWindow from '@/components/react/ProjectShowcaseWindow';
+
+export type CaseStudyHeroProps = {
+  theme: string;
+  number: string;
+  client: string;
+  phrase: string;
+  projectType: string;
+  year: number;
+  stack: string[];
+  domain: string;
+  live: string;
+  coverSrc: string;
+  coverWidth: number;
+  coverHeight: number;
+  alt: string;
+};
+
+const {
+  theme,
+  number,
+  client,
+  phrase,
+  projectType,
+  year,
+  stack,
+  domain,
+  live,
+  coverSrc,
+  coverWidth,
+  coverHeight,
+  alt,
+} = Astro.props as CaseStudyHeroProps;
+---
+
+<section class={`cs-hero cs-hero--${theme}`} aria-labelledby="cs-hero-title">
+  <div class="container-page cs-hero__inner">
+    <div class="cs-hero__copy">
+      <p class="cs-hero__eyebrow" data-cs-reveal="fade">CASO DE ESTUDIO — {number}</p>
+      <h1 id="cs-hero-title" class="cs-hero__title" data-cs-reveal="up">
+        {client}
+      </h1>
+      <p class="cs-hero__phrase" data-cs-reveal="up">
+        {phrase}
+      </p>
+      <dl class="cs-hero__meta" data-cs-reveal="up">
+        <div class="cs-hero__meta-item">
+          <dt>Tipo</dt>
+          <dd>{projectType}</dd>
+        </div>
+        <div class="cs-hero__meta-item">
+          <dt>Año</dt>
+          <dd>{year}</dd>
+        </div>
+        <div class="cs-hero__meta-item">
+          <dt>Tecnologías</dt>
+          <dd>{stack.join(' · ')}</dd>
+        </div>
+        <div class="cs-hero__meta-item">
+          <dt>Dominio</dt>
+          <dd>{domain}</dd>
+        </div>
+      </dl>
+      <div class="cs-hero__actions" data-cs-reveal="up">
+        <a
+          href={live}
+          class="cs-btn cs-btn--secondary"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Visitar sitio <span aria-hidden="true">↗</span>
+        </a>
+        <a href="/#proyectos" class="cs-btn cs-btn--ghost">Volver al trabajo</a>
+      </div>
+    </div>
+
+    <div class="cs-hero__media" data-cs-reveal="clip">
+      <div class="cs-hero__media-scale" data-cs-parallax="light">
+        <ProjectShowcaseWindow
+          client:visible
+          name={client}
+          domain={domain}
+          imageSrc={coverSrc}
+          imageWidth={coverWidth}
+          imageHeight={coverHeight}
+          alt={alt}
+          sizes="(min-width: 1024px) 58vw, 100vw"
+        />
+      </div>
+    </div>
+  </div>
+</section>

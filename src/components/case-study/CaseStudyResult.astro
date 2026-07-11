@@ -1,0 +1,30 @@
+---
+const { theme, paragraphs, live, domain } = Astro.props as {
+  theme: string;
+  paragraphs: string[];
+  live: string;
+  domain: string;
+};
+---
+
+<section class={`cs-section cs-result cs-result--${theme}`} aria-labelledby="cs-result-title">
+  <div class="container-page cs-result__inner">
+    <h2 id="cs-result-title" class="cs-result__title" data-cs-reveal="up">Resultado</h2>
+    <div class="cs-result__body" data-cs-reveal="up">
+      {paragraphs.map((p) => (
+        <p>{p}</p>
+      ))}
+    </div>
+    <div class="cs-result__actions" data-cs-reveal="up">
+      <a
+        href={live}
+        class="cs-btn cs-btn--primary"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Visitar sitio
+      </a>
+      <span class="cs-result__domain">{domain}</span>
+    </div>
+  </div>
+</section>

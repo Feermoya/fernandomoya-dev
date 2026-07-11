@@ -1,0 +1,46 @@
+---
+import type { CaseStudyGalleryFrame } from '@/data/case-studies';
+
+const { theme, client, coverSrc, coverWidth, coverHeight, alt, frames } = Astro.props as {
+  theme: string;
+  client: string;
+  coverSrc: string;
+  coverWidth: number;
+  coverHeight: number;
+  alt: string;
+  frames: CaseStudyGalleryFrame[];
+};
+---
+
+<section class={`cs-section cs-gallery cs-gallery--${theme}`} aria-labelledby="cs-gallery-title">
+  <div class="container-page">
+    <h2 id="cs-gallery-title" class="cs-gallery__title" data-cs-reveal="up">
+      Pantallas del proyecto
+    </h2>
+    <div class="cs-gallery__grid">
+      {
+        frames.map((frame, index) => (
+          <figure
+            class={`cs-gallery__frame${index === 0 ? ' cs-gallery__frame--lead' : ''}`}
+            data-cs-reveal="clip"
+          >
+            <div class="cs-gallery__viewport" style={`aspect-ratio: ${frame.aspectRatio};`}>
+              <img
+                src={coverSrc}
+                alt={`${alt} — ${frame.caption}`}
+                width={coverWidth}
+                height={coverHeight}
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width: 1024px) 48vw, 100vw"
+                class="cs-gallery__image"
+                style={`object-position: ${frame.objectPosition};`}
+              />
+            </div>
+            <figcaption class="cs-gallery__caption">{frame.caption}</figcaption>
+          </figure>
+        ))
+      }
+    </div>
+  </div>
+</section>

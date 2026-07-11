@@ -1,0 +1,31 @@
+---
+import type { CaseStudyDecision } from '@/data/case-studies';
+
+const { theme, decisions } = Astro.props as {
+  theme: string;
+  decisions: CaseStudyDecision[];
+};
+---
+
+<section class={`cs-section cs-decisions cs-decisions--${theme}`} aria-labelledby="cs-decisions-title">
+  <div class="container-page">
+    <h2 id="cs-decisions-title" class="cs-decisions__title" data-cs-reveal="up">
+      Decisiones principales
+    </h2>
+    <ol class="cs-decisions__list">
+      {
+        decisions.map((item, index) => (
+          <li class="cs-decisions__item" data-cs-reveal="up">
+            <span class="cs-decisions__number" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <div class="cs-decisions__content">
+              <h3 class="cs-decisions__name">{item.title}</h3>
+              <p class="cs-decisions__body">{item.body}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

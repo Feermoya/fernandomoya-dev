@@ -1,0 +1,26 @@
+---
+const { theme, objectives } = Astro.props as {
+  theme: string;
+  objectives: string[];
+};
+---
+
+<section class={`cs-section cs-objectives cs-objectives--${theme}`} aria-labelledby="cs-objectives-title">
+  <div class="container-page">
+    <h2 id="cs-objectives-title" class="cs-objectives__title" data-cs-reveal="up">
+      El desafío
+    </h2>
+    <ol class="cs-objectives__list">
+      {
+        objectives.map((item, index) => (
+          <li class="cs-objectives__item" data-cs-reveal="up">
+            <span class="cs-objectives__number" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <p class="cs-objectives__text">{item}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

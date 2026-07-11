@@ -15,6 +15,7 @@ export type FeaturedProjectData = {
   stack: string[];
   domain: string;
   live: string;
+  caseUrl: string;
   coverSrc: string;
   coverWidth: number;
   coverHeight: number;
@@ -108,13 +109,16 @@ export default function FeaturedProject({ project }: Props) {
               ))}
             </ul>
             <div className="featured-project__links" data-featured-copy>
+              <a href={project.caseUrl} className="featured-project__cta">
+                Ver caso
+              </a>
               <a
                 href={project.live}
-                className="featured-project__cta"
+                className="featured-project__cta featured-project__cta--secondary"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Ver sitio
+                Visitar sitio <span aria-hidden="true">↗</span>
               </a>
               <span className="featured-project__domain">{project.domain}</span>
             </div>
