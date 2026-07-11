@@ -97,23 +97,6 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
       appShell ? 'bg-[#F6F8FB]' : 'bg-bg-base',
     ]}
   >
-    {
-      !appShell ? (
-        <div
-          id="page-transition-overlay"
-          class="page-transition-overlay pointer-events-none fixed inset-0 z-[200]"
-          aria-hidden="true"
-        >
-          <div class="page-transition-overlay-inner">
-            <div class="page-transition-overlay-logo" aria-hidden="true">
-              <span class="page-transition-overlay-letter">F</span>
-              <span class="page-transition-overlay-letter">M</span>
-            </div>
-          </div>
-        </div>
-      ) : null
-    }
-
     {!appShell ? <AmbientBackdrop /> : null}
     {
       !appShell ? (
@@ -136,8 +119,7 @@ const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
     {
       appShell ? null : (
         <script>
-          import '@/scripts/fm-page-transition.ts';
-          import '@/scripts/fm-lenis.ts';
+          import '@/scripts/fm-anchor-navigation.ts';
         </script>
       )
     }

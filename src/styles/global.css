@@ -34,19 +34,20 @@
     scroll-behavior: smooth;
   }
 
-  html.lenis {
-    scroll-behavior: auto;
-  }
-
-  html.lenis,
-  html.lenis body {
-    height: auto;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
     }
+  }
+
+  #inicio,
+  #proyectos,
+  #proceso,
+  #piezas-marca,
+  #sobre-mi,
+  #contacto,
+  #main {
+    scroll-margin-top: calc(var(--fm-header-offset) + 0.75rem);
   }
 
   .skip-link {
@@ -621,11 +622,23 @@
     }
   }
 
+  .site-header-mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+  }
+
   .site-header-mobile-panel {
-    position: absolute;
+    position: fixed;
     left: var(--fm-space-4);
     right: var(--fm-space-4);
-    z-index: 1;
+    top: max(4.75rem, calc(env(safe-area-inset-top, 0px) + 4.25rem));
+    z-index: 200;
     max-width: 20rem;
     margin-inline: auto;
     overflow-y: auto;
@@ -1996,68 +2009,5 @@
   .about-photo-orbit {
     animation: none;
     background-position: 50% 50%;
-  }
-}
-
-/* —— View Transitions: barrido en snapshot `root` (+ overlay en `fm-page-transition.ts`) —— */
-.page-transition-overlay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--fm-bg-base);
-  clip-path: inset(0% 0% 100% 0%);
-}
-
-.page-transition-overlay-logo {
-  display: inline-flex;
-  align-items: center;
-  opacity: 0;
-  filter: blur(12px);
-  font-family: var(--fm-font-display);
-}
-
-.page-transition-overlay-letter {
-  display: inline-block;
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--fm-text-primary);
-}
-
-@supports (view-transition-name: none) {
-  @media not (prefers-reduced-motion: reduce) {
-    ::view-transition-old(root) {
-      animation-name: fm-vt-old-root;
-      animation-duration: 400ms;
-      animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
-      animation-fill-mode: both;
-    }
-
-    ::view-transition-new(root) {
-      animation-name: fm-vt-new-root;
-      animation-duration: 500ms;
-      animation-delay: 50ms;
-      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-      animation-fill-mode: both;
-    }
-  }
-}
-
-@keyframes fm-vt-old-root {
-  from {
-    clip-path: inset(0% 0% 100% 0%);
-  }
-  to {
-    clip-path: inset(0% 0% 0% 0%);
-  }
-}
-
-@keyframes fm-vt-new-root {
-  from {
-    clip-path: inset(0% 0% 0% 0%);
-  }
-  to {
-    clip-path: inset(100% 0% 0% 0%);
   }
 }

@@ -26,7 +26,6 @@ export default function SiteHeader({
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRootRef = useRef<HTMLDivElement>(null);
   const menuPanelRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuButtonId = 'site-header-menu-btn';
@@ -38,33 +37,34 @@ export default function SiteHeader({
 
   const closeMenu = useCallback((returnFocus = false) => {
     setMenuOpen(false);
+    document.body.style.overflow = '';
     if (returnFocus) {
       requestAnimationFrame(() => menuButtonRef.current?.focus());
     }
   }, []);
 
   useEffect(() => {
-    if (!menuOpen) return;
-    const prevOverflow = document.body.style.overflow;
+    if (!menuOpen) {
+      document.body.style.overflow = '';
+      return;
+    }
+
     document.body.style.overflow = 'hidden';
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeMenu(true);
     };
-    const onPointerDown = (e: PointerEvent) => {
-      const t = e.target;
-      if (!(t instanceof Node)) return;
-      if (menuRootRef.current?.contains(t)) return;
-      if (menuPanelRef.current?.contains(t)) return;
-      closeMenu(true);
-    };
+
     document.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onPointerDown, true);
     return () => {
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = '';
       document.removeEventListener('keydown', onKey);
-      document.removeEventListener('pointerdown', onPointerDown, true);
     };
   }, [menuOpen, closeMenu]);
+
+  const handleMobileNavClick = useCallback(() => {
+    closeMenu();
+  }, [closeMenu]);
 
   return (
     <div className="site-header-shell">
@@ -101,7 +101,7 @@ export default function SiteHeader({
               {ctaLabel}
             </a>
 
-            <div ref={menuRootRef} className="site-header-menu-btn-wrap shrink-0">
+            <div className="site-header-menu-btn-wrap shrink-0">
               <button
                 ref={menuButtonRef}
                 id={menuButtonId}
@@ -120,20 +120,17 @@ export default function SiteHeader({
 
       {menuOpen && typeof document !== 'undefined'
         ? createPortal(
-            <div className="fixed inset-0 z-[200] lg:hidden" role="presentation">
+            <>
               <button
                 type="button"
-                className="absolute inset-0 bg-black/60 motion-reduce:transition-none"
+                className="site-header-mobile-backdrop lg:hidden"
                 aria-label="Cerrar menú"
                 onClick={() => closeMenu(true)}
               />
               <nav
                 ref={menuPanelRef}
                 id={menuPanelId}
-                className="site-header-mobile-panel"
-                style={{
-                  top: 'max(4.75rem, calc(env(safe-area-inset-top, 0px) + 4.25rem))',
-                }}
+                className="site-header-mobile-panel lg:hidden"
                 role="navigation"
                 aria-label="Móvil"
               >
@@ -141,7 +138,7 @@ export default function SiteHeader({
                   <a
                     href={backHref}
                     className="site-header-mobile-link motion-reduce:transition-none"
-                    onClick={() => closeMenu()}
+                    onClick={handleMobileNavClick}
                   >
                     {backLabel}
                   </a>
@@ -151,7 +148,7 @@ export default function SiteHeader({
                       key={link.href}
                       href={link.href}
                       className="site-header-mobile-link motion-reduce:transition-none"
-                      onClick={() => closeMenu()}
+                      onClick={handleMobileNavClick}
                     >
                       {link.label}
                     </a>
@@ -161,13 +158,13 @@ export default function SiteHeader({
                   <a
                     href={ctaHref}
                     className="site-header-cta motion-reduce:transition-none"
-                    onClick={() => closeMenu()}
+                    onClick={handleMobileNavClick}
                   >
                     {ctaLabel}
                   </a>
                 </div>
               </nav>
-            </div>,
+            </>,
             document.body,
           )
         : null}

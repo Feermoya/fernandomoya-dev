@@ -10,10 +10,4 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-declare global {
-  interface Window {
-    __fmLenis?: import('lenis').default;
-  }
-}
-
 export {};
