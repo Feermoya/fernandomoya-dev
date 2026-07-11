@@ -110,7 +110,6 @@ export default function HeroShowcase({ projects }: Props) {
     let currentX = 0;
     let currentY = 0;
     let rafId = 0;
-    let active = false;
 
     const tick = () => {
       currentX += (targetX - currentX) * 0.12;
@@ -128,7 +127,7 @@ export default function HeroShowcase({ projects }: Props) {
       const stillMoving =
         Math.abs(targetX - currentX) > 0.002 || Math.abs(targetY - currentY) > 0.002;
 
-      if (active || stillMoving) {
+      if (stillMoving) {
         rafId = requestAnimationFrame(tick);
       } else {
         rafId = 0;
@@ -141,14 +140,12 @@ export default function HeroShowcase({ projects }: Props) {
       const ny = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
       targetX = Math.max(-1, Math.min(1, nx));
       targetY = Math.max(-1, Math.min(1, ny));
-      active = true;
       if (!rafId) rafId = requestAnimationFrame(tick);
     };
 
     const onLeave = () => {
       targetX = 0;
       targetY = 0;
-      active = true;
       if (!rafId) rafId = requestAnimationFrame(tick);
     };
 

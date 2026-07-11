@@ -1,312 +1,117 @@
 ---
+import '@/styles/projects.css';
 import { getImage } from 'astro:assets';
-import { getCollection, type CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+import FeaturedProjects from '@/components/react/FeaturedProjects';
+import type { FeaturedProjectData } from '@/components/react/FeaturedProject';
+import type { ArchiveProjectData } from '@/components/react/FeaturedProjects';
 import { getProjectCover } from '@/utils/images';
 import { byOrderThenDate } from '@/utils/sort';
 
-const all = await getCollection('projects');
-const clients = all.filter((p) => p.data.kind === 'client').sort(byOrderThenDate);
-const own = all.filter((p) => p.data.kind === 'own').sort(byOrderThenDate);
+const SELECTED_IDS = ['hema', 'giacomelli-seguros', 'poletino-servicios'] as const;
 
-type ProjectCardData = {
-  id: string;
-  title: string;
-  projectType: string;
-  coverSrc: string | null;
-  live: string;
+const FEATURED_COPY: Record<
+  (typeof SELECTED_IDS)[number],
+  {
+    number: string;
+    typeLine: string;
+    phrase: string;
+    stack: string[];
+    theme: FeaturedProjectData['theme'];
+    mediaPosition: 'left' | 'right';
+  }
+> = {
+  hema: {
+    number: '01',
+    typeLine: 'Laboratorio genético · Sitio institucional',
+    phrase: 'Complejidad médica, explicada con claridad.',
+    stack: ['HTML', 'CSS', 'JavaScript'],
+    theme: 'hema',
+    mediaPosition: 'right',
+  },
+  'giacomelli-seguros': {
+    number: '02',
+    typeLine: 'Seguros · Sitio institucional',
+    phrase: 'Una empresa familiar, llevada al presente.',
+    stack: ['Astro', 'TypeScript', 'CSS'],
+    theme: 'giacomelli',
+    mediaPosition: 'left',
+  },
+  'poletino-servicios': {
+    number: '03',
+    typeLine: 'Industria · Servicios y maquinaria',
+    phrase: 'Maquinaria real. Comunicación directa.',
+    stack: ['HTML', 'CSS', 'Firebase'],
+    theme: 'poletino',
+    mediaPosition: 'right',
+  },
 };
 
-async function toCardData(p: CollectionEntry<'projects'>): Promise<ProjectCardData> {
-  const cover = getProjectCover(p.data.cover);
-  let coverSrc: string | null = null;
-  if (cover) {
-    coverSrc = (await getImage({ src: cover, width: 1200 })).src;
-  }
+function domainFromLive(url: string): string {
+  return new URL(url).hostname.replace(/^www\./, '');
+}
+
+const all = await getCollection('projects');
+const byId = new Map(all.map((entry) => [entry.id, entry]));
+
+async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<FeaturedProjectData> {
+  const entry = byId.get(id);
+  if (!entry) throw new Error(`Proyecto seleccionado no encontrado: ${id}`);
+
+  const copy = FEATURED_COPY[id];
+  const cover = getProjectCover(entry.data.cover);
+  if (!cover) throw new Error(`Portada no encontrada para ${id}`);
+
+  const optimized = await getImage({ src: cover, width: 1600, format: 'webp' });
+  const client = entry.data.client ?? entry.data.title;
+  const live = entry.data.links.live;
+
   return {
-    id: p.id,
-    title: p.data.title,
-    projectType: p.data.projectType,
-    coverSrc,
-    live: p.data.links.live,
+    id,
+    number: copy.number,
+    client,
+    typeLine: copy.typeLine,
+    phrase: copy.phrase,
+    stack: copy.stack,
+    domain: domainFromLive(live),
+    live,
+    coverSrc: optimized.src,
+    coverWidth: optimized.attributes.width ?? 1600,
+    coverHeight: optimized.attributes.height ?? 1000,
+    alt: `Captura del sitio web de ${client}`,
+    theme: copy.theme,
+    mediaPosition: copy.mediaPosition,
   };
 }
 
-const ordered = [...clients, ...own];
-const projectCards = await Promise.all(ordered.map(toCardData));
+const featured = await Promise.all(SELECTED_IDS.map(toFeaturedData));
+
+const archiveSource = all
+  .filter((entry) => !SELECTED_IDS.includes(entry.id as (typeof SELECTED_IDS)[number]))
+  .sort(byOrderThenDate);
+
+const archive: ArchiveProjectData[] = archiveSource.map((entry, index) => ({
+  id: entry.id,
+  number: String(index + 4).padStart(2, '0'),
+  label: entry.data.client ?? entry.data.title,
+  projectType: entry.data.projectType,
+  year: entry.data.publishDate.getFullYear(),
+  live: entry.data.links.live,
+}));
 ---
 
-<section
-  id="proyectos"
-  class="home-section-light relative border-t border-slate-200/70 py-10 sm:py-14"
-  aria-labelledby="projects-heading"
->
-  <div class="container-page" data-projects-section>
-    <div class="max-w-2xl">
-      <h2 id="projects-heading" class="home-section-title">
-        Sitios publicados
-      </h2>
-      <div class="home-section-accent-line" aria-hidden="true"></div>
-    </div>
-
-    <div class="projects-showcase mt-6 sm:mt-8">
-      {
-        projectCards.map((item, idx) => (
-          <a
-            href={item.live}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="project-showcase-card"
-            data-reveal
-            style={`--stagger-index:${idx};`}
-          >
-            <div class="project-showcase-card__media">
-              {item.coverSrc ? (
-                <img
-                  src={item.coverSrc}
-                  alt={`Captura de ${item.title}`}
-                  width="1200"
-                  height="900"
-                  loading="lazy"
-                  decoding="async"
-                  class="project-showcase-card__image"
-                  sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 320px"
-                />
-              ) : (
-                <div class="project-showcase-card__placeholder" aria-hidden="true" />
-              )}
-            </div>
-
-            <div class="project-showcase-card__body">
-              <span class="project-showcase-card__badge">{item.projectType}</span>
-              <h3 class="project-showcase-card__title">{item.title}</h3>
-              <span class="project-showcase-card__cta">
-                Ver proyecto
-                <span class="project-showcase-card__cta-arrow" aria-hidden="true">→</span>
-              </span>
-            </div>
-          </a>
-        ))
-      }
-    </div>
+<section id="proyectos" class="projects-editorial" aria-labelledby="projects-heading">
+  <div class="projects-editorial__intro container-page">
+    <p class="projects-editorial__eyebrow">TRABAJO SELECCIONADO</p>
+    <h2 id="projects-heading" class="projects-editorial__title">
+      No hago webs<br aria-hidden="true" />
+      para llenar espacio.
+    </h2>
+    <p class="projects-editorial__lead">
+      Cada proyecto parte de un problema distinto.<br aria-hidden="true" />
+      La solución también debería serlo.
+    </p>
   </div>
+
+  <FeaturedProjects client:visible featured={featured} archive={archive} />
 </section>
-
-<script>
-  const section = document.querySelector('[data-projects-section]');
-  if (section) {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const cards = Array.from(section.querySelectorAll('[data-reveal]'));
-
-    if (reduceMotion) {
-      cards.forEach((card) => card.classList.add('is-visible'));
-    } else {
-      const observer = new IntersectionObserver(
-        (entries, obs) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            entry.target.classList.add('is-visible');
-            obs.unobserve(entry.target);
-          });
-        },
-        { threshold: 0.12, rootMargin: '0px 0px -32px 0px' },
-      );
-      cards.forEach((card) => observer.observe(card));
-    }
-  }
-</script>
-
-<style>
-  .projects-showcase {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  @media (min-width: 640px) {
-    .projects-showcase {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.9rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .projects-showcase {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
-    }
-  }
-
-  @media (min-width: 1280px) {
-    .projects-showcase {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  .project-showcase-card {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-    overflow: hidden;
-    border-radius: 1.25rem;
-    border: 1px solid rgb(15 23 42 / 0.09);
-    background:
-      linear-gradient(155deg, rgb(255 255 255 / 0.78) 0%, rgb(248 250 252 / 0.68) 100%);
-    color: inherit;
-    text-decoration: none;
-    cursor: pointer;
-    box-shadow:
-      0 14px 36px rgb(15 23 42 / 0.07),
-      inset 0 1px 0 rgb(255 255 255 / 0.85);
-    opacity: 0;
-    transform: translateY(18px);
-    transition:
-      opacity 0.45s ease,
-      transform 0.45s ease,
-      border-color 0.25s ease,
-      box-shadow 0.25s ease;
-    transition-delay: calc(var(--stagger-index, 0) * 45ms);
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .project-showcase-card.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .project-showcase-card__media {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 12rem;
-    padding: 0.85rem 0.9rem;
-    background: linear-gradient(180deg, rgb(241 245 249 / 0.9), rgb(248 250 252 / 0.75));
-    border-bottom: 1px solid rgb(15 23 42 / 0.06);
-  }
-
-  @media (min-width: 640px) {
-    .project-showcase-card__media {
-      height: 11rem;
-      padding: 0.7rem 0.8rem;
-    }
-  }
-
-  .project-showcase-card__image {
-    display: block;
-    width: 100%;
-    height: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    object-position: center;
-  }
-
-  .project-showcase-card__placeholder {
-    width: 100%;
-    height: 100%;
-    border-radius: 0.5rem;
-    background: linear-gradient(135deg, rgb(226 232 240), rgb(241 245 249));
-  }
-
-  .project-showcase-card__body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.4rem;
-    padding: 0.9rem 1rem 1rem;
-  }
-
-  .project-showcase-card__badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    border: 1px solid rgb(226 232 240);
-    padding: 0.18rem 0.45rem;
-    font-size: 0.5625rem;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: rgb(100 116 139);
-    transition: border-color 0.25s ease, color 0.25s ease;
-  }
-
-  .project-showcase-card__title {
-    margin: 0;
-    font-family: 'Plus Jakarta Sans', var(--font-primary);
-    font-size: 0.9375rem;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    color: rgb(15 23 42);
-    transition: color 0.25s ease;
-  }
-
-  .project-showcase-card__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    margin-top: auto;
-    padding-top: 0.15rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: rgb(100 116 139);
-    transition: color 0.25s ease, gap 0.25s ease;
-  }
-
-  .project-showcase-card__cta-arrow {
-    display: inline-block;
-    transition: transform 0.25s ease;
-  }
-
-  .project-showcase-card:focus-visible {
-    outline: 2px solid rgb(45 91 227 / 0.45);
-    outline-offset: 3px;
-  }
-
-  @media (hover: hover) {
-    .project-showcase-card:hover {
-      transform: translateY(-4px);
-      border-color: rgb(45 91 227 / 0.18);
-      box-shadow:
-        0 22px 48px rgb(15 23 42 / 0.1),
-        inset 0 1px 0 rgb(255 255 255 / 0.92);
-    }
-
-    .project-showcase-card.is-visible:hover {
-      transform: translateY(-3px);
-    }
-
-    .project-showcase-card:hover .project-showcase-card__badge {
-      border-color: rgb(45 91 227 / 0.22);
-      color: rgb(71 85 105);
-    }
-
-    .project-showcase-card:hover .project-showcase-card__title {
-      color: rgb(45 91 227);
-    }
-
-    .project-showcase-card:hover .project-showcase-card__cta {
-      color: rgb(45 91 227);
-      gap: 0.4rem;
-    }
-
-    .project-showcase-card:hover .project-showcase-card__cta-arrow {
-      transform: translateX(2px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .project-showcase-card,
-    .project-showcase-card__badge,
-    .project-showcase-card__title,
-    .project-showcase-card__cta,
-    .project-showcase-card__cta-arrow {
-      transition: none !important;
-      transition-delay: 0s !important;
-    }
-
-    .project-showcase-card:hover {
-      transform: none;
-    }
-  }
-</style>
