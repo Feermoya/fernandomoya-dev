@@ -1,0 +1,95 @@
+/**
+ * ETAPA 1 — Tokens editoriales premium (negro / marfil).
+ * Fuente de verdad para el shell y componentes futuros.
+ */
+:root {
+  /* Fondos */
+  --fm-bg-base: #070707;
+  --fm-bg-surface: #101010;
+  --fm-bg-surface-raised: #161616;
+  --fm-bg-ivory: #f5f0e8;
+  --fm-bg-ivory-soft: #faf7f2;
+
+  /* Texto */
+  --fm-text-primary: #f5f0e8;
+  --fm-text-secondary: rgba(245, 240, 232, 0.62);
+  --fm-text-tertiary: rgba(245, 240, 232, 0.42);
+  --fm-text-on-ivory: #070707;
+  --fm-text-on-ivory-muted: rgba(7, 7, 7, 0.58);
+
+  /* Bordes */
+  --fm-border-light: rgba(245, 240, 232, 0.1);
+  --fm-border-light-strong: rgba(245, 240, 232, 0.18);
+  --fm-border-dark: rgba(7, 7, 7, 0.12);
+  --fm-border-dark-strong: rgba(7, 7, 7, 0.22);
+
+  /* Acento editorial (marfil sobre negro) */
+  --fm-accent: #f5f0e8;
+  --fm-accent-hover: #e8e0d4;
+  --fm-accent-muted: rgba(245, 240, 232, 0.14);
+
+  /* Radios */
+  --fm-radius-xs: 0.25rem;
+  --fm-radius-sm: 0.375rem;
+  --fm-radius-md: 0.5rem;
+  --fm-radius-lg: 0.75rem;
+  --fm-radius-xl: 1rem;
+  --fm-radius-2xl: 1.25rem;
+  --fm-radius-pill: 9999px;
+
+  /* Espaciado (escala 4px) */
+  --fm-space-1: 0.25rem;
+  --fm-space-2: 0.5rem;
+  --fm-space-3: 0.75rem;
+  --fm-space-4: 1rem;
+  --fm-space-5: 1.25rem;
+  --fm-space-6: 1.5rem;
+  --fm-space-8: 2rem;
+  --fm-space-10: 2.5rem;
+  --fm-space-12: 3rem;
+  --fm-space-16: 4rem;
+  --fm-space-20: 5rem;
+
+  /* Tipografía */
+  --fm-font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --fm-font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --fm-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Shell */
+  --fm-header-offset: calc(env(safe-area-inset-top, 0px) + 5.25rem);
+  --fm-container-max: 72rem;
+  --fm-header-blur: 12px;
+}
+
+@theme {
+  --font-sans: var(--fm-font-body);
+  --font-display: var(--fm-font-display);
+  --font-mono: var(--fm-font-mono);
+
+  --color-bg-base: var(--fm-bg-base);
+  --color-surface-0: var(--fm-bg-surface);
+  --color-surface-1: var(--fm-bg-surface-raised);
+  --color-surface-2: #1c1c1c;
+  --color-bg-ivory: var(--fm-bg-ivory);
+  --color-border: var(--fm-border-light);
+  --color-border-strong: var(--fm-border-light-strong);
+  --color-border-dark: var(--fm-border-dark);
+  --color-text: var(--fm-text-primary);
+  --color-muted: var(--fm-text-secondary);
+  --color-accent: var(--fm-accent);
+  --color-accent-hover: var(--fm-accent-hover);
+  --color-accent-warm: #c4b5a0;
+
+  --radius-sm: var(--fm-radius-sm);
+  --radius-md: var(--fm-radius-md);
+  --radius-lg: var(--fm-radius-lg);
+  --radius-xl: var(--fm-radius-xl);
+  --radius-2xl: var(--fm-radius-2xl);
+
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 20px 48px -16px rgba(0, 0, 0, 0.55);
+  --shadow-header: 0 8px 32px rgba(0, 0, 0, 0.32);
+
+  --breakpoint-xs: 24rem;
+}

@@ -1,5 +1,4 @@
-import FmLogoMark from '@/components/react/FmLogoMark';
-import { motion, useMotionValueEvent, useScroll } from 'motion/react';
+import { useMotionValueEvent, useScroll } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -8,9 +7,16 @@ export type NavLink = { href: string; label: string };
 type Props = {
   siteName: string;
   links: readonly NavLink[];
+  ctaHref?: string;
+  ctaLabel?: string;
 };
 
-export default function SiteHeader({ siteName, links }: Props) {
+export default function SiteHeader({
+  siteName,
+  links,
+  ctaHref = '#contacto',
+  ctaLabel = 'Hablemos',
+}: Props) {
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,7 +26,7 @@ export default function SiteHeader({ siteName, links }: Props) {
   const menuPanelId = 'site-header-menu-panel';
 
   useMotionValueEvent(scrollY, 'change', (y) => {
-    setIsScrolled(y > 50);
+    setIsScrolled(y > 24);
   });
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
@@ -49,65 +55,63 @@ export default function SiteHeader({ siteName, links }: Props) {
   }, [menuOpen, closeMenu]);
 
   return (
-    <header
-      id="site-header"
-      className="site-header-glass sticky top-0 z-50 overflow-visible border-b border-white/[0.08] pt-[env(safe-area-inset-top,0px)]"
-      data-scrolled={isScrolled ? 'true' : 'false'}
-    >
-      <div className="header-inner container-page flex min-h-0 flex-nowrap items-center justify-between gap-3 py-2 sm:gap-4 sm:py-2.5 lg:py-2">
-        <a
-          href="#inicio"
-          className="group inline-flex min-w-0 shrink items-center gap-2.5 font-semibold tracking-tight text-text transition-colors duration-200 ease-out hover:text-accent motion-reduce:transition-none"
+    <div className="site-header-shell">
+      <header id="site-header" aria-label="Sitio">
+        <div
+          className="site-header-bar"
+          data-scrolled={isScrolled ? 'true' : 'false'}
         >
-          <FmLogoMark />
-          <span className="hidden text-sm sm:inline">{siteName}</span>
-        </a>
+          <a href="#inicio" className="site-header-logo">
+            <span className="site-header-logo-mark" aria-hidden="true">
+              FM
+            </span>
+            <span className="site-header-logo-name">{siteName}</span>
+          </a>
 
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Principal">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="group relative rounded-md px-2.5 py-2 pb-2.5 text-sm text-muted transition-colors duration-200 ease-out hover:text-text motion-reduce:transition-none"
-            >
-              <span className="relative z-10">{l.label}</span>
-              <span className="nav-underline-grow" aria-hidden="true" />
+          <nav className="site-header-nav" aria-label="Principal">
+            {links.map((l) => (
+              <a key={l.href} href={l.href} className="site-header-nav-link">
+                {l.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <a href={ctaHref} className="site-header-cta">
+              {ctaLabel}
             </a>
-          ))}
-        </nav>
 
-        <div ref={menuRootRef} className="shrink-0 lg:hidden">
-          <button
-            id={menuButtonId}
-            type="button"
-            className="glass-surface-sm inline-flex h-9 w-[5.75rem] shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-2 text-sm font-medium text-text"
-            aria-expanded={menuOpen}
-            aria-controls={menuPanelId}
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            {menuOpen ? 'Cerrar' : 'Menú'}
-          </button>
+            <div ref={menuRootRef} className="site-header-menu-btn-wrap shrink-0">
+              <button
+                id={menuButtonId}
+                type="button"
+                className="site-header-menu-btn motion-reduce:transition-none"
+                aria-expanded={menuOpen}
+                aria-controls={menuPanelId}
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                {menuOpen ? 'Cerrar' : 'Menú'}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
+
       {menuOpen && typeof document !== 'undefined'
         ? createPortal(
             <div className="fixed inset-0 z-[200] lg:hidden" role="presentation">
               <button
                 type="button"
-                className="absolute inset-0 bg-black/50"
+                className="absolute inset-0 bg-black/60 motion-reduce:transition-none"
                 aria-label="Cerrar menú"
                 onClick={closeMenu}
               />
-              {/*
-                .glass-panel fuerza position:relative en global.css y anula `fixed` de Tailwind:
-                el menú quedaba al final del body (invisible). !absolute dentro de este layer fixed.
-              */}
               <nav
                 ref={menuPanelRef}
                 id={menuPanelId}
-                className="glass-panel !absolute left-4 right-4 z-[1] mx-auto max-h-[min(24rem,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-5.5rem))] w-full max-w-sm overflow-y-auto rounded-xl p-1.5 shadow-elevated"
+                className="site-header-mobile-panel"
                 style={{
-                  top: 'max(4rem, calc(env(safe-area-inset-top, 0px) + 3.35rem + 0.5rem))',
+                  top: 'max(4.75rem, calc(env(safe-area-inset-top, 0px) + 4.25rem))',
                 }}
                 role="navigation"
                 aria-label="Móvil"
@@ -116,17 +120,26 @@ export default function SiteHeader({ siteName, links }: Props) {
                   <a
                     key={link.href}
                     href={link.href}
-                    className="block rounded-lg px-3 py-2 text-sm text-muted transition-colors duration-200 ease-out hover:bg-white/[0.06] hover:text-text motion-reduce:transition-none"
+                    className="site-header-mobile-link motion-reduce:transition-none"
                     onClick={closeMenu}
                   >
                     {link.label}
                   </a>
                 ))}
+                <div className="site-header-mobile-cta">
+                  <a
+                    href={ctaHref}
+                    className="site-header-cta motion-reduce:transition-none"
+                    onClick={closeMenu}
+                  >
+                    {ctaLabel}
+                  </a>
+                </div>
               </nav>
             </div>,
             document.body,
           )
         : null}
-    </header>
+    </div>
   );
 }

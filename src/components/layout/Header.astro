@@ -3,11 +3,10 @@ import SiteHeader from '@/components/react/SiteHeader';
 import { site } from '@/data/site';
 
 const links = [
-  { href: '#inicio', label: 'Inicio' },
-  { href: '#proyectos', label: 'Proyectos' },
+  { href: '#proyectos', label: 'Trabajo' },
+  { href: '#piezas-marca', label: 'Proceso' },
   { href: '#sobre-mi', label: 'Sobre mí' },
-  { href: '/precios', label: 'Precios' },
 ] as const;
 ---
 
-<SiteHeader client:load siteName={site.name} links={links} />
+<SiteHeader client:load siteName={site.name} links={links} ctaHref="#contacto" ctaLabel="Hablemos" />

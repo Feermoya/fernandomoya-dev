@@ -21,7 +21,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #050818;
+    background: var(--fm-bg-base, #070707);
     overflow: hidden;
     transition:
       opacity 0.42s ease,
@@ -39,19 +39,7 @@
   }
 
   .fm-splash-glow {
-    position: absolute;
-    inset: 0;
-    margin: auto;
-    width: min(420px, 70vw);
-    height: min(420px, 70vw);
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(96, 165, 250, 0.14) 0%,
-      rgba(109, 40, 217, 0.06) 45%,
-      transparent 70%
-    );
-    pointer-events: none;
+    display: none;
   }
 
   .fm-splash-inner {
@@ -85,14 +73,14 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(245, 240, 232, 0.08);
   }
 
   .fm-splash-bar-fill {
     display: block;
     height: 100%;
     width: 0;
-    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    background: var(--fm-bg-ivory, #f5f0e8);
     animation: fm-splash-progress 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.08s;
   }
 
@@ -143,7 +131,7 @@
     initialSplashBooted = true;
 
     if ('fonts' in document) {
-      document.fonts.load('900 1em Nunito').catch(() => {});
+      document.fonts.load('400 1em "Instrument Serif"').catch(() => {});
     }
 
     if (document.readyState === 'complete') {
