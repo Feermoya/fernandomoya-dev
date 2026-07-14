@@ -57,17 +57,21 @@ function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
         ? 'Guardado en la nube'
         : status === 'saving'
           ? 'Guardando…'
-          : status === 'error'
-            ? 'No se pudo guardar'
-            : 'Solo en este dispositivo';
+          : status === 'offline'
+            ? 'Sin conexión · local'
+            : status === 'error'
+              ? 'No se pudo guardar'
+              : 'Solo en este dispositivo';
   const cls =
     status === 'synced'
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
       : status === 'error'
         ? 'border-red-200 bg-red-50 text-red-700'
-        : status === 'loading'
-          ? 'border-blue-200 bg-blue-50 text-blue-700'
-          : 'border-amber-200 bg-amber-50 text-amber-700';
+        : status === 'offline'
+          ? 'border-amber-200 bg-amber-50 text-amber-800'
+          : status === 'loading'
+            ? 'border-blue-200 bg-blue-50 text-blue-700'
+            : 'border-amber-200 bg-amber-50 text-amber-700';
 
   return (
     <span
@@ -84,6 +88,7 @@ export default function FinanceGameApp() {
     setSyncChip: (value: FinanceSyncChip | ((prev: FinanceSyncChip) => FinanceSyncChip)) => void;
     setLastRemoteAt: (value: string | null) => void;
     setCloudErr: (value: string | null) => void;
+    markOffline?: () => void;
   } | null>(null);
 
   const { state, setState, stateRef, persist, replaceState, patchState } = useFinancePersistence({
@@ -93,6 +98,9 @@ export default function FinanceGameApp() {
       cloudSyncRef.current?.setLastRemoteAt(iso);
       cloudSyncRef.current?.setCloudErr(null);
       cloudSyncRef.current?.setSyncChip('synced');
+    },
+    onRemoteOffline: () => {
+      cloudSyncRef.current?.markOffline?.();
     },
     onRemoteError: (msg) => {
       cloudSyncRef.current?.setCloudErr(msg);
@@ -106,6 +114,7 @@ export default function FinanceGameApp() {
     syncChip,
     lastRemoteAt,
     cloudErr,
+    isOfflineMode,
     activeSyncId,
     pullFromCloudImmediate,
     handleForcePush,
@@ -114,9 +123,10 @@ export default function FinanceGameApp() {
     setSyncChip,
     setLastRemoteAt,
     setCloudErr,
+    markOffline,
   } = useFinanceCloudSync({ stateRef, setState });
 
-  cloudSyncRef.current = { setSyncChip, setLastRemoteAt, setCloudErr };
+  cloudSyncRef.current = { setSyncChip, setLastRemoteAt, setCloudErr, markOffline };
 
   const {
     levelUp,
@@ -280,17 +290,29 @@ export default function FinanceGameApp() {
       <div className="finance-page-container relative z-[1] mx-auto min-w-0 px-4 py-4 sm:px-5 sm:py-6 lg:px-6">
         {cloudErr && cloudReady ? (
           <div
-            className="mb-2 flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50 p-3 sm:mb-3"
-            role="alert"
+            className={`mb-2 flex flex-col gap-2 rounded-xl border p-3 sm:mb-3 ${
+              isOfflineMode || syncChip === 'offline'
+                ? 'border-amber-200 bg-amber-50'
+                : 'border-red-200 bg-red-50'
+            }`}
+            role="status"
           >
-            <p className="text-xs font-bold text-red-700">{cloudErr}</p>
-            <button
-              type="button"
-              onClick={() => void pullFromCloudImmediate()}
-              className="finance-secondary-button min-h-[40px] self-start px-3 text-xs"
+            <p
+              className={`text-xs font-bold ${
+                isOfflineMode || syncChip === 'offline' ? 'text-amber-900' : 'text-red-700'
+              }`}
             >
-              Reintentar sincronización
-            </button>
+              {cloudErr}
+            </p>
+            {!isOfflineMode && syncChip !== 'offline' ? (
+              <button
+                type="button"
+                onClick={() => void pullFromCloudImmediate()}
+                className="finance-secondary-button min-h-[40px] self-start px-3 text-xs"
+              >
+                Reintentar sincronización
+              </button>
+            ) : null}
           </div>
         ) : null}
 

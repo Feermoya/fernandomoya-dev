@@ -11,14 +11,23 @@ import {
 import type { FinanceState } from '@/lib/finance/types';
 import {
   DEFAULT_FINANCE_SYNC_ID,
+  clearFinancePendingCloudPush,
   getFinanceLocalSavedAt,
   getFinanceSyncId,
+  isFinancePendingCloudPush,
   loadFinanceState,
+  markFinancePendingCloudPush,
   resetFinanceSyncIdToDefault,
   saveFinanceState,
   setFinanceLocalSavedAt,
 } from '@/lib/finance/storage';
-import { isFinanceCloudConfigured, upsertFinanceRemote } from '@/lib/finance/cloudSync';
+import {
+  FINANCE_OFFLINE_USER_MESSAGE,
+  isBrowserOnline,
+  isFinanceCloudConfigured,
+  isFinanceCloudNetworkError,
+  upsertFinanceRemote,
+} from '@/lib/finance/cloudSync';
 import {
   emptyFinanceStateForCloudMiss,
   prepareFinanceCloudSession,
@@ -26,10 +35,12 @@ import {
 } from '@/lib/finance/syncBootstrap';
 import { isStandalonePwa } from '@/lib/finance/pwa';
 
-export type FinanceSyncChip = 'loading' | 'synced' | 'saving' | 'error' | 'solo_local';
+export type FinanceSyncChip = 'loading' | 'synced' | 'saving' | 'error' | 'solo_local' | 'offline';
 
 function initialSyncChip(): FinanceSyncChip {
-  return isFinanceCloudConfigured() ? 'loading' : 'solo_local';
+  if (!isFinanceCloudConfigured()) return 'solo_local';
+  if (typeof navigator !== 'undefined' && !isBrowserOnline()) return 'offline';
+  return 'loading';
 }
 
 type Options = {
@@ -44,10 +55,14 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
   const [syncChip, setSyncChip] = useState<FinanceSyncChip>(() => initialSyncChip());
   const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(null);
   const [cloudErr, setCloudErr] = useState<string | null>(null);
+  const [isOfflineMode, setIsOfflineMode] = useState(
+    () => typeof navigator !== 'undefined' && !isBrowserOnline(),
+  );
   const [syncIdTick, setSyncIdTick] = useState(0);
 
   const pullInFlight = useRef(false);
   const bootGenRef = useRef(0);
+  const flushInFlight = useRef(false);
 
   const activeSyncId = useMemo(() => getFinanceSyncId(), [syncIdTick]);
 
@@ -61,11 +76,51 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       setState(next);
       saveFinanceState(next);
       setLastRemoteAt(updatedAt);
-      setCloudErr(null);
-      setSyncChip('synced');
     },
     [setState],
   );
+
+  const markOffline = useCallback((message = FINANCE_OFFLINE_USER_MESSAGE) => {
+    setIsOfflineMode(true);
+    setCloudErr(message);
+    setSyncChip('offline');
+  }, []);
+
+  const clearSoftOffline = useCallback(() => {
+    setIsOfflineMode(false);
+    setCloudErr(null);
+  }, []);
+
+  const flushPendingCloudPush = useCallback(async () => {
+    if (!isFinanceCloudConfigured()) return;
+    if (!isFinancePendingCloudPush()) return;
+    if (!isBrowserOnline()) return;
+    if (flushInFlight.current) return;
+    flushInFlight.current = true;
+    setSyncChip('saving');
+    try {
+      const iso = await upsertFinanceRemote(DEFAULT_FINANCE_SYNC_ID, stateRef.current);
+      setFinanceLocalSavedAt(iso);
+      setLastRemoteAt(iso);
+      clearFinancePendingCloudPush();
+      clearSoftOffline();
+      setSyncChip('synced');
+      if (import.meta.env.DEV) {
+        console.debug('[finance-sync] pending push flushed', { updated_at: iso });
+      }
+    } catch (e) {
+      if (isFinanceCloudNetworkError(e)) {
+        markFinancePendingCloudPush();
+        markOffline();
+      } else {
+        const msg = e instanceof Error ? e.message : 'Error al subir.';
+        setCloudErr(msg);
+        setSyncChip('error');
+      }
+    } finally {
+      flushInFlight.current = false;
+    }
+  }, [clearSoftOffline, markOffline, stateRef]);
 
   const pullFromCloudImmediate = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
@@ -73,13 +128,27 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     pullInFlight.current = true;
     setSyncChip((prev) => (prev === 'loading' ? 'loading' : 'saving'));
     try {
+      if (!isBrowserOnline()) {
+        const local = loadFinanceState();
+        applyCloudState(local, getFinanceLocalSavedAt() ?? new Date().toISOString());
+        markOffline();
+        return;
+      }
+
       const result = await pullCanonicalFromCloud();
       if (result.ok) {
         applyCloudState(result.state, result.updatedAt);
+        if (result.offline) {
+          markOffline(result.warning ?? FINANCE_OFFLINE_USER_MESSAGE);
+          return;
+        }
+        clearSoftOffline();
+        setSyncChip('synced');
         if (result.warning) {
           setCloudErr(result.warning);
           setSyncChip('error');
         }
+        await flushPendingCloudPush();
         if (import.meta.env.DEV) {
           console.debug('[finance-sync] pull ok', { updated_at: result.updatedAt, warning: result.warning });
         }
@@ -102,21 +171,33 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     } finally {
       pullInFlight.current = false;
     }
-  }, [applyCloudState]);
+  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markOffline]);
 
   const handleForcePush = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
     setSyncChip('saving');
     setCloudErr(null);
     try {
+      if (!isBrowserOnline()) {
+        markFinancePendingCloudPush();
+        markOffline();
+        return;
+      }
       const iso = await upsertFinanceRemote(DEFAULT_FINANCE_SYNC_ID, stateRef.current);
       setFinanceLocalSavedAt(iso);
       setLastRemoteAt(iso);
+      clearFinancePendingCloudPush();
+      clearSoftOffline();
       setSyncChip('synced');
       if (import.meta.env.DEV) {
         console.debug('[finance-sync] force push ok', { syncId: DEFAULT_FINANCE_SYNC_ID, updated_at: iso });
       }
     } catch (e) {
+      if (isFinanceCloudNetworkError(e)) {
+        markFinancePendingCloudPush();
+        markOffline();
+        return;
+      }
       const msg = e instanceof Error ? e.message : 'Error al subir.';
       setCloudErr(msg);
       setSyncChip('error');
@@ -125,7 +206,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       }
       throw e;
     }
-  }, [stateRef]);
+  }, [clearSoftOffline, markOffline, stateRef]);
 
   const handleRefreshFromCloud = useCallback(() => {
     void pullFromCloudImmediate();
@@ -147,7 +228,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
 
     const gen = ++bootGenRef.current;
     setCloudReady(false);
-    setSyncChip('loading');
+    setSyncChip(isBrowserOnline() ? 'loading' : 'offline');
     setCloudErr(null);
 
     async function boot() {
@@ -156,17 +237,34 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
           console.debug('[finance-sync] boot start', {
             syncId: DEFAULT_FINANCE_SYNC_ID,
             pwa: isStandalonePwa(),
+            online: isBrowserOnline(),
           });
         }
+
+        /** Offline: arrancar ya con localStorage (sin esperar a que fallen los fetch). */
+        if (!isBrowserOnline()) {
+          const local = loadFinanceState();
+          applyCloudState(local, getFinanceLocalSavedAt() ?? new Date().toISOString());
+          markOffline();
+          return;
+        }
+
         const result = await pullCanonicalFromCloud();
         if (gen !== bootGenRef.current) return;
 
         if (result.ok) {
           applyCloudState(result.state, result.updatedAt);
+          if (result.offline) {
+            markOffline(result.warning ?? FINANCE_OFFLINE_USER_MESSAGE);
+            return;
+          }
+          clearSoftOffline();
+          setSyncChip('synced');
           if (result.warning) {
             setCloudErr(result.warning);
             setSyncChip('error');
           }
+          await flushPendingCloudPush();
           if (import.meta.env.DEV) {
             console.debug('[finance-sync] boot ok', { updated_at: result.updatedAt, warning: result.warning });
           }
@@ -193,7 +291,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     }
 
     void boot();
-  }, [applyCloudState, syncIdTick]);
+  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markOffline, syncIdTick]);
 
   useEffect(() => {
     if (!isFinanceCloudConfigured()) return;
@@ -205,7 +303,14 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       void pullFromCloudImmediate();
     };
     const onOnline = () => {
-      void pullFromCloudImmediate();
+      setIsOfflineMode(false);
+      void (async () => {
+        await pullFromCloudImmediate();
+        await flushPendingCloudPush();
+      })();
+    };
+    const onOffline = () => {
+      markOffline();
     };
     const onPageShow = (ev: PageTransitionEvent) => {
       if (ev.persisted) void pullFromCloudImmediate();
@@ -214,21 +319,25 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     document.addEventListener('visibilitychange', onVis);
     window.addEventListener('focus', onFocus);
     window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
     window.addEventListener('pageshow', onPageShow);
     return () => {
       document.removeEventListener('visibilitychange', onVis);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
       window.removeEventListener('pageshow', onPageShow);
     };
-  }, [pullFromCloudImmediate]);
+  }, [flushPendingCloudPush, markOffline, pullFromCloudImmediate]);
 
   useEffect(() => {
     if (!isFinanceCloudConfigured() || !cloudReady) return;
     if (!isStandalonePwa()) return;
 
     const tick = () => {
-      if (document.visibilityState === 'visible') void pullFromCloudImmediate();
+      if (document.visibilityState === 'visible' && isBrowserOnline()) {
+        void pullFromCloudImmediate();
+      }
     };
     const id = window.setInterval(tick, 45_000);
     return () => clearInterval(id);
@@ -243,11 +352,14 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     setLastRemoteAt,
     cloudErr,
     setCloudErr,
+    isOfflineMode,
     activeSyncId,
     pullFromCloudImmediate,
     handleForcePush,
     handleRefreshFromCloud,
     handleResetSyncIdToDefault,
     applyCloudState,
+    markOffline,
+    markPendingCloudPush: markFinancePendingCloudPush,
   };
 }

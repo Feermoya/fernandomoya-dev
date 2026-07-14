@@ -48,11 +48,20 @@ export type RemoteFinanceRow = {
   updatedAt: string;
 };
 
+/** Mensaje suave: offline es modo normal, no un fallo de la app. */
+export const FINANCE_OFFLINE_USER_MESSAGE =
+  'Sin conexión. Trabajás con los datos de este dispositivo. Al volver la red se sincroniza solo.';
+
 export class FinanceCloudNetworkError extends Error {
-  constructor(message = 'No se pudo conectar con Supabase.') {
+  constructor(message = FINANCE_OFFLINE_USER_MESSAGE) {
     super(message);
     this.name = 'FinanceCloudNetworkError';
   }
+}
+
+export function isBrowserOnline(): boolean {
+  if (typeof navigator === 'undefined') return true;
+  return navigator.onLine !== false;
 }
 
 export function isFinanceCloudNetworkError(error: unknown): boolean {
@@ -68,22 +77,29 @@ function isNetworkFetchError(error: unknown): boolean {
       msg.includes('failed to fetch') ||
       msg.includes('network') ||
       msg.includes('load failed') ||
-      msg.includes('err_name_not_resolved')
+      msg.includes('internet') ||
+      msg.includes('disconnected') ||
+      msg.includes('offline') ||
+      msg.includes('err_name_not_resolved') ||
+      msg.includes('err_internet_disconnected') ||
+      msg.includes('err_network') ||
+      msg.includes('err_connection')
     );
   }
   return false;
 }
 
 async function financeCloudFetch(url: string, init: RequestInit): Promise<Response> {
+  if (!isBrowserOnline()) {
+    throw new FinanceCloudNetworkError(FINANCE_OFFLINE_USER_MESSAGE);
+  }
   try {
     return await fetch(url, init);
   } catch (error) {
     if (import.meta.env.DEV) {
       console.debug('[finance-sync] network error', { url, error });
     }
-    throw new FinanceCloudNetworkError(
-      'No se pudo conectar con Supabase. Revisá PUBLIC_FINANCE_SUPABASE_URL en .env.local o tu conexión.',
-    );
+    throw new FinanceCloudNetworkError(FINANCE_OFFLINE_USER_MESSAGE);
   }
 }
 

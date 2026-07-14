@@ -8,23 +8,40 @@ export const FINANCE_SYNC_ID_KEY = 'fm-finance-sync-id';
 /** ID de fila vieja en Supabase (frase/hash) — se usa solo para recuperar datos. */
 export const FINANCE_LEGACY_SYNC_ID_KEY = 'fm-finance-legacy-sync-id';
 export const FINANCE_LOCAL_SAVED_AT_KEY = 'fm-finance-local-saved-at';
+/** Hay cambios locales pendientes de subir a Supabase (offline / fallo de red). */
+export const FINANCE_PENDING_CLOUD_PUSH_KEY = 'fm-finance-pending-cloud-push';
 const FINANCE_APP_VERSION_KEY = 'fm-finance-app-version';
 
 /**
- * Si cambió la versión de la app (deploy), borra caché local de datos.
- * Crítico en PWA iOS, que guarda localStorage aparte de Safari.
+ * Marca la versión de la app.
+ * No borra el caché local: si estás offline al abrir tras un deploy,
+ * seguirían apareciendo los datos del dispositivo y se sincronizan al volver la red.
+ * El pull de arranque ya aplica la nube cuando hay conexión.
  */
 export function ensureFinanceAppDataVersion(): boolean {
   if (typeof window === 'undefined') return false;
   const prev = window.localStorage.getItem(FINANCE_APP_VERSION_KEY);
   const changed = prev !== FINANCE_APP_DATA_VERSION;
   if (changed) {
-    window.localStorage.removeItem(FINANCE_STORAGE_KEY);
-    window.localStorage.removeItem(FINANCE_LOCAL_SAVED_AT_KEY);
     window.localStorage.setItem(FINANCE_APP_VERSION_KEY, FINANCE_APP_DATA_VERSION);
   }
   resetFinanceSyncIdToDefault();
   return changed;
+}
+
+export function isFinancePendingCloudPush(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(FINANCE_PENDING_CLOUD_PUSH_KEY) === '1';
+}
+
+export function markFinancePendingCloudPush(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(FINANCE_PENDING_CLOUD_PUSH_KEY, '1');
+}
+
+export function clearFinancePendingCloudPush(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(FINANCE_PENDING_CLOUD_PUSH_KEY);
 }
 
 /** ID fijo de la fila en Supabase para esta app personal (un solo libro). */

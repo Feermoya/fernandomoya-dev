@@ -1,5 +1,6 @@
 import {
   fetchFinanceRemote,
+  FINANCE_OFFLINE_USER_MESSAGE,
   FinanceCloudNetworkError,
   isFinanceCloudConfigured,
   isFinanceCloudNetworkError,
@@ -28,6 +29,8 @@ export type CloudPullResult =
       updatedAt: string;
       sourceId: string;
       migrated: boolean;
+      /** Modo offline / red caída: datos locales válidos, sync pendiente. */
+      offline?: boolean;
       warning?: string;
     }
   | { ok: false; reason: 'not_configured' | 'empty' | 'error'; message?: string };
@@ -142,21 +145,29 @@ export async function pullCanonicalFromCloud(): Promise<CloudPullResult> {
     const local = loadFinanceState();
     const state = withPreferences(local);
     saveFinanceState(state);
-    const warning =
-      e instanceof FinanceCloudNetworkError || isFinanceCloudNetworkError(e)
-        ? e instanceof Error
-          ? e.message
-          : 'No se pudo conectar con Supabase.'
-        : undefined;
+    const isNetwork = e instanceof FinanceCloudNetworkError || isFinanceCloudNetworkError(e);
 
-    if (hasMeaningfulData(state) || warning) {
+    /** Offline o red caída: la app siempre arranca con lo local. Mes/año no importan. */
+    if (isNetwork) {
       return {
         ok: true,
         state,
         updatedAt: getFinanceLocalSavedAt() ?? new Date().toISOString(),
         sourceId: 'local-cache',
         migrated: false,
-        warning,
+        offline: true,
+        warning: FINANCE_OFFLINE_USER_MESSAGE,
+      };
+    }
+
+    if (hasMeaningfulData(state)) {
+      return {
+        ok: true,
+        state,
+        updatedAt: getFinanceLocalSavedAt() ?? new Date().toISOString(),
+        sourceId: 'local-cache',
+        migrated: false,
+        warning: e instanceof Error ? e.message : 'Error al leer la nube.',
       };
     }
 
