@@ -6,6 +6,9 @@
     },
     "api/finance-keepalive.mjs": {
       "maxDuration": 15
+    },
+    "api/finance-cloud.mjs": {
+      "maxDuration": 20
     }
   },
   "crons": [

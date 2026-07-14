@@ -134,7 +134,6 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
   const flushPendingCloudPush = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
     if (!isFinancePendingCloudPush()) return;
-    if (!isBrowserOnline()) return;
     if (flushInFlight.current) return;
     flushInFlight.current = true;
     setSyncChip('saving');
@@ -168,13 +167,6 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     pullInFlight.current = true;
     setSyncChip((prev) => (prev === 'loading' ? 'loading' : 'saving'));
     try {
-      if (!isBrowserOnline()) {
-        const local = loadFinanceState();
-        applyCloudState(local, getFinanceLocalSavedAt() ?? new Date().toISOString());
-        markCloudIssue('offline');
-        return;
-      }
-
       const result = await pullCanonicalFromCloud();
       if (result.ok) {
         applyCloudState(result.state, result.updatedAt);
@@ -218,11 +210,6 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     setSyncChip('saving');
     setCloudErr(null);
     try {
-      if (!isBrowserOnline()) {
-        markFinancePendingCloudPush();
-        markCloudIssue('offline');
-        return;
-      }
       const iso = await upsertFinanceRemote(DEFAULT_FINANCE_SYNC_ID, stateRef.current);
       setFinanceLocalSavedAt(iso);
       setLastRemoteAt(iso);
@@ -268,7 +255,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
 
     const gen = ++bootGenRef.current;
     setCloudReady(false);
-    setSyncChip(isBrowserOnline() ? 'loading' : 'offline');
+    setSyncChip('loading');
     setCloudErr(null);
 
     async function boot() {
@@ -281,14 +268,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
           });
         }
 
-        /** Offline: arrancar ya con localStorage (sin esperar a que fallen los fetch). */
-        if (!isBrowserOnline()) {
-          const local = loadFinanceState();
-          applyCloudState(local, getFinanceLocalSavedAt() ?? new Date().toISOString());
-          markCloudIssue('offline');
-          return;
-        }
-
+        /** Siempre intentar sync vía /api (same-origin). No abortar por navigator.onLine. */
         const result = await pullCanonicalFromCloud();
         if (gen !== bootGenRef.current) return;
 

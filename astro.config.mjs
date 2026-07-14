@@ -7,37 +7,105 @@ import sitemap from '@astrojs/sitemap';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-function financePricesDevPlugin() {
+function financeApiDevPlugin() {
   return {
-    name: 'finance-prices-dev-api',
+    name: 'finance-api-dev',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const urlPath = req.url?.split('?')[0] ?? '';
-        if (urlPath !== '/api/finance-prices') return next();
 
-        try {
-          const fullUrl = new URL(req.url ?? '/', 'http://localhost');
-          const tickers = fullUrl.searchParams.get('tickers') ?? '';
-          const { buildFinancePricesResponse, FINANCE_PRICES_CACHE_HEADERS } =
-            await server.ssrLoadModule('/src/lib/finance/financePricesServer.ts');
-          const body = await buildFinancePricesResponse(tickers);
-          res.statusCode = body.error === 'Parámetro tickers vacío' ? 400 : 200;
-          Object.entries(FINANCE_PRICES_CACHE_HEADERS).forEach(([k, v]) => {
-            res.setHeader(k, v);
-          });
-          res.end(JSON.stringify(body));
-        } catch (e) {
-          res.statusCode = 500;
-          res.setHeader('Content-Type', 'application/json; charset=utf-8');
-          res.end(
-            JSON.stringify({
-              ok: false,
-              prices: {},
-              fetchedAt: new Date().toISOString(),
-              error: e instanceof Error ? e.message : 'Error interno',
-            }),
-          );
+        if (urlPath === '/api/finance-prices') {
+          try {
+            const fullUrl = new URL(req.url ?? '/', 'http://localhost');
+            const tickers = fullUrl.searchParams.get('tickers') ?? '';
+            const { buildFinancePricesResponse, FINANCE_PRICES_CACHE_HEADERS } =
+              await server.ssrLoadModule('/src/lib/finance/financePricesServer.ts');
+            const body = await buildFinancePricesResponse(tickers);
+            res.statusCode = body.error === 'Parámetro tickers vacío' ? 400 : 200;
+            Object.entries(FINANCE_PRICES_CACHE_HEADERS).forEach(([k, v]) => {
+              res.setHeader(k, v);
+            });
+            res.end(JSON.stringify(body));
+          } catch (e) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.end(
+              JSON.stringify({
+                ok: false,
+                prices: {},
+                fetchedAt: new Date().toISOString(),
+                error: e instanceof Error ? e.message : 'Error interno',
+              }),
+            );
+          }
+          return;
         }
+
+        if (urlPath === '/api/finance-keepalive' || urlPath === '/api/finance-cloud') {
+          try {
+            const modPath =
+              urlPath === '/api/finance-keepalive'
+                ? path.resolve(__dirname, 'api/finance-keepalive.mjs')
+                : path.resolve(__dirname, 'api/finance-cloud.mjs');
+            const mod = await import(/* @vite-ignore */ modPath);
+            const handler = mod.default;
+            const fullUrl = new URL(req.url ?? '/', 'http://localhost');
+
+            let parsedBody = undefined;
+            if (req.method === 'POST') {
+              const chunks = [];
+              for await (const chunk of req) {
+                chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+              }
+              const raw = Buffer.concat(chunks).toString('utf8');
+              try {
+                parsedBody = raw ? JSON.parse(raw) : null;
+              } catch {
+                parsedBody = raw;
+              }
+            }
+
+            const fakeReq = {
+              method: req.method,
+              query: Object.fromEntries(fullUrl.searchParams.entries()),
+              body: parsedBody,
+            };
+
+            const fakeRes = {
+              statusCode: 200,
+              headers: {},
+              setHeader(k, v) {
+                this.headers[k] = v;
+              },
+              status(code) {
+                this.statusCode = code;
+                return this;
+              },
+              json(body) {
+                res.statusCode = this.statusCode;
+                Object.entries(this.headers).forEach(([k, v]) => res.setHeader(k, v));
+                if (!this.headers['Content-Type']) {
+                  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                }
+                res.end(JSON.stringify(body));
+              },
+            };
+
+            await handler(fakeReq, fakeRes);
+          } catch (e) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.end(
+              JSON.stringify({
+                ok: false,
+                error: e instanceof Error ? e.message : 'Error interno',
+              }),
+            );
+          }
+          return;
+        }
+
+        return next();
       });
     },
   };
@@ -60,7 +128,7 @@ export default defineConfig({
   /** Landing de una sola vista: sin prefetch de otras rutas. */
   prefetch: false,
   vite: {
-    plugins: [tailwindcss(), financePricesDevPlugin()],
+    plugins: [tailwindcss(), financeApiDevPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

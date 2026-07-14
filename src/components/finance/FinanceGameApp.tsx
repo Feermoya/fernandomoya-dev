@@ -114,7 +114,6 @@ export default function FinanceGameApp() {
     syncChip,
     lastRemoteAt,
     cloudErr,
-    isOfflineMode,
     activeSyncId,
     pullFromCloudImmediate,
     handleForcePush,
@@ -288,31 +287,19 @@ export default function FinanceGameApp() {
   return (
     <div className="finance-app-shell relative isolate min-w-0 overflow-x-hidden sm:pt-2">
       <div className="finance-page-container relative z-[1] mx-auto min-w-0 px-4 py-4 sm:px-5 sm:py-6 lg:px-6">
-        {cloudErr && cloudReady ? (
+        {cloudErr && cloudReady && syncChip === 'error' ? (
           <div
-            className={`mb-2 flex flex-col gap-2 rounded-xl border p-3 sm:mb-3 ${
-              isOfflineMode || syncChip === 'offline'
-                ? 'border-amber-200 bg-amber-50'
-                : 'border-red-200 bg-red-50'
-            }`}
+            className="mb-2 flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50 p-3 sm:mb-3"
             role="status"
           >
-            <p
-              className={`text-xs font-bold ${
-                isOfflineMode || syncChip === 'offline' ? 'text-amber-900' : 'text-red-700'
-              }`}
+            <p className="text-xs font-bold text-red-700">{cloudErr}</p>
+            <button
+              type="button"
+              onClick={() => void pullFromCloudImmediate()}
+              className="finance-secondary-button min-h-[40px] self-start px-3 text-xs"
             >
-              {cloudErr}
-            </p>
-            {!isOfflineMode ? (
-              <button
-                type="button"
-                onClick={() => void pullFromCloudImmediate()}
-                className="finance-secondary-button min-h-[40px] self-start px-3 text-xs"
-              >
-                Reintentar sincronización
-              </button>
-            ) : null}
+              Reintentar sincronización
+            </button>
           </div>
         ) : null}
 

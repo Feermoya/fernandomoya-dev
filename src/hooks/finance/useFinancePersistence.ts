@@ -9,7 +9,6 @@ import {
   clearFinancePendingCloudPush,
 } from '@/lib/finance/storage';
 import {
-  isBrowserOnline,
   isFinanceCloudConfigured,
   isFinanceCloudNetworkError,
   upsertFinanceRemote,
@@ -36,15 +35,9 @@ export function useFinancePersistence(options: PersistenceOptions = {}) {
 
   const scheduleRemoteSave = useCallback((syncId: string, next: FinanceState) => {
     if (!isFinanceCloudConfigured()) return;
-    if (remoteTimer.current) clearTimeout(remoteTimer.current);
+      if (remoteTimer.current) clearTimeout(remoteTimer.current);
     remoteTimer.current = setTimeout(() => {
       remoteTimer.current = null;
-
-      if (!isBrowserOnline()) {
-        markFinancePendingCloudPush();
-        optionsRef.current.onRemoteOffline?.();
-        return;
-      }
 
       void upsertFinanceRemote(syncId, next)
         .then((iso) => {

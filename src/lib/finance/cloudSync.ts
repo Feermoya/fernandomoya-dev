@@ -1,8 +1,10 @@
 import type { FinanceState } from '@/lib/finance/types';
-import { financeGameStateSelectUrl } from '@/lib/finance/postgrest';
 import { DEFAULT_FINANCE_SYNC_ID, importFinanceState } from '@/lib/finance/storage';
 
-const TABLE = 'finance_game_state';
+/**
+ * Sync vía same-origin `/api/finance-cloud`.
+ * El browser NO habla con supabase.co (Vercel sí → estable).
+ */
 
 export function isFinanceCloudConfigured(): boolean {
   const url = import.meta.env.PUBLIC_FINANCE_SUPABASE_URL as string | undefined;
@@ -10,54 +12,16 @@ export function isFinanceCloudConfigured(): boolean {
   return Boolean(url?.trim() && key?.trim());
 }
 
-function headersRead(): HeadersInit {
-  const key = import.meta.env.PUBLIC_FINANCE_SUPABASE_ANON_KEY as string;
-  return {
-    apikey: key,
-    Authorization: `Bearer ${key}`,
-    Accept: 'application/json',
-  };
-}
-
-function headersWriteMinimal(): HeadersInit {
-  return {
-    ...headersRead(),
-    'Content-Type': 'application/json',
-  };
-}
-
-function restBase(): string {
-  const url = (import.meta.env.PUBLIC_FINANCE_SUPABASE_URL as string).replace(/\/$/, '');
-  return `${url}/rest/v1`;
-}
-
-async function readErrorDetail(res: Response): Promise<string> {
-  try {
-    const text = await res.text();
-    if (!text) return '';
-    const trimmed = text.trim();
-    if (trimmed.length <= 200) return trimmed;
-    return `${trimmed.slice(0, 200)}…`;
-  } catch {
-    return '';
-  }
-}
-
 export type RemoteFinanceRow = {
   state: FinanceState;
   updatedAt: string;
 };
 
-/** El dispositivo no tiene red (navigator offline). */
 export const FINANCE_OFFLINE_USER_MESSAGE =
   'Sin conexión a internet. Trabajás con los datos de este dispositivo. Al volver la red se sincroniza solo.';
 
-/**
- * Hay internet, pero no se llega a Supabase (proyecto pausado/borrado, DNS, firewall, env mal).
- * No confundir con “solo local para siempre”.
- */
 export const FINANCE_CLOUD_UNREACHABLE_MESSAGE =
-  'No se pudo llegar a la nube (Supabase). Tus datos siguen en este dispositivo. Revisá que el proyecto esté activo y que URL/key en el hosting estén bien.';
+  'No se pudo sincronizar con la nube. Tus datos siguen en este dispositivo; se reintenta al recargar.';
 
 export class FinanceCloudNetworkError extends Error {
   readonly kind: 'offline' | 'unreachable';
@@ -110,12 +74,27 @@ function cloudFetchErrorForContext(): FinanceCloudNetworkError {
   return new FinanceCloudNetworkError(FINANCE_CLOUD_UNREACHABLE_MESSAGE, 'unreachable');
 }
 
-async function financeCloudFetch(url: string, init: RequestInit): Promise<Response> {
-  /** No confiar ciegamente en navigator.onLine: si dice offline, aún así conviene intentar si hay duda.
-   * Solo cortamos si el navegador reporta offline de forma explícita. */
-  if (!isBrowserOnline()) {
-    throw cloudFetchErrorForContext();
+async function readErrorDetail(res: Response): Promise<string> {
+  try {
+    const text = await res.text();
+    if (!text) return '';
+    const trimmed = text.trim();
+    if (trimmed.length <= 200) return trimmed;
+    return `${trimmed.slice(0, 200)}…`;
+  } catch {
+    return '';
   }
+}
+
+function proxyReadUrl(syncId: string): string {
+  return `/api/finance-cloud?id=${encodeURIComponent(syncId)}`;
+}
+
+/**
+ * Siempre intenta el proxy same-origin (si la página cargó, suele funcionar).
+ * No abortamos por navigator.onLine: es poco fiable y era la causa del falso “Sin conexión”.
+ */
+async function financeCloudFetch(url: string, init: RequestInit): Promise<Response> {
   try {
     return await fetch(url, init);
   } catch (error) {
@@ -126,28 +105,19 @@ async function financeCloudFetch(url: string, init: RequestInit): Promise<Respon
   }
 }
 
-/**
- * Ping liviano a Supabase (cuenta como actividad del Free).
- * Fire-and-forget al abrir/recargar Foco financiero. No altera el estado de la app.
- */
+/** Ping vía API propia (Vercel → Supabase). */
 export async function pingFinanceCloudKeepalive(
-  syncId: string = DEFAULT_FINANCE_SYNC_ID,
+  _syncId: string = DEFAULT_FINANCE_SYNC_ID,
 ): Promise<boolean> {
   if (!isFinanceCloudConfigured()) return false;
-  if (!isBrowserOnline()) return false;
   try {
-    const url = financeGameStateSelectUrl(restBase(), syncId, 'id');
-    const res = await fetch(url, {
+    const res = await fetch('/api/finance-keepalive', {
       method: 'GET',
-      headers: {
-        ...headersRead(),
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
       cache: 'no-store',
       credentials: 'omit',
     });
     if (import.meta.env.DEV) {
-      console.debug('[finance-sync] keepalive', { syncId, status: res.status, ok: res.ok });
+      console.debug('[finance-sync] keepalive', { status: res.status, ok: res.ok });
     }
     return res.ok;
   } catch (error) {
@@ -166,37 +136,45 @@ export async function fetchFinanceRemote(
     console.debug('[finance-sync] fetch start', { syncId });
   }
 
-  const url = financeGameStateSelectUrl(restBase(), syncId);
-
-  const res = await financeCloudFetch(url, {
-    headers: {
-      ...headersRead(),
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: '0',
-    },
+  const res = await financeCloudFetch(proxyReadUrl(syncId), {
     method: 'GET',
     cache: 'no-store',
     credentials: 'omit',
+    headers: {
+      Accept: 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+    },
   });
 
   if (!res.ok) {
     const detail = await readErrorDetail(res);
     if (import.meta.env.DEV) {
-      console.debug('[finance-sync] fetch error', { syncId, status: res.status, detail, url });
+      console.debug('[finance-sync] fetch error', { syncId, status: res.status, detail });
     }
-    const suffix = detail ? ` ${detail}` : '';
-    throw new Error(`Nube: lectura falló (${res.status}).${suffix}`);
+    if (res.status === 502 || res.status === 503 || res.status >= 500) {
+      throw cloudFetchErrorForContext();
+    }
+    throw new Error(`Nube: lectura falló (${res.status}).${detail ? ` ${detail}` : ''}`);
   }
 
-  const rows = (await res.json()) as { body: unknown; updated_at: string }[];
-  if (!rows?.length) {
+  const payload = (await res.json()) as {
+    ok?: boolean;
+    row?: { body: unknown; updated_at: string } | null;
+    error?: string;
+  };
+
+  if (!payload.ok) {
+    throw new Error(payload.error || 'Nube: lectura falló.');
+  }
+
+  if (!payload.row) {
     if (import.meta.env.DEV) {
       console.debug('[finance-sync] fetch empty row', { syncId });
     }
     return null;
   }
-  const body = rows[0].body;
+
+  const body = payload.row.body;
   const parsed = importFinanceState(typeof body === 'string' ? body : JSON.stringify(body));
   if (!parsed.ok) {
     if (import.meta.env.DEV) {
@@ -205,15 +183,11 @@ export async function fetchFinanceRemote(
     throw new Error(parsed.error);
   }
   if (import.meta.env.DEV) {
-    console.debug('[finance-sync] fetch ok', { syncId, updated_at: rows[0].updated_at });
+    console.debug('[finance-sync] fetch ok', { syncId, updated_at: payload.row.updated_at });
   }
-  return { state: parsed.state, updatedAt: rows[0].updated_at };
+  return { state: parsed.state, updatedAt: payload.row.updated_at };
 }
 
-/**
- * Upsert sin `updated_at` en el cuerpo: lo fija el servidor (default + trigger en update).
- * Devuelve el `updated_at` de la fila devuelta por PostgREST.
- */
 export async function upsertFinanceRemote(
   syncId: string = DEFAULT_FINANCE_SYNC_ID,
   state: FinanceState,
@@ -222,30 +196,35 @@ export async function upsertFinanceRemote(
   if (import.meta.env.DEV) {
     console.debug('[finance-sync] upsert start', { syncId });
   }
-  const res = await financeCloudFetch(`${restBase()}/${TABLE}`, {
+
+  const res = await financeCloudFetch('/api/finance-cloud', {
     method: 'POST',
-    headers: {
-      ...headersWriteMinimal(),
-      Prefer: 'return=representation,resolution=merge-duplicates',
-    },
-    body: JSON.stringify([{ id: syncId, body: state }]),
     cache: 'no-store',
+    credentials: 'omit',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id: syncId, state }),
   });
+
   if (!res.ok) {
     const detail = await readErrorDetail(res);
     if (import.meta.env.DEV) {
       console.debug('[finance-sync] upsert error', { syncId, status: res.status, detail });
     }
+    if (res.status === 502 || res.status === 503 || res.status >= 500) {
+      throw cloudFetchErrorForContext();
+    }
     throw new Error(`Nube: guardado falló (${res.status}). ${detail}`.trim());
   }
-  const rows = (await res.json()) as { updated_at?: string }[];
-  const updatedAt = rows?.[0]?.updated_at;
-  if (!updatedAt) {
-    if (import.meta.env.DEV) {
-      console.debug('[finance-sync] upsert ok but missing updated_at in response', { syncId });
-    }
-    return new Date().toISOString();
+
+  const payload = (await res.json()) as { ok?: boolean; updated_at?: string; error?: string };
+  if (!payload.ok) {
+    throw new Error(payload.error || 'Nube: guardado falló.');
   }
+
+  const updatedAt = payload.updated_at || new Date().toISOString();
   if (import.meta.env.DEV) {
     console.debug('[finance-sync] upsert ok', { syncId, updated_at: updatedAt });
   }
