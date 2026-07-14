@@ -48,14 +48,27 @@ export type RemoteFinanceRow = {
   updatedAt: string;
 };
 
-/** Mensaje suave: offline es modo normal, no un fallo de la app. */
+/** El dispositivo no tiene red (navigator offline). */
 export const FINANCE_OFFLINE_USER_MESSAGE =
-  'Sin conexión. Trabajás con los datos de este dispositivo. Al volver la red se sincroniza solo.';
+  'Sin conexión a internet. Trabajás con los datos de este dispositivo. Al volver la red se sincroniza solo.';
+
+/**
+ * Hay internet, pero no se llega a Supabase (proyecto pausado/borrado, DNS, firewall, env mal).
+ * No confundir con “solo local para siempre”.
+ */
+export const FINANCE_CLOUD_UNREACHABLE_MESSAGE =
+  'No se pudo llegar a la nube (Supabase). Tus datos siguen en este dispositivo. Revisá que el proyecto esté activo y que URL/key en el hosting estén bien.';
 
 export class FinanceCloudNetworkError extends Error {
-  constructor(message = FINANCE_OFFLINE_USER_MESSAGE) {
+  readonly kind: 'offline' | 'unreachable';
+
+  constructor(
+    message: string = FINANCE_CLOUD_UNREACHABLE_MESSAGE,
+    kind: 'offline' | 'unreachable' = 'unreachable',
+  ) {
     super(message);
     this.name = 'FinanceCloudNetworkError';
+    this.kind = kind;
   }
 }
 
@@ -69,8 +82,8 @@ export function isFinanceCloudNetworkError(error: unknown): boolean {
 }
 
 function isNetworkFetchError(error: unknown): boolean {
-  if (error instanceof TypeError) return true;
   if (error instanceof FinanceCloudNetworkError) return true;
+  if (error instanceof TypeError) return true;
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
     return (
@@ -81,6 +94,7 @@ function isNetworkFetchError(error: unknown): boolean {
       msg.includes('disconnected') ||
       msg.includes('offline') ||
       msg.includes('err_name_not_resolved') ||
+      msg.includes('enotfound') ||
       msg.includes('err_internet_disconnected') ||
       msg.includes('err_network') ||
       msg.includes('err_connection')
@@ -89,9 +103,18 @@ function isNetworkFetchError(error: unknown): boolean {
   return false;
 }
 
-async function financeCloudFetch(url: string, init: RequestInit): Promise<Response> {
+function cloudFetchErrorForContext(): FinanceCloudNetworkError {
   if (!isBrowserOnline()) {
-    throw new FinanceCloudNetworkError(FINANCE_OFFLINE_USER_MESSAGE);
+    return new FinanceCloudNetworkError(FINANCE_OFFLINE_USER_MESSAGE, 'offline');
+  }
+  return new FinanceCloudNetworkError(FINANCE_CLOUD_UNREACHABLE_MESSAGE, 'unreachable');
+}
+
+async function financeCloudFetch(url: string, init: RequestInit): Promise<Response> {
+  /** No confiar ciegamente en navigator.onLine: si dice offline, aún así conviene intentar si hay duda.
+   * Solo cortamos si el navegador reporta offline de forma explícita. */
+  if (!isBrowserOnline()) {
+    throw cloudFetchErrorForContext();
   }
   try {
     return await fetch(url, init);
@@ -99,7 +122,39 @@ async function financeCloudFetch(url: string, init: RequestInit): Promise<Respon
     if (import.meta.env.DEV) {
       console.debug('[finance-sync] network error', { url, error });
     }
-    throw new FinanceCloudNetworkError(FINANCE_OFFLINE_USER_MESSAGE);
+    throw cloudFetchErrorForContext();
+  }
+}
+
+/**
+ * Ping liviano a Supabase (cuenta como actividad del Free).
+ * Fire-and-forget al abrir/recargar Foco financiero. No altera el estado de la app.
+ */
+export async function pingFinanceCloudKeepalive(
+  syncId: string = DEFAULT_FINANCE_SYNC_ID,
+): Promise<boolean> {
+  if (!isFinanceCloudConfigured()) return false;
+  if (!isBrowserOnline()) return false;
+  try {
+    const url = financeGameStateSelectUrl(restBase(), syncId, 'id');
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        ...headersRead(),
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+      cache: 'no-store',
+      credentials: 'omit',
+    });
+    if (import.meta.env.DEV) {
+      console.debug('[finance-sync] keepalive', { syncId, status: res.status, ok: res.ok });
+    }
+    return res.ok;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.debug('[finance-sync] keepalive fail', error);
+    }
+    return false;
   }
 }
 

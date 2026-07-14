@@ -3,8 +3,17 @@
   "functions": {
     "api/finance-prices.mjs": {
       "maxDuration": 60
+    },
+    "api/finance-keepalive.mjs": {
+      "maxDuration": 15
     }
   },
+  "crons": [
+    {
+      "path": "/api/finance-keepalive",
+      "schedule": "0 14 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/foco-financiero",

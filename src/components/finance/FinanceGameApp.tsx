@@ -58,7 +58,7 @@ function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
         : status === 'saving'
           ? 'Guardando…'
           : status === 'offline'
-            ? 'Sin conexión · local'
+            ? 'Nube no disponible'
             : status === 'error'
               ? 'No se pudo guardar'
               : 'Solo en este dispositivo';
@@ -304,7 +304,7 @@ export default function FinanceGameApp() {
             >
               {cloudErr}
             </p>
-            {!isOfflineMode && syncChip !== 'offline' ? (
+            {!isOfflineMode ? (
               <button
                 type="button"
                 onClick={() => void pullFromCloudImmediate()}

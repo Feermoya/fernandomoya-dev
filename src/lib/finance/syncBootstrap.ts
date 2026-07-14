@@ -1,7 +1,9 @@
 import {
   fetchFinanceRemote,
+  FINANCE_CLOUD_UNREACHABLE_MESSAGE,
   FINANCE_OFFLINE_USER_MESSAGE,
   FinanceCloudNetworkError,
+  isBrowserOnline,
   isFinanceCloudConfigured,
   isFinanceCloudNetworkError,
   upsertFinanceRemote,
@@ -29,8 +31,10 @@ export type CloudPullResult =
       updatedAt: string;
       sourceId: string;
       migrated: boolean;
-      /** Modo offline / red caída: datos locales válidos, sync pendiente. */
+      /** Falló la nube pero hay datos locales; la app sigue usable. */
       offline?: boolean;
+      /** `offline` = sin internet; `unreachable` = internet ok pero Supabase no responde. */
+      cloudIssue?: 'offline' | 'unreachable';
       warning?: string;
     }
   | { ok: false; reason: 'not_configured' | 'empty' | 'error'; message?: string };
@@ -147,8 +151,20 @@ export async function pullCanonicalFromCloud(): Promise<CloudPullResult> {
     saveFinanceState(state);
     const isNetwork = e instanceof FinanceCloudNetworkError || isFinanceCloudNetworkError(e);
 
-    /** Offline o red caída: la app siempre arranca con lo local. Mes/año no importan. */
+    /** Nube inaccesible: la app siempre arranca con lo local. Mes/año no importan. */
     if (isNetwork) {
+      const cloudIssue =
+        e instanceof FinanceCloudNetworkError
+          ? e.kind
+          : isBrowserOnline()
+            ? 'unreachable'
+            : 'offline';
+      const warning =
+        e instanceof FinanceCloudNetworkError
+          ? e.message
+          : cloudIssue === 'offline'
+            ? FINANCE_OFFLINE_USER_MESSAGE
+            : FINANCE_CLOUD_UNREACHABLE_MESSAGE;
       return {
         ok: true,
         state,
@@ -156,7 +172,8 @@ export async function pullCanonicalFromCloud(): Promise<CloudPullResult> {
         sourceId: 'local-cache',
         migrated: false,
         offline: true,
-        warning: FINANCE_OFFLINE_USER_MESSAGE,
+        cloudIssue,
+        warning,
       };
     }
 

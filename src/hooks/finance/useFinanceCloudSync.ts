@@ -22,10 +22,12 @@ import {
   setFinanceLocalSavedAt,
 } from '@/lib/finance/storage';
 import {
+  FINANCE_CLOUD_UNREACHABLE_MESSAGE,
   FINANCE_OFFLINE_USER_MESSAGE,
   isBrowserOnline,
   isFinanceCloudConfigured,
   isFinanceCloudNetworkError,
+  pingFinanceCloudKeepalive,
   upsertFinanceRemote,
 } from '@/lib/finance/cloudSync';
 import {
@@ -69,6 +71,27 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
   useEffect(() => {
     prepareFinanceCloudSession();
     setLastRemoteAt(getFinanceLocalSavedAt());
+    /** Cada visita/recarga cuenta como actividad en Supabase (anti-pausa Free). */
+    if (isFinanceCloudConfigured()) {
+      void pingFinanceCloudKeepalive();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isFinanceCloudConfigured()) return;
+
+    const pulse = () => {
+      if (document.visibilityState === 'visible') {
+        void pingFinanceCloudKeepalive();
+      }
+    };
+
+    document.addEventListener('visibilitychange', pulse);
+    window.addEventListener('focus', pulse);
+    return () => {
+      document.removeEventListener('visibilitychange', pulse);
+      window.removeEventListener('focus', pulse);
+    };
   }, []);
 
   const applyCloudState = useCallback(
@@ -85,6 +108,23 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     setCloudErr(message);
     setSyncChip('offline');
   }, []);
+
+  const markCloudUnreachable = useCallback((message = FINANCE_CLOUD_UNREACHABLE_MESSAGE) => {
+    setIsOfflineMode(false);
+    setCloudErr(message);
+    setSyncChip('offline');
+  }, []);
+
+  const markCloudIssue = useCallback(
+    (issue: 'offline' | 'unreachable' = 'unreachable', message?: string) => {
+      if (issue === 'offline') {
+        markOffline(message ?? FINANCE_OFFLINE_USER_MESSAGE);
+      } else {
+        markCloudUnreachable(message ?? FINANCE_CLOUD_UNREACHABLE_MESSAGE);
+      }
+    },
+    [markCloudUnreachable, markOffline],
+  );
 
   const clearSoftOffline = useCallback(() => {
     setIsOfflineMode(false);
@@ -111,7 +151,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     } catch (e) {
       if (isFinanceCloudNetworkError(e)) {
         markFinancePendingCloudPush();
-        markOffline();
+        markCloudIssue(isBrowserOnline() ? 'unreachable' : 'offline');
       } else {
         const msg = e instanceof Error ? e.message : 'Error al subir.';
         setCloudErr(msg);
@@ -120,7 +160,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     } finally {
       flushInFlight.current = false;
     }
-  }, [clearSoftOffline, markOffline, stateRef]);
+  }, [clearSoftOffline, markCloudIssue, stateRef]);
 
   const pullFromCloudImmediate = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
@@ -131,7 +171,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       if (!isBrowserOnline()) {
         const local = loadFinanceState();
         applyCloudState(local, getFinanceLocalSavedAt() ?? new Date().toISOString());
-        markOffline();
+        markCloudIssue('offline');
         return;
       }
 
@@ -139,7 +179,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       if (result.ok) {
         applyCloudState(result.state, result.updatedAt);
         if (result.offline) {
-          markOffline(result.warning ?? FINANCE_OFFLINE_USER_MESSAGE);
+          markCloudIssue(result.cloudIssue ?? 'unreachable', result.warning);
           return;
         }
         clearSoftOffline();
@@ -171,7 +211,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     } finally {
       pullInFlight.current = false;
     }
-  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markOffline]);
+  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markCloudIssue]);
 
   const handleForcePush = useCallback(async () => {
     if (!isFinanceCloudConfigured()) return;
@@ -180,7 +220,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     try {
       if (!isBrowserOnline()) {
         markFinancePendingCloudPush();
-        markOffline();
+        markCloudIssue('offline');
         return;
       }
       const iso = await upsertFinanceRemote(DEFAULT_FINANCE_SYNC_ID, stateRef.current);
@@ -195,7 +235,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     } catch (e) {
       if (isFinanceCloudNetworkError(e)) {
         markFinancePendingCloudPush();
-        markOffline();
+        markCloudIssue(isBrowserOnline() ? 'unreachable' : 'offline');
         return;
       }
       const msg = e instanceof Error ? e.message : 'Error al subir.';
@@ -206,7 +246,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       }
       throw e;
     }
-  }, [clearSoftOffline, markOffline, stateRef]);
+  }, [clearSoftOffline, markCloudIssue, stateRef]);
 
   const handleRefreshFromCloud = useCallback(() => {
     void pullFromCloudImmediate();
@@ -245,7 +285,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
         if (!isBrowserOnline()) {
           const local = loadFinanceState();
           applyCloudState(local, getFinanceLocalSavedAt() ?? new Date().toISOString());
-          markOffline();
+          markCloudIssue('offline');
           return;
         }
 
@@ -255,7 +295,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
         if (result.ok) {
           applyCloudState(result.state, result.updatedAt);
           if (result.offline) {
-            markOffline(result.warning ?? FINANCE_OFFLINE_USER_MESSAGE);
+            markCloudIssue(result.cloudIssue ?? 'unreachable', result.warning);
             return;
           }
           clearSoftOffline();
@@ -291,7 +331,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     }
 
     void boot();
-  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markOffline, syncIdTick]);
+  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markCloudIssue, syncIdTick]);
 
   useEffect(() => {
     if (!isFinanceCloudConfigured()) return;
@@ -310,7 +350,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       })();
     };
     const onOffline = () => {
-      markOffline();
+      markCloudIssue('offline');
     };
     const onPageShow = (ev: PageTransitionEvent) => {
       if (ev.persisted) void pullFromCloudImmediate();
@@ -328,18 +368,20 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       window.removeEventListener('offline', onOffline);
       window.removeEventListener('pageshow', onPageShow);
     };
-  }, [flushPendingCloudPush, markOffline, pullFromCloudImmediate]);
+  }, [flushPendingCloudPush, markCloudIssue, pullFromCloudImmediate]);
 
+  /** Reintento periódico (navegador y PWA): si Supabase vuelve, se reconecta solo.
+   * Además, un pull liviano al mantener la pestaña abierta cuenta como actividad
+   * (el Free de Supabase pausa ~7 días sin queries). El keep-alive de GitHub Actions
+   * cubre las semanas en que no entres. */
   useEffect(() => {
     if (!isFinanceCloudConfigured() || !cloudReady) return;
-    if (!isStandalonePwa()) return;
 
     const tick = () => {
-      if (document.visibilityState === 'visible' && isBrowserOnline()) {
-        void pullFromCloudImmediate();
-      }
+      if (document.visibilityState !== 'visible') return;
+      void pullFromCloudImmediate();
     };
-    const id = window.setInterval(tick, 45_000);
+    const id = window.setInterval(tick, isStandalonePwa() ? 45_000 : 5 * 60_000);
     return () => clearInterval(id);
   }, [cloudReady, pullFromCloudImmediate]);
 
@@ -359,7 +401,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     handleRefreshFromCloud,
     handleResetSyncIdToDefault,
     applyCloudState,
-    markOffline,
+    markOffline: () => markCloudIssue(isBrowserOnline() ? 'unreachable' : 'offline'),
     markPendingCloudPush: markFinancePendingCloudPush,
   };
 }
