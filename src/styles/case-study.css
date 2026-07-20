@@ -61,6 +61,20 @@
   --cs-window-shadow: 0 32px 72px rgba(20, 18, 15, 0.16);
 }
 
+.case-study-page--giuliana {
+  --cs-bg: #f8f3ee;
+  --cs-text: #2a2424;
+  --cs-muted: rgba(42, 36, 36, 0.62);
+  --cs-accent: #b8838a;
+  --cs-border: rgba(42, 36, 36, 0.12);
+  --cs-btn-primary-bg: #2a2424;
+  --cs-btn-primary-text: #f8f3ee;
+  --cs-result-bg: #2a2424;
+  --cs-result-text: #f8f3ee;
+  --cs-window-border: rgba(42, 36, 36, 0.12);
+  --cs-window-shadow: 0 32px 72px rgba(42, 36, 36, 0.14);
+}
+
 .case-study-page .project-showcase-window {
   border-color: var(--cs-window-border);
   box-shadow: var(--cs-window-shadow);

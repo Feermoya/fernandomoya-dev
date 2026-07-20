@@ -1,9 +1,14 @@
 /** IDs con caso de estudio público (ETAPA 4). */
-export const CASE_STUDY_IDS = ['hema', 'giacomelli-seguros', 'poletino-servicios'] as const;
+export const CASE_STUDY_IDS = [
+  'hema',
+  'giacomelli-seguros',
+  'poletino-servicios',
+  'dra-giuliana-macchiavello',
+] as const;
 
 export type CaseStudyId = (typeof CASE_STUDY_IDS)[number];
 
-export type CaseStudyTheme = 'hema' | 'giacomelli' | 'poletino';
+export type CaseStudyTheme = 'hema' | 'giacomelli' | 'poletino' | 'giuliana';
 
 export type CaseStudyDecision = {
   title: string;
@@ -154,7 +159,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     number: '03',
     phrase: 'Maquinaria real. Comunicación directa.',
     theme: 'poletino',
-    nextId: 'hema',
+    nextId: 'dra-giuliana-macchiavello',
     context: [
       'Poletino ofrece alquiler de hidrogrúas, transporte de cargas pesadas y maquinaria para obras en Mendoza y alrededores, y la web tenía que hablarle a otro comprador B2B: alguien que busca resolver un problema operativo y necesita saber si pueden cubrirlo, en qué zona y cómo contactar.',
       'En este tipo de rubro, la página falla si queda vaga: listados incompletos o un tono demasiado genérico generan desconfianza. El visitante suele comparar pocos proveedores y decide rápido si sigue leyendo o cierra.',
@@ -203,6 +208,79 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       { id: 'services', caption: 'Servicios y maquinaria', objectPosition: '50% 28%', aspectRatio: '16 / 9' },
       { id: 'equipment', caption: 'Equipamiento', objectPosition: '60% 40%', aspectRatio: '21 / 9' },
       { id: 'cta', caption: 'Presupuesto y contacto', objectPosition: 'bottom center', aspectRatio: '16 / 8' },
+    ],
+  },
+  'dra-giuliana-macchiavello': {
+    number: '04',
+    phrase: 'Convertir tratamientos estéticos en decisiones más claras e informadas.',
+    theme: 'giuliana',
+    nextId: 'giacomelli-seguros',
+    context: [
+      'La Dra. Giuliana Macchiavello trabaja en armonización orofacial y odontología en Mendoza. Su público llega principalmente desde Instagram buscando información sobre tratamientos, resultados y formas de contacto.',
+      'El desafío no era solamente mostrar procedimientos. En este tipo de servicio, antes de consultar aparecen dudas sobre la naturalidad del resultado, la seguridad, los tiempos y cuál es el tratamiento adecuado para cada rostro.',
+      'La web debía ordenar esa información y convertir el criterio profesional de Giuliana en el centro de la marca.',
+    ],
+    objectives: [
+      'Presentar a la doctora y su forma de trabajar.',
+      'Organizar los tratamientos de manera clara.',
+      'Explicar beneficios sin realizar promesas médicas.',
+      'Reducir dudas antes de la primera consulta.',
+      'Reforzar la idea de resultados naturales y personalizados.',
+      'Facilitar el contacto mediante WhatsApp.',
+      'Construir una base preparada para posicionamiento local en Mendoza.',
+    ],
+    direction: {
+      estructura: [
+        'La información se organizó alrededor de las necesidades de las pacientes y no como un listado técnico de procedimientos. Cada tratamiento explica qué aspecto permite trabajar, cómo se evalúa y por qué la indicación depende de cada caso.',
+        'Se diseñaron secciones para presentar a la doctora, explicar su criterio profesional, recorrer los tratamientos, responder preguntas frecuentes y consultar directamente por WhatsApp. El sitio prioriza velocidad de carga, adaptación a celulares, navegación clara y una estructura semántica preparada para SEO.',
+      ],
+      identidad: [
+        'La dirección visual combina fondos crema, blanco cálido, rosa empolvado y tonos neutros. El rosa se utiliza como acento para conservar una estética femenina sin convertir la web en algo infantil o excesivamente romántico.',
+        'La composición utiliza espacios amplios, tipografía editorial y fotografías de evaluación profesional. La jerarquía presenta primero el enfoque de la doctora, después las necesidades de la paciente y finalmente los tratamientos disponibles.',
+      ],
+    },
+    decisions: [
+      {
+        title: 'El criterio antes que el procedimiento',
+        body: 'La evaluación profesional ocupa el centro de la comunicación.',
+      },
+      {
+        title: 'Tratamientos ordenados por necesidad',
+        body: 'La persona puede comenzar por lo que quiere mejorar, aunque todavía no conozca el nombre del procedimiento.',
+      },
+      {
+        title: 'Una estética femenina y profesional',
+        body: 'La identidad es cálida y delicada, sin perder claridad ni credibilidad médica.',
+      },
+      {
+        title: 'WhatsApp como cierre del recorrido',
+        body: 'El contacto permanece visible y aparece cuando la persona ya cuenta con información suficiente para consultar.',
+      },
+    ],
+    result: [
+      'La web funciona como una extensión más clara y completa de su comunicación en redes. Una persona puede conocer a la doctora, entender qué tipo de resultados prioriza, explorar los tratamientos y resolver sus principales dudas antes de escribirle.',
+      'El recorrido termina con una acción concreta: solicitar una evaluación o consultar disponibilidad por WhatsApp.',
+    ],
+    gallery: [
+      { id: 'full', caption: 'Vista general de la página', objectPosition: 'top center', aspectRatio: '16 / 10' },
+      {
+        id: 'treatments',
+        caption: 'Tratamientos organizados por objetivo',
+        objectPosition: '45% 28%',
+        aspectRatio: '16 / 9',
+      },
+      {
+        id: 'doctor',
+        caption: 'Presentación y criterio de la doctora',
+        objectPosition: '55% 45%',
+        aspectRatio: '21 / 9',
+      },
+      {
+        id: 'faq',
+        caption: 'Preguntas frecuentes y contacto',
+        objectPosition: 'bottom center',
+        aspectRatio: '16 / 8',
+      },
     ],
   },
 };

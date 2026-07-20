@@ -7,6 +7,7 @@ export type ArchiveProjectData = {
   projectType: string;
   year: number;
   live: string;
+  caseUrl?: string;
 };
 
 type Props = {
@@ -30,10 +31,9 @@ export default function FeaturedProjects({ featured, archive }: Props) {
             {archive.map((item) => (
               <li key={item.id} className="projects-archive__item">
                 <a
-                  href={item.live}
+                  href={item.caseUrl ?? item.live}
                   className="projects-archive__row"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(item.caseUrl ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
                 >
                   <span className="projects-archive__number" aria-hidden="true">
                     {item.number}

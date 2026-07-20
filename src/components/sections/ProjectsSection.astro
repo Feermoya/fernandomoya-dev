@@ -7,6 +7,7 @@ import type { FeaturedProjectData } from '@/components/react/FeaturedProject';
 import type { ArchiveProjectData } from '@/components/react/FeaturedProjects';
 import { getProjectCover } from '@/utils/images';
 import { byOrderThenDate } from '@/utils/sort';
+import { isCaseStudyId } from '@/data/case-studies';
 
 const SELECTED_IDS = ['hema', 'giacomelli-seguros', 'poletino-servicios'] as const;
 
@@ -93,6 +94,7 @@ const archive: ArchiveProjectData[] = archiveSource.map((entry, index) => ({
   projectType: entry.data.projectType,
   year: entry.data.publishDate.getFullYear(),
   live: entry.data.links.live,
+  caseUrl: isCaseStudyId(entry.id) ? `/proyectos/${entry.id}` : undefined,
 }));
 ---
 
