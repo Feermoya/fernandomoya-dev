@@ -66,22 +66,33 @@ export default function HeroShowcase({ projects }: Props) {
     const centerIndex = projects.findIndex((p) => p.slotClass.includes('hema'));
     const centerSlot = centerIndex >= 0 ? slots[centerIndex] : slots[0];
     const sideSlots = slots.filter((_, i) => i !== centerIndex);
+    // Si la hidratación llegó tarde (client:idle), no ocultar el SSR: evita flash.
+    const skipEntrance = typeof performance !== 'undefined' && performance.now() > 900;
 
     const ctx = gsap.context(() => {
       gsap.set(copy, { opacity: 1 });
       gsap.set(stage, { opacity: 1 });
-      gsap.set([eyebrow, titleLineEls, lead, actions], { opacity: 0, y: 18 });
-      gsap.set(centerSlot, { opacity: 0, y: 56, scale: 0.94 });
-      gsap.set(sideSlots, { opacity: 0, y: 40, scale: 0.96 });
 
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      if (skipEntrance) {
+        gsap.set([eyebrow, ...titleLineEls, lead, actions, ...slots], {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+        });
+      } else {
+        gsap.set([eyebrow, titleLineEls, lead, actions], { opacity: 0, y: 18 });
+        gsap.set(centerSlot, { opacity: 0, y: 56, scale: 0.94 });
+        gsap.set(sideSlots, { opacity: 0, y: 40, scale: 0.96 });
 
-      tl.to(centerSlot, { opacity: 1, y: 0, scale: 1, duration: 0.42 }, 0)
-        .to(sideSlots, { opacity: 1, y: 0, scale: 1, duration: 0.32, stagger: 0.08 }, 0.14)
-        .to(eyebrow, { opacity: 1, y: 0, duration: 0.24 }, 0.36)
-        .to(titleLineEls, { opacity: 1, y: 0, duration: 0.28, stagger: 0.06 }, 0.46)
-        .to(lead, { opacity: 1, y: 0, duration: 0.24 }, 0.68)
-        .to(actions, { opacity: 1, y: 0, duration: 0.24 }, 0.76);
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+        tl.to(centerSlot, { opacity: 1, y: 0, scale: 1, duration: 0.42 }, 0)
+          .to(sideSlots, { opacity: 1, y: 0, scale: 1, duration: 0.32, stagger: 0.08 }, 0.14)
+          .to(eyebrow, { opacity: 1, y: 0, duration: 0.24 }, 0.36)
+          .to(titleLineEls, { opacity: 1, y: 0, duration: 0.28, stagger: 0.06 }, 0.46)
+          .to(lead, { opacity: 1, y: 0, duration: 0.24 }, 0.68)
+          .to(actions, { opacity: 1, y: 0, duration: 0.24 }, 0.76);
+      }
 
       if (!mobile) {
         ScrollTrigger.create({

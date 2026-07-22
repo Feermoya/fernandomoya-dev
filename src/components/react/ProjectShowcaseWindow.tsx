@@ -2,6 +2,7 @@ type Props = {
   name: string;
   domain: string;
   imageSrc: string;
+  imageSrcSet?: string;
   imageWidth: number;
   imageHeight: number;
   alt: string;
@@ -12,6 +13,7 @@ export default function ProjectShowcaseWindow({
   name,
   domain,
   imageSrc,
+  imageSrcSet,
   imageWidth,
   imageHeight,
   alt,
@@ -36,6 +38,7 @@ export default function ProjectShowcaseWindow({
       <div className="project-showcase-window__viewport">
         <img
           src={imageSrc}
+          srcSet={imageSrcSet}
           alt={alt}
           width={imageWidth}
           height={imageHeight}

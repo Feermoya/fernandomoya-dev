@@ -4,6 +4,7 @@ description: Sitio web para la Dra. Giuliana Macchiavello, profesional especiali
 publishDate: 2026-07-01
 kind: client
 projectType: Armonización orofacial · Sitio institucional
+listLabel: Web armonización orofacial · Dra. Giuliana Macchiavello
 featured: false
 order: 5
 cover: dra-giuliana-macchiavello.webp

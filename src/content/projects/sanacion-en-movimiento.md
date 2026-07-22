@@ -4,6 +4,7 @@ description: Sitio web para acompañamientos y prácticas de bienestar, pensado 
 publishDate: 2023-11-20
 kind: client
 projectType: Sitio de servicios de bienestar
+listLabel: Web bienestar · Sanación en Movimiento
 stack:
   - HTML
   - CSS

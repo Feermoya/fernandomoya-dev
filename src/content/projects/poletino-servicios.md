@@ -4,6 +4,7 @@ description: Sitio web para una empresa de servicios industriales, maquinaria y 
 publishDate: 2024-02-10
 kind: client
 projectType: Sitio de servicios industriales
+listLabel: Web servicios industriales · Poletino
 stack:
   - HTML
   - CSS

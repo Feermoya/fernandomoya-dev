@@ -4,6 +4,7 @@ description: Sitio propio con notas y datos útiles para viajeros que cruzan a C
 publishDate: 2025-01-08
 kind: own
 projectType: Medio / noticias
+listLabel: Web noticias · Paso Chile Hoy
 stack:
   - HTML
   - CSS

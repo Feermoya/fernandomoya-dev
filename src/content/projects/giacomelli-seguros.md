@@ -4,6 +4,7 @@ description: Sitio web para Giacomelli Seguros, productor de seguros en Mendoza 
 publishDate: 2026-03-01
 kind: client
 projectType: Sitio de productor de seguros
+listLabel: Web productor de seguros · Giacomelli
 stack:
   - Astro
   - TypeScript

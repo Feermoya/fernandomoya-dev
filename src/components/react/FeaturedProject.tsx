@@ -10,12 +10,14 @@ export type FeaturedProjectData = {
   id: string;
   number: string;
   client: string;
+  listLabel: string;
   typeLine: string;
   phrase: string;
   domain: string;
   live: string;
   caseUrl: string;
   coverSrc: string;
+  coverSrcSet?: string;
   coverWidth: number;
   coverHeight: number;
   alt: string;
@@ -94,7 +96,7 @@ export default function FeaturedProject({ project }: Props) {
               {project.number}
             </span>
             <h3 id={`featured-project-${project.id}`} className="featured-project__name" data-featured-copy>
-              {project.client}
+              {project.listLabel}
             </h3>
             <p className="featured-project__phrase" data-featured-copy>
               {project.phrase}
@@ -125,6 +127,7 @@ export default function FeaturedProject({ project }: Props) {
                   name={project.client}
                   domain={project.domain}
                   imageSrc={project.coverSrc}
+                  imageSrcSet={project.coverSrcSet}
                   imageWidth={project.coverWidth}
                   imageHeight={project.coverHeight}
                   alt={project.alt}

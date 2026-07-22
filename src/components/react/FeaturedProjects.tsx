@@ -4,8 +4,6 @@ export type ArchiveProjectData = {
   id: string;
   number: string;
   label: string;
-  projectType: string;
-  year: number;
   live: string;
   caseUrl?: string;
 };
@@ -39,10 +37,6 @@ export default function FeaturedProjects({ featured, archive }: Props) {
                     {item.number}
                   </span>
                   <span className="projects-archive__label">{item.label}</span>
-                  <span className="projects-archive__meta">
-                    <span className="projects-archive__type">{item.projectType}</span>
-                    <span className="projects-archive__year">{item.year}</span>
-                  </span>
                   <span className="projects-archive__arrow" aria-hidden="true">
                     →
                   </span>

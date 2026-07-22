@@ -7,7 +7,6 @@ export type CaseStudyHeroProps = {
   client: string;
   phrase: string;
   projectType: string;
-  year: number;
   domain: string;
   live: string;
   coverSrc: string;
@@ -22,7 +21,6 @@ const {
   client,
   phrase,
   projectType,
-  year,
   domain,
   live,
   coverSrc,
@@ -46,10 +44,6 @@ const {
         <div class="cs-hero__meta-item">
           <dt>Tipo</dt>
           <dd>{projectType}</dd>
-        </div>
-        <div class="cs-hero__meta-item">
-          <dt>Año</dt>
-          <dd>{year}</dd>
         </div>
         <div class="cs-hero__meta-item">
           <dt>Dominio</dt>

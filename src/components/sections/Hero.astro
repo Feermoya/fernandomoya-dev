@@ -8,38 +8,58 @@ import hemaCover from '@/assets/projects/hema.webp';
 import giacomelliCover from '@/assets/projects/giacomelli.webp';
 import poletinoCover from '@/assets/projects/poletino.webp';
 
-const hemaImage = await getImage({ src: hemaCover, width: 1400, format: 'webp' });
-const giacomelliImage = await getImage({ src: giacomelliCover, width: 1200, format: 'webp' });
-const poletinoImage = await getImage({ src: poletinoCover, width: 1200, format: 'webp' });
+const heroSizes = '(min-width: 1024px) 34rem, 88vw';
+
+const hemaImage = await getImage({
+  src: hemaCover,
+  widths: [400, 640, 800],
+  sizes: heroSizes,
+  format: 'webp',
+});
+const giacomelliImage = await getImage({
+  src: giacomelliCover,
+  widths: [400, 640, 800],
+  sizes: heroSizes,
+  format: 'webp',
+});
+const poletinoImage = await getImage({
+  src: poletinoCover,
+  widths: [400, 640, 800],
+  sizes: heroSizes,
+  format: 'webp',
+});
 
 const projects: HeroProject[] = [
   {
     name: 'HEMA',
     domain: 'hema.com.ar',
     imageSrc: hemaImage.src,
-    imageWidth: hemaImage.attributes.width ?? 1400,
-    imageHeight: hemaImage.attributes.height ?? 875,
+    imageSrcSet: hemaImage.srcSet.attribute,
+    imageWidth: hemaImage.attributes.width ?? 800,
+    imageHeight: hemaImage.attributes.height ?? 500,
     alt: 'Captura del sitio web de HEMA, laboratorio de diagnóstico genético',
     priority: true,
     slotClass: 'hero-editorial__window-slot--hema',
     depth: 0,
   },
   {
-    name: 'Giacomelli Seguros',
+    name: 'Giacomelli',
     domain: 'giacomelliseguros.com',
     imageSrc: giacomelliImage.src,
-    imageWidth: giacomelliImage.attributes.width ?? 1200,
-    imageHeight: giacomelliImage.attributes.height ?? 750,
+    imageSrcSet: giacomelliImage.srcSet.attribute,
+    imageWidth: giacomelliImage.attributes.width ?? 800,
+    imageHeight: giacomelliImage.attributes.height ?? 500,
     alt: 'Captura del sitio web de Giacomelli Seguros, productor de seguros en Mendoza',
     slotClass: 'hero-editorial__window-slot--giacomelli',
     depth: 2,
   },
   {
-    name: 'Poletino Servicios',
+    name: 'Poletino',
     domain: 'poletinosg.com.ar',
     imageSrc: poletinoImage.src,
-    imageWidth: poletinoImage.attributes.width ?? 1200,
-    imageHeight: poletinoImage.attributes.height ?? 750,
+    imageSrcSet: poletinoImage.srcSet.attribute,
+    imageWidth: poletinoImage.attributes.width ?? 800,
+    imageHeight: poletinoImage.attributes.height ?? 500,
     alt: 'Captura del sitio web de Poletino Servicios, alquiler de hidrogrúas y transporte',
     slotClass: 'hero-editorial__window-slot--poletino',
     depth: 1,
@@ -47,4 +67,4 @@ const projects: HeroProject[] = [
 ];
 ---
 
-<HeroShowcase client:load projects={projects} />
+<HeroShowcase client:idle projects={projects} />

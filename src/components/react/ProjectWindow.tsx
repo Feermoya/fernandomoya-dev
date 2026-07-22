@@ -2,6 +2,7 @@ export type ProjectWindowData = {
   name: string;
   domain: string;
   imageSrc: string;
+  imageSrcSet?: string;
   imageWidth: number;
   imageHeight: number;
   alt: string;
@@ -16,6 +17,7 @@ export default function ProjectWindow({
   name,
   domain,
   imageSrc,
+  imageSrcSet,
   imageWidth,
   imageHeight,
   alt,
@@ -41,12 +43,13 @@ export default function ProjectWindow({
       <div className="hero-project-window__viewport">
         <img
           src={imageSrc}
+          srcSet={imageSrcSet}
           alt={alt}
           width={imageWidth}
           height={imageHeight}
           loading={priority ? 'eager' : 'lazy'}
           fetchPriority={priority ? 'high' : 'auto'}
-          decoding={priority ? 'sync' : 'async'}
+          decoding={priority ? 'async' : 'async'}
           sizes="(min-width: 1024px) 34rem, 88vw"
           className="hero-project-window__image"
         />

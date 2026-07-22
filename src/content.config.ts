@@ -16,6 +16,12 @@ const projects = defineCollection({
     kind: z.enum(['client', 'own']),
     /** Etiqueta corta de tipo: “Sitio corporativo”, “Marca personal”, etc. */
     projectType: z.string(),
+    /**
+     * Nombre visible en listados (home / archivo).
+     * Debe explicar el rubro, no solo el nombre del cliente.
+     * Ej.: “Web psicóloga · Patricia Moya”
+     */
+    listLabel: z.string().optional(),
     /** Tecnologías o capas relevantes (editable cuando definas el stack real). */
     stack: z.array(z.string()).default([]),
     featured: z.boolean().default(false),

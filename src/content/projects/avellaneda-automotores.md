@@ -4,6 +4,7 @@ description: Sitio web para una concesionaria de autos usados, pensado para que 
 publishDate: 2024-04-15
 kind: client
 projectType: Sitio corporativo con catálogo
+listLabel: Web concesionaria · Avellaneda Automotores
 stack:
   - HTML
   - CSS

@@ -6,6 +6,7 @@ import FeaturedProjects from '@/components/react/FeaturedProjects';
 import type { FeaturedProjectData } from '@/components/react/FeaturedProject';
 import type { ArchiveProjectData } from '@/components/react/FeaturedProjects';
 import { getProjectCover } from '@/utils/images';
+import { projectListLabel } from '@/utils/project-label';
 import { byOrderThenDate } from '@/utils/sort';
 import { isCaseStudyId } from '@/data/case-studies';
 
@@ -59,22 +60,30 @@ async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<Featur
   const cover = getProjectCover(entry.data.cover);
   if (!cover) throw new Error(`Portada no encontrada para ${id}`);
 
-  const optimized = await getImage({ src: cover, width: 1600, format: 'webp' });
+  const optimized = await getImage({
+    src: cover,
+    widths: [640, 960, 1280],
+    sizes: '(min-width: 1280px) 62vw, (min-width: 1024px) 58vw, 100vw',
+    format: 'webp',
+  });
   const client = entry.data.client ?? entry.data.title;
+  const listLabel = projectListLabel(entry.data);
   const live = entry.data.links.live;
 
   return {
     id,
     number: copy.number,
     client,
+    listLabel,
     typeLine: copy.typeLine,
     phrase: copy.phrase,
     domain: domainFromLive(live),
     live,
     caseUrl: `/proyectos/${id}`,
     coverSrc: optimized.src,
-    coverWidth: optimized.attributes.width ?? 1600,
-    coverHeight: optimized.attributes.height ?? 1000,
+    coverSrcSet: optimized.srcSet.attribute,
+    coverWidth: optimized.attributes.width ?? 1280,
+    coverHeight: optimized.attributes.height ?? 800,
     alt: `Captura del sitio web de ${client}`,
     theme: copy.theme,
     mediaPosition: copy.mediaPosition,
@@ -90,9 +99,7 @@ const archiveSource = all
 const archive: ArchiveProjectData[] = archiveSource.map((entry, index) => ({
   id: entry.id,
   number: String(index + 4).padStart(2, '0'),
-  label: entry.data.client ?? entry.data.title,
-  projectType: entry.data.projectType,
-  year: entry.data.publishDate.getFullYear(),
+  label: projectListLabel(entry.data),
   live: entry.data.links.live,
   caseUrl: isCaseStudyId(entry.id) ? `/proyectos/${entry.id}` : undefined,
 }));

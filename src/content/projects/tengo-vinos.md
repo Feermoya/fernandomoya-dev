@@ -4,6 +4,7 @@ description: Tienda y contenidos para una marca de vinos propia, pensada para mo
 publishDate: 2024-10-01
 kind: own
 projectType: E-commerce / catálogo
+listLabel: Web tienda de vinos · Tengo Vinos
 stack:
   - HTML
   - CSS

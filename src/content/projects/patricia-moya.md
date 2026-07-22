@@ -4,6 +4,7 @@ description: Sitio web para consulta psicológica en Mendoza, con atención pres
 publishDate: 2024-09-01
 kind: client
 projectType: Sitio profesional
+listLabel: Web psicóloga · Patricia Moya
 stack:
   - HTML
   - CSS

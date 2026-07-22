@@ -4,6 +4,7 @@ description: Sitio web para un laboratorio de diagnóstico genético y molecular
 publishDate: 2024-06-01
 kind: client
 projectType: Sitio institucional
+listLabel: Web laboratorio genético · HEMA
 stack:
   - HTML
   - CSS
