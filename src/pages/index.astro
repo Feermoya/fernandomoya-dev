@@ -5,6 +5,7 @@ import HomeAbout from '@/components/sections/HomeAbout.astro';
 import BrandWorkSection from '@/components/sections/BrandWorkSection.astro';
 import ProcessSection from '@/components/sections/ProcessSection.astro';
 import ProjectsSection from '@/components/sections/ProjectsSection.astro';
+import SeoImpactSection from '@/components/sections/SeoImpactSection.astro';
 import HomeContactSection from '@/components/sections/HomeContactSection.astro';
 import { site } from '@/data/site';
 import { pageTitle } from '@/utils/seo';
@@ -36,6 +37,7 @@ const professionalServiceSchema = {
   <script type="application/ld+json" set:html={JSON.stringify(professionalServiceSchema)} />
   <Hero />
   <ProjectsSection />
+  <SeoImpactSection />
   <ProcessSection />
   <BrandWorkSection />
   <HomeAbout />

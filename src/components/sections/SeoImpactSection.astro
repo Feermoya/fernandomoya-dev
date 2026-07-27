@@ -1,0 +1,133 @@
+---
+import '@/styles/seo-impact.css';
+import SeoPerformanceChart from '@/components/react/SeoPerformanceChart';
+import {
+  seoPerformanceCase,
+  seoPerformanceSeries,
+  seoPerformanceSummary,
+} from '@/data/seo-performance';
+
+function formatClicks(value: number): string {
+  return new Intl.NumberFormat('es-AR').format(value);
+}
+
+function formatImpressions(value: number): string {
+  const thousands = value / 1000;
+  return `${thousands.toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} mil`;
+}
+
+function formatPosition(value: number): string {
+  return value.toLocaleString('es-AR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+}
+
+const visitsLabel = formatClicks(seoPerformanceSummary.clicks);
+const appearancesLabel = formatImpressions(seoPerformanceSummary.impressions);
+const positionLabel = formatPosition(seoPerformanceSummary.averagePosition);
+---
+
+<section id="resultados-seo" class="seo-impact" aria-labelledby="seo-impact-heading">
+  <div class="container-page seo-impact__grid">
+    <div class="seo-impact__copy">
+      <p class="seo-impact__eyebrow">RESULTADOS QUE SE PUEDEN MEDIR</p>
+      <h2 id="seo-impact-heading" class="seo-impact__title">
+        Una web no debería<br aria-hidden="true" />
+        quedarse esperando visitas.
+      </h2>
+      <p class="seo-impact__lead">
+        También trabajo el contenido y la estructura para que una web tenga más oportunidades de
+        aparecer en Google cuando alguien busca lo que ese negocio ofrece.
+      </p>
+      <p class="seo-impact__case-id">{seoPerformanceCase.identification}</p>
+      <p class="seo-impact__note seo-impact__note--copy">{seoPerformanceCase.note}</p>
+    </div>
+
+    <div class="seo-impact__visual">
+      <div class="seo-impact__panel">
+        <dl class="seo-impact__metrics">
+          <div class="seo-impact__metric seo-impact__metric--primary">
+            <dt>Visitas desde Google</dt>
+            <dd>
+              <span class="seo-impact__metric-sr">Visitas desde Google: {visitsLabel}</span>
+              <span
+                class="seo-impact__metric-value"
+                aria-hidden="true"
+                data-seo-count="clicks"
+                data-seo-value={seoPerformanceSummary.clicks}
+              >
+                {visitsLabel}
+              </span>
+              <p class="seo-impact__metric-hint" aria-hidden="true">
+                Personas que llegaron al sitio desde una búsqueda.
+              </p>
+            </dd>
+          </div>
+          <div class="seo-impact__metric seo-impact__metric--primary">
+            <dt>Apariciones en Google</dt>
+            <dd>
+              <span class="seo-impact__metric-sr">
+                Apariciones en Google: {appearancesLabel}
+              </span>
+              <span
+                class="seo-impact__metric-value"
+                aria-hidden="true"
+                data-seo-count="impressions"
+                data-seo-value={seoPerformanceSummary.impressions}
+              >
+                {appearancesLabel}
+              </span>
+              <p class="seo-impact__metric-hint" aria-hidden="true">
+                Veces que la web se mostró en resultados de búsqueda.
+              </p>
+            </dd>
+          </div>
+          <div class="seo-impact__metric seo-impact__metric--secondary">
+            <dt>Posición promedio</dt>
+            <dd>
+              <span class="seo-impact__metric-sr">Posición promedio: {positionLabel}</span>
+              <span
+                class="seo-impact__metric-value"
+                aria-hidden="true"
+                data-seo-count="averagePosition"
+                data-seo-value={seoPerformanceSummary.averagePosition}
+              >
+                {positionLabel}
+              </span>
+              <p class="seo-impact__metric-hint" aria-hidden="true">
+                En promedio, apareció entre los primeros resultados.
+              </p>
+            </dd>
+          </div>
+          <div class="seo-impact__metric seo-impact__metric--secondary">
+            <dt>Período analizado</dt>
+            <dd>
+              <span class="seo-impact__metric-sr">Período analizado: 90 días</span>
+              <span class="seo-impact__metric-value" aria-hidden="true">90 días</span>
+              <p class="seo-impact__metric-hint" aria-hidden="true">
+                Resultados acumulados del caso presentado.
+              </p>
+            </dd>
+          </div>
+        </dl>
+
+        <p class="seo-impact__highlight">
+          Más de 2.100 apariciones en Google<br aria-hidden="true" />
+          generaron 178 visitas al sitio.
+        </p>
+
+        <SeoPerformanceChart
+          client:visible
+          series={seoPerformanceSeries}
+          summary={seoPerformanceSummary}
+        />
+
+        <p class="seo-impact__note seo-impact__note--panel">{seoPerformanceCase.note}</p>
+      </div>
+    </div>
+  </div>
+</section>
