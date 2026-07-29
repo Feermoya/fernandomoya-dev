@@ -1,4 +1,5 @@
 import { sendCallMeBotWhatsAppServer } from '@/lib/finance/callMeBotServer';
+import { formatARS } from '@/lib/finance/calculations';
 import { buildFinancePricesResponse } from '@/lib/finance/financePricesServer';
 import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
 import {
@@ -22,6 +23,17 @@ import {
 import { DEFAULT_FINANCE_SYNC_ID } from '@/lib/finance/storage';
 import { getArgentinaDateParts } from '@/lib/finance/timezone';
 import type { FinanceReminderSettings, FinanceState } from '@/lib/finance/types';
+import { formatMarketWhatsAppMessage } from '@/lib/finance/whatsappCopy';
+
+export type WhatsAppJobKind = 'investment' | 'market' | 'both';
+
+export type WhatsAppJobRunOptions = {
+  /** Ignora already_sent / enabled checks mínimamente; para botón de prueba. */
+  force?: boolean;
+  /** Si false, no escribe huellas en Supabase (prueba no contamina el anti-spam del cron). */
+  persist?: boolean;
+  only?: WhatsAppJobKind;
+};
 
 export type WhatsAppJobSkipReason =
   | 'supabase_not_configured'
@@ -56,16 +68,6 @@ function actionableMarketAlerts(alerts: MarketAlert[]): MarketAlert[] {
   return alerts.filter((a) => a.kind !== 'neutral');
 }
 
-function formatMarketWhatsAppMessage(alerts: MarketAlert[]): string {
-  const lines = alerts.flatMap((alert) => [`• ${alert.title}`, `  ${alert.detail}`, '']);
-  return [
-    'Foco financiero — Alertas de mercado',
-    '',
-    ...lines,
-    'Seguimiento informativo. No es asesoramiento financiero.',
-  ].join('\n');
-}
-
 /** Preferencias sincronizadas primero; env solo como respaldo. */
 export function resolveCallMeBotApiKey(reminder?: FinanceReminderSettings): string {
   return (
@@ -80,18 +82,21 @@ export async function runInvestmentReminderJob(
   state: FinanceState,
   phone: string,
   apiKey: string,
+  options: WhatsAppJobRunOptions = {},
 ): Promise<{ result: WhatsAppJobResult; nextReminder?: FinanceReminderSettings }> {
   const prefs = normalizePreferences(state.preferences);
   const reminder = prefs.reminder;
   const { day, monthKey } = getArgentinaDateParts();
   const runKey = cronReminderRunKey(monthKey, day);
+  const force = Boolean(options.force);
+  const persist = options.persist !== false;
 
-  if (!reminder.enabled) {
+  if (!force && !reminder.enabled) {
     return { result: { ok: true, action: 'skipped', skipReason: 'reminders_disabled' } };
   }
 
   const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
-  if (!nudge.shouldNotify) {
+  if (!force && !nudge.shouldNotify) {
     return {
       result: {
         ok: true,
@@ -103,7 +108,7 @@ export async function runInvestmentReminderJob(
     };
   }
 
-  if (reminder.lastCronReminderKeys?.includes(runKey)) {
+  if (!force && reminder.lastCronReminderKeys?.includes(runKey)) {
     return {
       result: {
         ok: true,
@@ -115,7 +120,19 @@ export async function runInvestmentReminderJob(
     };
   }
 
-  const send = await sendCallMeBotWhatsAppServer(phone, nudge.message, apiKey);
+  const message = nudge.shouldNotify
+    ? nudge.message
+    : [
+        '👋 Hola, soy tu bot de *Foco financiero*.',
+        '',
+        '✅ *Prueba de aviso de inversión*',
+        `Este mes llevás un buen ritmo (*${formatARS(nudge.invested)}*).`,
+        'Si estuvieras atrasado, acá te pediría sumar un poco más hacia el siguiente nivel.',
+        '',
+        '_Esto fue solo una prueba manual desde la app._',
+      ].join('\n');
+
+  const send = await sendCallMeBotWhatsAppServer(phone, message, apiKey);
   if (!send.ok) {
     return {
       result: {
@@ -136,7 +153,7 @@ export async function runInvestmentReminderJob(
       detail: send.detail,
       fingerprints: [runKey],
     },
-    nextReminder: markCronReminderSent(reminder, runKey),
+    nextReminder: persist && !force ? markCronReminderSent(reminder, runKey) : undefined,
   };
 }
 
@@ -144,11 +161,14 @@ export async function runMarketAlertJob(
   state: FinanceState,
   phone: string,
   apiKey: string,
+  options: WhatsAppJobRunOptions = {},
 ): Promise<{ result: WhatsAppJobResult; nextReminder?: FinanceReminderSettings }> {
   const prefs = normalizePreferences(state.preferences);
   const reminder = prefs.reminder;
+  const force = Boolean(options.force);
+  const persist = options.persist !== false;
 
-  if (!reminder.marketWhatsAppEnabled) {
+  if (!force && !reminder.marketWhatsAppEnabled) {
     return { result: { ok: true, action: 'skipped', skipReason: 'market_disabled' } };
   }
 
@@ -174,9 +194,35 @@ export async function runMarketAlertJob(
   );
   const activeFingerprints = alerts.map(marketAlertFingerprint);
   const sentSet = new Set(reminder.lastMarketAlertKeys ?? []);
-  const fresh = alerts.filter((alert) => !sentSet.has(marketAlertFingerprint(alert)));
+  const fresh = force
+    ? alerts
+    : alerts.filter((alert) => !sentSet.has(marketAlertFingerprint(alert)));
 
   if (fresh.length === 0) {
+    if (force) {
+      const message = [
+        '👋 Hola, soy tu bot de *Foco financiero*.',
+        '',
+        '✅ *Prueba de alertas de mercado*',
+        'Ahora mismo no hay movimientos fuertes en tus activos.',
+        'Cuando haya una baja o suba relevante, te escribo con el detalle.',
+        '',
+        '_Esto fue solo una prueba manual desde la app._',
+      ].join('\n');
+      const send = await sendCallMeBotWhatsAppServer(phone, message, apiKey);
+      if (!send.ok) {
+        return {
+          result: {
+            ok: false,
+            action: 'error',
+            detail: send.detail,
+            error: 'CallMeBot rejected the market alert',
+          },
+        };
+      }
+      return { result: { ok: true, action: 'sent', detail: send.detail } };
+    }
+
     const pruned = markMarketAlertsSent(reminder, [], activeFingerprints);
     const changed =
       JSON.stringify(pruned.lastMarketAlertKeys ?? []) !==
@@ -209,13 +255,17 @@ export async function runMarketAlertJob(
       detail: send.detail,
       fingerprints: freshKeys,
     },
-    nextReminder: markMarketAlertsSent(reminder, freshKeys, activeFingerprints),
+    nextReminder:
+      persist && !force
+        ? markMarketAlertsSent(reminder, freshKeys, activeFingerprints)
+        : undefined,
   };
 }
 
 /** Orquesta jobs de WhatsApp para el cron único de keepalive (Hobby). */
 export async function runFinanceWhatsAppJobs(
   syncId: string = DEFAULT_FINANCE_SYNC_ID,
+  options: WhatsAppJobRunOptions = {},
 ): Promise<FinanceWhatsAppJobsResult> {
   if (!isFinanceRemoteConfigured()) {
     const skipped: WhatsAppJobResult = {
@@ -244,6 +294,9 @@ export async function runFinanceWhatsAppJobs(
   let reminder = prefs.reminder;
   const phone = resolveWhatsAppPhone();
   const apiKey = resolveCallMeBotApiKey(reminder);
+  const only = options.only ?? 'both';
+  const runInvestment = only === 'both' || only === 'investment';
+  const runMarket = only === 'both' || only === 'market';
 
   if (!phone) {
     const skipped: WhatsAppJobResult = { ok: true, action: 'skipped', skipReason: 'no_phone' };
@@ -254,17 +307,24 @@ export async function runFinanceWhatsAppJobs(
     return { ok: true, reminder: skipped, market: skipped };
   }
 
-  const investment = await runInvestmentReminderJob(state, phone, apiKey);
+  const skippedIdle: WhatsAppJobResult = { ok: true, action: 'skipped', skipReason: 'reminders_disabled' };
+
+  const investment = runInvestment
+    ? await runInvestmentReminderJob(state, phone, apiKey, options)
+    : { result: skippedIdle };
   if (investment.nextReminder) reminder = investment.nextReminder;
 
   const marketState: FinanceState = {
     ...state,
     preferences: { ...prefs, reminder },
   };
-  const market = await runMarketAlertJob(marketState, phone, apiKey);
+  const market = runMarket
+    ? await runMarketAlertJob(marketState, phone, apiKey, options)
+    : { result: { ok: true, action: 'skipped', skipReason: 'market_disabled' } };
   if (market.nextReminder) reminder = market.nextReminder;
 
-  const shouldPersist = Boolean(investment.nextReminder || market.nextReminder);
+  const shouldPersist =
+    options.persist !== false && Boolean(investment.nextReminder || market.nextReminder);
   if (shouldPersist) {
     const nextState: FinanceState = {
       ...state,

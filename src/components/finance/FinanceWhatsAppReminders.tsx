@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { site } from '@/data/site';
 import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
 import { normalizePreferences, whatsappAutomationReadiness } from '@/lib/finance/preferences';
 import { getArgentinaDateParts } from '@/lib/finance/timezone';
 import type { FinancePreferences, FinanceState } from '@/lib/finance/types';
+import { requestWhatsAppTest } from '@/lib/finance/whatsappTestClient';
 
 type Props = {
   state: FinanceState;
@@ -15,6 +16,8 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
   const reminder = prefs.reminder;
   const readiness = whatsappAutomationReadiness(reminder);
   const { monthKey } = getArgentinaDateParts();
+  const [busy, setBusy] = useState<'investment' | 'market' | 'both' | null>(null);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   const nudge = useMemo(
     () => evaluateInvestmentWhatsAppNudge(state, monthKey),
@@ -26,6 +29,14 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
       ...prefs,
       reminder: { ...reminder, ...partial },
     });
+  };
+
+  const runTest = async (kind: 'investment' | 'market' | 'both') => {
+    setBusy(kind);
+    setTestResult(null);
+    const result = await requestWhatsAppTest(kind);
+    setBusy(null);
+    setTestResult(result.message);
   };
 
   return (
@@ -80,11 +91,50 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
             </p>
           ) : (
             <p className="mt-1 text-xs leading-relaxed text-emerald-800">
-              Sin aviso: el volumen del mes alcanza. Silencio hasta el próximo mes / si baja el ritmo.
+              Sin aviso automático: el volumen del mes alcanza. Podés mandar una prueba igual con los
+              botones de abajo.
             </p>
           )}
         </div>
       ) : null}
+
+      <div className="flex flex-col gap-2">
+        <p className="finance-label">Probar ahora (no espera al cron)</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <button
+            type="button"
+            disabled={Boolean(busy) || !readiness.apiKeyOk}
+            onClick={() => void runTest('investment')}
+            className="finance-secondary-button min-h-[44px] flex-1 text-sm disabled:opacity-50"
+          >
+            {busy === 'investment' ? 'Enviando…' : 'Probar inversión'}
+          </button>
+          <button
+            type="button"
+            disabled={Boolean(busy) || !readiness.apiKeyOk}
+            onClick={() => void runTest('market')}
+            className="finance-secondary-button min-h-[44px] flex-1 text-sm disabled:opacity-50"
+          >
+            {busy === 'market' ? 'Enviando…' : 'Probar mercado'}
+          </button>
+          <button
+            type="button"
+            disabled={Boolean(busy) || !readiness.apiKeyOk}
+            onClick={() => void runTest('both')}
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-2xl bg-[#25D366] px-4 text-sm font-black text-white shadow-md disabled:opacity-50"
+          >
+            {busy === 'both' ? 'Enviando…' : 'Probar los dos'}
+          </button>
+        </div>
+        {testResult ? (
+          <p className="text-xs font-semibold text-slate-600" role="status">
+            {testResult}
+          </p>
+        ) : null}
+        <p className="text-[10px] text-slate-500">
+          Las pruebas no gastan el cupo anti-spam del cron (podés repetirlas).
+        </p>
+      </div>
 
       <ul className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-semibold text-slate-600">
         <li className="text-emerald-700">Número fijo: {site.social.whatsappPhoneDigits}</li>

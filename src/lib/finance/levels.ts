@@ -5,6 +5,7 @@ import {
   formatARS,
 } from '@/lib/finance/calculations';
 import type { FinanceState, MonthlyLevelResult } from '@/lib/finance/types';
+import { formatInvestmentWhatsAppMessage } from '@/lib/finance/whatsappCopy';
 
 export const LEVEL_THRESHOLDS = {
   L1: 150_000,
@@ -332,6 +333,17 @@ export function evaluateInvestmentWhatsAppNudge(
   const monthLabel = monthLabelEs(month);
   const nextTitle = gap.nextTitle;
 
+  const build = (kind: 'low' | 'near_level' | 'push') =>
+    formatInvestmentWhatsAppMessage({
+      kind,
+      monthLabel,
+      invested,
+      amountMissing: gap.amountMissing,
+      level,
+      nextLevel: gap.nextLevel,
+      nextTitle,
+    });
+
   if (invested < TH.L1) {
     return {
       shouldNotify: true,
@@ -339,11 +351,7 @@ export function evaluateInvestmentWhatsAppNudge(
       level,
       nextLevel: gap.nextLevel,
       kind: 'low',
-      message: [
-        `Foco financiero — ${monthLabel}`,
-        `Llevás ${formatARS(invested)} invertidos este mes (poco).`,
-        `Te faltan ${formatARS(gap.amountMissing)} para el nivel ${gap.nextLevel} (${nextTitle}).`,
-      ].join('\n'),
+      message: build('low'),
     };
   }
 
@@ -361,11 +369,7 @@ export function evaluateInvestmentWhatsAppNudge(
       level,
       nextLevel: gap.nextLevel,
       kind: 'near_level',
-      message: [
-        `Foco financiero — ${monthLabel}`,
-        `Estás cerca del nivel ${gap.nextLevel} (${nextTitle}).`,
-        `Llevás ${formatARS(invested)}. Te faltan ${formatARS(gap.amountMissing)}.`,
-      ].join('\n'),
+      message: build('near_level'),
     };
   }
 
@@ -375,11 +379,7 @@ export function evaluateInvestmentWhatsAppNudge(
     level,
     nextLevel: gap.nextLevel,
     kind: 'push',
-    message: [
-      `Foco financiero — ${monthLabel}`,
-      `Nivel actual: ${level} · siguiente: ${gap.nextLevel} (${nextTitle}).`,
-      `Llevás ${formatARS(invested)}. Te faltan ${formatARS(gap.amountMissing)} este mes.`,
-    ].join('\n'),
+    message: build('push'),
   };
 }
 

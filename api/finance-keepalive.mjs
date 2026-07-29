@@ -57,6 +57,90 @@ function sumByType(entries, month, type) {
   return getEntriesByMonth(entries, month).filter((e) => e.type === type).reduce((s, e) => s + e.amount, 0);
 }
 
+// src/lib/finance/whatsappCopy.ts
+var BOT_SIGN = "\u{1F44B} Hola, soy tu bot de *Foco financiero*. Te escribo para acompa\xF1arte, no para apurarte.";
+function levelLine(level, nextLevel, nextTitle) {
+  if (level <= 0) {
+    return `\u{1F331} Todav\xEDa no arrancaste el nivel este mes. El primero es *${nextTitle}* (nivel ${nextLevel}).`;
+  }
+  return `\u{1F3AF} Est\xE1s en el *nivel ${level}*. El siguiente es *${nextLevel} \xB7 ${nextTitle}*.`;
+}
+function formatInvestmentWhatsAppMessage(params) {
+  const { kind, monthLabel, invested, amountMissing, level, nextLevel, nextTitle } = params;
+  const investedLine = `\u{1F4B0} Este mes llev\xE1s *${formatARS(invested)}*.`;
+  const gapLine = `Te faltan *${formatARS(amountMissing)}* para pasar al siguiente nivel.`;
+  let body;
+  if (kind === "low") {
+    body = [
+      `\u{1F4CA} ${monthLabel}: todav\xEDa hay poco movimiento.`,
+      investedLine,
+      gapLine,
+      "",
+      "Si pod\xE9s, carg\xE1 algo aunque sea chico. El mes se arma de a poco y despu\xE9s cuesta menos \u{1F4AA}"
+    ].join("\n");
+  } else if (kind === "near_level") {
+    body = [
+      `\u{1F525} ${monthLabel}: *est\xE1s muy cerca* de subir.`,
+      levelLine(level, nextLevel, nextTitle),
+      investedLine,
+      gapLine,
+      "",
+      "Revis\xE1 si pod\xE9s sumar un poco m\xE1s y cerr\xE1s el nivel. Vale la pena el empuj\xF3n final \u2728"
+    ].join("\n");
+  } else {
+    body = [
+      `\u{1F4C8} ${monthLabel}: buen ritmo, pero todav\xEDa hay margen.`,
+      levelLine(level, nextLevel, nextTitle),
+      investedLine,
+      gapLine,
+      "",
+      "Cuando puedas, met\xE9 una carga m\xE1s. Mantener el foco ahora cambia el cierre del mes \u{1F64C}"
+    ].join("\n");
+  }
+  return [BOT_SIGN, "", body, "", "_Cuando cargues plata en la app, dejo de insistir un rato._"].join("\n");
+}
+function emojiForAlert(alert) {
+  switch (alert.kind) {
+    case "daily-drop":
+    case "loss-since-buy":
+      return "\u{1F4C9}";
+    case "daily-rise":
+    case "gain-since-buy":
+      return "\u{1F4C8}";
+    default:
+      return "\u{1F514}";
+  }
+}
+function humanDetail(alert) {
+  switch (alert.kind) {
+    case "loss-since-buy":
+      return "Baj\xF3 frente a tu precio de compra. Revis\xE1 con calma si quer\xE9s promediar, esperar o no hacer nada.";
+    case "gain-since-buy":
+      return "Est\xE1 arriba de tu compra. Buen dato para repasar si sigue alineado con tu plan.";
+    case "daily-drop":
+      return "Movimiento fuerte a la baja hoy. Puede servir mirarlo sin apurarte.";
+    case "daily-rise":
+      return "Subi\xF3 bastante hoy. Un chequeo r\xE1pido alcanza.";
+    default:
+      return alert.detail;
+  }
+}
+function formatMarketWhatsAppMessage(alerts) {
+  const blocks = alerts.map((alert) => {
+    return [`${emojiForAlert(alert)} *${alert.title}*`, humanDetail(alert)].join("\n");
+  });
+  return [
+    BOT_SIGN,
+    "",
+    "\u{1F514} *Alertas de mercado* seg\xFAn tus activos cargados:",
+    "",
+    ...blocks.flatMap((block, i) => i === 0 ? [block] : ["", block]),
+    "",
+    "_Esto es seguimiento informativo, no asesoramiento financiero._",
+    "Cuando puedas, miralo en Foco. Si no hace falta mover nada, tambi\xE9n est\xE1 bien \u{1F44D}"
+  ].join("\n");
+}
+
 // src/lib/finance/levels.ts
 var LEVEL_THRESHOLDS = {
   L1: 15e4,
@@ -211,6 +295,15 @@ function evaluateInvestmentWhatsAppNudge(state, month) {
   }
   const monthLabel = monthLabelEs(month);
   const nextTitle = gap.nextTitle;
+  const build = (kind) => formatInvestmentWhatsAppMessage({
+    kind,
+    monthLabel,
+    invested,
+    amountMissing: gap.amountMissing,
+    level,
+    nextLevel: gap.nextLevel,
+    nextTitle
+  });
   if (invested < TH.L1) {
     return {
       shouldNotify: true,
@@ -218,11 +311,7 @@ function evaluateInvestmentWhatsAppNudge(state, month) {
       level,
       nextLevel: gap.nextLevel,
       kind: "low",
-      message: [
-        `Foco financiero \u2014 ${monthLabel}`,
-        `Llev\xE1s ${formatARS(invested)} invertidos este mes (poco).`,
-        `Te faltan ${formatARS(gap.amountMissing)} para el nivel ${gap.nextLevel} (${nextTitle}).`
-      ].join("\n")
+      message: build("low")
     };
   }
   const thresholds = [0, TH.L1, TH.L2, TH.L3, TH.L4];
@@ -237,11 +326,7 @@ function evaluateInvestmentWhatsAppNudge(state, month) {
       level,
       nextLevel: gap.nextLevel,
       kind: "near_level",
-      message: [
-        `Foco financiero \u2014 ${monthLabel}`,
-        `Est\xE1s cerca del nivel ${gap.nextLevel} (${nextTitle}).`,
-        `Llev\xE1s ${formatARS(invested)}. Te faltan ${formatARS(gap.amountMissing)}.`
-      ].join("\n")
+      message: build("near_level")
     };
   }
   return {
@@ -250,11 +335,7 @@ function evaluateInvestmentWhatsAppNudge(state, month) {
     level,
     nextLevel: gap.nextLevel,
     kind: "push",
-    message: [
-      `Foco financiero \u2014 ${monthLabel}`,
-      `Nivel actual: ${level} \xB7 siguiente: ${gap.nextLevel} (${nextTitle}).`,
-      `Llev\xE1s ${formatARS(invested)}. Te faltan ${formatARS(gap.amountMissing)} este mes.`
-    ].join("\n")
+    message: build("push")
   };
 }
 function monthLabelEs(ym) {
@@ -1188,28 +1269,21 @@ function buildMarketAlerts(params) {
 function actionableMarketAlerts(alerts) {
   return alerts.filter((a) => a.kind !== "neutral");
 }
-function formatMarketWhatsAppMessage(alerts) {
-  const lines = alerts.flatMap((alert) => [`\u2022 ${alert.title}`, `  ${alert.detail}`, ""]);
-  return [
-    "Foco financiero \u2014 Alertas de mercado",
-    "",
-    ...lines,
-    "Seguimiento informativo. No es asesoramiento financiero."
-  ].join("\n");
-}
 function resolveCallMeBotApiKey(reminder) {
   return reminder?.callMeBotApiKey?.trim() || process.env.CALLMEBOT_API_KEY?.trim() || process.env.FINANCE_CALLMEBOT_API_KEY?.trim() || "";
 }
-async function runInvestmentReminderJob(state, phone, apiKey) {
+async function runInvestmentReminderJob(state, phone, apiKey, options = {}) {
   const prefs = normalizePreferences(state.preferences);
   const reminder = prefs.reminder;
   const { day, monthKey } = getArgentinaDateParts();
   const runKey = cronReminderRunKey(monthKey, day);
-  if (!reminder.enabled) {
+  const force = Boolean(options.force);
+  const persist = options.persist !== false;
+  if (!force && !reminder.enabled) {
     return { result: { ok: true, action: "skipped", skipReason: "reminders_disabled" } };
   }
   const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
-  if (!nudge.shouldNotify) {
+  if (!force && !nudge.shouldNotify) {
     return {
       result: {
         ok: true,
@@ -1220,7 +1294,7 @@ async function runInvestmentReminderJob(state, phone, apiKey) {
       }
     };
   }
-  if (reminder.lastCronReminderKeys?.includes(runKey)) {
+  if (!force && reminder.lastCronReminderKeys?.includes(runKey)) {
     return {
       result: {
         ok: true,
@@ -1231,7 +1305,16 @@ async function runInvestmentReminderJob(state, phone, apiKey) {
       }
     };
   }
-  const send = await sendCallMeBotWhatsAppServer(phone, nudge.message, apiKey);
+  const message = nudge.shouldNotify ? nudge.message : [
+    "\u{1F44B} Hola, soy tu bot de *Foco financiero*.",
+    "",
+    "\u2705 *Prueba de aviso de inversi\xF3n*",
+    `Este mes llev\xE1s un buen ritmo (*${formatARS(nudge.invested)}*).`,
+    "Si estuvieras atrasado, ac\xE1 te pedir\xEDa sumar un poco m\xE1s hacia el siguiente nivel.",
+    "",
+    "_Esto fue solo una prueba manual desde la app._"
+  ].join("\n");
+  const send = await sendCallMeBotWhatsAppServer(phone, message, apiKey);
   if (!send.ok) {
     return {
       result: {
@@ -1251,13 +1334,15 @@ async function runInvestmentReminderJob(state, phone, apiKey) {
       detail: send.detail,
       fingerprints: [runKey]
     },
-    nextReminder: markCronReminderSent(reminder, runKey)
+    nextReminder: persist && !force ? markCronReminderSent(reminder, runKey) : void 0
   };
 }
-async function runMarketAlertJob(state, phone, apiKey) {
+async function runMarketAlertJob(state, phone, apiKey, options = {}) {
   const prefs = normalizePreferences(state.preferences);
   const reminder = prefs.reminder;
-  if (!reminder.marketWhatsAppEnabled) {
+  const force = Boolean(options.force);
+  const persist = options.persist !== false;
+  if (!force && !reminder.marketWhatsAppEnabled) {
     return { result: { ok: true, action: "skipped", skipReason: "market_disabled" } };
   }
   const tickers = getTrackedTickersFromEntries(state.entries);
@@ -1280,8 +1365,31 @@ async function runMarketAlertJob(state, phone, apiKey) {
   );
   const activeFingerprints = alerts.map(marketAlertFingerprint);
   const sentSet = new Set(reminder.lastMarketAlertKeys ?? []);
-  const fresh = alerts.filter((alert) => !sentSet.has(marketAlertFingerprint(alert)));
+  const fresh = force ? alerts : alerts.filter((alert) => !sentSet.has(marketAlertFingerprint(alert)));
   if (fresh.length === 0) {
+    if (force) {
+      const message2 = [
+        "\u{1F44B} Hola, soy tu bot de *Foco financiero*.",
+        "",
+        "\u2705 *Prueba de alertas de mercado*",
+        "Ahora mismo no hay movimientos fuertes en tus activos.",
+        "Cuando haya una baja o suba relevante, te escribo con el detalle.",
+        "",
+        "_Esto fue solo una prueba manual desde la app._"
+      ].join("\n");
+      const send2 = await sendCallMeBotWhatsAppServer(phone, message2, apiKey);
+      if (!send2.ok) {
+        return {
+          result: {
+            ok: false,
+            action: "error",
+            detail: send2.detail,
+            error: "CallMeBot rejected the market alert"
+          }
+        };
+      }
+      return { result: { ok: true, action: "sent", detail: send2.detail } };
+    }
     const pruned = markMarketAlertsSent(reminder, [], activeFingerprints);
     const changed = JSON.stringify(pruned.lastMarketAlertKeys ?? []) !== JSON.stringify(reminder.lastMarketAlertKeys ?? []);
     return {
@@ -1310,10 +1418,10 @@ async function runMarketAlertJob(state, phone, apiKey) {
       detail: send.detail,
       fingerprints: freshKeys
     },
-    nextReminder: markMarketAlertsSent(reminder, freshKeys, activeFingerprints)
+    nextReminder: persist && !force ? markMarketAlertsSent(reminder, freshKeys, activeFingerprints) : void 0
   };
 }
-async function runFinanceWhatsAppJobs(syncId = DEFAULT_FINANCE_SYNC_ID) {
+async function runFinanceWhatsAppJobs(syncId = DEFAULT_FINANCE_SYNC_ID, options = {}) {
   if (!isFinanceRemoteConfigured()) {
     const skipped = {
       ok: true,
@@ -1338,6 +1446,9 @@ async function runFinanceWhatsAppJobs(syncId = DEFAULT_FINANCE_SYNC_ID) {
   let reminder = prefs.reminder;
   const phone = resolveWhatsAppPhone();
   const apiKey = resolveCallMeBotApiKey(reminder);
+  const only = options.only ?? "both";
+  const runInvestment = only === "both" || only === "investment";
+  const runMarket = only === "both" || only === "market";
   if (!phone) {
     const skipped = { ok: true, action: "skipped", skipReason: "no_phone" };
     return { ok: true, reminder: skipped, market: skipped };
@@ -1346,15 +1457,16 @@ async function runFinanceWhatsAppJobs(syncId = DEFAULT_FINANCE_SYNC_ID) {
     const skipped = { ok: true, action: "skipped", skipReason: "no_api_key" };
     return { ok: true, reminder: skipped, market: skipped };
   }
-  const investment = await runInvestmentReminderJob(state, phone, apiKey);
+  const skippedIdle = { ok: true, action: "skipped", skipReason: "reminders_disabled" };
+  const investment = runInvestment ? await runInvestmentReminderJob(state, phone, apiKey, options) : { result: skippedIdle };
   if (investment.nextReminder) reminder = investment.nextReminder;
   const marketState = {
     ...state,
     preferences: { ...prefs, reminder }
   };
-  const market = await runMarketAlertJob(marketState, phone, apiKey);
+  const market = runMarket ? await runMarketAlertJob(marketState, phone, apiKey, options) : { result: { ok: true, action: "skipped", skipReason: "market_disabled" } };
   if (market.nextReminder) reminder = market.nextReminder;
-  const shouldPersist = Boolean(investment.nextReminder || market.nextReminder);
+  const shouldPersist = options.persist !== false && Boolean(investment.nextReminder || market.nextReminder);
   if (shouldPersist) {
     const nextState = {
       ...state,
@@ -1386,8 +1498,26 @@ function headerValue(headers, name) {
   if (Array.isArray(raw)) return raw[0] ?? "";
   return typeof raw === "string" ? raw : "";
 }
+function queryValue(req, name) {
+  const fromQuery = req.query?.[name];
+  if (typeof fromQuery === "string") return fromQuery;
+  if (Array.isArray(fromQuery) && typeof fromQuery[0] === "string") return fromQuery[0];
+  if (typeof req.url === "string") {
+    try {
+      const u = new URL(req.url, "http://localhost");
+      return u.searchParams.get(name) ?? "";
+    } catch {
+      return "";
+    }
+  }
+  return "";
+}
 function isVercelCron(req) {
   return headerValue(req.headers, "x-vercel-cron") === "1";
+}
+function parseWhatsAppKind(raw) {
+  if (raw === "investment" || raw === "market") return raw;
+  return "both";
 }
 function json(res, status, body) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -1409,7 +1539,8 @@ async function handler(req, res) {
       });
     }
     const cron = isVercelCron(req);
-    if (!cron) {
+    const isTest = queryValue(req, "whatsapp") === "test";
+    if (!cron && !isTest) {
       return json(res, 200, {
         ok: true,
         pingedAt,
@@ -1417,12 +1548,17 @@ async function handler(req, res) {
         whatsapp: { ran: false, reason: "not_cron" }
       });
     }
-    const whatsapp = await runFinanceWhatsAppJobs(DEFAULT_FINANCE_SYNC_ID);
+    const kind = parseWhatsAppKind(queryValue(req, "kind"));
+    const whatsapp = await runFinanceWhatsAppJobs(DEFAULT_FINANCE_SYNC_ID, {
+      force: isTest,
+      persist: !isTest,
+      only: isTest ? kind : "both"
+    });
     return json(res, 200, {
       ok: ping.ok && whatsapp.ok,
       pingedAt,
       ping: { rows: ping.rows },
-      whatsapp: { ran: true, ...whatsapp }
+      whatsapp: { ran: true, mode: isTest ? "test" : "cron", kind, ...whatsapp }
     });
   } catch (e) {
     return json(res, 500, {

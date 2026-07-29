@@ -1,10 +1,15 @@
 import { DEFAULT_FINANCE_SYNC_ID } from '../src/lib/finance/storage';
 import { pingFinanceRemote } from '../src/lib/finance/remoteFinanceState';
-import { runFinanceWhatsAppJobs } from '../src/lib/finance/whatsappJobs';
+import {
+  runFinanceWhatsAppJobs,
+  type WhatsAppJobKind,
+} from '../src/lib/finance/whatsappJobs';
 
 type Req = {
   method?: string;
   headers?: Record<string, string | string[] | undefined>;
+  query?: Record<string, string | string[] | undefined>;
+  url?: string;
 };
 
 type Res = {
@@ -12,18 +17,35 @@ type Res = {
   setHeader: (key: string, value: string) => void;
 };
 
-function headerValue(
-  headers: Req['headers'],
-  name: string,
-): string {
+function headerValue(headers: Req['headers'], name: string): string {
   if (!headers) return '';
   const raw = headers[name] ?? headers[name.toLowerCase()];
   if (Array.isArray(raw)) return raw[0] ?? '';
   return typeof raw === 'string' ? raw : '';
 }
 
+function queryValue(req: Req, name: string): string {
+  const fromQuery = req.query?.[name];
+  if (typeof fromQuery === 'string') return fromQuery;
+  if (Array.isArray(fromQuery) && typeof fromQuery[0] === 'string') return fromQuery[0];
+  if (typeof req.url === 'string') {
+    try {
+      const u = new URL(req.url, 'http://localhost');
+      return u.searchParams.get(name) ?? '';
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
+
 function isVercelCron(req: Req): boolean {
   return headerValue(req.headers, 'x-vercel-cron') === '1';
+}
+
+function parseWhatsAppKind(raw: string): WhatsAppJobKind {
+  if (raw === 'investment' || raw === 'market') return raw;
+  return 'both';
 }
 
 function json(res: Res, status: number, body: unknown) {
@@ -33,12 +55,10 @@ function json(res: Res, status: number, body: unknown) {
 }
 
 /**
- * Keep-alive Supabase + (solo en cron Vercel) jobs de WhatsApp.
- * Un único cron Hobby apunta aquí — no agregar otro path en vercel.json.
+ * Keep-alive Supabase + WhatsApp (cron Vercel o prueba desde la app).
  *
- * Prueba manual (después de deploy):
- *   curl -sS -H "x-vercel-cron: 1" "https://TU_DOMINIO/api/finance-keepalive"
- * La respuesta JSON dice si envió o por qué saltó (`skipReason` / `error`).
+ * Cron: header x-vercel-cron: 1
+ * Prueba UI: ?whatsapp=test&kind=market|investment|both
  */
 export default async function handler(req: Req, res: Res) {
   try {
@@ -58,7 +78,9 @@ export default async function handler(req: Req, res: Res) {
     }
 
     const cron = isVercelCron(req);
-    if (!cron) {
+    const isTest = queryValue(req, 'whatsapp') === 'test';
+
+    if (!cron && !isTest) {
       return json(res, 200, {
         ok: true,
         pingedAt,
@@ -67,13 +89,18 @@ export default async function handler(req: Req, res: Res) {
       });
     }
 
-    const whatsapp = await runFinanceWhatsAppJobs(DEFAULT_FINANCE_SYNC_ID);
+    const kind = parseWhatsAppKind(queryValue(req, 'kind'));
+    const whatsapp = await runFinanceWhatsAppJobs(DEFAULT_FINANCE_SYNC_ID, {
+      force: isTest,
+      persist: !isTest,
+      only: isTest ? kind : 'both',
+    });
 
     return json(res, 200, {
       ok: ping.ok && whatsapp.ok,
       pingedAt,
       ping: { rows: ping.rows },
-      whatsapp: { ran: true, ...whatsapp },
+      whatsapp: { ran: true, mode: isTest ? 'test' : 'cron', kind, ...whatsapp },
     });
   } catch (e) {
     return json(res, 500, {

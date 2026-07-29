@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Bell,
   Circle,
+  MessageCircle,
   RefreshCcw,
   TrendingDown,
   TrendingUp,
@@ -18,6 +19,7 @@ import {
   type MarketAlert,
   type MarketAlertSeverity,
 } from '@/lib/finance/marketAlerts';
+import { requestWhatsAppTest } from '@/lib/finance/whatsappTestClient';
 
 type Props = {
   entries: FinanceEntry[];
@@ -88,10 +90,14 @@ export function FinanceMarketAlerts({ entries }: Props) {
   const tickers = useMemo(() => getTrackedTickersFromEntries(entries), [entries]);
   const tickersKey = tickers.join(',');
 
-  const [prices, setPrices] = useState<Record<string, import('@/lib/finance/financePrices').FinancePrice>>({});
+  const [prices, setPrices] = useState<
+    Record<string, import('@/lib/finance/financePrices').FinancePrice>
+  >({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
+  const [waBusy, setWaBusy] = useState(false);
+  const [waResult, setWaResult] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (tickers.length === 0) return;
@@ -109,20 +115,22 @@ export function FinanceMarketAlerts({ entries }: Props) {
     void load();
   }, [tickersKey, load, tickers.length]);
 
-  const alerts = useMemo(
-    () => buildMarketAlerts({ entries, prices }),
-    [entries, prices],
-  );
+  const alerts = useMemo(() => buildMarketAlerts({ entries, prices }), [entries, prices]);
+
+  const sendWhatsApp = useCallback(async () => {
+    setWaBusy(true);
+    setWaResult(null);
+    const result = await requestWhatsAppTest('market');
+    setWaBusy(false);
+    setWaResult(result.message);
+  }, []);
 
   if (tickers.length === 0) return null;
 
   const fetchedLabel = formatPricesFetchedTime(fetchedAt);
 
   return (
-    <section
-      className="finance-card-compact p-3"
-      aria-labelledby="market-alerts-heading"
-    >
+    <section className="finance-card-compact p-3" aria-labelledby="market-alerts-heading">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h3
@@ -134,20 +142,31 @@ export function FinanceMarketAlerts({ entries }: Props) {
           </h3>
           <p className="mt-0.5 text-xs font-semibold text-slate-500">Según tus activos cargados</p>
         </div>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => void load()}
-          className="finance-secondary-button inline-flex min-h-[32px] items-center gap-1.5 px-2.5 text-[10px] font-bold disabled:opacity-50"
-        >
-          <RefreshCcw
-            size={14}
-            strokeWidth={2.25}
-            className={loading ? 'motion-safe:animate-spin' : ''}
-            aria-hidden
-          />
-          Actualizar
-        </button>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => void load()}
+            className="finance-secondary-button inline-flex min-h-[32px] items-center gap-1.5 px-2.5 text-[10px] font-bold disabled:opacity-50"
+          >
+            <RefreshCcw
+              size={14}
+              strokeWidth={2.25}
+              className={loading ? 'motion-safe:animate-spin' : ''}
+              aria-hidden
+            />
+            Actualizar
+          </button>
+          <button
+            type="button"
+            disabled={waBusy || loading}
+            onClick={() => void sendWhatsApp()}
+            className="inline-flex min-h-[32px] items-center gap-1.5 rounded-xl bg-[#25D366] px-2.5 text-[10px] font-bold text-white shadow-sm disabled:opacity-50"
+          >
+            <MessageCircle size={14} strokeWidth={2.25} aria-hidden />
+            {waBusy ? 'Enviando…' : 'WhatsApp'}
+          </button>
+        </div>
       </div>
 
       {fetchedLabel ? (
@@ -157,6 +176,12 @@ export function FinanceMarketAlerts({ entries }: Props) {
       {error ? (
         <p className="mt-2 text-[11px] font-semibold text-red-600" role="alert">
           {error}
+        </p>
+      ) : null}
+
+      {waResult ? (
+        <p className="mt-2 text-[11px] font-semibold text-slate-600" role="status">
+          {waResult}
         </p>
       ) : null}
 
@@ -171,8 +196,8 @@ export function FinanceMarketAlerts({ entries }: Props) {
       )}
 
       <p className="mt-2.5 text-[9px] leading-snug text-slate-400">
-        Seguimiento informativo. No es asesoramiento financiero. Si activaste alertas por WhatsApp en
-        Recordatorios, el cron diario también te avisa sin abrir la app.
+        Seguimiento informativo. No es asesoramiento financiero. El botón WhatsApp manda una prueba
+        ahora; el cron diario sigue avisando solo.
       </p>
     </section>
   );
