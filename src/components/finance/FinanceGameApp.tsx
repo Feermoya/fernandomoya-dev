@@ -24,6 +24,7 @@ import { FinanceConcentrationPanel } from '@/components/finance/FinanceConcentra
 import { FinanceTickerHistoryPanel } from '@/components/finance/FinanceTickerHistoryPanel';
 import { FinanceRecentInvestments } from '@/components/finance/FinanceRecentInvestments';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
+import { FinanceEntryLoadSummaryCard } from '@/components/finance/entry';
 import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
 import { FinanceMarketAlerts } from '@/components/finance/FinanceMarketAlerts';
 import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
@@ -132,7 +133,9 @@ export default function FinanceGameApp() {
     levelUp,
     celebration,
     confettiKey,
+    loadSummary,
     dismissLevelUp,
+    dismissLoadSummary,
     handleAddEntry,
   } = useFinanceCelebrations({ persist });
 
@@ -389,13 +392,21 @@ export default function FinanceGameApp() {
 
           <aside className="finance-side-column">
             <section id="inversion" className="order-4 scroll-mt-24 min-w-0 lg:order-none">
-              <FinanceEntryForm
-                month={month}
-                entries={state.entries}
-                quickAmounts={preferences.quickAmounts}
-                pendingPlanLabels={pendingPlanLabels}
-                onAddEntry={handleAddEntry}
-              />
+              <div className="flex flex-col gap-2.5">
+                <FinanceEntryForm
+                  month={month}
+                  entries={state.entries}
+                  quickAmounts={preferences.quickAmounts}
+                  pendingPlanLabels={pendingPlanLabels}
+                  onAddEntry={handleAddEntry}
+                />
+                {loadSummary ? (
+                  <FinanceEntryLoadSummaryCard
+                    summary={loadSummary}
+                    onDismiss={dismissLoadSummary}
+                  />
+                ) : null}
+              </div>
             </section>
 
             <section className="order-3 hidden min-w-0 lg:order-none lg:block">
