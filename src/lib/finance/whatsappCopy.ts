@@ -1,14 +1,26 @@
 import { formatARS } from '@/lib/finance/calculations';
 import type { MarketAlert } from '@/lib/finance/marketAlerts';
 
-const BOT_SIGN =
-  '👋 Hola, soy tu bot de *Foco financiero*. Te escribo para acompañarte, no para apurarte.';
+function formatPercentEs(value: number): string {
+  return Math.abs(value).toLocaleString('es-AR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+}
 
-function levelLine(level: number, nextLevel: number, nextTitle: string): string {
-  if (level <= 0) {
-    return `🌱 Todavía no arrancaste el nivel este mes. El primero es *${nextTitle}* (nivel ${nextLevel}).`;
-  }
-  return `🎯 Estás en el *nivel ${level}*. El siguiente es *${nextLevel} · ${nextTitle}*.`;
+function formatMoneyWhatsApp(amount: number, currency?: string): string {
+  const cur = (currency ?? 'ARS').toUpperCase();
+  const hasCents = Math.abs(amount % 1) > 1e-9;
+  const num = amount.toLocaleString('es-AR', {
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
+  if (cur === 'USD') return `US$ ${num}`;
+  return `$ ${num}`;
+}
+
+function monthLabelForMessage(monthLabel: string): string {
+  return monthLabel.trim().toLocaleLowerCase('es-AR');
 }
 
 export function formatInvestmentWhatsAppMessage(params: {
@@ -21,82 +33,133 @@ export function formatInvestmentWhatsAppMessage(params: {
   nextTitle: string;
 }): string {
   const { kind, monthLabel, invested, amountMissing, level, nextLevel, nextTitle } = params;
-  const investedLine = `💰 Este mes llevás *${formatARS(invested)}*.`;
-  const gapLine = `Te faltan *${formatARS(amountMissing)}* para pasar al siguiente nivel.`;
+  const month = monthLabelForMessage(monthLabel);
+  const monthlyAmount = formatARS(invested);
+  const amountToNext = formatARS(amountMissing);
+  const nextLevelLabel = `${nextLevel} · ${nextTitle}`;
 
-  let body: string;
   if (kind === 'low') {
-    body = [
-      `📊 ${monthLabel}: todavía hay poco movimiento.`,
-      investedLine,
-      gapLine,
+    return [
+      '🟡 *Inversión mensual*',
       '',
-      'Si podés, cargá algo aunque sea chico. El mes se arma de a poco y después cuesta menos 💪',
-    ].join('\n');
-  } else if (kind === 'near_level') {
-    body = [
-      `🔥 ${monthLabel}: *estás muy cerca* de subir.`,
-      levelLine(level, nextLevel, nextTitle),
-      investedLine,
-      gapLine,
+      `Llevás *${monthlyAmount}* en ${month}.`,
+      `Te faltan *${amountToNext}* para llegar al nivel *${nextLevelLabel}*.`,
       '',
-      'Revisá si podés sumar un poco más y cerrás el nivel. Vale la pena el empujón final ✨',
-    ].join('\n');
-  } else {
-    body = [
-      `📈 ${monthLabel}: buen ritmo, pero todavía hay margen.`,
-      levelLine(level, nextLevel, nextTitle),
-      investedLine,
-      gapLine,
-      '',
-      'Cuando puedas, meté una carga más. Mantener el foco ahora cambia el cierre del mes 🙌',
+      'Sumá una inversión cuando puedas.',
     ].join('\n');
   }
 
-  return [BOT_SIGN, '', body, '', '_Cuando cargues plata en la app, dejo de insistir un rato._'].join('\n');
+  if (kind === 'near_level') {
+    if (level <= 0) {
+      return [
+        '🎯 *Estás cerca de empezar*',
+        '',
+        `Llevás *${monthlyAmount}* en ${month}.`,
+        `Te faltan *${amountToNext}* para llegar al nivel *${nextLevelLabel}*.`,
+      ].join('\n');
+    }
+    return [
+      '🎯 *Estás cerca del próximo nivel*',
+      '',
+      `Llevás *${monthlyAmount}* en ${month}.`,
+      `Te faltan solo *${amountToNext}* para llegar al nivel *${nextLevelLabel}*.`,
+    ].join('\n');
+  }
+
+  return [
+    '📊 *Progreso de inversión*',
+    '',
+    `Llevás *${monthlyAmount}* en ${month}.`,
+    `Estás en el nivel *${level}*.`,
+    '',
+    `Te faltan *${amountToNext}* para llegar al nivel *${nextLevelLabel}*.`,
+  ].join('\n');
 }
 
-function emojiForAlert(alert: MarketAlert): string {
-  switch (alert.kind) {
-    case 'daily-drop':
-    case 'loss-since-buy':
-      return '📉';
-    case 'daily-rise':
-    case 'gain-since-buy':
-      return '📈';
-    default:
-      return '🔔';
-  }
+export function formatInvestmentTestWhatsAppMessage(monthlyAmount: number): string {
+  return [
+    '✅ *Prueba de inversión*',
+    '',
+    `Este mes llevás *${formatARS(monthlyAmount)}*.`,
+    'No hay alertas pendientes.',
+  ].join('\n');
 }
 
-function humanDetail(alert: MarketAlert): string {
-  switch (alert.kind) {
-    case 'loss-since-buy':
-      return 'Bajó frente a tu precio de compra. Revisá con calma si querés promediar, esperar o no hacer nada.';
-    case 'gain-since-buy':
-      return 'Está arriba de tu compra. Buen dato para repasar si sigue alineado con tu plan.';
-    case 'daily-drop':
-      return 'Movimiento fuerte a la baja hoy. Puede servir mirarlo sin apurarte.';
-    case 'daily-rise':
-      return 'Subió bastante hoy. Un chequeo rápido alcanza.';
-    default:
-      return alert.detail;
+export function formatMarketTestEmptyWhatsAppMessage(): string {
+  return [
+    '✅ *Prueba de mercado*',
+    '',
+    'No hay movimientos importantes en tus activos.',
+  ].join('\n');
+}
+
+function formatMarketAlertBlock(alert: MarketAlert): string {
+  const pct =
+    typeof alert.changePercent === 'number' && Number.isFinite(alert.changePercent)
+      ? formatPercentEs(alert.changePercent)
+      : null;
+  const hasBuy =
+    typeof alert.buyPrice === 'number' &&
+    alert.buyPrice > 0 &&
+    typeof alert.currentPrice === 'number' &&
+    alert.currentPrice > 0;
+  const hasCurrent = typeof alert.currentPrice === 'number' && alert.currentPrice > 0;
+  const buyMoney = hasBuy ? formatMoneyWhatsApp(alert.buyPrice!, alert.buyCurrency) : null;
+  const currentMoney = hasCurrent
+    ? formatMoneyWhatsApp(alert.currentPrice!, alert.currentCurrency)
+    : null;
+
+  if (alert.kind === 'loss-since-buy') {
+    const title = pct
+      ? `🔴 *${alert.ticker} está ${pct}% abajo de tu compra*`
+      : `🔴 *${alert.ticker} está abajo de tu compra*`;
+    if (buyMoney && currentMoney) {
+      return [title, '', `Compra: *${buyMoney}*`, `Precio actual: *${currentMoney}*`].join('\n');
+    }
+    return title;
   }
+
+  if (alert.kind === 'gain-since-buy') {
+    const title = pct
+      ? `🟢 *${alert.ticker} subió ${pct}% desde tu compra*`
+      : `🟢 *${alert.ticker} subió desde tu compra*`;
+    if (buyMoney && currentMoney) {
+      return [title, '', `Compra: *${buyMoney}*`, `Precio actual: *${currentMoney}*`].join('\n');
+    }
+    return title;
+  }
+
+  if (alert.kind === 'daily-drop') {
+    const title = pct
+      ? `🔴 *${alert.ticker} bajó ${pct}% hoy*`
+      : `🔴 *${alert.ticker} bajó hoy*`;
+    if (currentMoney) {
+      return [title, '', `Precio actual: *${currentMoney}*`].join('\n');
+    }
+    return title;
+  }
+
+  if (alert.kind === 'daily-rise') {
+    const title = pct
+      ? `🟢 *${alert.ticker} subió ${pct}% hoy*`
+      : `🟢 *${alert.ticker} subió hoy*`;
+    if (currentMoney) {
+      return [title, '', `Precio actual: *${currentMoney}*`].join('\n');
+    }
+    return title;
+  }
+
+  return `🟡 *${alert.title}*`;
 }
 
 export function formatMarketWhatsAppMessage(alerts: MarketAlert[]): string {
-  const blocks = alerts.map((alert) => {
-    return [`${emojiForAlert(alert)} *${alert.title}*`, humanDetail(alert)].join('\n');
-  });
+  if (alerts.length === 0) return formatMarketTestEmptyWhatsAppMessage();
 
-  return [
-    BOT_SIGN,
-    '',
-    '🔔 *Alertas de mercado* según tus activos cargados:',
-    '',
-    ...blocks.flatMap((block, i) => (i === 0 ? [block] : ['', block])),
-    '',
-    '_Esto es seguimiento informativo, no asesoramiento financiero._',
-    'Cuando puedas, miralo en Foco. Si no hace falta mover nada, también está bien 👍',
-  ].join('\n');
+  const header =
+    alerts.length === 1 ? '🔔 *Alerta de mercado*' : '🔔 *Alertas de mercado*';
+  const blocks = alerts.map(formatMarketAlertBlock);
+
+  return [header, '', ...blocks.flatMap((block, i) => (i === 0 ? [block] : ['', block]))].join(
+    '\n',
+  );
 }

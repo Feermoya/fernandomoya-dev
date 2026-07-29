@@ -58,87 +58,124 @@ function sumByType(entries, month, type) {
 }
 
 // src/lib/finance/whatsappCopy.ts
-var BOT_SIGN = "\u{1F44B} Hola, soy tu bot de *Foco financiero*. Te escribo para acompa\xF1arte, no para apurarte.";
-function levelLine(level, nextLevel, nextTitle) {
-  if (level <= 0) {
-    return `\u{1F331} Todav\xEDa no arrancaste el nivel este mes. El primero es *${nextTitle}* (nivel ${nextLevel}).`;
-  }
-  return `\u{1F3AF} Est\xE1s en el *nivel ${level}*. El siguiente es *${nextLevel} \xB7 ${nextTitle}*.`;
+function formatPercentEs(value) {
+  return Math.abs(value).toLocaleString("es-AR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  });
+}
+function formatMoneyWhatsApp(amount, currency) {
+  const cur = (currency ?? "ARS").toUpperCase();
+  const hasCents = Math.abs(amount % 1) > 1e-9;
+  const num = amount.toLocaleString("es-AR", {
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: 2
+  });
+  if (cur === "USD") return `US$ ${num}`;
+  return `$ ${num}`;
+}
+function monthLabelForMessage(monthLabel) {
+  return monthLabel.trim().toLocaleLowerCase("es-AR");
 }
 function formatInvestmentWhatsAppMessage(params) {
   const { kind, monthLabel, invested, amountMissing, level, nextLevel, nextTitle } = params;
-  const investedLine = `\u{1F4B0} Este mes llev\xE1s *${formatARS(invested)}*.`;
-  const gapLine = `Te faltan *${formatARS(amountMissing)}* para pasar al siguiente nivel.`;
-  let body;
+  const month = monthLabelForMessage(monthLabel);
+  const monthlyAmount = formatARS(invested);
+  const amountToNext = formatARS(amountMissing);
+  const nextLevelLabel = `${nextLevel} \xB7 ${nextTitle}`;
   if (kind === "low") {
-    body = [
-      `\u{1F4CA} ${monthLabel}: todav\xEDa hay poco movimiento.`,
-      investedLine,
-      gapLine,
+    return [
+      "\u{1F7E1} *Inversi\xF3n mensual*",
       "",
-      "Si pod\xE9s, carg\xE1 algo aunque sea chico. El mes se arma de a poco y despu\xE9s cuesta menos \u{1F4AA}"
-    ].join("\n");
-  } else if (kind === "near_level") {
-    body = [
-      `\u{1F525} ${monthLabel}: *est\xE1s muy cerca* de subir.`,
-      levelLine(level, nextLevel, nextTitle),
-      investedLine,
-      gapLine,
+      `Llev\xE1s *${monthlyAmount}* en ${month}.`,
+      `Te faltan *${amountToNext}* para llegar al nivel *${nextLevelLabel}*.`,
       "",
-      "Revis\xE1 si pod\xE9s sumar un poco m\xE1s y cerr\xE1s el nivel. Vale la pena el empuj\xF3n final \u2728"
-    ].join("\n");
-  } else {
-    body = [
-      `\u{1F4C8} ${monthLabel}: buen ritmo, pero todav\xEDa hay margen.`,
-      levelLine(level, nextLevel, nextTitle),
-      investedLine,
-      gapLine,
-      "",
-      "Cuando puedas, met\xE9 una carga m\xE1s. Mantener el foco ahora cambia el cierre del mes \u{1F64C}"
+      "Sum\xE1 una inversi\xF3n cuando puedas."
     ].join("\n");
   }
-  return [BOT_SIGN, "", body, "", "_Cuando cargues plata en la app, dejo de insistir un rato._"].join("\n");
+  if (kind === "near_level") {
+    if (level <= 0) {
+      return [
+        "\u{1F3AF} *Est\xE1s cerca de empezar*",
+        "",
+        `Llev\xE1s *${monthlyAmount}* en ${month}.`,
+        `Te faltan *${amountToNext}* para llegar al nivel *${nextLevelLabel}*.`
+      ].join("\n");
+    }
+    return [
+      "\u{1F3AF} *Est\xE1s cerca del pr\xF3ximo nivel*",
+      "",
+      `Llev\xE1s *${monthlyAmount}* en ${month}.`,
+      `Te faltan solo *${amountToNext}* para llegar al nivel *${nextLevelLabel}*.`
+    ].join("\n");
+  }
+  return [
+    "\u{1F4CA} *Progreso de inversi\xF3n*",
+    "",
+    `Llev\xE1s *${monthlyAmount}* en ${month}.`,
+    `Est\xE1s en el nivel *${level}*.`,
+    "",
+    `Te faltan *${amountToNext}* para llegar al nivel *${nextLevelLabel}*.`
+  ].join("\n");
 }
-function emojiForAlert(alert) {
-  switch (alert.kind) {
-    case "daily-drop":
-    case "loss-since-buy":
-      return "\u{1F4C9}";
-    case "daily-rise":
-    case "gain-since-buy":
-      return "\u{1F4C8}";
-    default:
-      return "\u{1F514}";
-  }
+function formatInvestmentTestWhatsAppMessage(monthlyAmount) {
+  return [
+    "\u2705 *Prueba de inversi\xF3n*",
+    "",
+    `Este mes llev\xE1s *${formatARS(monthlyAmount)}*.`,
+    "No hay alertas pendientes."
+  ].join("\n");
 }
-function humanDetail(alert) {
-  switch (alert.kind) {
-    case "loss-since-buy":
-      return "Baj\xF3 frente a tu precio de compra. Revis\xE1 con calma si quer\xE9s promediar, esperar o no hacer nada.";
-    case "gain-since-buy":
-      return "Est\xE1 arriba de tu compra. Buen dato para repasar si sigue alineado con tu plan.";
-    case "daily-drop":
-      return "Movimiento fuerte a la baja hoy. Puede servir mirarlo sin apurarte.";
-    case "daily-rise":
-      return "Subi\xF3 bastante hoy. Un chequeo r\xE1pido alcanza.";
-    default:
-      return alert.detail;
+function formatMarketTestEmptyWhatsAppMessage() {
+  return [
+    "\u2705 *Prueba de mercado*",
+    "",
+    "No hay movimientos importantes en tus activos."
+  ].join("\n");
+}
+function formatMarketAlertBlock(alert) {
+  const pct = typeof alert.changePercent === "number" && Number.isFinite(alert.changePercent) ? formatPercentEs(alert.changePercent) : null;
+  const hasBuy = typeof alert.buyPrice === "number" && alert.buyPrice > 0 && typeof alert.currentPrice === "number" && alert.currentPrice > 0;
+  const hasCurrent = typeof alert.currentPrice === "number" && alert.currentPrice > 0;
+  const buyMoney = hasBuy ? formatMoneyWhatsApp(alert.buyPrice, alert.buyCurrency) : null;
+  const currentMoney = hasCurrent ? formatMoneyWhatsApp(alert.currentPrice, alert.currentCurrency) : null;
+  if (alert.kind === "loss-since-buy") {
+    const title = pct ? `\u{1F534} *${alert.ticker} est\xE1 ${pct}% abajo de tu compra*` : `\u{1F534} *${alert.ticker} est\xE1 abajo de tu compra*`;
+    if (buyMoney && currentMoney) {
+      return [title, "", `Compra: *${buyMoney}*`, `Precio actual: *${currentMoney}*`].join("\n");
+    }
+    return title;
   }
+  if (alert.kind === "gain-since-buy") {
+    const title = pct ? `\u{1F7E2} *${alert.ticker} subi\xF3 ${pct}% desde tu compra*` : `\u{1F7E2} *${alert.ticker} subi\xF3 desde tu compra*`;
+    if (buyMoney && currentMoney) {
+      return [title, "", `Compra: *${buyMoney}*`, `Precio actual: *${currentMoney}*`].join("\n");
+    }
+    return title;
+  }
+  if (alert.kind === "daily-drop") {
+    const title = pct ? `\u{1F534} *${alert.ticker} baj\xF3 ${pct}% hoy*` : `\u{1F534} *${alert.ticker} baj\xF3 hoy*`;
+    if (currentMoney) {
+      return [title, "", `Precio actual: *${currentMoney}*`].join("\n");
+    }
+    return title;
+  }
+  if (alert.kind === "daily-rise") {
+    const title = pct ? `\u{1F7E2} *${alert.ticker} subi\xF3 ${pct}% hoy*` : `\u{1F7E2} *${alert.ticker} subi\xF3 hoy*`;
+    if (currentMoney) {
+      return [title, "", `Precio actual: *${currentMoney}*`].join("\n");
+    }
+    return title;
+  }
+  return `\u{1F7E1} *${alert.title}*`;
 }
 function formatMarketWhatsAppMessage(alerts) {
-  const blocks = alerts.map((alert) => {
-    return [`${emojiForAlert(alert)} *${alert.title}*`, humanDetail(alert)].join("\n");
-  });
-  return [
-    BOT_SIGN,
-    "",
-    "\u{1F514} *Alertas de mercado* seg\xFAn tus activos cargados:",
-    "",
-    ...blocks.flatMap((block, i) => i === 0 ? [block] : ["", block]),
-    "",
-    "_Esto es seguimiento informativo, no asesoramiento financiero._",
-    "Cuando puedas, miralo en Foco. Si no hace falta mover nada, tambi\xE9n est\xE1 bien \u{1F44D}"
-  ].join("\n");
+  if (alerts.length === 0) return formatMarketTestEmptyWhatsAppMessage();
+  const header = alerts.length === 1 ? "\u{1F514} *Alerta de mercado*" : "\u{1F514} *Alertas de mercado*";
+  const blocks = alerts.map(formatMarketAlertBlock);
+  return [header, "", ...blocks.flatMap((block, i) => i === 0 ? [block] : ["", block])].join(
+    "\n"
+  );
 }
 
 // src/lib/finance/levels.ts
@@ -1305,15 +1342,7 @@ async function runInvestmentReminderJob(state, phone, apiKey, options = {}) {
       }
     };
   }
-  const message = nudge.shouldNotify ? nudge.message : [
-    "\u{1F44B} Hola, soy tu bot de *Foco financiero*.",
-    "",
-    "\u2705 *Prueba de aviso de inversi\xF3n*",
-    `Este mes llev\xE1s un buen ritmo (*${formatARS(nudge.invested)}*).`,
-    "Si estuvieras atrasado, ac\xE1 te pedir\xEDa sumar un poco m\xE1s hacia el siguiente nivel.",
-    "",
-    "_Esto fue solo una prueba manual desde la app._"
-  ].join("\n");
+  const message = nudge.shouldNotify ? nudge.message : formatInvestmentTestWhatsAppMessage(nudge.invested);
   const send = await sendCallMeBotWhatsAppServer(phone, message, apiKey);
   if (!send.ok) {
     return {
@@ -1368,15 +1397,7 @@ async function runMarketAlertJob(state, phone, apiKey, options = {}) {
   const fresh = force ? alerts : alerts.filter((alert) => !sentSet.has(marketAlertFingerprint(alert)));
   if (fresh.length === 0) {
     if (force) {
-      const message2 = [
-        "\u{1F44B} Hola, soy tu bot de *Foco financiero*.",
-        "",
-        "\u2705 *Prueba de alertas de mercado*",
-        "Ahora mismo no hay movimientos fuertes en tus activos.",
-        "Cuando haya una baja o suba relevante, te escribo con el detalle.",
-        "",
-        "_Esto fue solo una prueba manual desde la app._"
-      ].join("\n");
+      const message2 = formatMarketTestEmptyWhatsAppMessage();
       const send2 = await sendCallMeBotWhatsAppServer(phone, message2, apiKey);
       if (!send2.ok) {
         return {

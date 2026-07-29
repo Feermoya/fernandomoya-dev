@@ -196,8 +196,7 @@ export function FinanceMarketAlerts({ entries }: Props) {
       )}
 
       <p className="mt-2.5 text-[9px] leading-snug text-slate-400">
-        Seguimiento informativo. No es asesoramiento financiero. El botón WhatsApp manda una prueba
-        ahora; el cron diario sigue avisando solo.
+        El botón WhatsApp manda una prueba ahora; el cron diario sigue avisando solo.
       </p>
     </section>
   );

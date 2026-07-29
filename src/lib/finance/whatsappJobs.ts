@@ -1,5 +1,4 @@
 import { sendCallMeBotWhatsAppServer } from '@/lib/finance/callMeBotServer';
-import { formatARS } from '@/lib/finance/calculations';
 import { buildFinancePricesResponse } from '@/lib/finance/financePricesServer';
 import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
 import {
@@ -23,7 +22,7 @@ import {
 import { DEFAULT_FINANCE_SYNC_ID } from '@/lib/finance/storage';
 import { getArgentinaDateParts } from '@/lib/finance/timezone';
 import type { FinanceReminderSettings, FinanceState } from '@/lib/finance/types';
-import { formatMarketWhatsAppMessage } from '@/lib/finance/whatsappCopy';
+import { formatMarketWhatsAppMessage, formatInvestmentTestWhatsAppMessage, formatMarketTestEmptyWhatsAppMessage } from '@/lib/finance/whatsappCopy';
 
 export type WhatsAppJobKind = 'investment' | 'market' | 'both';
 
@@ -122,15 +121,7 @@ export async function runInvestmentReminderJob(
 
   const message = nudge.shouldNotify
     ? nudge.message
-    : [
-        '👋 Hola, soy tu bot de *Foco financiero*.',
-        '',
-        '✅ *Prueba de aviso de inversión*',
-        `Este mes llevás un buen ritmo (*${formatARS(nudge.invested)}*).`,
-        'Si estuvieras atrasado, acá te pediría sumar un poco más hacia el siguiente nivel.',
-        '',
-        '_Esto fue solo una prueba manual desde la app._',
-      ].join('\n');
+    : formatInvestmentTestWhatsAppMessage(nudge.invested);
 
   const send = await sendCallMeBotWhatsAppServer(phone, message, apiKey);
   if (!send.ok) {
@@ -200,15 +191,7 @@ export async function runMarketAlertJob(
 
   if (fresh.length === 0) {
     if (force) {
-      const message = [
-        '👋 Hola, soy tu bot de *Foco financiero*.',
-        '',
-        '✅ *Prueba de alertas de mercado*',
-        'Ahora mismo no hay movimientos fuertes en tus activos.',
-        'Cuando haya una baja o suba relevante, te escribo con el detalle.',
-        '',
-        '_Esto fue solo una prueba manual desde la app._',
-      ].join('\n');
+      const message = formatMarketTestEmptyWhatsAppMessage();
       const send = await sendCallMeBotWhatsAppServer(phone, message, apiKey);
       if (!send.ok) {
         return {

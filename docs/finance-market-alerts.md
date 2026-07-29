@@ -4,7 +4,7 @@
 
 El módulo detecta **tickers** a partir de las inversiones cargadas, consulta **precios actuales** y muestra **alertas informativas**. Las mismas reglas alimentan WhatsApp automático vía el cron único de keep-alive.
 
-No es asesoramiento financiero: textos prudentes (*“puede ser una oportunidad para revisar”*, etc.).
+Los mensajes de WhatsApp son cortos y factuales (sin saludos ni disclaimer legal).
 
 ## Architecture
 
