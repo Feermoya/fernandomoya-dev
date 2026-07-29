@@ -466,12 +466,14 @@ export function FinanceMonthlyInvestmentPlan({
         <div className="min-w-0 flex-1">
           <h3
             id="monthly-plan-heading"
-            className="flex items-center gap-2 text-base font-black tracking-tight text-slate-900"
+            className="finance-section-title flex items-center gap-2"
           >
-            <Target size={18} strokeWidth={2.25} className="shrink-0 text-blue-600" aria-hidden />
-            Plan de foco
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600">
+              <Target size={16} strokeWidth={2.25} aria-hidden />
+            </span>
+            Plan del mes
           </h3>
-          <p className="mt-0.5 text-xs font-semibold text-slate-500">Activos que querés cubrir este mes</p>
+          <p className="finance-section-sub mt-1 pl-10">Activos a cubrir</p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {hasPlan ? (

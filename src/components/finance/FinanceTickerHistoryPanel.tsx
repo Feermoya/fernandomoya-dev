@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
+import { History } from 'lucide-react';
 import { formatARS } from '@/lib/finance/calculations';
 import { getTickerHistorySummary } from '@/lib/finance/tickerHistory';
 import type { FinanceEntry } from '@/lib/finance/types';
+import { FinanceDetailsSummary } from '@/components/finance/FinanceDetailsSummary';
 
 type Props = {
   entries: FinanceEntry[];
@@ -23,10 +25,18 @@ export function FinanceTickerHistoryPanel({ entries }: Props) {
   return (
     <details className="finance-details group open:pb-1">
       <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-3.5 sm:px-4 [&::-webkit-details-marker]:hidden">
-        <span className="finance-label">
-          Historial por activo
+        <FinanceDetailsSummary
+          icon={History}
+          label="Historial"
+          trailing={
+            <span className="ml-auto text-[11px] font-bold tabular-nums text-slate-500">
+              {topFive.length}
+            </span>
+          }
+        />
+        <span className="text-slate-400 transition group-open:rotate-180" aria-hidden>
+          ▾
         </span>
-        <span className="text-[11px] font-bold tabular-nums text-slate-500">{topFive.length}</span>
       </summary>
 
       <div className="px-3 pb-3 pt-2 sm:px-4">
@@ -34,11 +44,13 @@ export function FinanceTickerHistoryPanel({ entries }: Props) {
           {topFive.map((item) => (
             <li
               key={item.label}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-2.5 py-2"
             >
               <div className="flex items-baseline justify-between gap-2">
-                <span className="min-w-0 truncate text-sm font-black text-slate-900">{item.label}</span>
-                <span className="shrink-0 text-xs font-bold tabular-nums text-slate-700">
+                <span className="min-w-0 truncate text-sm font-bold tracking-tight text-slate-900">
+                  {item.label}
+                </span>
+                <span className="finance-metric-sm shrink-0 text-base">
                   {formatARS(item.totalAmount)}
                 </span>
               </div>

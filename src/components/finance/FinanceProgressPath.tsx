@@ -1,6 +1,8 @@
+import { LayoutDashboard } from 'lucide-react';
 import type { FinanceState } from '@/lib/finance/types';
 import { highestAchievedLevel, isLevelUnlocked, LEVEL_RULES } from '@/lib/finance/levels';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
+import { FinanceSectionHeading } from '@/components/finance/FinanceSectionHeading';
 
 type Props = {
   state: FinanceState;
@@ -13,17 +15,22 @@ export function FinanceProgressPath({ state, month, compact = false }: Props) {
   const pad = compact ? 'p-3 sm:p-4' : 'p-4 sm:p-6';
   const nodePad = compact ? 'p-2.5 sm:p-3' : 'p-3';
   const numSize = compact ? 'h-8 w-8 text-xs' : 'h-9 w-9 text-sm';
-  const titleSize = compact ? 'text-base' : 'text-xl';
 
   return (
     <section className={`finance-card-compact relative overflow-hidden ${pad}`}>
       <div className="relative z-[1]">
-        <p className="finance-label">Ruta de niveles</p>
-        <h3 className={`mt-0.5 font-black tracking-tight text-slate-900 ${titleSize}`}>
-          Cada nivel premia constancia, no improvisación.
-        </h3>
+        <FinanceSectionHeading
+          title="Niveles"
+          subtitle="Constancia, no improvisación"
+          icon={LayoutDashboard}
+          iconTone="violet"
+        />
 
-        <ol className={`mt-4 flex flex-col gap-2 sm:gap-3 lg:flex-row lg:flex-wrap lg:gap-x-2 ${compact ? 'lg:gap-y-2' : 'lg:gap-y-4'}`}>
+        <ol
+          className={`mt-4 flex flex-col gap-2 sm:gap-3 lg:flex-row lg:flex-wrap lg:gap-x-2 ${
+            compact ? 'lg:gap-y-2' : 'lg:gap-y-4'
+          }`}
+        >
           {LEVEL_RULES.map((row, idx) => {
             const unlocked = isLevelUnlocked(row.level, state, month);
             const isCurrent = row.level === current;
@@ -41,7 +48,7 @@ export function FinanceProgressPath({ state, month, compact = false }: Props) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className={`flex shrink-0 items-center justify-center rounded-full border-2 font-black ${numSize}`}
+                    className={`flex shrink-0 items-center justify-center rounded-full border-2 font-bold ${numSize}`}
                     style={{
                       borderColor: theme.border,
                       color: theme.text,
@@ -54,11 +61,17 @@ export function FinanceProgressPath({ state, month, compact = false }: Props) {
                     {theme.icon}
                   </span>
                 </div>
-                <p className={`mt-1.5 truncate font-black text-slate-900 ${compact ? 'text-xs sm:text-sm' : 'text-sm'}`}>
+                <p
+                  className={`mt-1.5 truncate font-bold text-slate-900 ${
+                    compact ? 'text-xs sm:text-sm' : 'text-sm'
+                  }`}
+                >
                   {row.name}
                 </p>
                 <p
-                  className={`mt-1 font-medium leading-snug text-slate-500 line-clamp-2 ${compact ? 'text-[10px] sm:text-[11px]' : 'text-[11px]'}`}
+                  className={`mt-1 font-medium leading-snug text-slate-500 line-clamp-2 ${
+                    compact ? 'text-[10px] sm:text-[11px]' : 'text-[11px]'
+                  }`}
                 >
                   {row.condition}
                 </p>
@@ -70,7 +83,7 @@ export function FinanceProgressPath({ state, month, compact = false }: Props) {
                   }`}
                 >
                   {unlocked ? 'Desbloqueado' : 'Pendiente'}
-                  {isCurrent ? ' · Acá' : ''}
+                  {isCurrent ? ' · Actual' : ''}
                 </span>
                 {idx < LEVEL_RULES.length - 1 ? (
                   <span

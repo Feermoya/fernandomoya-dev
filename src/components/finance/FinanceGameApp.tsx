@@ -1,4 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Cloud,
+  Coins,
+  Goal,
+  MessageCircle,
+  Settings,
+  ShieldAlert,
+  Trophy,
+} from 'lucide-react';
 import type { FinanceEntry, FinanceGoal, FinanceState } from '@/lib/finance/types';
 import { getInitialFinanceState } from '@/lib/finance/storage';
 import { isFinanceCloudConfigured } from '@/lib/finance/cloudSync';
@@ -23,6 +32,7 @@ import { FinanceEntryEditModal } from '@/components/finance/FinanceEntryEditModa
 import { FinanceWhatsAppReminders } from '@/components/finance/FinanceWhatsAppReminders';
 import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmountsEditor';
 import { FinanceToaster } from '@/components/finance/FinanceToaster';
+import { FinanceDetailsSummary } from '@/components/finance/FinanceDetailsSummary';
 import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
 import { normalizePreferences } from '@/lib/finance/preferences';
 import type { FinancePreferences } from '@/lib/finance/types';
@@ -69,6 +79,7 @@ function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
       role="status"
       className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${cls}`}
     >
+      <Cloud size={12} strokeWidth={2.25} aria-hidden />
       <span className="truncate">{label}</span>
     </span>
   );
@@ -278,8 +289,8 @@ export default function FinanceGameApp() {
 
         <header className="finance-app-header mb-4 flex items-start justify-between gap-3 sm:mb-5">
           <div className="min-w-0">
-            <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">Foco financiero</h1>
-            <p className="mt-0.5 text-xs font-medium text-slate-500">Seguimiento mensual de inversión</p>
+            <h1 className="finance-brand-title">Foco financiero</h1>
+            <p className="finance-brand-sub mt-1">Inversión mensual con claridad</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {isFinanceCloudConfigured() ? (
@@ -296,10 +307,10 @@ export default function FinanceGameApp() {
                   });
                 }}
                 disabled={syncChip === 'loading' || !cloudReady}
-                className="finance-touch-target inline-flex min-h-[36px] items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-40"
-                title="Traer últimos datos de la nube"
+                className="finance-touch-target inline-flex min-h-[36px] items-center justify-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-40"
+                title="Sincronizar con la nube"
               >
-                ↻
+                <Cloud size={15} strokeWidth={2.25} aria-hidden />
               </button>
             ) : null}
             <SyncStatusChip status={syncChip} />
@@ -410,8 +421,8 @@ export default function FinanceGameApp() {
 
           <div className="finance-advanced-section flex min-w-0 flex-col gap-2 sm:gap-2.5 lg:grid lg:grid-cols-2 lg:gap-3">
           <details className="finance-details group open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold [&::-webkit-details-marker]:hidden">
-              Ver ruta de niveles
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+              <FinanceDetailsSummary icon={Trophy} label="Niveles" />
             </summary>
             <div className="px-3 pb-4 pt-3 sm:px-4">
               <FinanceLevels
@@ -428,8 +439,8 @@ export default function FinanceGameApp() {
           </details>
 
           <details className="finance-details open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold [&::-webkit-details-marker]:hidden">
-              Ver objetivos
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+              <FinanceDetailsSummary icon={Goal} label="Objetivos" />
             </summary>
             <div className="px-3 pb-4 pt-3 sm:px-4">
               <FinanceGoals goals={state.goals} onAdd={addGoal} onUpdate={updateGoal} onRemove={removeGoal} />
@@ -437,8 +448,8 @@ export default function FinanceGameApp() {
           </details>
 
           <details className="finance-details open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold [&::-webkit-details-marker]:hidden">
-              Avisos WhatsApp
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+              <FinanceDetailsSummary icon={MessageCircle} label="Avisos WhatsApp" />
             </summary>
             <div className="px-3 pb-4 pt-3 sm:px-4">
               <FinanceWhatsAppReminders state={state} onPreferencesChange={patchPreferences} />
@@ -446,8 +457,8 @@ export default function FinanceGameApp() {
           </details>
 
           <details className="finance-details open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold [&::-webkit-details-marker]:hidden">
-              Montos rápidos
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+              <FinanceDetailsSummary icon={Coins} label="Montos rápidos" />
             </summary>
             <div className="px-3 pb-4 pt-3 sm:px-4">
               <FinanceQuickAmountsEditor preferences={preferences} onChange={patchPreferences} />
@@ -455,8 +466,8 @@ export default function FinanceGameApp() {
           </details>
 
           <details className="finance-details open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold [&::-webkit-details-marker]:hidden">
-              Ajustes avanzados
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+              <FinanceDetailsSummary icon={Settings} label="Configuración" />
             </summary>
             <div className="px-3 pb-4 pt-3 sm:px-4">
               <FinanceJsonTools
@@ -474,8 +485,8 @@ export default function FinanceGameApp() {
           </details>
 
           <details className="finance-details open:pb-1 border-red-200 bg-red-50">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold text-red-800 [&::-webkit-details-marker]:hidden">
-              Zona peligrosa
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+              <FinanceDetailsSummary icon={ShieldAlert} label="Zona peligrosa" tone="danger" />
             </summary>
             <div className="border-t border-red-200 px-4 pb-4 pt-3">
               <p className="text-xs font-medium text-red-700">

@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Goal } from 'lucide-react';
 import type { FinanceGoal, FinanceGoalCategory } from '@/lib/finance/types';
 import { formatARS } from '@/lib/finance/calculations';
+import { FinanceSectionHeading } from '@/components/finance/FinanceSectionHeading';
 
 type Props = {
   goals: FinanceGoal[];
@@ -70,12 +72,17 @@ export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
   const st = CAT_STYLE[category];
 
   return (
-    <section className="finance-card p-3 sm:p-4">
-      <p className="text-xs font-medium text-slate-500">Creá o editá metas cuando quieras planificar un monto destino.</p>
+    <section className="space-y-4">
+      <FinanceSectionHeading
+        title="Objetivos"
+        subtitle="Metas con monto destino"
+        icon={Goal}
+        iconTone="emerald"
+      />
 
       <form
         onSubmit={submit}
-        className={`mt-4 grid grid-cols-1 gap-2.5 rounded-xl border-2 p-3 sm:grid-cols-2 sm:gap-3 ${st.card}`}
+        className={`grid grid-cols-1 gap-2.5 rounded-xl border p-3 sm:grid-cols-2 sm:gap-3 ${st.card}`}
       >
         <label className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="finance-label">Nombre</span>
@@ -147,11 +154,24 @@ export function FinanceGoals({ goals, onAdd, onUpdate, onRemove }: Props) {
                     Quitar
                   </button>
                 </div>
-                <div className="mt-3 flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-bold tabular-nums text-slate-600">
-                    {formatARS(g.currentAmount)} / {formatARS(g.targetAmount)}
+                <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="finance-metric-meta">
+                    {formatARS(g.currentAmount)} de {formatARS(g.targetAmount)}
                   </span>
-                  <span className="text-lg font-black tabular-nums text-slate-900">{pct.toFixed(0)}%</span>
+                  <span className="finance-metric-sm text-base">{pct.toFixed(0)}%</span>
+                </div>
+                <div className="mt-1.5">
+                  <span
+                    className={`inline-flex rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${
+                      pct >= 100
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : pct >= 50
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'bg-amber-50 text-amber-700'
+                    }`}
+                  >
+                    {pct >= 100 ? 'Completado' : pct >= 50 ? 'En buen camino' : 'Por avanzar'}
+                  </span>
                 </div>
                 <div className="mt-2 h-3 overflow-hidden rounded-full bg-white/60">
                   <div className={`h-full rounded-full bg-gradient-to-r ${cs.bar}`} style={{ width: `${pct}%` }} />

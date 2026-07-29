@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CircleDollarSign } from 'lucide-react';
+import { Banknote } from 'lucide-react';
 import { formatARS } from '@/lib/finance/calculations';
 import { getEntryTicker } from '@/lib/finance/entryTicker';
 import { fetchFinancePrices } from '@/lib/finance/financePrices';
@@ -158,9 +158,12 @@ export function FinanceEntryForm({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600">
-              <CircleDollarSign size={18} strokeWidth={2.25} aria-hidden />
+              <Banknote size={18} strokeWidth={2.25} aria-hidden />
             </span>
-            <h3 className="text-base font-black tracking-tight text-slate-900">Sumar inversión</h3>
+            <div>
+              <h3 className="finance-section-title">Inversión</h3>
+              <p className="finance-section-sub mt-0.5">Registrar un movimiento</p>
+            </div>
           </div>
         </div>
 
@@ -173,7 +176,7 @@ export function FinanceEntryForm({
             step={1}
             required
             placeholder="$ 0"
-            className="finance-input-mobile min-h-[48px] rounded-xl px-3 py-2.5 text-center text-xl font-black tabular-nums sm:text-2xl"
+            className="finance-input-mobile finance-metric min-h-[52px] rounded-xl px-3 py-2.5 text-center sm:text-[1.75rem]"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />

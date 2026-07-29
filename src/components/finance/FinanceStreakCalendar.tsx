@@ -16,12 +16,12 @@ export function FinanceStreakCalendar({ entries, monthCount = 12, streakCount, c
   return (
     <div className={compact ? 'rounded-xl border border-slate-200 bg-slate-50/80 px-2 py-2' : 'finance-card-compact px-2.5 py-2 sm:px-3 sm:py-2.5'}>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <p className="finance-label flex items-center gap-1">
+        <p className="finance-label mb-1.5 flex items-center gap-1.5">
           <Flame size={12} strokeWidth={2.25} className="text-amber-600" aria-hidden />
           Racha
           {typeof streakCount === 'number' ? (
-            <span className="ml-1.5 font-black tabular-nums text-slate-700">
-              · {streakCount} {streakUnit}
+            <span className="ml-1 font-bold normal-case tracking-normal tabular-nums text-slate-800">
+              {streakCount} {streakUnit}
             </span>
           ) : null}
         </p>

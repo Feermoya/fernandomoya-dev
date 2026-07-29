@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  Bell,
   Circle,
   MessageCircle,
   RefreshCcw,
   TrendingDown,
   TrendingUp,
+  TriangleAlert,
 } from 'lucide-react';
 import type { FinanceEntry, FinancePreferences } from '@/lib/finance/types';
 import {
@@ -22,6 +22,7 @@ import {
 import { syncMarketAlertsWhatsApp } from '@/lib/finance/marketAlertAutoNotify';
 import { normalizePreferences, whatsappAutomationReadiness } from '@/lib/finance/preferences';
 import { requestMarketWhatsAppTest } from '@/lib/finance/whatsappTestClient';
+import { FinanceSectionHeading } from '@/components/finance/FinanceSectionHeading';
 import { sileo } from 'sileo';
 
 type Props = {
@@ -231,18 +232,15 @@ export function FinanceMarketAlerts({ entries, preferences, onPreferencesChange 
   const autoOn = prefs.reminder.marketWhatsAppEnabled && readiness.apiKeyOk;
 
   return (
-    <section className="finance-card-compact p-3" aria-labelledby="market-alerts-heading">
+    <section className="finance-card-compact p-3.5" aria-labelledby="market-alerts-heading">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3
-            id="market-alerts-heading"
-            className="flex items-center gap-2 text-base font-black tracking-tight text-slate-900"
-          >
-            <Bell size={18} strokeWidth={2.25} className="shrink-0 text-blue-600" aria-hidden />
-            Alertas de mercado
-          </h3>
-          <p className="mt-0.5 text-xs font-semibold text-slate-500">Según tus activos cargados</p>
-        </div>
+        <FinanceSectionHeading
+          id="market-alerts-heading"
+          title="Alertas"
+          subtitle="Según tus precios de compra"
+          icon={TriangleAlert}
+          iconTone="amber"
+        />
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"

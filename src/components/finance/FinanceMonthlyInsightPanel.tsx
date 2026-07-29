@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import { Eye } from 'lucide-react';
 import type { MonthlyMissionView } from '@/lib/finance/levels';
 import { getMonthlyInsightSummary, type MonthlyInsight } from '@/lib/finance/monthlyInsights';
 import { getMonthlyPlanProgress } from '@/lib/finance/monthlyInvestmentPlan';
 import type { FinanceState } from '@/lib/finance/types';
+import { FinanceSectionHeading } from '@/components/finance/FinanceSectionHeading';
 
 type Props = {
   state: FinanceState;
@@ -17,7 +19,7 @@ function severityTitleClass(severity: MonthlyInsight['severity']): string {
     case 'warning':
       return 'text-amber-700';
     case 'danger':
-      return 'text-red-600';
+      return 'text-red-700';
     default:
       return 'text-blue-700';
   }
@@ -30,7 +32,7 @@ function severityDetailClass(severity: MonthlyInsight['severity']): string {
     case 'warning':
       return 'text-amber-600';
     case 'danger':
-      return 'text-red-500';
+      return 'text-red-600';
     default:
       return 'text-slate-500';
   }
@@ -75,27 +77,27 @@ export function FinanceMonthlyInsightPanel({ state, month, mission }: Props) {
   const { main } = summary;
 
   return (
-    <section
-      className="finance-card-compact p-3"
-      aria-labelledby="monthly-insight-heading"
-    >
-      <p
+    <section className="finance-card-compact p-3.5" aria-labelledby="monthly-insight-heading">
+      <FinanceSectionHeading
         id="monthly-insight-heading"
-        className="finance-label"
-      >
-        Diagnóstico
-      </p>
+        title="Qué mirar ahora"
+        subtitle="Señal principal del mes"
+        icon={Eye}
+        iconTone="amber"
+      />
 
-      <div className="mt-2.5">
-        <p className={`text-sm font-black leading-tight ${severityTitleClass(main.severity)}`}>{main.title}</p>
+      <div className="mt-3">
+        <p className={`text-sm font-bold leading-snug tracking-tight ${severityTitleClass(main.severity)}`}>
+          {main.title}
+        </p>
         <p className={`mt-1 text-xs font-medium leading-snug ${severityDetailClass(main.severity)}`}>
           {main.detail}
         </p>
       </div>
 
       {secondary.length > 0 ? (
-        <div className="mt-3 border-t border-slate-200 pt-3">
-          <p className="finance-label">Prioridad del mes</p>
+        <div className="mt-3 border-t border-slate-100 pt-3">
+          <p className="finance-label">También</p>
           <ul className="mt-2 space-y-1.5">
             {secondary.map((item) => (
               <li
