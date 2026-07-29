@@ -35,6 +35,10 @@ function json(res: Res, status: number, body: unknown) {
 /**
  * Keep-alive Supabase + (solo en cron Vercel) jobs de WhatsApp.
  * Un único cron Hobby apunta aquí — no agregar otro path en vercel.json.
+ *
+ * Prueba manual (después de deploy):
+ *   curl -sS -H "x-vercel-cron: 1" "https://TU_DOMINIO/api/finance-keepalive"
+ * La respuesta JSON dice si envió o por qué saltó (`skipReason` / `error`).
  */
 export default async function handler(req: Req, res: Res) {
   try {

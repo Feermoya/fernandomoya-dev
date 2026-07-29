@@ -103,13 +103,15 @@ export type FinanceReminderSettings = {
   enabled: boolean;
   /** Solo dígitos, con código país (ej. 5491123456789). */
   phoneDigits: string;
-  /** Días del mes (1–28) en los que el cron puede avisar si falta invertir. */
+  /** Días del mes (1–28) — legacy; el job ya no depende de esto. */
   daysOfMonth: number[];
   /** API key de CallMeBot (se sincroniza a la nube; el cron la lee desde ahí). */
   callMeBotApiKey?: string;
   messageTemplate?: string;
-  /** Claves de recordatorio de ahorro ya enviadas: `YYYY-MM-D`. */
+  /** Claves de recordatorio WhatsApp ya enviadas: `YYYY-MM-wN`. */
   lastCronReminderKeys?: string[];
+  /** Banner in-app descartado (NO bloquea WhatsApp). */
+  lastInAppReminderKeys?: string[];
   /** WhatsApp automático cuando hay alertas de mercado relevantes. */
   marketWhatsAppEnabled?: boolean;
   /** Huellas estables ya avisadas: `loss-since-buy:TSLA`. */

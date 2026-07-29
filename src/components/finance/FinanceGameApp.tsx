@@ -26,7 +26,7 @@ import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmou
 import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
 import {
   cronReminderRunKey,
-  markCronReminderSent,
+  markInAppReminderDismissed,
   normalizePreferences,
   shouldShowInAppReminder,
   reminderStatusLine,
@@ -188,7 +188,7 @@ export default function FinanceGameApp() {
     const runKey = cronReminderRunKey(monthKey, day);
     patchPreferences({
       ...preferences,
-      reminder: markCronReminderSent(preferences.reminder, runKey),
+      reminder: markInAppReminderDismissed(preferences.reminder, runKey),
     });
   }, [patchPreferences, preferences]);
 

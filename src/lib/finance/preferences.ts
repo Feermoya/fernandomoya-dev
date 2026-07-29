@@ -42,6 +42,9 @@ export function normalizePreferences(raw?: FinancePreferences): FinancePreferenc
       lastCronReminderKeys: Array.isArray(reminder.lastCronReminderKeys)
         ? reminder.lastCronReminderKeys.filter((k) => typeof k === 'string').slice(-36)
         : undefined,
+      lastInAppReminderKeys: Array.isArray(reminder.lastInAppReminderKeys)
+        ? reminder.lastInAppReminderKeys.filter((k) => typeof k === 'string').slice(-36)
+        : undefined,
       marketWhatsAppEnabled: reminder.marketWhatsAppEnabled !== false,
       lastMarketAlertKeys: Array.isArray(reminder.lastMarketAlertKeys)
         ? reminder.lastMarketAlertKeys.filter((k) => typeof k === 'string').slice(-64)
@@ -82,6 +85,19 @@ export function markCronReminderSent(
   };
 }
 
+/** Solo oculta el banner; no cuenta como WhatsApp enviado. */
+export function markInAppReminderDismissed(
+  reminder: FinanceReminderSettings,
+  runKey: string,
+): FinanceReminderSettings {
+  const keys = [...(reminder.lastInAppReminderKeys ?? [])];
+  if (!keys.includes(runKey)) keys.push(runKey);
+  return {
+    ...reminder,
+    lastInAppReminderKeys: keys.slice(-36),
+  };
+}
+
 export function markMarketAlertsSent(
   reminder: FinanceReminderSettings,
   fingerprints: string[],
@@ -96,7 +112,7 @@ export function markMarketAlertsSent(
   };
 }
 
-/** Banner in-app alineado al motor de WhatsApp. */
+/** Banner in-app alineado al motor de WhatsApp (dismiss propio, no bloquea cron). */
 export function shouldShowInAppReminder(
   reminder: FinanceReminderSettings,
   state: FinanceState,
@@ -106,7 +122,7 @@ export function shouldShowInAppReminder(
   const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
   if (!nudge.shouldNotify) return false;
   const runKey = cronReminderRunKey(monthKey, day);
-  if (reminder.lastCronReminderKeys?.includes(runKey)) return false;
+  if (reminder.lastInAppReminderKeys?.includes(runKey)) return false;
   return true;
 }
 

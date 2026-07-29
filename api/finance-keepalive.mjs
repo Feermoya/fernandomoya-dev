@@ -343,8 +343,9 @@ function normalizePreferences(raw) {
       phoneDigits: site.social.whatsappPhoneDigits,
       daysOfMonth: normalizeReminderDays(reminder.daysOfMonth),
       messageTemplate: void 0,
-      callMeBotApiKey: void 0,
+      callMeBotApiKey: reminder.callMeBotApiKey?.trim() || void 0,
       lastCronReminderKeys: Array.isArray(reminder.lastCronReminderKeys) ? reminder.lastCronReminderKeys.filter((k) => typeof k === "string").slice(-36) : void 0,
+      lastInAppReminderKeys: Array.isArray(reminder.lastInAppReminderKeys) ? reminder.lastInAppReminderKeys.filter((k) => typeof k === "string").slice(-36) : void 0,
       marketWhatsAppEnabled: reminder.marketWhatsAppEnabled !== false,
       lastMarketAlertKeys: Array.isArray(reminder.lastMarketAlertKeys) ? reminder.lastMarketAlertKeys.filter((k) => typeof k === "string").slice(-64) : void 0
     }
@@ -1196,8 +1197,8 @@ function formatMarketWhatsAppMessage(alerts) {
     "Seguimiento informativo. No es asesoramiento financiero."
   ].join("\n");
 }
-function resolveCallMeBotApiKey() {
-  return process.env.CALLMEBOT_API_KEY?.trim() || process.env.FINANCE_CALLMEBOT_API_KEY?.trim() || "";
+function resolveCallMeBotApiKey(reminder) {
+  return reminder?.callMeBotApiKey?.trim() || process.env.CALLMEBOT_API_KEY?.trim() || process.env.FINANCE_CALLMEBOT_API_KEY?.trim() || "";
 }
 async function runInvestmentReminderJob(state, phone, apiKey) {
   const prefs = normalizePreferences(state.preferences);
@@ -1336,7 +1337,7 @@ async function runFinanceWhatsAppJobs(syncId = DEFAULT_FINANCE_SYNC_ID) {
   const prefs = normalizePreferences(state.preferences);
   let reminder = prefs.reminder;
   const phone = resolveWhatsAppPhone();
-  const apiKey = resolveCallMeBotApiKey();
+  const apiKey = resolveCallMeBotApiKey(reminder);
   if (!phone) {
     const skipped = { ok: true, action: "skipped", skipReason: "no_phone" };
     return { ok: true, reminder: skipped, market: skipped };
