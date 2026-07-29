@@ -5,7 +5,7 @@
       "maxDuration": 60
     },
     "api/finance-keepalive.mjs": {
-      "maxDuration": 15
+      "maxDuration": 60
     },
     "api/finance-cloud.mjs": {
       "maxDuration": 20

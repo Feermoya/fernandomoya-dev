@@ -296,6 +296,93 @@ export function getGapToNextInvestmentMilestone(
   return { amountMissing: 0, nextLevel: nextL, nextTitle, hint: 'Seguí la ruta: racha o emergencia.' };
 }
 
+export type InvestmentWhatsAppNudge =
+  | { shouldNotify: false; reason: 'sufficient' | 'no_volume_gap'; invested: number; level: number }
+  | {
+      shouldNotify: true;
+      invested: number;
+      level: number;
+      nextLevel: number;
+      message: string;
+      kind: 'low' | 'near_level' | 'push';
+    };
+
+/**
+ * ¿Hace falta WhatsApp de inversión este mes?
+ * - Poca plata → avisa.
+ * - Cerca de subir de nivel (2, 3, …) → avisa.
+ * - Ya llegaste a Disciplina (L3 / 450k) o más de volumen → silencio.
+ */
+export function evaluateInvestmentWhatsAppNudge(
+  state: FinanceState,
+  month: string,
+): InvestmentWhatsAppNudge {
+  const invested = pipeForMonth(state, month);
+  const level = highestAchievedLevel(state, month);
+
+  if (invested >= TH.L3) {
+    return { shouldNotify: false, reason: 'sufficient', invested, level };
+  }
+
+  const gap = getGapToNextInvestmentMilestone(state, month);
+  if (!gap || gap.amountMissing <= 0) {
+    return { shouldNotify: false, reason: 'no_volume_gap', invested, level };
+  }
+
+  const monthLabel = monthLabelEs(month);
+  const nextTitle = gap.nextTitle;
+
+  if (invested < TH.L1) {
+    return {
+      shouldNotify: true,
+      invested,
+      level,
+      nextLevel: gap.nextLevel,
+      kind: 'low',
+      message: [
+        `Foco financiero — ${monthLabel}`,
+        `Llevás ${formatARS(invested)} invertidos este mes (poco).`,
+        `Te faltan ${formatARS(gap.amountMissing)} para el nivel ${gap.nextLevel} (${nextTitle}).`,
+      ].join('\n'),
+    };
+  }
+
+  const thresholds = [0, TH.L1, TH.L2, TH.L3, TH.L4];
+  const nextThreshold =
+    gap.nextLevel <= 4 ? thresholds[gap.nextLevel] ?? TH.L3 : TH.L3;
+  const prevThreshold = gap.nextLevel <= 4 ? thresholds[gap.nextLevel - 1] ?? 0 : TH.L2;
+  const span = Math.max(1, nextThreshold - prevThreshold);
+  const near = gap.amountMissing / span <= 0.2 || gap.amountMissing <= 75_000;
+
+  if (near) {
+    return {
+      shouldNotify: true,
+      invested,
+      level,
+      nextLevel: gap.nextLevel,
+      kind: 'near_level',
+      message: [
+        `Foco financiero — ${monthLabel}`,
+        `Estás cerca del nivel ${gap.nextLevel} (${nextTitle}).`,
+        `Llevás ${formatARS(invested)}. Te faltan ${formatARS(gap.amountMissing)}.`,
+      ].join('\n'),
+    };
+  }
+
+  return {
+    shouldNotify: true,
+    invested,
+    level,
+    nextLevel: gap.nextLevel,
+    kind: 'push',
+    message: [
+      `Foco financiero — ${monthLabel}`,
+      `Nivel actual: ${level} · siguiente: ${gap.nextLevel} (${nextTitle}).`,
+      `Llevás ${formatARS(invested)}. Te faltan ${formatARS(gap.amountMissing)} este mes.`,
+    ].join('\n'),
+  };
+}
+
 export type MonthlyMissionView = {
   monthLabel: string;
   headline: string;

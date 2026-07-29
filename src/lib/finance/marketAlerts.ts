@@ -4,12 +4,20 @@ import type { FinanceEntry } from '@/lib/finance/types';
 
 export type MarketAlertSeverity = 'opportunity' | 'positive' | 'warning' | 'neutral';
 
+export type MarketAlertKind =
+  | 'daily-drop'
+  | 'daily-rise'
+  | 'loss-since-buy'
+  | 'gain-since-buy'
+  | 'neutral';
+
 export type MarketAlert = {
   id: string;
   ticker: string;
   title: string;
   detail: string;
   severity: MarketAlertSeverity;
+  kind: MarketAlertKind;
   currentPrice?: number;
   currentCurrency?: string;
   buyPrice?: number;
@@ -17,6 +25,11 @@ export type MarketAlert = {
   changePercent?: number;
   source?: string;
 };
+
+/** Huella anti-spam para WhatsApp / cron. */
+export function marketAlertFingerprint(alert: Pick<MarketAlert, 'kind' | 'ticker'>): string {
+  return `${alert.kind}:${alert.ticker.toUpperCase()}`;
+}
 
 const SEVERITY_RANK: Record<MarketAlertSeverity, number> = {
   opportunity: 0,
@@ -88,7 +101,7 @@ export function buildMarketAlerts(params: {
   const seen = new Set<string>();
 
   const push = (alert: Omit<MarketAlert, 'id'>) => {
-    const key = `${alert.ticker}:${alert.severity}:${alert.title}`;
+    const key = marketAlertFingerprint(alert);
     if (seen.has(key)) return;
     seen.add(key);
     alerts.push({ ...alert, id: key });
@@ -105,6 +118,7 @@ export function buildMarketAlerts(params: {
       if (changePercent <= -minDailyDropPercent) {
         push({
           ticker,
+          kind: 'daily-drop',
           severity: 'opportunity',
           title: `${ticker} bajó ${Math.abs(changePercent).toFixed(1)}% hoy`,
           detail: 'Puede ser una oportunidad para revisar.',
@@ -116,6 +130,7 @@ export function buildMarketAlerts(params: {
       } else if (changePercent >= minDailyDropPercent) {
         push({
           ticker,
+          kind: 'daily-rise',
           severity: 'positive',
           title: `${ticker} subió ${changePercent.toFixed(1)}% hoy`,
           detail: 'Revisá si sigue alineado con tu estrategia.',
@@ -144,6 +159,7 @@ export function buildMarketAlerts(params: {
       if (deltaFromBuy <= -minLossSinceBuyPercent) {
         push({
           ticker,
+          kind: 'loss-since-buy',
           severity: 'opportunity',
           title: `${ticker} está ${Math.abs(deltaFromBuy).toFixed(1)}% abajo de tu compra`,
           detail: 'Podés revisar si querés promediar o esperar.',
@@ -157,6 +173,7 @@ export function buildMarketAlerts(params: {
       } else if (deltaFromBuy >= minGainSinceBuyPercent) {
         push({
           ticker,
+          kind: 'gain-since-buy',
           severity: 'positive',
           title: `${ticker} está ${deltaFromBuy.toFixed(1)}% arriba de tu compra`,
           detail: 'Buen avance desde tu precio registrado.',
@@ -175,6 +192,7 @@ export function buildMarketAlerts(params: {
     alerts.push({
       id: 'neutral:none',
       ticker: tickers[0],
+      kind: 'neutral',
       severity: 'neutral',
       title: 'Sin movimientos fuertes',
       detail: 'No hay bajas o subas relevantes en tus activos seguidos.',

@@ -5,15 +5,34 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
 
-await esbuild.build({
-  entryPoints: [path.join(root, 'api/finance-prices.entry.ts')],
+const shared = {
   bundle: true,
   platform: 'node',
   format: 'esm',
   target: 'node20',
-  outfile: path.join(root, 'api/finance-prices.mjs'),
   logLevel: 'info',
   packages: 'external',
-});
+  alias: {
+    '@': path.join(root, 'src'),
+  },
+};
 
-console.log('Bundled api/finance-prices.mjs');
+const entries = [
+  {
+    entry: path.join(root, 'api/finance-prices.entry.ts'),
+    outfile: path.join(root, 'api/finance-prices.mjs'),
+  },
+  {
+    entry: path.join(root, 'api/finance-keepalive.entry.ts'),
+    outfile: path.join(root, 'api/finance-keepalive.mjs'),
+  },
+];
+
+for (const { entry, outfile } of entries) {
+  await esbuild.build({
+    ...shared,
+    entryPoints: [entry],
+    outfile,
+  });
+  console.log(`Bundled ${path.relative(root, outfile)}`);
+}

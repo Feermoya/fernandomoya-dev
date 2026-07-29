@@ -171,7 +171,8 @@ export function FinanceMarketAlerts({ entries }: Props) {
       )}
 
       <p className="mt-2.5 text-[9px] leading-snug text-slate-400">
-        Seguimiento informativo. No es asesoramiento financiero.
+        Seguimiento informativo. No es asesoramiento financiero. Si activaste alertas por WhatsApp en
+        Recordatorios, el cron diario también te avisa sin abrir la app.
       </p>
     </section>
   );

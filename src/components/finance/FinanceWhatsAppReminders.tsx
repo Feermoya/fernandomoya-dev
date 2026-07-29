@@ -1,15 +1,8 @@
-import { useMemo, useState } from 'react';
-import { formatARS, getMonthlyInvested, MONTHLY_STREAK_MINIMUM_ARS } from '@/lib/finance/calculations';
-import {
-  buildWhatsAppLink,
-  cronReminderRunKey,
-  DEFAULT_REMINDER_MESSAGE,
-  markCronReminderSent,
-  normalizePreferences,
-  reminderMessageForMonth,
-  sendCallMeBotWhatsApp,
-} from '@/lib/finance/preferences';
-import { getArgentinaDateParts, monthLabelEsFromKey } from '@/lib/finance/timezone';
+import { useMemo } from 'react';
+import { site } from '@/data/site';
+import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
+import { normalizePreferences, whatsappAutomationReadiness } from '@/lib/finance/preferences';
+import { getArgentinaDateParts } from '@/lib/finance/timezone';
 import type { FinancePreferences, FinanceState } from '@/lib/finance/types';
 
 type Props = {
@@ -17,28 +10,16 @@ type Props = {
   onPreferencesChange: (prefs: FinancePreferences) => void;
 };
 
-const DAY_OPTIONS = [1, 5, 10, 15, 20, 25] as const;
-
-
 export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) {
   const prefs = normalizePreferences(state.preferences);
   const reminder = prefs.reminder;
-  const [sending, setSending] = useState(false);
-  const [sendResult, setSendResult] = useState<string | null>(null);
+  const readiness = whatsappAutomationReadiness(reminder);
+  const { monthKey } = getArgentinaDateParts();
 
-  const { monthKey, day } = getArgentinaDateParts();
-  const invested = getMonthlyInvested(state.entries, monthKey);
-  const previewText = useMemo(
-    () =>
-      reminderMessageForMonth(
-        reminder.messageTemplate ?? DEFAULT_REMINDER_MESSAGE,
-        monthLabelEsFromKey(monthKey),
-        invested,
-      ),
-    [reminder.messageTemplate, monthKey, invested],
+  const nudge = useMemo(
+    () => evaluateInvestmentWhatsAppNudge(state, monthKey),
+    [state, monthKey],
   );
-
-  const waLink = buildWhatsAppLink(reminder.phoneDigits, previewText);
 
   const patchReminder = (partial: Partial<typeof reminder>) => {
     onPreferencesChange({
@@ -47,34 +28,12 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
     });
   };
 
-  const toggleDay = (day: number) => {
-    const set = new Set(reminder.daysOfMonth);
-    if (set.has(day)) set.delete(day);
-    else set.add(day);
-    patchReminder({ daysOfMonth: [...set].sort((a, b) => a - b) });
-  };
-
-  const sendAuto = async () => {
-    if (!reminder.callMeBotApiKey?.trim()) {
-      setSendResult('Agregá tu API key de CallMeBot (gratis en callmebot.com).');
-      return;
-    }
-    setSending(true);
-    setSendResult(null);
-    const res = await sendCallMeBotWhatsApp(reminder.phoneDigits, previewText, reminder.callMeBotApiKey);
-    setSending(false);
-    if (res.ok) {
-      setSendResult('Pedido enviado. Revisá WhatsApp en unos segundos.');
-      patchReminder(markCronReminderSent(reminder, cronReminderRunKey(monthKey, day)));
-    } else {
-      setSendResult(res.error ?? 'No se pudo enviar.');
-    }
-  };
-
   return (
     <div className="space-y-4">
       <p className="text-sm font-semibold leading-relaxed text-slate-600">
-        Recordatorios por WhatsApp: abrís un chat con el mensaje listo, o envío automático con CallMeBot.
+        Avisos automáticos a {site.social.whatsappPhoneDigits} por el cron diario (~11:00 AR). La app
+        detecta si este mes invertiste poco o si estás cerca de subir de nivel; si ya llegaste a un
+        buen volumen, no molesta.
       </p>
 
       <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
@@ -84,115 +43,78 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
           onChange={(e) => patchReminder({ enabled: e.target.checked })}
           className="h-5 w-5 rounded border-slate-300 text-blue-600"
         />
-        <span className="text-sm font-bold text-slate-900">Activar recordatorios</span>
+        <span className="text-sm font-bold text-slate-900">Recordatorio de inversión</span>
       </label>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="finance-label">Tu WhatsApp (con código país)</span>
+      <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
         <input
-          type="tel"
-          inputMode="numeric"
-          placeholder="5491123456789"
-          className="finance-input-mobile min-h-[48px] rounded-xl px-3 text-sm font-bold"
-          value={reminder.phoneDigits}
-          onChange={(e) => patchReminder({ phoneDigits: e.target.value.replace(/\D/g, '') })}
+          type="checkbox"
+          checked={Boolean(reminder.marketWhatsAppEnabled)}
+          onChange={(e) => patchReminder({ marketWhatsAppEnabled: e.target.checked })}
+          className="h-5 w-5 rounded border-slate-300 text-blue-600"
         />
-        <span className="text-[10px] text-slate-500">Argentina: 54 + 9 + área + número (sin + ni espacios).</span>
+        <span className="text-sm font-bold text-slate-900">Alertas de mercado</span>
       </label>
-
-      <div>
-        <p className="finance-label">Días del mes</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {DAY_OPTIONS.map((d) => {
-            const on = reminder.daysOfMonth.includes(d);
-            return (
-              <button
-                key={d}
-                type="button"
-                onClick={() => toggleDay(d)}
-                className={`min-h-[40px] min-w-[44px] rounded-xl border px-3 text-sm font-black transition ${
-                  on
-                    ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                {d}
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-1.5 text-[10px] text-slate-500">
-          Solo avisa si este mes invertiste menos de {formatARS(MONTHLY_STREAK_MINIMUM_ARS)} (nada o poco). Si
-          ya llegaste a ese mínimo, no manda WhatsApp ni banner.
-        </p>
-      </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="finance-label">
-          Mensaje ({'{mes}'}, {'{invertido}'}, {'{falta}'})
-        </span>
-        <textarea
-          rows={3}
-          className="finance-input-mobile rounded-xl px-3 py-2 text-sm"
-          value={reminder.messageTemplate ?? DEFAULT_REMINDER_MESSAGE}
-          onChange={(e) => patchReminder({ messageTemplate: e.target.value })}
+        <span className="finance-label">API key CallMeBot (una sola vez)</span>
+        <input
+          type="password"
+          autoComplete="off"
+          placeholder="Pegá acá la key que te mandó el bot"
+          className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm"
+          value={reminder.callMeBotApiKey ?? ''}
+          onChange={(e) => patchReminder({ callMeBotApiKey: e.target.value.trim() })}
         />
+        <span className="text-[10px] text-slate-500">
+          Se guarda con tu sync a la nube. No hace falta variable en Vercel.
+        </span>
       </label>
 
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-        <p className="finance-label text-emerald-600">Vista previa</p>
-        <p className="mt-1 text-xs leading-relaxed text-emerald-800">{previewText}</p>
-      </div>
+      {reminder.enabled ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <p className="finance-label text-emerald-600">Qué vería el cron ahora</p>
+          {nudge.shouldNotify ? (
+            <p className="mt-1 whitespace-pre-line text-xs leading-relaxed text-emerald-800">
+              {nudge.message}
+            </p>
+          ) : (
+            <p className="mt-1 text-xs leading-relaxed text-emerald-800">
+              Sin aviso: el volumen del mes alcanza. Silencio hasta el próximo mes / si baja el ritmo.
+            </p>
+          )}
+        </div>
+      ) : null}
 
-      <div className="flex flex-col gap-2">
-        {waLink ? (
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex min-h-[48px] items-center justify-center rounded-2xl bg-[#25D366] text-sm font-black text-white shadow-md active:scale-[0.99]"
-          >
-            Abrir WhatsApp con este mensaje
-          </a>
-        ) : (
-          <p className="text-xs text-amber-600">Cargá tu número para habilitar WhatsApp.</p>
-        )}
+      <ul className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-semibold text-slate-600">
+        <li className="text-emerald-700">Número fijo: {site.social.whatsappPhoneDigits}</li>
+        <li className={readiness.apiKeyOk ? 'text-emerald-700' : 'text-amber-700'}>
+          {readiness.apiKeyOk ? 'CallMeBot key guardada' : 'Falta pegar la API key arriba'}
+        </li>
+        <li className={readiness.anyJobEnabled ? 'text-emerald-700' : 'text-amber-700'}>
+          {readiness.anyJobEnabled
+            ? 'Al menos un aviso automático activado'
+            : 'Activá inversión y/o mercado'}
+        </li>
+        <li className={readiness.ready ? 'text-emerald-700' : 'text-slate-500'}>
+          {readiness.ready
+            ? 'Listo: el cron puede enviarte WhatsApp (~11:00 AR)'
+            : 'Completá key + un aviso activado'}
+        </li>
+      </ul>
 
-        <label className="mt-2 flex flex-col gap-1.5">
-          <span className="finance-label">
-            API key CallMeBot (opcional, envío automático)
-          </span>
-          <input
-            type="password"
-            autoComplete="off"
-            placeholder="Pegá la key de callmebot.com"
-            className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm"
-            value={reminder.callMeBotApiKey ?? ''}
-            onChange={(e) => patchReminder({ callMeBotApiKey: e.target.value })}
-          />
-        </label>
-
-        <button
-          type="button"
-          disabled={sending || !reminder.phoneDigits}
-          onClick={() => void sendAuto()}
-          className="finance-secondary-button min-h-[48px] text-sm disabled:opacity-50"
+      <p className="text-[10px] leading-relaxed text-slate-500">
+        CallMeBot:{' '}
+        <a
+          href="https://www.callmebot.com/blog/free-api-whatsapp-messages/"
+          className="text-blue-600 underline"
+          target="_blank"
+          rel="noreferrer"
         >
-          {sending ? 'Enviando…' : 'Enviar por WhatsApp ahora (CallMeBot)'}
-        </button>
-
-        {sendResult ? <p className="text-xs font-semibold text-slate-500">{sendResult}</p> : null}
-
-        <p className="text-[10px] leading-relaxed text-slate-500">
-          CallMeBot es gratuito: vinculá tu número en{' '}
-          <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" className="text-blue-600 underline" target="_blank" rel="noreferrer">
-            callmebot.com
-          </a>
-          . En producción, un cron de Vercel puede enviar el recordatorio solo los días que elijas (5, 15, 25…)
-          si configurás <code className="rounded bg-slate-100 px-1 text-slate-600">CALLMEBOT_API_KEY</code> y{' '}
-          <code className="rounded bg-slate-100 px-1 text-slate-600">CRON_SECRET</code> en el hosting (sin costo extra en hobby).
-        </p>
-      </div>
+          callmebot.com
+        </a>
+        . Pegá la key solo en esta pantalla (no en el chat ni en GitHub).
+      </p>
     </div>
   );
 }

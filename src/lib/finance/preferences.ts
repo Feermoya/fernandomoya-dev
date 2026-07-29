@@ -1,17 +1,12 @@
 import { site } from '@/data/site';
 import type { FinancePreferences, FinanceReminderSettings, FinanceState } from '@/lib/finance/types';
-import {
-  formatARS,
-  getMonthlyInvestmentReminderGap,
-  MONTHLY_STREAK_MINIMUM_ARS,
-  needsMonthlyInvestmentReminder,
-} from '@/lib/finance/calculations';
+import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
 import { getArgentinaDateParts } from '@/lib/finance/timezone';
 
 export const DEFAULT_QUICK_AMOUNTS = [50_000, 100_000, 200_000, 500_000] as const;
 
-export const DEFAULT_REMINDER_MESSAGE =
-  'Foco financiero — {mes}: llevás {invertido} invertidos. Si podés, sumá para llegar al mínimo del mes ({falta} restantes).';
+/** Ventana anti-spam del recordatorio de inversión (1 = días 1–3, 2 = 4–6, …). */
+export const INVESTMENT_REMINDER_DAYS_PER_WINDOW = 3;
 
 const DEFAULT_REMINDER_DAYS = [5, 15, 25];
 
@@ -19,10 +14,10 @@ export function getDefaultPreferences(): FinancePreferences {
   return {
     quickAmounts: [...DEFAULT_QUICK_AMOUNTS],
     reminder: {
-      enabled: false,
+      enabled: true,
       phoneDigits: site.social.whatsappPhoneDigits,
       daysOfMonth: [...DEFAULT_REMINDER_DAYS],
-      messageTemplate: DEFAULT_REMINDER_MESSAGE,
+      marketWhatsAppEnabled: true,
     },
   };
 }
@@ -39,14 +34,17 @@ export function normalizePreferences(raw?: FinancePreferences): FinancePreferenc
   return {
     quickAmounts: quickAmounts.length > 0 ? quickAmounts : base.quickAmounts,
     reminder: {
-      enabled: Boolean(reminder.enabled),
-      phoneDigits: String(reminder.phoneDigits ?? '').replace(/\D/g, ''),
+      enabled: reminder.enabled !== false,
+      phoneDigits: site.social.whatsappPhoneDigits,
       daysOfMonth: normalizeReminderDays(reminder.daysOfMonth),
+      messageTemplate: undefined,
       callMeBotApiKey: reminder.callMeBotApiKey?.trim() || undefined,
-      messageTemplate: reminder.messageTemplate?.trim() || DEFAULT_REMINDER_MESSAGE,
-      lastAutoReminderMonth: reminder.lastAutoReminderMonth,
       lastCronReminderKeys: Array.isArray(reminder.lastCronReminderKeys)
         ? reminder.lastCronReminderKeys.filter((k) => typeof k === 'string').slice(-36)
+        : undefined,
+      marketWhatsAppEnabled: reminder.marketWhatsAppEnabled !== false,
+      lastMarketAlertKeys: Array.isArray(reminder.lastMarketAlertKeys)
+        ? reminder.lastMarketAlertKeys.filter((k) => typeof k === 'string').slice(-64)
         : undefined,
     },
   };
@@ -66,8 +64,10 @@ function normalizeReminderDays(days: number[] | undefined): number[] {
   return uniq.length > 0 ? uniq.sort((a, b) => a - b) : [...DEFAULT_REMINDER_DAYS];
 }
 
+/** Clave de ventana ~cada 3 días dentro del mes. */
 export function cronReminderRunKey(monthKey: string, day: number): string {
-  return `${monthKey}-${day}`;
+  const window = Math.max(1, Math.ceil(day / INVESTMENT_REMINDER_DAYS_PER_WINDOW));
+  return `${monthKey}-w${window}`;
 }
 
 export function markCronReminderSent(
@@ -79,78 +79,77 @@ export function markCronReminderSent(
   return {
     ...reminder,
     lastCronReminderKeys: keys.slice(-36),
-    lastAutoReminderMonth: runKey.split('-').slice(0, 2).join('-'),
   };
 }
 
-export function buildWhatsAppLink(phoneDigits: string, text: string): string {
-  const phone = phoneDigits.replace(/\D/g, '');
-  if (!phone) return '';
-  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+export function markMarketAlertsSent(
+  reminder: FinanceReminderSettings,
+  fingerprints: string[],
+  activeFingerprints: string[],
+): FinanceReminderSettings {
+  const kept = (reminder.lastMarketAlertKeys ?? []).filter((key) => activeFingerprints.includes(key));
+  const next = new Set(kept);
+  for (const fp of fingerprints) next.add(fp);
+  return {
+    ...reminder,
+    lastMarketAlertKeys: [...next].slice(-64),
+  };
 }
 
-/** CallMeBot: registrate en callmebot.com y pegá tu API key. */
-export async function sendCallMeBotWhatsApp(
-  phoneDigits: string,
-  text: string,
-  apiKey: string,
-): Promise<{ ok: boolean; error?: string }> {
-  const phone = phoneDigits.replace(/\D/g, '');
-  if (!phone || !apiKey.trim()) {
-    return { ok: false, error: 'Falta teléfono o API key de CallMeBot.' };
-  }
-  try {
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(apiKey.trim())}`;
-    await fetch(url, { mode: 'no-cors' });
-    return { ok: true };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'No se pudo enviar.';
-    return { ok: false, error: msg };
-  }
-}
-
+/** Banner in-app alineado al motor de WhatsApp. */
 export function shouldShowInAppReminder(
   reminder: FinanceReminderSettings,
-  investedThisMonth: number,
+  state: FinanceState,
 ): boolean {
   if (!reminder.enabled) return false;
-  if (!needsMonthlyInvestmentReminder(investedThisMonth)) return false;
   const { day, monthKey } = getArgentinaDateParts();
-  if (!reminder.daysOfMonth.includes(day)) return false;
+  const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
+  if (!nudge.shouldNotify) return false;
   const runKey = cronReminderRunKey(monthKey, day);
   if (reminder.lastCronReminderKeys?.includes(runKey)) return false;
   return true;
 }
 
-export function reminderMessageForMonth(
-  template: string,
-  monthLabel: string,
-  invested: number,
-  minimumArs: number = MONTHLY_STREAK_MINIMUM_ARS,
-): string {
-  const invertido =
-    invested > 0 ? formatARS(invested) : '$0 (sin cargas de inversión este mes)';
-  const falta = formatARS(getMonthlyInvestmentReminderGap(invested, minimumArs));
-  return template
-    .replaceAll('{mes}', monthLabel)
-    .replaceAll('{invertido}', invertido)
-    .replaceAll('{falta}', falta);
-}
-
-/** Texto corto para banner / UI según cuánto invertiste. */
-export function reminderStatusLine(
-  invested: number,
-  minimumArs: number = MONTHLY_STREAK_MINIMUM_ARS,
-): { title: string; detail: string } {
-  if (invested <= 0) {
+export function reminderStatusLine(state: FinanceState): { title: string; detail: string } {
+  const { monthKey } = getArgentinaDateParts();
+  const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
+  if (!nudge.shouldNotify) {
     return {
-      title: 'Sin inversiones este mes',
-      detail: `Todavía no cargaste nada. El mínimo del mes es ${formatARS(minimumArs)}.`,
+      title: 'Inversión del mes en buen ritmo',
+      detail: 'No hace falta empujón por WhatsApp con el volumen actual.',
     };
   }
-  const gap = getMonthlyInvestmentReminderGap(invested, minimumArs);
+  if (nudge.kind === 'near_level') {
+    return {
+      title: `Cerca del nivel ${nudge.nextLevel}`,
+      detail: nudge.message.split('\n').slice(1).join(' '),
+    };
+  }
+  if (nudge.kind === 'low') {
+    return {
+      title: 'Poca inversión este mes',
+      detail: nudge.message.split('\n').slice(1).join(' '),
+    };
+  }
   return {
-    title: 'Invertiste poco este mes',
-    detail: `Llevás ${formatARS(invested)}. Te faltan ${formatARS(gap)} para el mínimo (${formatARS(minimumArs)}).`,
+    title: `Rumbo al nivel ${nudge.nextLevel}`,
+    detail: nudge.message.split('\n').slice(1).join(' '),
+  };
+}
+
+export function whatsappAutomationReadiness(reminder: FinanceReminderSettings): {
+  phoneOk: boolean;
+  apiKeyOk: boolean;
+  anyJobEnabled: boolean;
+  ready: boolean;
+} {
+  const phoneOk = site.social.whatsappPhoneDigits.replace(/\D/g, '').length >= 10;
+  const apiKeyOk = Boolean(reminder.callMeBotApiKey?.trim());
+  const anyJobEnabled = Boolean(reminder.enabled || reminder.marketWhatsAppEnabled);
+  return {
+    phoneOk,
+    apiKeyOk,
+    anyJobEnabled,
+    ready: phoneOk && apiKeyOk && anyJobEnabled,
   };
 }

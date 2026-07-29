@@ -23,17 +23,14 @@ import { FinanceConfettiBurst } from '@/components/finance/FinanceConfettiBurst'
 import { FinanceEntryEditModal } from '@/components/finance/FinanceEntryEditModal';
 import { FinanceWhatsAppReminders } from '@/components/finance/FinanceWhatsAppReminders';
 import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmountsEditor';
-import { formatARS } from '@/lib/finance/calculations';
+import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
 import {
+  cronReminderRunKey,
+  markCronReminderSent,
   normalizePreferences,
   shouldShowInAppReminder,
-  buildWhatsAppLink,
-  reminderMessageForMonth,
   reminderStatusLine,
-  DEFAULT_REMINDER_MESSAGE,
 } from '@/lib/finance/preferences';
-import { getCalendarMonthKey, getEntriesByMonth, getMonthlyInvested } from '@/lib/finance/calculations';
-import { cronReminderRunKey, markCronReminderSent } from '@/lib/finance/preferences';
 import { getArgentinaDateParts } from '@/lib/finance/timezone';
 import type { FinancePreferences } from '@/lib/finance/types';
 import { FinanceGoals } from '@/components/finance/FinanceGoals';
@@ -159,35 +156,15 @@ export default function FinanceGameApp() {
     [persist],
   );
 
-  const todayMonth = getCalendarMonthKey();
-  const investedTodayMonth = getMonthlyInvested(state.entries, todayMonth);
   const monthEntries = useMemo(() => getEntriesByMonth(state.entries, month), [state.entries, month]);
   const mission = useMemo(() => getMonthlyMissionView(state, month), [state, month]);
 
   const showReminderBanner = useMemo(
-    () => shouldShowInAppReminder(preferences.reminder, investedTodayMonth),
-    [preferences.reminder, investedTodayMonth],
+    () => shouldShowInAppReminder(preferences.reminder, state),
+    [preferences.reminder, state],
   );
 
-  const todayMonthLabel = useMemo(() => {
-    const [y, m] = todayMonth.split('-').map(Number);
-    return new Date(y, m - 1, 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
-  }, [todayMonth]);
-
-  const reminderBannerCopy = useMemo(
-    () => reminderStatusLine(investedTodayMonth),
-    [investedTodayMonth],
-  );
-
-  const reminderWaLink = useMemo(() => {
-    const r = preferences.reminder;
-    const text = reminderMessageForMonth(
-      r.messageTemplate ?? DEFAULT_REMINDER_MESSAGE,
-      todayMonthLabel,
-      investedTodayMonth,
-    );
-    return buildWhatsAppLink(r.phoneDigits, text);
-  }, [preferences.reminder, todayMonthLabel, investedTodayMonth]);
+  const reminderBannerCopy = useMemo(() => reminderStatusLine(state), [state]);
 
   const sortedMonthInvestments = useMemo(() => {
     return [...monthEntries]
@@ -341,22 +318,14 @@ export default function FinanceGameApp() {
           <>
         <FinanceInstallHint />
 
-        {showReminderBanner && reminderWaLink ? (
+        {showReminderBanner ? (
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-black text-amber-900">{reminderBannerCopy.title}</p>
             <p className="mt-1 text-xs font-semibold text-amber-800">{reminderBannerCopy.detail}</p>
             <p className="mt-1 text-[10px] text-amber-700">
-              Solo te avisamos si no llegaste al mínimo del mes. Hoy toca recordatorio programado.
+              Si tenés WhatsApp automático activado, el cron también te avisa sin abrir la app.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <a
-                href={reminderWaLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#25D366] px-4 text-xs font-black text-white"
-              >
-                WhatsApp
-              </a>
               <a
                 href="#inversion"
                 className="finance-primary-button inline-flex min-h-[44px] items-center justify-center px-4 text-xs"
@@ -481,7 +450,7 @@ export default function FinanceGameApp() {
 
           <details className="finance-details open:pb-1">
             <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 text-sm font-bold [&::-webkit-details-marker]:hidden">
-              Recordatorios WhatsApp
+              Avisos WhatsApp
             </summary>
             <div className="px-3 pb-4 pt-3 sm:px-4">
               <FinanceWhatsAppReminders state={state} onPreferencesChange={patchPreferences} />
