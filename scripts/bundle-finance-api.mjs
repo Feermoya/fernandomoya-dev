@@ -26,6 +26,10 @@ const entries = [
     entry: path.join(root, 'api/finance-keepalive.entry.ts'),
     outfile: path.join(root, 'api/finance-keepalive.mjs'),
   },
+  {
+    entry: path.join(root, 'api/finance-whatsapp-send.entry.ts'),
+    outfile: path.join(root, 'api/finance-whatsapp-send.mjs'),
+  },
 ];
 
 for (const { entry, outfile } of entries) {

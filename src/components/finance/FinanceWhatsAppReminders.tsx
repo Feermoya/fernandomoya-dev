@@ -4,7 +4,16 @@ import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
 import { normalizePreferences, whatsappAutomationReadiness } from '@/lib/finance/preferences';
 import { getArgentinaDateParts } from '@/lib/finance/timezone';
 import type { FinancePreferences, FinanceState } from '@/lib/finance/types';
-import { requestWhatsAppTest } from '@/lib/finance/whatsappTestClient';
+import {
+  requestCombinedWhatsAppTest,
+  requestInvestmentWhatsAppTest,
+  requestMarketWhatsAppTest,
+} from '@/lib/finance/whatsappTestClient';
+import {
+  buildMarketAlerts,
+  getTrackedTickersFromEntries,
+} from '@/lib/finance/marketAlerts';
+import { fetchFinancePrices } from '@/lib/finance/financePrices';
 
 type Props = {
   state: FinanceState;
@@ -31,10 +40,28 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
     });
   };
 
+  const loadMarketAlertsForTest = async () => {
+    const tickers = getTrackedTickersFromEntries(state.entries);
+    if (tickers.length === 0) return [];
+    const result = await fetchFinancePrices(tickers);
+    return buildMarketAlerts({ entries: state.entries, prices: result.prices }).filter(
+      (a) => a.kind !== 'neutral',
+    );
+  };
+
   const runTest = async (kind: 'investment' | 'market' | 'both') => {
     setBusy(kind);
     setTestResult(null);
-    const result = await requestWhatsAppTest(kind);
+    let result;
+    if (kind === 'investment') {
+      result = await requestInvestmentWhatsAppTest(state);
+    } else if (kind === 'market') {
+      const alerts = await loadMarketAlertsForTest();
+      result = await requestMarketWhatsAppTest(alerts);
+    } else {
+      const alerts = await loadMarketAlertsForTest();
+      result = await requestCombinedWhatsAppTest(state, alerts);
+    }
     setBusy(null);
     setTestResult(result.message);
   };
@@ -132,7 +159,8 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
           </p>
         ) : null}
         <p className="text-[10px] text-slate-500">
-          Las pruebas no gastan el cupo anti-spam del cron (podés repetirlas).
+          El pedido vuelve en segundos. La entrega de CallMeBot gratis a veces tarda varios minutos;
+          no spamées pruebas seguidas (hace peor la cola).
         </p>
       </div>
 

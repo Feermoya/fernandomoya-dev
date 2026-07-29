@@ -7,6 +7,9 @@
     "api/finance-keepalive.mjs": {
       "maxDuration": 60
     },
+    "api/finance-whatsapp-send.mjs": {
+      "maxDuration": 20
+    },
     "api/finance-cloud.mjs": {
       "maxDuration": 20
     }

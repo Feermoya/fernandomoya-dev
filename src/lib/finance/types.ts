@@ -110,8 +110,6 @@ export type FinanceReminderSettings = {
   messageTemplate?: string;
   /** Claves de recordatorio WhatsApp ya enviadas: `YYYY-MM-wN`. */
   lastCronReminderKeys?: string[];
-  /** Banner in-app descartado (NO bloquea WhatsApp). */
-  lastInAppReminderKeys?: string[];
   /** WhatsApp automático cuando hay alertas de mercado relevantes. */
   marketWhatsAppEnabled?: boolean;
   /** Huellas estables ya avisadas: `loss-since-buy:TSLA`. */

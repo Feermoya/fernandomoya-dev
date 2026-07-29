@@ -1,4 +1,13 @@
-import type { WhatsAppJobKind } from '@/lib/finance/whatsappJobs';
+import type { MarketAlert } from '@/lib/finance/marketAlerts';
+import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
+import {
+  formatInvestmentTestWhatsAppMessage,
+  formatInvestmentWhatsAppMessage,
+  formatMarketTestEmptyWhatsAppMessage,
+  formatMarketWhatsAppMessage,
+} from '@/lib/finance/whatsappCopy';
+import type { FinanceState } from '@/lib/finance/types';
+import { getArgentinaDateParts } from '@/lib/finance/timezone';
 
 export type WhatsAppTestClientResult = {
   ok: boolean;
@@ -6,65 +15,116 @@ export type WhatsAppTestClientResult = {
   detail?: string;
 };
 
-/**
- * Dispara una prueba de WhatsApp vía el mismo endpoint del cron (modo test).
- * No cuenta para el anti-spam del automático.
- */
-export async function requestWhatsAppTest(
-  kind: WhatsAppJobKind = 'both',
-): Promise<WhatsAppTestClientResult> {
+async function postWhatsAppTexts(texts: string[]): Promise<WhatsAppTestClientResult> {
   try {
-    const url = `/api/finance-keepalive?whatsapp=test&kind=${encodeURIComponent(kind)}`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await fetch('/api/finance-whatsapp-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(texts.length === 1 ? { text: texts[0] } : { texts }),
+      cache: 'no-store',
+    });
     const body = (await res.json().catch(() => null)) as {
       ok?: boolean;
       error?: string;
-      whatsapp?: {
-        ok?: boolean;
-        reminder?: { action?: string; skipReason?: string; error?: string };
-        market?: { action?: string; skipReason?: string; error?: string };
-      };
+      sent?: number;
+      note?: string;
+      results?: { ok: boolean; detail: string }[];
     } | null;
 
     if (!res.ok || !body) {
       return {
         ok: false,
-        message: 'No se pudo contactar el servidor de avisos.',
+        message: 'No se pudo contactar el envío WhatsApp.',
         detail: body?.error,
       };
     }
 
-    const reminder = body.whatsapp?.reminder;
-    const market = body.whatsapp?.market;
-    const parts: string[] = [];
-
-    if (kind === 'both' || kind === 'investment') {
-      if (reminder?.action === 'sent') parts.push('inversión enviada');
-      else if (reminder?.error) parts.push(`inversión: ${reminder.error}`);
-      else if (reminder?.skipReason) parts.push(`inversión omitida (${reminder.skipReason})`);
+    if (!body.ok && !(body.sent && body.sent > 0)) {
+      return {
+        ok: false,
+        message: body.error || 'CallMeBot no aceptó el mensaje.',
+        detail: body.results?.[0]?.detail,
+      };
     }
-    if (kind === 'both' || kind === 'market') {
-      if (market?.action === 'sent') parts.push('mercado enviado');
-      else if (market?.error) parts.push(`mercado: ${market.error}`);
-      else if (market?.skipReason) parts.push(`mercado omitido (${market.skipReason})`);
-    }
-
-    const sent =
-      (kind !== 'market' && reminder?.action === 'sent') ||
-      (kind !== 'investment' && market?.action === 'sent');
 
     return {
-      ok: Boolean(body.ok && sent),
-      message: sent
-        ? `Listo. Revisá WhatsApp (${parts.join(' · ')}).`
-        : `No se envió mensaje. ${parts.join(' · ') || body.error || 'Revisá la key y el sync.'}`,
-      detail: parts.join(' | '),
+      ok: true,
+      message:
+        'Pedido aceptado. Revisá WhatsApp: CallMeBot gratis a veces tarda unos minutos en entregar.',
+      detail: body.note ?? body.results?.[0]?.detail,
     };
   } catch (e) {
     return {
       ok: false,
-      message: 'Error de red al pedir la prueba.',
+      message: 'Error de red al pedir el envío.',
       detail: e instanceof Error ? e.message : undefined,
     };
   }
 }
+
+/** Prueba de mercado con alertas ya calculadas en la UI (sin re-scrape en servidor). */
+export async function requestMarketWhatsAppTest(
+  alerts: MarketAlert[],
+): Promise<WhatsAppTestClientResult> {
+  const actionable = alerts.filter((a) => a.kind !== 'neutral');
+  const text =
+    actionable.length > 0
+      ? formatMarketWhatsAppMessage(actionable)
+      : formatMarketTestEmptyWhatsAppMessage();
+  return postWhatsAppTexts([text]);
+}
+
+/** Prueba de inversión con el estado local (sin cron / precios). */
+export async function requestInvestmentWhatsAppTest(
+  state: FinanceState,
+): Promise<WhatsAppTestClientResult> {
+  const { monthKey } = getArgentinaDateParts();
+  const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
+  const text = nudge.shouldNotify
+    ? nudge.message
+    : formatInvestmentTestWhatsAppMessage(nudge.invested);
+  return postWhatsAppTexts([text]);
+}
+
+/** Envía inversión + mercado en pedidos separados (espaciados en el servidor). */
+export async function requestCombinedWhatsAppTest(
+  state: FinanceState,
+  alerts: MarketAlert[],
+): Promise<WhatsAppTestClientResult> {
+  const { monthKey } = getArgentinaDateParts();
+  const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
+  const investmentText = nudge.shouldNotify
+    ? nudge.message
+    : formatInvestmentTestWhatsAppMessage(nudge.invested);
+
+  const actionable = alerts.filter((a) => a.kind !== 'neutral');
+  const marketText =
+    actionable.length > 0
+      ? formatMarketWhatsAppMessage(actionable)
+      : formatMarketTestEmptyWhatsAppMessage();
+
+  return postWhatsAppTexts([investmentText, marketText]);
+}
+
+/** @deprecated usar requestMarket / requestInvestment */
+export async function requestWhatsAppTest(
+  kind: 'investment' | 'market' | 'both' = 'both',
+  opts?: { state?: FinanceState; alerts?: MarketAlert[] },
+): Promise<WhatsAppTestClientResult> {
+  if (kind === 'investment' && opts?.state) {
+    return requestInvestmentWhatsAppTest(opts.state);
+  }
+  if (kind === 'market' && opts?.alerts) {
+    return requestMarketWhatsAppTest(opts.alerts);
+  }
+  if (kind === 'both' && opts?.state) {
+    return requestCombinedWhatsAppTest(opts.state, opts.alerts ?? []);
+  }
+  return {
+    ok: false,
+    message: 'Faltan datos para armar el mensaje de prueba.',
+  };
+}
+
+// re-export for callers that build messages themselves
+export { formatInvestmentWhatsAppMessage };

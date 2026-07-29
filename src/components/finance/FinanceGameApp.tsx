@@ -24,14 +24,7 @@ import { FinanceEntryEditModal } from '@/components/finance/FinanceEntryEditModa
 import { FinanceWhatsAppReminders } from '@/components/finance/FinanceWhatsAppReminders';
 import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmountsEditor';
 import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
-import {
-  cronReminderRunKey,
-  markInAppReminderDismissed,
-  normalizePreferences,
-  shouldShowInAppReminder,
-  reminderStatusLine,
-} from '@/lib/finance/preferences';
-import { getArgentinaDateParts } from '@/lib/finance/timezone';
+import { normalizePreferences } from '@/lib/finance/preferences';
 import type { FinancePreferences } from '@/lib/finance/types';
 import { FinanceGoals } from '@/components/finance/FinanceGoals';
 import { FinanceLevels } from '@/components/finance/FinanceLevels';
@@ -159,13 +152,6 @@ export default function FinanceGameApp() {
   const monthEntries = useMemo(() => getEntriesByMonth(state.entries, month), [state.entries, month]);
   const mission = useMemo(() => getMonthlyMissionView(state, month), [state, month]);
 
-  const showReminderBanner = useMemo(
-    () => shouldShowInAppReminder(preferences.reminder, state),
-    [preferences.reminder, state],
-  );
-
-  const reminderBannerCopy = useMemo(() => reminderStatusLine(state), [state]);
-
   const sortedMonthInvestments = useMemo(() => {
     return [...monthEntries]
       .filter((e) => e.type === 'investment')
@@ -182,15 +168,6 @@ export default function FinanceGameApp() {
     },
     [persist, setMicroToast],
   );
-
-  const dismissReminderBanner = useCallback(() => {
-    const { day, monthKey } = getArgentinaDateParts();
-    const runKey = cronReminderRunKey(monthKey, day);
-    patchPreferences({
-      ...preferences,
-      reminder: markInAppReminderDismissed(preferences.reminder, runKey),
-    });
-  }, [patchPreferences, preferences]);
 
   const removeEntry = useCallback(
     (id: string) => {
@@ -317,31 +294,6 @@ export default function FinanceGameApp() {
         {cloudReady ? (
           <>
         <FinanceInstallHint />
-
-        {showReminderBanner ? (
-          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-black text-amber-900">{reminderBannerCopy.title}</p>
-            <p className="mt-1 text-xs font-semibold text-amber-800">{reminderBannerCopy.detail}</p>
-            <p className="mt-1 text-[10px] text-amber-700">
-              Si tenés WhatsApp automático activado, el cron también te avisa sin abrir la app.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <a
-                href="#inversion"
-                className="finance-primary-button inline-flex min-h-[44px] items-center justify-center px-4 text-xs"
-              >
-                Cargar ahora
-              </a>
-              <button
-                type="button"
-                onClick={dismissReminderBanner}
-                className="finance-secondary-button inline-flex min-h-[44px] items-center justify-center px-3 text-xs"
-              >
-                Después
-              </button>
-            </div>
-          </div>
-        ) : null}
 
         {isEmpty ? (
           <div className="finance-card-compact mb-4 p-4">

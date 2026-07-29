@@ -19,7 +19,7 @@ import {
   type MarketAlert,
   type MarketAlertSeverity,
 } from '@/lib/finance/marketAlerts';
-import { requestWhatsAppTest } from '@/lib/finance/whatsappTestClient';
+import { requestMarketWhatsAppTest } from '@/lib/finance/whatsappTestClient';
 
 type Props = {
   entries: FinanceEntry[];
@@ -120,10 +120,10 @@ export function FinanceMarketAlerts({ entries }: Props) {
   const sendWhatsApp = useCallback(async () => {
     setWaBusy(true);
     setWaResult(null);
-    const result = await requestWhatsAppTest('market');
+    const result = await requestMarketWhatsAppTest(alerts);
     setWaBusy(false);
     setWaResult(result.message);
-  }, []);
+  }, [alerts]);
 
   if (tickers.length === 0) return null;
 

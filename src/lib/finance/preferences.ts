@@ -1,7 +1,5 @@
 import { site } from '@/data/site';
 import type { FinancePreferences, FinanceReminderSettings, FinanceState } from '@/lib/finance/types';
-import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
-import { getArgentinaDateParts } from '@/lib/finance/timezone';
 
 export const DEFAULT_QUICK_AMOUNTS = [50_000, 100_000, 200_000, 500_000] as const;
 
@@ -41,9 +39,6 @@ export function normalizePreferences(raw?: FinancePreferences): FinancePreferenc
       callMeBotApiKey: reminder.callMeBotApiKey?.trim() || undefined,
       lastCronReminderKeys: Array.isArray(reminder.lastCronReminderKeys)
         ? reminder.lastCronReminderKeys.filter((k) => typeof k === 'string').slice(-36)
-        : undefined,
-      lastInAppReminderKeys: Array.isArray(reminder.lastInAppReminderKeys)
-        ? reminder.lastInAppReminderKeys.filter((k) => typeof k === 'string').slice(-36)
         : undefined,
       marketWhatsAppEnabled: reminder.marketWhatsAppEnabled !== false,
       lastMarketAlertKeys: Array.isArray(reminder.lastMarketAlertKeys)
@@ -85,19 +80,6 @@ export function markCronReminderSent(
   };
 }
 
-/** Solo oculta el banner; no cuenta como WhatsApp enviado. */
-export function markInAppReminderDismissed(
-  reminder: FinanceReminderSettings,
-  runKey: string,
-): FinanceReminderSettings {
-  const keys = [...(reminder.lastInAppReminderKeys ?? [])];
-  if (!keys.includes(runKey)) keys.push(runKey);
-  return {
-    ...reminder,
-    lastInAppReminderKeys: keys.slice(-36),
-  };
-}
-
 export function markMarketAlertsSent(
   reminder: FinanceReminderSettings,
   fingerprints: string[],
@@ -109,47 +91,6 @@ export function markMarketAlertsSent(
   return {
     ...reminder,
     lastMarketAlertKeys: [...next].slice(-64),
-  };
-}
-
-/** Banner in-app alineado al motor de WhatsApp (dismiss propio, no bloquea cron). */
-export function shouldShowInAppReminder(
-  reminder: FinanceReminderSettings,
-  state: FinanceState,
-): boolean {
-  if (!reminder.enabled) return false;
-  const { day, monthKey } = getArgentinaDateParts();
-  const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
-  if (!nudge.shouldNotify) return false;
-  const runKey = cronReminderRunKey(monthKey, day);
-  if (reminder.lastInAppReminderKeys?.includes(runKey)) return false;
-  return true;
-}
-
-export function reminderStatusLine(state: FinanceState): { title: string; detail: string } {
-  const { monthKey } = getArgentinaDateParts();
-  const nudge = evaluateInvestmentWhatsAppNudge(state, monthKey);
-  if (!nudge.shouldNotify) {
-    return {
-      title: 'Inversión del mes en buen ritmo',
-      detail: 'No hace falta empujón por WhatsApp con el volumen actual.',
-    };
-  }
-  if (nudge.kind === 'near_level') {
-    return {
-      title: `Cerca del nivel ${nudge.nextLevel}`,
-      detail: nudge.message.split('\n').slice(1).join(' '),
-    };
-  }
-  if (nudge.kind === 'low') {
-    return {
-      title: 'Poca inversión este mes',
-      detail: nudge.message.split('\n').slice(1).join(' '),
-    };
-  }
-  return {
-    title: `Rumbo al nivel ${nudge.nextLevel}`,
-    detail: nudge.message.split('\n').slice(1).join(' '),
   };
 }
 
