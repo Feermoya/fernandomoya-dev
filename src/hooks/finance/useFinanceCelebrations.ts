@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { sileo } from 'sileo';
 import type { FinanceDashboardCelebration } from '@/components/finance/FinanceDashboard';
 import type { FinanceEntry, FinanceState } from '@/lib/finance/types';
 import { formatARS, getMonthlyInvested } from '@/lib/finance/calculations';
 import { triggerEntryHaptic } from '@/lib/finance/celebration';
+import { getEntryTicker } from '@/lib/finance/entryTicker';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
 import {
   getLevelProgressPercent,
@@ -33,7 +35,6 @@ export function useFinanceCelebrations({ persist }: Options) {
   } | null>(null);
   const [celebration, setCelebration] = useState<FinanceDashboardCelebration | null>(null);
   const celebrationKeyRef = useRef(0);
-  const [microToast, setMicroToast] = useState<{ message: string; sub?: string } | null>(null);
   const [confettiKey, setConfettiKey] = useState(0);
 
   useEffect(() => {
@@ -42,19 +43,14 @@ export function useFinanceCelebrations({ persist }: Options) {
     return () => clearTimeout(t);
   }, [celebration?.key]);
 
-  useEffect(() => {
-    if (!microToast) return;
-    const t = window.setTimeout(() => setMicroToast(null), 2600);
-    return () => clearTimeout(t);
-  }, [microToast?.message]);
-
   const dismissLevelUp = useCallback(() => setLevelUp(null), []);
 
   const handleAddEntry = useCallback(
     (entry: FinanceEntry) => {
       let overlay: { level: number; title: string; icon: string; message?: string } | null = null;
       let dash: FinanceDashboardCelebration | null = null;
-      let toast: { message: string; sub?: string } | null = null;
+      let toastTitle = 'Inversión cargada';
+      let toastDescription = formatARS(entry.amount);
 
       persist((prev) => {
         const m = entry.month;
@@ -73,8 +69,12 @@ export function useFinanceCelebrations({ persist }: Options) {
         const newLevel = getMonthlyLevel(next, m).level;
         const inv = getMonthlyInvested(next.entries, m);
         const mv = getMonthlyMissionView(next, m);
+        const ticker = getEntryTicker(entry) ?? entry.category ?? entry.asset;
 
-        const subParts: string[] = [`${formatARS(inv)} este mes · ${mv.percent.toFixed(0)}% del objetivo`];
+        const subParts: string[] = [
+          ticker ? `${formatARS(entry.amount)} en ${ticker}` : formatARS(entry.amount),
+          `${formatARS(inv)} este mes · ${mv.percent.toFixed(0)}% del objetivo`,
+        ];
         if (afterPlan.totalCount > 0 && afterPlan.completedCount > beforePlan.completedCount) {
           const newlyDone = getNewlyCompletedPlanLabels(beforePlan, afterPlan);
           if (newlyDone.length > 0) {
@@ -92,10 +92,9 @@ export function useFinanceCelebrations({ persist }: Options) {
           }
         }
 
-        toast = {
-          message: `+${formatARS(entry.amount)} sumado`,
-          sub: subParts.join(' · '),
-        };
+        toastTitle = 'Inversión cargada';
+        toastDescription = subParts.join(' · ');
+
         if (newLevel > prevLevel) {
           const info = getMonthlyLevel(next, m);
           const th = getLevelTheme(newLevel);
@@ -118,7 +117,10 @@ export function useFinanceCelebrations({ persist }: Options) {
       });
 
       queueMicrotask(() => {
-        if (toast) setMicroToast(toast);
+        sileo.success({
+          title: toastTitle,
+          description: toastDescription,
+        });
         setConfettiKey((k) => k + 1);
         triggerEntryHaptic();
         if (overlay) setLevelUp(overlay);
@@ -131,9 +133,7 @@ export function useFinanceCelebrations({ persist }: Options) {
   return {
     levelUp,
     celebration,
-    microToast,
     confettiKey,
-    setMicroToast,
     dismissLevelUp,
     handleAddEntry,
   };

@@ -72,7 +72,6 @@ export function FinanceEntryForm({
   const [platform, setPlatform] = useState<(typeof PLATFORM_OPTIONS)[number]>('Balanz');
   const [category, setCategory] = useState('');
   const [note, setNote] = useState('');
-  const [savedFlash, setSavedFlash] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -145,8 +144,6 @@ export function FinanceEntryForm({
       onEntrySaved?.(entry);
       setAmount('');
       setNote('');
-      setSavedFlash(true);
-      window.setTimeout(() => setSavedFlash(false), 2200);
     } finally {
       setSubmitting(false);
     }
@@ -155,15 +152,8 @@ export function FinanceEntryForm({
   return (
     <form
       onSubmit={submit}
-      className={`finance-card-compact relative scroll-mt-24 overflow-hidden p-3 transition sm:p-3.5 ${savedFlash ? 'ring-2 ring-blue-500/30 ring-offset-2 ring-offset-white' : ''}`}
+      className="finance-card-compact relative scroll-mt-24 overflow-hidden p-3 transition sm:p-3.5"
     >
-      {savedFlash ? (
-        <div
-          className="pointer-events-none absolute inset-0 z-10 bg-emerald-100/40 motion-safe:animate-pulse"
-          aria-live="polite"
-        />
-      ) : null}
-
       <div className="relative z-[1]">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
@@ -172,11 +162,6 @@ export function FinanceEntryForm({
             </span>
             <h3 className="text-base font-black tracking-tight text-slate-900">Sumar inversión</h3>
           </div>
-          {savedFlash ? (
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-600">
-              Listo
-            </span>
-          ) : null}
         </div>
 
         <label className="mt-3 flex flex-col gap-1">

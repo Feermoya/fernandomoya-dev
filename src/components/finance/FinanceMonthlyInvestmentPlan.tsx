@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, Clock, RefreshCcw, Target } from 'lucide-react';
+import { sileo } from 'sileo';
 import type { FinanceEntry, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
 import { formatARS } from '@/lib/finance/calculations';
 import type { FinancePricesMap } from '@/lib/finance/financePrices';
@@ -350,7 +351,6 @@ export function FinanceMonthlyInvestmentPlan({
 }: Props) {
   const [rawInput, setRawInput] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
-  const [addInfo, setAddInfo] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const [prices, setPrices] = useState<FinancePricesMap>({});
@@ -427,13 +427,11 @@ export function FinanceMonthlyInvestmentPlan({
     const trimmed = rawInput.trim();
     if (!trimmed) {
       setAddError('Pegá al menos un ticker o activo.');
-      setAddInfo(null);
       return;
     }
     const parsed = parseInvestmentPlanInput(trimmed);
     if (parsed.length === 0) {
       setAddError('No se detectaron tickers válidos.');
-      setAddInfo(null);
       return;
     }
     const newItems = createMonthlyInvestmentPlanItems({
@@ -443,19 +441,16 @@ export function FinanceMonthlyInvestmentPlan({
     });
     if (newItems.length === 0) {
       setAddError('Esos tickers ya están en el plan de este mes.');
-      setAddInfo(null);
       return;
     }
     onAddItems(trimmed);
     setRawInput('');
     setAddError(null);
     setShowAddForm(false);
-    setAddInfo(
-      newItems.length === 1
-        ? `Se agregó ${newItems[0].label}.`
-        : `Se agregaron ${newItems.length} tickers al plan.`,
-    );
-    window.setTimeout(() => setAddInfo(null), 2800);
+    sileo.success({
+      title: newItems.length === 1 ? `Se agregó ${newItems[0].label}` : `Se agregaron ${newItems.length} tickers`,
+      description: 'Plan del mes actualizado.',
+    });
   };
 
   const hasMergedItem = progress.items.some((p) => planItemLabelLooksLikeMergedTickers(p.item.label));
@@ -616,11 +611,6 @@ export function FinanceMonthlyInvestmentPlan({
       {addError ? (
         <p className="mt-2 text-[11px] font-semibold text-red-600" role="alert">
           {addError}
-        </p>
-      ) : null}
-      {addInfo ? (
-        <p className="mt-2 text-[11px] font-semibold text-emerald-600" role="status">
-          {addInfo}
         </p>
       ) : null}
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { sileo } from 'sileo';
 import { site } from '@/data/site';
 import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
 import { normalizePreferences, whatsappAutomationReadiness } from '@/lib/finance/preferences';
@@ -26,7 +27,6 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
   const readiness = whatsappAutomationReadiness(reminder);
   const { monthKey } = getArgentinaDateParts();
   const [busy, setBusy] = useState<'investment' | 'market' | 'both' | null>(null);
-  const [testResult, setTestResult] = useState<string | null>(null);
 
   const nudge = useMemo(
     () => evaluateInvestmentWhatsAppNudge(state, monthKey),
@@ -51,27 +51,38 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
 
   const runTest = async (kind: 'investment' | 'market' | 'both') => {
     setBusy(kind);
-    setTestResult(null);
-    let result;
-    if (kind === 'investment') {
-      result = await requestInvestmentWhatsAppTest(state);
-    } else if (kind === 'market') {
-      const alerts = await loadMarketAlertsForTest();
-      result = await requestMarketWhatsAppTest(alerts);
-    } else {
-      const alerts = await loadMarketAlertsForTest();
-      result = await requestCombinedWhatsAppTest(state, alerts);
+    try {
+      const job = async () => {
+        if (kind === 'investment') return requestInvestmentWhatsAppTest(state);
+        if (kind === 'market') {
+          const alerts = await loadMarketAlertsForTest();
+          return requestMarketWhatsAppTest(alerts);
+        }
+        const alerts = await loadMarketAlertsForTest();
+        return requestCombinedWhatsAppTest(state, alerts);
+      };
+      await sileo.promise(job(), {
+        loading: { title: 'Enviando WhatsApp…' },
+        success: (result) => ({
+          title: result.ok ? 'WhatsApp enviado' : 'No se pudo enviar',
+          description: result.message,
+        }),
+        error: {
+          title: 'Error de WhatsApp',
+          description: 'No se pudo completar el envío.',
+        },
+      });
+    } finally {
+      setBusy(null);
     }
-    setBusy(null);
-    setTestResult(result.message);
   };
 
   return (
     <div className="space-y-4">
       <p className="text-sm font-semibold leading-relaxed text-slate-600">
-        Avisos automáticos a {site.social.whatsappPhoneDigits} por el cron diario (~11:00 AR). La app
-        detecta si este mes invertiste poco o si estás cerca de subir de nivel; si ya llegaste a un
-        buen volumen, no molesta.
+        Avisos a {site.social.whatsappPhoneDigits}: el cron (~11:00 AR) cubre el día si no abrís la
+        app. Las alertas de mercado también se mandan al abrir o actualizar precios cuando aparece
+        una novedad (misma lógica anti-spam).
       </p>
 
       <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
@@ -153,11 +164,6 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
             {busy === 'both' ? 'Enviando…' : 'Probar los dos'}
           </button>
         </div>
-        {testResult ? (
-          <p className="text-xs font-semibold text-slate-600" role="status">
-            {testResult}
-          </p>
-        ) : null}
         <p className="text-[10px] text-slate-500">
           El pedido vuelve en segundos. La entrega de CallMeBot gratis a veces tarda varios minutos;
           no spamées pruebas seguidas (hace peor la cola).
@@ -176,7 +182,7 @@ export function FinanceWhatsAppReminders({ state, onPreferencesChange }: Props) 
         </li>
         <li className={readiness.ready ? 'text-emerald-700' : 'text-slate-500'}>
           {readiness.ready
-            ? 'Listo: el cron puede enviarte WhatsApp (~11:00 AR)'
+            ? 'Listo: cron (~11:00 AR) + alertas al actualizar precios'
             : 'Completá key + un aviso activado'}
         </li>
       </ul>

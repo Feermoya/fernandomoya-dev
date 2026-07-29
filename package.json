@@ -23,6 +23,7 @@
     "motion": "^12.38.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "sileo": "^0.1.5",
     "split-type": "^0.3.4",
     "tailwindcss": "^4.2.0"
   },

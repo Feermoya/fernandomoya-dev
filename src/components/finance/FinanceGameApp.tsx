@@ -18,11 +18,11 @@ import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
 import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
 import { FinanceMarketAlerts } from '@/components/finance/FinanceMarketAlerts';
 import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
-import { FinanceMicroToast } from '@/components/finance/FinanceMicroToast';
 import { FinanceConfettiBurst } from '@/components/finance/FinanceConfettiBurst';
 import { FinanceEntryEditModal } from '@/components/finance/FinanceEntryEditModal';
 import { FinanceWhatsAppReminders } from '@/components/finance/FinanceWhatsAppReminders';
 import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmountsEditor';
+import { FinanceToaster } from '@/components/finance/FinanceToaster';
 import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
 import { normalizePreferences } from '@/lib/finance/preferences';
 import type { FinancePreferences } from '@/lib/finance/types';
@@ -38,6 +38,7 @@ import {
 } from '@/hooks/finance/useFinanceCloudSync';
 import { useFinanceMonthlyPlanActions } from '@/hooks/finance/useFinanceMonthlyPlanActions';
 import { useFinanceCelebrations } from '@/hooks/finance/useFinanceCelebrations';
+import { sileo } from 'sileo';
 
 function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
   const label =
@@ -107,7 +108,6 @@ export default function FinanceGameApp() {
     activeSyncId,
     pullFromCloudImmediate,
     handleForcePush,
-    handleRefreshFromCloud,
     handleResetSyncIdToDefault,
     setSyncChip,
     setLastRemoteAt,
@@ -120,9 +120,7 @@ export default function FinanceGameApp() {
   const {
     levelUp,
     celebration,
-    microToast,
     confettiKey,
-    setMicroToast,
     dismissLevelUp,
     handleAddEntry,
   } = useFinanceCelebrations({ persist });
@@ -164,14 +162,18 @@ export default function FinanceGameApp() {
         ...prev,
         entries: prev.entries.map((e) => (e.id === updated.id ? updated : e)),
       }));
-      setMicroToast({ message: 'Inversión actualizada', sub: formatARS(updated.amount) });
+      sileo.success({
+        title: 'Cambios guardados',
+        description: `La inversión fue actualizada · ${formatARS(updated.amount)}`,
+      });
     },
-    [persist, setMicroToast],
+    [persist],
   );
 
   const removeEntry = useCallback(
     (id: string) => {
       persist((prev) => ({ ...prev, entries: prev.entries.filter((e) => e.id !== id) }));
+      sileo.info({ title: 'Inversión eliminada' });
     },
     [persist],
   );
@@ -179,6 +181,7 @@ export default function FinanceGameApp() {
   const addGoal = useCallback(
     (goal: FinanceGoal) => {
       persist((prev) => ({ ...prev, goals: [...prev.goals, goal] }));
+      sileo.success({ title: 'Objetivo guardado' });
     },
     [persist],
   );
@@ -189,6 +192,7 @@ export default function FinanceGameApp() {
         ...prev,
         goals: prev.goals.map((g) => (g.id === goal.id ? goal : g)),
       }));
+      sileo.success({ title: 'Objetivo actualizado' });
     },
     [persist],
   );
@@ -196,6 +200,7 @@ export default function FinanceGameApp() {
   const removeGoal = useCallback(
     (id: string) => {
       persist((prev) => ({ ...prev, goals: prev.goals.filter((g) => g.id !== id) }));
+      sileo.info({ title: 'Objetivo eliminado' });
     },
     [persist],
   );
@@ -215,6 +220,10 @@ export default function FinanceGameApp() {
       const fresh = getInitialFinanceState();
       fresh.currentMonth = prev.currentMonth;
       return fresh;
+    });
+    sileo.warning({
+      title: 'Datos borrados',
+      description: 'El libro quedó vacío.',
     });
   }, [persist]);
 
@@ -240,6 +249,7 @@ export default function FinanceGameApp() {
 
   return (
     <div className="finance-app-shell relative isolate min-w-0 overflow-x-hidden sm:pt-2">
+      <FinanceToaster />
       <div className="finance-page-container relative z-[1] mx-auto min-w-0 px-4 py-4 sm:px-5 sm:py-6 lg:px-6">
         {cloudErr && cloudReady && syncChip === 'error' ? (
           <div
@@ -249,7 +259,16 @@ export default function FinanceGameApp() {
             <p className="text-xs font-bold text-red-700">{cloudErr}</p>
             <button
               type="button"
-              onClick={() => void pullFromCloudImmediate()}
+              onClick={() => {
+                void sileo.promise(pullFromCloudImmediate(), {
+                  loading: { title: 'Reintentando sincronización…' },
+                  success: { title: 'Sincronización completada' },
+                  error: {
+                    title: 'No se pudo sincronizar',
+                    description: 'Revisá la conexión e intentá nuevamente.',
+                  },
+                });
+              }}
               className="finance-secondary-button min-h-[40px] self-start px-3 text-xs"
             >
               Reintentar sincronización
@@ -266,7 +285,16 @@ export default function FinanceGameApp() {
             {isFinanceCloudConfigured() ? (
               <button
                 type="button"
-                onClick={handleRefreshFromCloud}
+                onClick={() => {
+                  void sileo.promise(pullFromCloudImmediate(), {
+                    loading: { title: 'Actualizando desde la nube…' },
+                    success: { title: 'Datos actualizados' },
+                    error: {
+                      title: 'No se pudo sincronizar',
+                      description: 'Revisá la conexión e intentá nuevamente.',
+                    },
+                  });
+                }}
                 disabled={syncChip === 'loading' || !cloudReady}
                 className="finance-touch-target inline-flex min-h-[36px] items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-40"
                 title="Traer últimos datos de la nube"
@@ -327,7 +355,11 @@ export default function FinanceGameApp() {
             </section>
 
             <section className="order-3 min-w-0 scroll-mt-20 lg:order-none lg:hidden">
-              <FinanceMarketAlerts entries={state.entries} />
+              <FinanceMarketAlerts
+                entries={state.entries}
+                preferences={preferences}
+                onPreferencesChange={patchPreferences}
+              />
             </section>
 
             <section className="order-7 min-w-0 lg:order-none">
@@ -356,7 +388,11 @@ export default function FinanceGameApp() {
             </section>
 
             <section className="order-3 hidden min-w-0 lg:order-none lg:block">
-              <FinanceMarketAlerts entries={state.entries} />
+              <FinanceMarketAlerts
+                entries={state.entries}
+                preferences={preferences}
+                onPreferencesChange={patchPreferences}
+              />
             </section>
 
             <section className="order-5 min-w-0 lg:order-none">
@@ -474,7 +510,6 @@ export default function FinanceGameApp() {
       ) : null}
 
       {confettiKey > 0 ? <FinanceConfettiBurst burstKey={confettiKey} /> : null}
-      {microToast ? <FinanceMicroToast message={microToast.message} sub={microToast.sub} /> : null}
 
       <FinanceEntryEditModal
         entry={editingEntry}

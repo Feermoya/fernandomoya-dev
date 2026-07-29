@@ -8,7 +8,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
-import type { FinanceEntry } from '@/lib/finance/types';
+import type { FinanceEntry, FinancePreferences } from '@/lib/finance/types';
 import {
   fetchFinancePrices,
   formatPricesFetchedTime,
@@ -19,10 +19,15 @@ import {
   type MarketAlert,
   type MarketAlertSeverity,
 } from '@/lib/finance/marketAlerts';
+import { syncMarketAlertsWhatsApp } from '@/lib/finance/marketAlertAutoNotify';
+import { normalizePreferences, whatsappAutomationReadiness } from '@/lib/finance/preferences';
 import { requestMarketWhatsAppTest } from '@/lib/finance/whatsappTestClient';
+import { sileo } from 'sileo';
 
 type Props = {
   entries: FinanceEntry[];
+  preferences: FinancePreferences;
+  onPreferencesChange: (prefs: FinancePreferences) => void;
 };
 
 function alertIcon(severity: MarketAlertSeverity) {
@@ -86,9 +91,11 @@ function AlertItem({ alert }: { alert: MarketAlert }) {
   );
 }
 
-export function FinanceMarketAlerts({ entries }: Props) {
+export function FinanceMarketAlerts({ entries, preferences, onPreferencesChange }: Props) {
   const tickers = useMemo(() => getTrackedTickersFromEntries(entries), [entries]);
   const tickersKey = tickers.join(',');
+  const prefs = useMemo(() => normalizePreferences(preferences), [preferences]);
+  const readiness = whatsappAutomationReadiness(prefs.reminder);
 
   const [prices, setPrices] = useState<
     Record<string, import('@/lib/finance/financePrices').FinancePrice>
@@ -97,9 +104,45 @@ export function FinanceMarketAlerts({ entries }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
   const [waBusy, setWaBusy] = useState(false);
-  const [waResult, setWaResult] = useState<string | null>(null);
+  const [lastAutoStatus, setLastAutoStatus] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const runAutoNotify = useCallback(
+    async (nextPrices: typeof prices) => {
+      if (!prefs.reminder.marketWhatsAppEnabled || !readiness.apiKeyOk) return;
+      if (Object.keys(nextPrices).length === 0) return;
+
+      const { result, nextReminder } = await syncMarketAlertsWhatsApp({
+        entries,
+        prices: nextPrices,
+        preferences: prefs,
+      });
+
+      if (nextReminder) {
+        onPreferencesChange({
+          ...prefs,
+          reminder: nextReminder,
+        });
+      }
+
+      if (result.action === 'sent') {
+        setLastAutoStatus(
+          result.freshCount === 1
+            ? 'WhatsApp enviado por 1 alerta nueva'
+            : `WhatsApp enviado por ${result.freshCount} alertas nuevas`,
+        );
+        sileo.info({
+          title: 'WhatsApp · alertas de mercado',
+          description:
+            result.freshCount === 1
+              ? 'Se envió 1 alerta nueva.'
+              : `Se enviaron ${result.freshCount} alertas nuevas.`,
+        });
+      }
+    },
+    [entries, prefs, readiness.apiKeyOk, onPreferencesChange],
+  );
+
+  const load = useCallback(async (opts?: { notify?: boolean }) => {
     if (tickers.length === 0) return;
     setLoading(true);
     setError(null);
@@ -107,7 +150,19 @@ export function FinanceMarketAlerts({ entries }: Props) {
     setLoading(false);
     setPrices(result.prices);
     setFetchedAt(result.fetchedAt);
-    if (!result.ok && result.error) setError(result.error);
+    if (!result.ok && result.error) {
+      setError(result.error);
+      if (opts?.notify) {
+        sileo.error({ title: 'Error al consultar precios', description: result.error });
+      }
+      return;
+    }
+    if (opts?.notify) {
+      sileo.info({
+        title: 'Precios actualizados',
+        description: formatPricesFetchedTime(result.fetchedAt) || undefined,
+      });
+    }
   }, [tickers]);
 
   useEffect(() => {
@@ -115,19 +170,65 @@ export function FinanceMarketAlerts({ entries }: Props) {
     void load();
   }, [tickersKey, load, tickers.length]);
 
+  useEffect(() => {
+    if (loading || !fetchedAt) return;
+    void runAutoNotify(prices);
+  }, [loading, fetchedAt, prices, runAutoNotify]);
+
   const alerts = useMemo(() => buildMarketAlerts({ entries, prices }), [entries, prices]);
 
   const sendWhatsApp = useCallback(async () => {
     setWaBusy(true);
-    setWaResult(null);
-    const result = await requestMarketWhatsAppTest(alerts);
-    setWaBusy(false);
-    setWaResult(result.message);
-  }, [alerts]);
+    try {
+      await sileo.promise(
+        (async () => {
+          const { result, nextReminder } = await syncMarketAlertsWhatsApp({
+            entries,
+            prices,
+            preferences: prefs,
+            force: true,
+          });
+          if (nextReminder) {
+            onPreferencesChange({
+              ...prefs,
+              reminder: nextReminder,
+            });
+          }
+          if (result.action === 'error') {
+            return { ok: false as const, message: result.message };
+          }
+          if (result.action === 'sent') {
+            setLastAutoStatus('WhatsApp reenviado');
+            return {
+              ok: true as const,
+              message: 'Pedido aceptado. Revisá WhatsApp.',
+            };
+          }
+          // Sin alertas accionables: mandar mensaje vacío de prueba (igual que antes)
+          const fallback = await requestMarketWhatsAppTest(alerts);
+          return fallback;
+        })(),
+        {
+          loading: { title: 'Enviando WhatsApp…' },
+          success: (r) => ({
+            title: r.ok ? 'WhatsApp enviado' : 'No se pudo enviar',
+            description: r.message,
+          }),
+          error: {
+            title: 'Error de WhatsApp',
+            description: 'No se pudo completar el envío.',
+          },
+        },
+      );
+    } finally {
+      setWaBusy(false);
+    }
+  }, [alerts, entries, prices, prefs, onPreferencesChange]);
 
   if (tickers.length === 0) return null;
 
   const fetchedLabel = formatPricesFetchedTime(fetchedAt);
+  const autoOn = prefs.reminder.marketWhatsAppEnabled && readiness.apiKeyOk;
 
   return (
     <section className="finance-card-compact p-3" aria-labelledby="market-alerts-heading">
@@ -146,7 +247,7 @@ export function FinanceMarketAlerts({ entries }: Props) {
           <button
             type="button"
             disabled={loading}
-            onClick={() => void load()}
+            onClick={() => void load({ notify: true })}
             className="finance-secondary-button inline-flex min-h-[32px] items-center gap-1.5 px-2.5 text-[10px] font-bold disabled:opacity-50"
           >
             <RefreshCcw
@@ -179,12 +280,6 @@ export function FinanceMarketAlerts({ entries }: Props) {
         </p>
       ) : null}
 
-      {waResult ? (
-        <p className="mt-2 text-[11px] font-semibold text-slate-600" role="status">
-          {waResult}
-        </p>
-      ) : null}
-
       {loading && alerts.length === 0 ? (
         <p className="mt-3 text-xs font-semibold text-slate-500">Consultando precios…</p>
       ) : (
@@ -196,7 +291,10 @@ export function FinanceMarketAlerts({ entries }: Props) {
       )}
 
       <p className="mt-2.5 text-[9px] leading-snug text-slate-400">
-        El botón WhatsApp manda una prueba ahora; el cron diario sigue avisando solo.
+        {autoOn
+          ? 'Si aparece una alerta nueva al actualizar, se manda WhatsApp solo con esa novedad. El cron (~11:00 AR) cubre el día si no abrís la app. El botón reenvía todo.'
+          : 'Activá “Alertas de mercado” y la API key en Avisos WhatsApp para el envío automático.'}
+        {lastAutoStatus ? ` · ${lastAutoStatus}` : ''}
       </p>
     </section>
   );

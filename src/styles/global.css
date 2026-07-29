@@ -350,28 +350,6 @@
     background-color: #f6f8fb;
   }
 
-
-  @keyframes finance-micro-toast-in {
-    from {
-      opacity: 0;
-      transform: translate(-50%, -8px);
-    }
-    to {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-  }
-
-  .finance-micro-toast > div {
-    animation: finance-micro-toast-in 0.35s ease-out both;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .finance-micro-toast > div {
-      animation: none;
-    }
-  }
-
   @keyframes finance-confetti-fall {
     0% {
       opacity: 1;

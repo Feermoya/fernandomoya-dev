@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { sileo } from 'sileo';
 import type { FinanceState } from '@/lib/finance/types';
 import { DEFAULT_FINANCE_SYNC_ID, exportFinanceState, importFinanceState } from '@/lib/finance/storage';
 
@@ -17,10 +18,6 @@ type Props = {
   onResetSyncIdToDefault: () => void;
 };
 
-function clearFeedbackAfter(ms: number, set: (v: string | null) => void) {
-  window.setTimeout(() => set(null), ms);
-}
-
 export function FinanceJsonTools({
   state,
   onImport,
@@ -33,13 +30,7 @@ export function FinanceJsonTools({
   onResetSyncIdToDefault,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [diagBusy, setDiagBusy] = useState<'pull' | 'push' | 'reset' | null>(null);
-
-  const setMsg = (msg: string, ms = 3200) => {
-    setFeedback(msg);
-    clearFeedbackAfter(ms, setFeedback);
-  };
 
   const download = () => {
     const json = exportFinanceState(state);
@@ -50,16 +41,16 @@ export function FinanceJsonTools({
     a.download = 'finance-game-backup.json';
     a.click();
     URL.revokeObjectURL(url);
-    setMsg('Archivo descargado.');
+    sileo.success({ title: 'Archivo descargado' });
   };
 
   const copyJson = async () => {
     const json = exportFinanceState(state);
     try {
       await navigator.clipboard.writeText(json);
-      setMsg('JSON copiado.');
+      sileo.info({ title: 'JSON copiado al portapapeles' });
     } catch {
-      setMsg('No se pudo copiar. Probá descargar archivo.', 4500);
+      sileo.error({ title: 'No se pudo copiar', description: 'Probá descargar el archivo.' });
     }
   };
 
@@ -68,18 +59,17 @@ export function FinanceJsonTools({
     try {
       text = await navigator.clipboard.readText();
     } catch {
-      setMsg('No se pudo leer el portapapeles. Probá “Elegir archivo”.', 5000);
+      sileo.error({ title: 'No se pudo leer el portapapeles', description: 'Probá “Elegir archivo”.' });
       return;
     }
     const trimmed = text.trim();
     if (!trimmed.startsWith('{')) {
-      setMsg('El portapapeles no parece un JSON de Foco.');
+      sileo.warning({ title: 'JSON inválido', description: 'El portapapeles no parece un JSON de Foco.' });
       return;
     }
     const result = importFinanceState(trimmed);
     if (!result.ok) {
-      setFeedback(result.error);
-      clearFeedbackAfter(5000, setFeedback);
+      sileo.error({ title: 'Importación inválida', description: result.error });
       return;
     }
     if (
@@ -91,7 +81,7 @@ export function FinanceJsonTools({
       return;
     }
     onImport(result.state);
-    setMsg('Datos aplicados desde el portapapeles.');
+    sileo.success({ title: 'Importación completada', description: 'Datos aplicados desde el portapapeles.' });
   };
 
   const shareOrDownload = async () => {
@@ -109,7 +99,7 @@ export function FinanceJsonTools({
           title: 'Respaldo Foco financiero',
           text: 'Respaldo JSON',
         });
-        setMsg('Compartido.');
+        sileo.success({ title: 'Compartido' });
         return;
       } catch (e) {
         if (e instanceof DOMException && e.name === 'AbortError') return;
@@ -125,15 +115,14 @@ export function FinanceJsonTools({
       const text = await file.text();
       const result = importFinanceState(text);
       if (!result.ok) {
-        setFeedback(result.error);
-        clearFeedbackAfter(5000, setFeedback);
+        sileo.error({ title: 'Importación inválida', description: result.error });
         return;
       }
       onImport(result.state);
-      setMsg('Importado desde archivo.');
+      sileo.success({ title: 'Importación completada', description: 'Importado desde archivo.' });
     } catch (err) {
-      setFeedback(err instanceof Error ? err.message : 'Error al leer.');
-      clearFeedbackAfter(5000, setFeedback);
+      const msg = err instanceof Error ? err.message : 'Error al leer.';
+      sileo.error({ title: 'No se pudo importar', description: msg });
     } finally {
       e.target.value = '';
     }
@@ -215,9 +204,15 @@ export function FinanceJsonTools({
                 className="finance-secondary-button min-h-[40px] px-3 py-2 text-xs disabled:opacity-50"
                 onClick={() => {
                   setDiagBusy('pull');
-                  void onForcePull()
-                    .then(() => setMsg('Datos traídos desde la nube.'))
-                    .catch(() => {})
+                  void sileo
+                    .promise(onForcePull(), {
+                      loading: { title: 'Trayendo de la nube…' },
+                      success: { title: 'Sincronización completada' },
+                      error: {
+                        title: 'No se pudo sincronizar',
+                        description: 'Revisá la conexión e intentá nuevamente.',
+                      },
+                    })
                     .finally(() => setDiagBusy(null));
                 }}
               >
@@ -229,9 +224,15 @@ export function FinanceJsonTools({
                 className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                 onClick={() => {
                   setDiagBusy('push');
-                  void onForcePush()
-                    .then(() => setMsg('Estado de este dispositivo subido.'))
-                    .catch(() => {})
+                  void sileo
+                    .promise(onForcePush(), {
+                      loading: { title: 'Subiendo a la nube…' },
+                      success: { title: 'Sincronización completada' },
+                      error: {
+                        title: 'No se pudo sincronizar',
+                        description: 'Revisá la conexión e intentá nuevamente.',
+                      },
+                    })
                     .finally(() => setDiagBusy(null));
                 }}
               >
@@ -246,7 +247,10 @@ export function FinanceJsonTools({
                   setDiagBusy('reset');
                   try {
                     onResetSyncIdToDefault();
-                    setMsg('ID restablecido al predeterminado. Podés “Forzar traer de la nube”.');
+                    sileo.info({
+                      title: 'ID restablecido',
+                      description: 'Podés “Forzar traer de la nube”.',
+                    });
                   } finally {
                     setDiagBusy(null);
                   }
@@ -298,8 +302,6 @@ export function FinanceJsonTools({
         </button>
       </div>
       <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={onFile} />
-
-      {feedback ? <p className="mt-3 text-xs font-medium text-slate-700">{feedback}</p> : null}
     </section>
   );
 }
