@@ -1,5 +1,7 @@
 import { getEntryTicker } from '@/lib/finance/entryTicker';
 import type { FinancePricesMap } from '@/lib/finance/financePrices';
+import type { FinancePortfolioHolding } from '@/lib/finance/portfolio/types';
+import { getTrackedTickersFromPortfolio } from '@/lib/finance/portfolio/consolidate';
 import type { FinanceEntry } from '@/lib/finance/types';
 
 export type MarketAlertSeverity = 'opportunity' | 'positive' | 'warning' | 'neutral';
@@ -43,21 +45,7 @@ const DEFAULT_MIN_GAIN_SINCE_BUY = 8;
 const DEFAULT_MIN_LOSS_SINCE_BUY = 5;
 
 export function getTrackedTickersFromEntries(entries: FinanceEntry[]): string[] {
-  const byTicker = new Map<string, string>();
-
-  for (const entry of entries) {
-    if (entry.type !== 'investment') continue;
-    const ticker = getEntryTicker(entry);
-    if (!ticker) continue;
-    const prev = byTicker.get(ticker);
-    if (!prev || entry.createdAt > prev) {
-      byTicker.set(ticker, entry.createdAt);
-    }
-  }
-
-  return [...byTicker.entries()]
-    .sort((a, b) => (a[1] < b[1] ? 1 : -1))
-    .map(([ticker]) => ticker);
+  return getTrackedTickersFromPortfolio(entries, []);
 }
 
 export function getLastBuyEntryForTicker(
@@ -76,6 +64,61 @@ export function getLastBuyEntryForTicker(
   return best;
 }
 
+/** Referencia de compra: última entry con precio, o holding histórico (misma moneda que cotización). */
+export function getBuyReferenceForTicker(params: {
+  entries: FinanceEntry[];
+  holdings?: FinancePortfolioHolding[];
+  ticker: string;
+  currentCurrency?: string;
+}): { buyPrice: number; buyCurrency: string } | null {
+  const { entries, holdings = [], ticker, currentCurrency } = params;
+  const lastBuy = getLastBuyEntryForTicker(entries, ticker);
+  if (
+    lastBuy &&
+    typeof lastBuy.buyPrice === 'number' &&
+    lastBuy.buyPrice > 0 &&
+    currenciesMatch(lastBuy.buyCurrency, currentCurrency)
+  ) {
+    return {
+      buyPrice: lastBuy.buyPrice,
+      buyCurrency: (lastBuy.buyCurrency ?? 'ARS').toUpperCase(),
+    };
+  }
+
+  const norm = ticker.toUpperCase();
+  const matching = holdings.filter((h) => h.ticker.toUpperCase() === norm);
+  if (matching.length === 0) return null;
+
+  if (currentCurrency) {
+    const sameFx = matching.filter((h) =>
+      currenciesMatch(h.currency, currentCurrency),
+    );
+    if (sameFx.length === 0) return null;
+    let qty = 0;
+    let cost = 0;
+    for (const h of sameFx) {
+      qty += h.quantity;
+      cost += h.quantity * h.averagePurchasePrice;
+    }
+    if (!(qty > 0)) return null;
+    return {
+      buyPrice: cost / qty,
+      buyCurrency: currentCurrency.toUpperCase(),
+    };
+  }
+
+  const currencies = [...new Set(matching.map((h) => h.currency.toUpperCase()))];
+  if (currencies.length !== 1) return null;
+  let qty = 0;
+  let cost = 0;
+  for (const h of matching) {
+    qty += h.quantity;
+    cost += h.quantity * h.averagePurchasePrice;
+  }
+  if (!(qty > 0)) return null;
+  return { buyPrice: cost / qty, buyCurrency: currencies[0] };
+}
+
 function currenciesMatch(a?: string, b?: string): boolean {
   if (!a || !b) return false;
   return a.toUpperCase() === b.toUpperCase();
@@ -84,6 +127,7 @@ function currenciesMatch(a?: string, b?: string): boolean {
 export function buildMarketAlerts(params: {
   entries: FinanceEntry[];
   prices: FinancePricesMap;
+  holdings?: FinancePortfolioHolding[];
   minDailyDropPercent?: number;
   minGainSinceBuyPercent?: number;
   minLossSinceBuyPercent?: number;
@@ -91,12 +135,13 @@ export function buildMarketAlerts(params: {
   const {
     entries,
     prices,
+    holdings = [],
     minDailyDropPercent = DEFAULT_MIN_DAILY_DROP,
     minGainSinceBuyPercent = DEFAULT_MIN_GAIN_SINCE_BUY,
     minLossSinceBuyPercent = DEFAULT_MIN_LOSS_SINCE_BUY,
   } = params;
 
-  const tickers = getTrackedTickersFromEntries(entries);
+  const tickers = getTrackedTickersFromPortfolio(entries, holdings);
   const alerts: MarketAlert[] = [];
   const seen = new Set<string>();
 
@@ -142,18 +187,19 @@ export function buildMarketAlerts(params: {
       }
     }
 
-    const lastBuy = getLastBuyEntryForTicker(entries, ticker);
-    const buyPrice = lastBuy?.buyPrice;
-    const buyCurrency = lastBuy?.buyCurrency;
+    const buyRef = getBuyReferenceForTicker({
+      entries,
+      holdings,
+      ticker,
+      currentCurrency,
+    });
 
     if (
-      lastBuy &&
-      typeof buyPrice === 'number' &&
-      buyPrice > 0 &&
+      buyRef &&
       typeof currentPrice === 'number' &&
-      currentPrice > 0 &&
-      currenciesMatch(buyCurrency, currentCurrency)
+      currentPrice > 0
     ) {
+      const { buyPrice, buyCurrency } = buyRef;
       const deltaFromBuy = ((currentPrice - buyPrice) / buyPrice) * 100;
 
       if (deltaFromBuy <= -minLossSinceBuyPercent) {

@@ -157,7 +157,12 @@ async function fetchTickerPrice(ticker: string, fetchedAt: string): Promise<Fina
   if (isCryptoTicker(ticker)) {
     return fetchYahooCryptoPrice(ticker, fetchedAt);
   }
-  return fetchGoogleBcbaPrice(ticker, fetchedAt);
+  const bcba = await fetchGoogleBcbaPrice(ticker, fetchedAt);
+  if (bcba.price > 0 && bcba.source !== 'missing') return bcba;
+  // Fallback Yahoo (acciones/ETFs USD u otros no listados en BCBA).
+  const yahoo = await fetchYahooCryptoPrice(ticker, fetchedAt);
+  if (yahoo.price > 0 && yahoo.source !== 'missing') return yahoo;
+  return bcba.error ? bcba : yahoo;
 }
 
 export async function buildFinancePricesResponse(rawTickers: string): Promise<FinancePricesApiResponse> {

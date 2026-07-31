@@ -30,6 +30,14 @@ const entries = [
     entry: path.join(root, 'api/finance-whatsapp-send.entry.ts'),
     outfile: path.join(root, 'api/finance-whatsapp-send.mjs'),
   },
+  {
+    entry: path.join(root, 'api/finance-symbol-search.entry.ts'),
+    outfile: path.join(root, 'api/finance-symbol-search.mjs'),
+  },
+  {
+    entry: path.join(root, 'api/finance-market-monitor.entry.ts'),
+    outfile: path.join(root, 'api/finance-market-monitor.mjs'),
+  },
 ];
 
 for (const { entry, outfile } of entries) {

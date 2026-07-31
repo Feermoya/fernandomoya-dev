@@ -380,7 +380,11 @@ async function fetchTickerPrice(ticker, fetchedAt) {
   if (isCryptoTicker(ticker)) {
     return fetchYahooCryptoPrice(ticker, fetchedAt);
   }
-  return fetchGoogleBcbaPrice(ticker, fetchedAt);
+  const bcba = await fetchGoogleBcbaPrice(ticker, fetchedAt);
+  if (bcba.price > 0 && bcba.source !== "missing") return bcba;
+  const yahoo = await fetchYahooCryptoPrice(ticker, fetchedAt);
+  if (yahoo.price > 0 && yahoo.source !== "missing") return yahoo;
+  return bcba.error ? bcba : yahoo;
 }
 async function buildFinancePricesResponse(rawTickers) {
   const tickers = normalizeFinanceTickers(rawTickers);

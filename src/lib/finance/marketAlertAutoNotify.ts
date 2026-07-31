@@ -4,6 +4,11 @@ import {
   type MarketAlert,
 } from '@/lib/finance/marketAlerts';
 import {
+  fingerprintAlreadySent,
+  isFingerprintInCooldown,
+  markMarketAlertsSentWithCooldown,
+} from '@/lib/finance/monitor/antiSpam';
+import {
   markMarketAlertsSent,
   normalizePreferences,
   whatsappAutomationReadiness,
@@ -37,8 +42,9 @@ function freshKey(fingerprints: string[]): string {
 export function getActionableMarketAlerts(
   entries: FinanceEntry[],
   prices: FinancePricesMap,
+  holdings: import('@/lib/finance/portfolio/types').FinancePortfolioHolding[] = [],
 ): MarketAlert[] {
-  return actionable(buildMarketAlerts({ entries, prices }));
+  return actionable(buildMarketAlerts({ entries, prices, holdings }));
 }
 
 /**
@@ -49,6 +55,7 @@ export async function syncMarketAlertsWhatsApp(params: {
   entries: FinanceEntry[];
   prices: FinancePricesMap;
   preferences: FinancePreferences;
+  holdings?: import('@/lib/finance/portfolio/types').FinancePortfolioHolding[];
   /** true = forzar reenvío de todas las alertas activas (botón manual). */
   force?: boolean;
 }): Promise<{
@@ -66,12 +73,22 @@ export async function syncMarketAlertsWhatsApp(params: {
     return { result: { action: 'skipped', reason: 'no_api_key' } };
   }
 
-  const alerts = getActionableMarketAlerts(params.entries, params.prices);
+  const alerts = getActionableMarketAlerts(
+    params.entries,
+    params.prices,
+    params.holdings ?? [],
+  );
   const activeFingerprints = fingerprintsOf(alerts);
   const sentSet = new Set(reminder.lastMarketAlertKeys ?? []);
+  const nowMs = Date.now();
   const fresh = params.force
     ? alerts
-    : alerts.filter((alert) => !sentSet.has(marketAlertFingerprint(alert)));
+    : alerts.filter((alert) => {
+        const fp = marketAlertFingerprint(alert);
+        if (fingerprintAlreadySent(sentSet, alert)) return false;
+        if (isFingerprintInCooldown(reminder, fp, nowMs)) return false;
+        return true;
+      });
 
   if (fresh.length === 0) {
     const pruned = markMarketAlertsSent(reminder, [], activeFingerprints);
@@ -107,7 +124,12 @@ export async function syncMarketAlertsWhatsApp(params: {
     const freshKeys = fingerprintsOf(fresh);
     return {
       result: { action: 'sent', freshCount: fresh.length, fingerprints: freshKeys },
-      nextReminder: markMarketAlertsSent(reminder, freshKeys, activeFingerprints),
+      nextReminder: markMarketAlertsSentWithCooldown(
+        reminder,
+        freshKeys,
+        activeFingerprints,
+        new Date().toISOString(),
+      ),
     };
   } finally {
     if (!params.force) claimedKeys.delete(key);

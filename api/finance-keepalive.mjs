@@ -3,6 +3,161 @@ function isMonthlyPlanAnchorItem(item) {
   return item.id.startsWith("anchor-");
 }
 
+// src/lib/finance/monitor/status.ts
+function normalizeMonitorStatus(raw) {
+  if (typeof raw !== "object" || raw === null) return {};
+  const o = raw;
+  const out = {};
+  if (typeof o.lastRunAt === "string") out.lastRunAt = o.lastRunAt;
+  if (typeof o.lastSuccessfulRunAt === "string") out.lastSuccessfulRunAt = o.lastSuccessfulRunAt;
+  if (typeof o.lastErrorAt === "string") out.lastErrorAt = o.lastErrorAt;
+  if (typeof o.lastErrorCode === "string") out.lastErrorCode = o.lastErrorCode.slice(0, 80);
+  if (typeof o.lastSymbolsRequested === "number" && Number.isFinite(o.lastSymbolsRequested)) {
+    out.lastSymbolsRequested = o.lastSymbolsRequested;
+  }
+  if (typeof o.lastSymbolsResolved === "number" && Number.isFinite(o.lastSymbolsResolved)) {
+    out.lastSymbolsResolved = o.lastSymbolsResolved;
+  }
+  if (typeof o.lastAlertsDetected === "number" && Number.isFinite(o.lastAlertsDetected)) {
+    out.lastAlertsDetected = o.lastAlertsDetected;
+  }
+  if (typeof o.lastAlertsSent === "number" && Number.isFinite(o.lastAlertsSent)) {
+    out.lastAlertsSent = o.lastAlertsSent;
+  }
+  if (typeof o.lastDurationMs === "number" && Number.isFinite(o.lastDurationMs)) {
+    out.lastDurationMs = o.lastDurationMs;
+  }
+  if (typeof o.lastSkipReason === "string") out.lastSkipReason = o.lastSkipReason.slice(0, 80);
+  return out;
+}
+
+// src/lib/finance/entryTicker.ts
+var TICKER_RE = /^[A-Z0-9][A-Z0-9.-]{0,9}$/;
+var NON_TICKER_CATEGORY = /^(acciones?|cedears?|mep|usd|ars|etf|crypto|bitcoin|fondo|emergencia|proyecto|otro|inversi[oó]n|d[oó]lar)/i;
+function normalizeTicker(value) {
+  if (!value) return "";
+  return value.trim().toUpperCase().replace(/\s+/g, "").replace(/[^A-Z0-9.-]/g, "").slice(0, 10);
+}
+function looksLikeFinanceTicker(value) {
+  const t = normalizeTicker(value);
+  if (!t || t.length > 10) return false;
+  if (NON_TICKER_CATEGORY.test(t)) return false;
+  return TICKER_RE.test(t);
+}
+function extractTickerFromNote(note) {
+  if (!note?.trim()) return void 0;
+  const tokens = note.split(/[\s,;/|]+/);
+  for (const raw of tokens) {
+    const t = normalizeTicker(raw);
+    if (looksLikeFinanceTicker(t)) return t;
+  }
+  return void 0;
+}
+function tickerFromCategory(category) {
+  if (!category?.trim()) return void 0;
+  const norm = normalizeTicker(category);
+  if (looksLikeFinanceTicker(norm)) return norm;
+  const first = normalizeTicker(category.split(/[\s,;/|]+/)[0]);
+  if (looksLikeFinanceTicker(first)) return first;
+  return void 0;
+}
+function getEntryTicker(entry) {
+  if (entry.ticker && looksLikeFinanceTicker(entry.ticker)) {
+    return normalizeTicker(entry.ticker);
+  }
+  const fromCategory = tickerFromCategory(entry.category);
+  if (fromCategory) return fromCategory;
+  const fromNote = extractTickerFromNote(entry.note);
+  if (fromNote) return fromNote;
+  if (entry.asset === "BTC") return "BTC";
+  if (entry.asset === "ETF" || entry.asset === "CEDEAR") {
+    const again = tickerFromCategory(entry.category) ?? extractTickerFromNote(entry.note);
+    if (again) return again;
+  }
+  return void 0;
+}
+
+// src/lib/finance/portfolio/validateHolding.ts
+var CURRENCIES = /* @__PURE__ */ new Set(["ARS", "USD"]);
+function newId() {
+  return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `ph-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+function parseCurrency(raw) {
+  if (typeof raw !== "string") return null;
+  const c = raw.trim().toUpperCase();
+  if (c === "ARS" || c === "USD") return c;
+  if (c === "PESOS" || c === "$") return "ARS";
+  if (c === "U$S" || c === "US$") return "USD";
+  return null;
+}
+function optionalTrim(raw) {
+  if (typeof raw !== "string") return void 0;
+  const t = raw.trim();
+  return t || void 0;
+}
+function normalizeAndValidateHolding(raw, opts) {
+  const errors = [];
+  if (typeof raw !== "object" || raw === null) {
+    return { ok: false, errors: [{ message: "Holding inv\xE1lido." }] };
+  }
+  const o = raw;
+  const now = opts?.nowIso ?? (/* @__PURE__ */ new Date()).toISOString();
+  const ticker = normalizeTicker(typeof o.ticker === "string" ? o.ticker : "");
+  if (!ticker || !looksLikeFinanceTicker(ticker)) {
+    errors.push({ field: "ticker", message: "Ticker inv\xE1lido." });
+  }
+  const quantity = typeof o.quantity === "number" ? o.quantity : Number(o.quantity);
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    errors.push({ field: "quantity", message: "La cantidad debe ser mayor que cero." });
+  }
+  const averagePurchasePrice = typeof o.averagePurchasePrice === "number" ? o.averagePurchasePrice : Number(o.averagePurchasePrice);
+  if (!Number.isFinite(averagePurchasePrice) || averagePurchasePrice <= 0) {
+    errors.push({
+      field: "averagePurchasePrice",
+      message: "El precio promedio debe ser mayor que cero."
+    });
+  }
+  const currency = parseCurrency(o.currency);
+  if (!currency || !CURRENCIES.has(currency)) {
+    errors.push({ field: "currency", message: "Moneda inv\xE1lida (ARS o USD)." });
+  }
+  const sourceRaw = typeof o.source === "string" ? o.source : "manual";
+  const source = sourceRaw === "csv" || sourceRaw === "manual" ? sourceRaw : "manual";
+  if (errors.length > 0) return { ok: false, errors };
+  const createdAt = typeof o.createdAt === "string" && o.createdAt.trim() ? o.createdAt : now;
+  const id = opts?.existingId || (typeof o.id === "string" && o.id.trim() ? o.id : newId());
+  const holding = {
+    id,
+    ticker,
+    quantity,
+    averagePurchasePrice,
+    currency,
+    source,
+    createdAt,
+    updatedAt: now
+  };
+  const displayName = optionalTrim(o.displayName);
+  if (displayName) holding.displayName = displayName;
+  const broker = optionalTrim(o.broker);
+  if (broker) holding.broker = broker;
+  const purchaseDate = optionalTrim(o.purchaseDate);
+  if (purchaseDate) holding.purchaseDate = purchaseDate;
+  const market = optionalTrim(o.market);
+  if (market) holding.market = market;
+  const notes = optionalTrim(o.notes);
+  if (notes) holding.notes = notes;
+  return { ok: true, holding };
+}
+function normalizePortfolioHoldings(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const item of raw) {
+    const result = normalizeAndValidateHolding(item);
+    if (result.ok) out.push(result.holding);
+  }
+  return out;
+}
+
 // src/data/site.ts
 var site = {
   name: "Fernando Moya",
@@ -60,15 +215,27 @@ function normalizePreferences(raw) {
       callMeBotApiKey: reminder.callMeBotApiKey?.trim() || void 0,
       lastCronReminderKeys: Array.isArray(reminder.lastCronReminderKeys) ? reminder.lastCronReminderKeys.filter((k) => typeof k === "string").slice(-36) : void 0,
       marketWhatsAppEnabled: reminder.marketWhatsAppEnabled !== false,
-      lastMarketAlertKeys: Array.isArray(reminder.lastMarketAlertKeys) ? reminder.lastMarketAlertKeys.filter((k) => typeof k === "string").slice(-64) : void 0
+      lastMarketAlertKeys: Array.isArray(reminder.lastMarketAlertKeys) ? reminder.lastMarketAlertKeys.filter((k) => typeof k === "string").slice(-64) : void 0,
+      lastMarketAlertSentAt: normalizeSentAtMap(reminder.lastMarketAlertSentAt)
     }
   };
+}
+function normalizeSentAtMap(raw) {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return void 0;
+  const out = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (typeof k === "string" && typeof v === "string" && k && v) out[k] = v;
+  }
+  const entries = Object.entries(out).slice(-64);
+  return entries.length > 0 ? Object.fromEntries(entries) : void 0;
 }
 function withPreferences(state) {
   return {
     ...state,
     preferences: normalizePreferences(state.preferences),
-    monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? []
+    monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
+    portfolioHoldings: state.portfolioHoldings ?? [],
+    monitorStatus: state.monitorStatus
   };
 }
 function normalizeReminderDays(days) {
@@ -130,7 +297,9 @@ function normalizeMonthlyInvestmentPlan(raw) {
 function withFinanceStateDefaults(state) {
   return {
     ...state,
-    monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? []
+    monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
+    portfolioHoldings: state.portfolioHoldings ?? [],
+    monitorStatus: state.monitorStatus
   };
 }
 function importFinanceState(jsonString) {
@@ -163,7 +332,8 @@ function importFinanceState(jsonString) {
       goals: o.goals,
       challenges: o.challenges,
       currentMonth: o.currentMonth,
-      monthlyInvestmentPlan: normalizeMonthlyInvestmentPlan(o.monthlyInvestmentPlan)
+      monthlyInvestmentPlan: normalizeMonthlyInvestmentPlan(o.monthlyInvestmentPlan),
+      portfolioHoldings: normalizePortfolioHoldings(o.portfolioHoldings)
     };
     if (typeof o.wealthTarget === "number" && Number.isFinite(o.wealthTarget)) {
       state.wealthTarget = o.wealthTarget;
@@ -172,6 +342,9 @@ function importFinanceState(jsonString) {
       state.preferences = normalizePreferences(o.preferences);
     } else {
       state.preferences = getDefaultPreferences();
+    }
+    if (o.monitorStatus && typeof o.monitorStatus === "object") {
+      state.monitorStatus = normalizeMonitorStatus(o.monitorStatus);
     }
     return { ok: true, state: withPreferences(withFinanceStateDefaults(state)) };
   } catch (e) {
@@ -695,7 +868,11 @@ async function fetchTickerPrice(ticker, fetchedAt) {
   if (isCryptoTicker(ticker)) {
     return fetchYahooCryptoPrice(ticker, fetchedAt);
   }
-  return fetchGoogleBcbaPrice(ticker, fetchedAt);
+  const bcba = await fetchGoogleBcbaPrice(ticker, fetchedAt);
+  if (bcba.price > 0 && bcba.source !== "missing") return bcba;
+  const yahoo = await fetchYahooCryptoPrice(ticker, fetchedAt);
+  if (yahoo.price > 0 && yahoo.source !== "missing") return yahoo;
+  return bcba.error ? bcba : yahoo;
 }
 async function buildFinancePricesResponse(rawTickers) {
   const tickers = normalizeFinanceTickers(rawTickers);
@@ -1110,50 +1287,18 @@ var LEVEL_RULES = [
   }
 ];
 
-// src/lib/finance/entryTicker.ts
-var TICKER_RE = /^[A-Z0-9][A-Z0-9.-]{0,9}$/;
-var NON_TICKER_CATEGORY = /^(acciones?|cedears?|mep|usd|ars|etf|crypto|bitcoin|fondo|emergencia|proyecto|otro|inversi[oó]n|d[oó]lar)/i;
-function normalizeTicker(value) {
-  if (!value) return "";
-  return value.trim().toUpperCase().replace(/\s+/g, "").replace(/[^A-Z0-9.-]/g, "").slice(0, 10);
-}
-function looksLikeFinanceTicker(value) {
-  const t = normalizeTicker(value);
-  if (!t || t.length > 10) return false;
-  if (NON_TICKER_CATEGORY.test(t)) return false;
-  return TICKER_RE.test(t);
-}
-function extractTickerFromNote(note) {
-  if (!note?.trim()) return void 0;
-  const tokens = note.split(/[\s,;/|]+/);
-  for (const raw of tokens) {
-    const t = normalizeTicker(raw);
-    if (looksLikeFinanceTicker(t)) return t;
+// src/lib/finance/portfolio/consolidate.ts
+function getTrackedTickersFromPortfolio(entries, holdings = []) {
+  const set = /* @__PURE__ */ new Set();
+  for (const e of entries) {
+    if (e.type !== "investment") continue;
+    const t = getEntryTicker(e);
+    if (t) set.add(t);
   }
-  return void 0;
-}
-function tickerFromCategory(category) {
-  if (!category?.trim()) return void 0;
-  const norm = normalizeTicker(category);
-  if (looksLikeFinanceTicker(norm)) return norm;
-  const first = normalizeTicker(category.split(/[\s,;/|]+/)[0]);
-  if (looksLikeFinanceTicker(first)) return first;
-  return void 0;
-}
-function getEntryTicker(entry) {
-  if (entry.ticker && looksLikeFinanceTicker(entry.ticker)) {
-    return normalizeTicker(entry.ticker);
+  for (const h of holdings) {
+    if (h.ticker) set.add(h.ticker.toUpperCase());
   }
-  const fromCategory = tickerFromCategory(entry.category);
-  if (fromCategory) return fromCategory;
-  const fromNote = extractTickerFromNote(entry.note);
-  if (fromNote) return fromNote;
-  if (entry.asset === "BTC") return "BTC";
-  if (entry.asset === "ETF" || entry.asset === "CEDEAR") {
-    const again = tickerFromCategory(entry.category) ?? extractTickerFromNote(entry.note);
-    if (again) return again;
-  }
-  return void 0;
+  return [...set].sort();
 }
 
 // src/lib/finance/marketAlerts.ts
@@ -1169,19 +1314,6 @@ var SEVERITY_RANK = {
 var DEFAULT_MIN_DAILY_DROP = 3;
 var DEFAULT_MIN_GAIN_SINCE_BUY = 8;
 var DEFAULT_MIN_LOSS_SINCE_BUY = 5;
-function getTrackedTickersFromEntries(entries) {
-  const byTicker = /* @__PURE__ */ new Map();
-  for (const entry of entries) {
-    if (entry.type !== "investment") continue;
-    const ticker = getEntryTicker(entry);
-    if (!ticker) continue;
-    const prev = byTicker.get(ticker);
-    if (!prev || entry.createdAt > prev) {
-      byTicker.set(ticker, entry.createdAt);
-    }
-  }
-  return [...byTicker.entries()].sort((a, b) => a[1] < b[1] ? 1 : -1).map(([ticker]) => ticker);
-}
 function getLastBuyEntryForTicker(entries, ticker) {
   const norm = ticker.toUpperCase();
   let best;
@@ -1192,6 +1324,46 @@ function getLastBuyEntryForTicker(entries, ticker) {
   }
   return best;
 }
+function getBuyReferenceForTicker(params) {
+  const { entries, holdings = [], ticker, currentCurrency } = params;
+  const lastBuy = getLastBuyEntryForTicker(entries, ticker);
+  if (lastBuy && typeof lastBuy.buyPrice === "number" && lastBuy.buyPrice > 0 && currenciesMatch(lastBuy.buyCurrency, currentCurrency)) {
+    return {
+      buyPrice: lastBuy.buyPrice,
+      buyCurrency: (lastBuy.buyCurrency ?? "ARS").toUpperCase()
+    };
+  }
+  const norm = ticker.toUpperCase();
+  const matching = holdings.filter((h) => h.ticker.toUpperCase() === norm);
+  if (matching.length === 0) return null;
+  if (currentCurrency) {
+    const sameFx = matching.filter(
+      (h) => currenciesMatch(h.currency, currentCurrency)
+    );
+    if (sameFx.length === 0) return null;
+    let qty2 = 0;
+    let cost2 = 0;
+    for (const h of sameFx) {
+      qty2 += h.quantity;
+      cost2 += h.quantity * h.averagePurchasePrice;
+    }
+    if (!(qty2 > 0)) return null;
+    return {
+      buyPrice: cost2 / qty2,
+      buyCurrency: currentCurrency.toUpperCase()
+    };
+  }
+  const currencies = [...new Set(matching.map((h) => h.currency.toUpperCase()))];
+  if (currencies.length !== 1) return null;
+  let qty = 0;
+  let cost = 0;
+  for (const h of matching) {
+    qty += h.quantity;
+    cost += h.quantity * h.averagePurchasePrice;
+  }
+  if (!(qty > 0)) return null;
+  return { buyPrice: cost / qty, buyCurrency: currencies[0] };
+}
 function currenciesMatch(a, b) {
   if (!a || !b) return false;
   return a.toUpperCase() === b.toUpperCase();
@@ -1200,11 +1372,12 @@ function buildMarketAlerts(params) {
   const {
     entries,
     prices,
+    holdings = [],
     minDailyDropPercent = DEFAULT_MIN_DAILY_DROP,
     minGainSinceBuyPercent = DEFAULT_MIN_GAIN_SINCE_BUY,
     minLossSinceBuyPercent = DEFAULT_MIN_LOSS_SINCE_BUY
   } = params;
-  const tickers = getTrackedTickersFromEntries(entries);
+  const tickers = getTrackedTickersFromPortfolio(entries, holdings);
   const alerts = [];
   const seen = /* @__PURE__ */ new Set();
   const push = (alert) => {
@@ -1246,10 +1419,14 @@ function buildMarketAlerts(params) {
         });
       }
     }
-    const lastBuy = getLastBuyEntryForTicker(entries, ticker);
-    const buyPrice = lastBuy?.buyPrice;
-    const buyCurrency = lastBuy?.buyCurrency;
-    if (lastBuy && typeof buyPrice === "number" && buyPrice > 0 && typeof currentPrice === "number" && currentPrice > 0 && currenciesMatch(buyCurrency, currentCurrency)) {
+    const buyRef = getBuyReferenceForTicker({
+      entries,
+      holdings,
+      ticker,
+      currentCurrency
+    });
+    if (buyRef && typeof currentPrice === "number" && currentPrice > 0) {
+      const { buyPrice, buyCurrency } = buyRef;
       const deltaFromBuy = (currentPrice - buyPrice) / buyPrice * 100;
       if (deltaFromBuy <= -minLossSinceBuyPercent) {
         push({
@@ -1293,6 +1470,46 @@ function buildMarketAlerts(params) {
     });
   }
   return alerts.sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]).slice(0, 4);
+}
+
+// src/lib/finance/monitor/antiSpam.ts
+var MONITOR_FINGERPRINT_COOLDOWN_MS = 2 * 60 * 60 * 1e3;
+function isFingerprintInCooldown(reminder, fingerprint, nowMs, cooldownMs = MONITOR_FINGERPRINT_COOLDOWN_MS) {
+  const map = reminder.lastMarketAlertSentAt;
+  if (!map || typeof map !== "object") return false;
+  const raw = map[fingerprint];
+  if (typeof raw !== "string") return false;
+  const t = Date.parse(raw);
+  if (!Number.isFinite(t)) return false;
+  return nowMs - t < cooldownMs;
+}
+function fingerprintAlreadySent(sentKeys, alert) {
+  const set = sentKeys instanceof Set ? sentKeys : new Set(sentKeys);
+  const primary = marketAlertFingerprint(alert);
+  if (set.has(primary)) return true;
+  const ticker = alert.ticker.toUpperCase();
+  const legacy = `${alert.kind}:${ticker}`;
+  if (set.has(legacy)) return true;
+  const cur = (alert.currentCurrency || alert.buyCurrency || "").toUpperCase();
+  if (cur && set.has(`${alert.kind}:${ticker}:${cur}`)) return true;
+  return false;
+}
+function markMarketAlertsSentWithCooldown(reminder, fingerprints, activeFingerprints, sentAtIso) {
+  const base = markMarketAlertsSent(reminder, fingerprints, activeFingerprints);
+  const prev = { ...reminder.lastMarketAlertSentAt ?? {} };
+  for (const fp of fingerprints) {
+    prev[fp] = sentAtIso;
+  }
+  const keep = /* @__PURE__ */ new Set([...base.lastMarketAlertKeys ?? [], ...fingerprints]);
+  const nextAt = {};
+  for (const [k, v] of Object.entries(prev)) {
+    if (keep.has(k) || fingerprints.includes(k)) nextAt[k] = v;
+  }
+  const entries = Object.entries(nextAt).slice(-64);
+  return {
+    ...base,
+    lastMarketAlertSentAt: Object.fromEntries(entries)
+  };
 }
 
 // src/lib/finance/timezone.ts
@@ -1383,7 +1600,8 @@ async function runMarketAlertJob(state, phone, apiKey, options = {}) {
   if (!force && !reminder.marketWhatsAppEnabled) {
     return { result: { ok: true, action: "skipped", skipReason: "market_disabled" } };
   }
-  const tickers = getTrackedTickersFromEntries(state.entries);
+  const holdings = state.portfolioHoldings ?? [];
+  const tickers = getTrackedTickersFromPortfolio(state.entries, holdings);
   if (tickers.length === 0) {
     return { result: { ok: true, action: "skipped", skipReason: "no_tickers" } };
   }
@@ -1399,11 +1617,21 @@ async function runMarketAlertJob(state, phone, apiKey, options = {}) {
     };
   }
   const alerts = actionableMarketAlerts(
-    buildMarketAlerts({ entries: state.entries, prices: pricesResponse.prices })
+    buildMarketAlerts({
+      entries: state.entries,
+      prices: pricesResponse.prices,
+      holdings
+    })
   );
   const activeFingerprints = alerts.map(marketAlertFingerprint);
   const sentSet = new Set(reminder.lastMarketAlertKeys ?? []);
-  const fresh = force ? alerts : alerts.filter((alert) => !sentSet.has(marketAlertFingerprint(alert)));
+  const nowMs = Date.now();
+  const fresh = force ? alerts : alerts.filter((alert) => {
+    const fp = marketAlertFingerprint(alert);
+    if (fingerprintAlreadySent(sentSet, alert)) return false;
+    if (isFingerprintInCooldown(reminder, fp, nowMs)) return false;
+    return true;
+  });
   if (fresh.length === 0) {
     if (force) {
       const message2 = formatMarketTestEmptyWhatsAppMessage();
@@ -1448,7 +1676,12 @@ async function runMarketAlertJob(state, phone, apiKey, options = {}) {
       detail: send.detail,
       fingerprints: freshKeys
     },
-    nextReminder: persist && !force ? markMarketAlertsSent(reminder, freshKeys, activeFingerprints) : void 0
+    nextReminder: persist && !force ? markMarketAlertsSentWithCooldown(
+      reminder,
+      freshKeys,
+      activeFingerprints,
+      (/* @__PURE__ */ new Date()).toISOString()
+    ) : void 0
   };
 }
 async function runFinanceWhatsAppJobs(syncId = DEFAULT_FINANCE_SYNC_ID, options = {}) {

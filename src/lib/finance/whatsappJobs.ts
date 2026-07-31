@@ -3,16 +3,17 @@ import { buildFinancePricesResponse } from '@/lib/finance/financePricesServer';
 import { evaluateInvestmentWhatsAppNudge } from '@/lib/finance/levels';
 import {
   buildMarketAlerts,
-  getTrackedTickersFromEntries,
   marketAlertFingerprint,
   type MarketAlert,
 } from '@/lib/finance/marketAlerts';
+import { getTrackedTickersFromPortfolio } from '@/lib/finance/portfolio/consolidate';
 import {
   cronReminderRunKey,
   markCronReminderSent,
   markMarketAlertsSent,
   normalizePreferences,
 } from '@/lib/finance/preferences';
+import { markMarketAlertsSentWithCooldown, fingerprintAlreadySent, isFingerprintInCooldown } from '@/lib/finance/monitor/antiSpam';
 import {
   fetchFinanceStateRemote,
   isFinanceRemoteConfigured,
@@ -163,7 +164,8 @@ export async function runMarketAlertJob(
     return { result: { ok: true, action: 'skipped', skipReason: 'market_disabled' } };
   }
 
-  const tickers = getTrackedTickersFromEntries(state.entries);
+  const holdings = state.portfolioHoldings ?? [];
+  const tickers = getTrackedTickersFromPortfolio(state.entries, holdings);
   if (tickers.length === 0) {
     return { result: { ok: true, action: 'skipped', skipReason: 'no_tickers' } };
   }
@@ -181,13 +183,23 @@ export async function runMarketAlertJob(
   }
 
   const alerts = actionableMarketAlerts(
-    buildMarketAlerts({ entries: state.entries, prices: pricesResponse.prices }),
+    buildMarketAlerts({
+      entries: state.entries,
+      prices: pricesResponse.prices,
+      holdings,
+    }),
   );
   const activeFingerprints = alerts.map(marketAlertFingerprint);
   const sentSet = new Set(reminder.lastMarketAlertKeys ?? []);
+  const nowMs = Date.now();
   const fresh = force
     ? alerts
-    : alerts.filter((alert) => !sentSet.has(marketAlertFingerprint(alert)));
+    : alerts.filter((alert) => {
+        const fp = marketAlertFingerprint(alert);
+        if (fingerprintAlreadySent(sentSet, alert)) return false;
+        if (isFingerprintInCooldown(reminder, fp, nowMs)) return false;
+        return true;
+      });
 
   if (fresh.length === 0) {
     if (force) {
@@ -240,7 +252,12 @@ export async function runMarketAlertJob(
     },
     nextReminder:
       persist && !force
-        ? markMarketAlertsSent(reminder, freshKeys, activeFingerprints)
+        ? markMarketAlertsSentWithCooldown(
+            reminder,
+            freshKeys,
+            activeFingerprints,
+            new Date().toISOString(),
+          )
         : undefined,
   };
 }

@@ -9,16 +9,17 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import type { FinanceEntry, FinancePreferences } from '@/lib/finance/types';
+import type { FinancePortfolioHolding } from '@/lib/finance/portfolio/types';
 import {
   fetchFinancePrices,
   formatPricesFetchedTime,
 } from '@/lib/finance/financePrices';
 import {
   buildMarketAlerts,
-  getTrackedTickersFromEntries,
   type MarketAlert,
   type MarketAlertSeverity,
 } from '@/lib/finance/marketAlerts';
+import { getTrackedTickersFromPortfolio } from '@/lib/finance/portfolio/consolidate';
 import { syncMarketAlertsWhatsApp } from '@/lib/finance/marketAlertAutoNotify';
 import { normalizePreferences, whatsappAutomationReadiness } from '@/lib/finance/preferences';
 import { requestMarketWhatsAppTest } from '@/lib/finance/whatsappTestClient';
@@ -27,6 +28,7 @@ import { sileo } from 'sileo';
 
 type Props = {
   entries: FinanceEntry[];
+  holdings?: FinancePortfolioHolding[];
   preferences: FinancePreferences;
   onPreferencesChange: (prefs: FinancePreferences) => void;
 };
@@ -92,8 +94,16 @@ function AlertItem({ alert }: { alert: MarketAlert }) {
   );
 }
 
-export function FinanceMarketAlerts({ entries, preferences, onPreferencesChange }: Props) {
-  const tickers = useMemo(() => getTrackedTickersFromEntries(entries), [entries]);
+export function FinanceMarketAlerts({
+  entries,
+  holdings = [],
+  preferences,
+  onPreferencesChange,
+}: Props) {
+  const tickers = useMemo(
+    () => getTrackedTickersFromPortfolio(entries, holdings),
+    [entries, holdings],
+  );
   const tickersKey = tickers.join(',');
   const prefs = useMemo(() => normalizePreferences(preferences), [preferences]);
   const readiness = whatsappAutomationReadiness(prefs.reminder);
@@ -114,6 +124,7 @@ export function FinanceMarketAlerts({ entries, preferences, onPreferencesChange 
 
       const { result, nextReminder } = await syncMarketAlertsWhatsApp({
         entries,
+        holdings,
         prices: nextPrices,
         preferences: prefs,
       });
@@ -140,7 +151,7 @@ export function FinanceMarketAlerts({ entries, preferences, onPreferencesChange 
         });
       }
     },
-    [entries, prefs, readiness.apiKeyOk, onPreferencesChange],
+    [entries, holdings, prefs, readiness.apiKeyOk, onPreferencesChange],
   );
 
   const load = useCallback(async (opts?: { notify?: boolean }) => {
@@ -176,7 +187,10 @@ export function FinanceMarketAlerts({ entries, preferences, onPreferencesChange 
     void runAutoNotify(prices);
   }, [loading, fetchedAt, prices, runAutoNotify]);
 
-  const alerts = useMemo(() => buildMarketAlerts({ entries, prices }), [entries, prices]);
+  const alerts = useMemo(
+    () => buildMarketAlerts({ entries, prices, holdings }),
+    [entries, prices, holdings],
+  );
 
   const sendWhatsApp = useCallback(async () => {
     setWaBusy(true);
@@ -185,6 +199,7 @@ export function FinanceMarketAlerts({ entries, preferences, onPreferencesChange 
         (async () => {
           const { result, nextReminder } = await syncMarketAlertsWhatsApp({
             entries,
+            holdings,
             prices,
             preferences: prefs,
             force: true,
@@ -224,7 +239,7 @@ export function FinanceMarketAlerts({ entries, preferences, onPreferencesChange 
     } finally {
       setWaBusy(false);
     }
-  }, [alerts, entries, prices, prefs, onPreferencesChange]);
+  }, [alerts, entries, holdings, prices, prefs, onPreferencesChange]);
 
   if (tickers.length === 0) return null;
 

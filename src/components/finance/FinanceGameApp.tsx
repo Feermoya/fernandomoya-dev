@@ -32,6 +32,7 @@ import { FinanceConfettiBurst } from '@/components/finance/FinanceConfettiBurst'
 import { FinanceEntryEditModal } from '@/components/finance/FinanceEntryEditModal';
 import { FinanceWhatsAppReminders } from '@/components/finance/FinanceWhatsAppReminders';
 import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmountsEditor';
+import { FinancePortfolioPanel } from '@/components/finance/portfolio';
 import { FinanceToaster } from '@/components/finance/FinanceToaster';
 import { FinanceDetailsSummary } from '@/components/finance/FinanceDetailsSummary';
 import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
@@ -371,6 +372,7 @@ export default function FinanceGameApp() {
             <section className="order-3 min-w-0 scroll-mt-20 lg:order-none lg:hidden">
               <FinanceMarketAlerts
                 entries={state.entries}
+                holdings={state.portfolioHoldings ?? []}
                 preferences={preferences}
                 onPreferencesChange={patchPreferences}
               />
@@ -382,6 +384,13 @@ export default function FinanceGameApp() {
                 investments={sortedMonthInvestments}
                 onEdit={setEditingEntry}
                 onRemove={removeEntry}
+              />
+            </section>
+
+            <section className="order-8 min-w-0 lg:order-none">
+              <FinancePortfolioPanel
+                holdings={state.portfolioHoldings ?? []}
+                onChange={(portfolioHoldings) => persist((prev) => ({ ...prev, portfolioHoldings }))}
               />
             </section>
 
@@ -412,6 +421,7 @@ export default function FinanceGameApp() {
             <section className="order-3 hidden min-w-0 lg:order-none lg:block">
               <FinanceMarketAlerts
                 entries={state.entries}
+                holdings={state.portfolioHoldings ?? []}
                 preferences={preferences}
                 onPreferencesChange={patchPreferences}
               />
@@ -463,7 +473,15 @@ export default function FinanceGameApp() {
               <FinanceDetailsSummary icon={MessageCircle} label="Avisos WhatsApp" />
             </summary>
             <div className="px-3 pb-4 pt-3 sm:px-4">
-              <FinanceWhatsAppReminders state={state} onPreferencesChange={patchPreferences} />
+              <FinanceWhatsAppReminders
+                state={state}
+                onPreferencesChange={patchPreferences}
+                onMonitorStatusChange={(monitorStatus) =>
+                  patchState({
+                    monitorStatus: { ...state.monitorStatus, ...monitorStatus },
+                  })
+                }
+              />
             </div>
           </details>
 

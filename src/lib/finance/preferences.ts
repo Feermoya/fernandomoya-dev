@@ -44,8 +44,19 @@ export function normalizePreferences(raw?: FinancePreferences): FinancePreferenc
       lastMarketAlertKeys: Array.isArray(reminder.lastMarketAlertKeys)
         ? reminder.lastMarketAlertKeys.filter((k) => typeof k === 'string').slice(-64)
         : undefined,
+      lastMarketAlertSentAt: normalizeSentAtMap(reminder.lastMarketAlertSentAt),
     },
   };
+}
+
+function normalizeSentAtMap(raw: unknown): Record<string, string> | undefined {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return undefined;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof k === 'string' && typeof v === 'string' && k && v) out[k] = v;
+  }
+  const entries = Object.entries(out).slice(-64);
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
 export function withPreferences(state: FinanceState): FinanceState {
@@ -53,6 +64,8 @@ export function withPreferences(state: FinanceState): FinanceState {
     ...state,
     preferences: normalizePreferences(state.preferences),
     monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
+    portfolioHoldings: state.portfolioHoldings ?? [],
+    monitorStatus: state.monitorStatus,
   };
 }
 

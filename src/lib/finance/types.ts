@@ -1,3 +1,8 @@
+import type { FinanceMonitorStatus } from '@/lib/finance/monitor/status';
+import type { FinancePortfolioHolding } from '@/lib/finance/portfolio/types';
+
+export type { FinanceMonitorStatus };
+
 export type FinanceEntryType =
   | 'income'
   | 'fixed_expense'
@@ -114,6 +119,11 @@ export type FinanceReminderSettings = {
   marketWhatsAppEnabled?: boolean;
   /** Huellas estables ya avisadas: `loss-since-buy:TSLA`. */
   lastMarketAlertKeys?: string[];
+  /**
+   * ISO de último envío exitoso por huella (enfriamiento ante oscilación cerca del umbral).
+   * Compatible con estados viejos sin este campo.
+   */
+  lastMarketAlertSentAt?: Record<string, string>;
 };
 
 export type FinancePreferences = {
@@ -130,6 +140,13 @@ export type FinanceState = {
   wealthTarget?: number;
   preferences?: FinancePreferences;
   monthlyInvestmentPlan?: MonthlyInvestmentPlanItem[];
+  /**
+   * Posiciones históricas / cartera inicial.
+   * No cuentan como inversiones del mes (objetivo, racha, niveles, ops).
+   */
+  portfolioHoldings?: FinancePortfolioHolding[];
+  /** Última corrida del monitor automático (no destructivo). */
+  monitorStatus?: FinanceMonitorStatus;
 };
 
 export type MonthlyLevelResult = {

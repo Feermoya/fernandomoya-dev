@@ -1,5 +1,7 @@
 import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
 import { isMonthlyPlanAnchorItem } from '@/lib/finance/monthlyInvestmentPlan';
+import { normalizeMonitorStatus } from '@/lib/finance/monitor/status';
+import { normalizePortfolioHoldings } from '@/lib/finance/portfolio/validateHolding';
 import type { FinanceState, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
 import { getDefaultPreferences, normalizePreferences, withPreferences } from '@/lib/finance/preferences';
 
@@ -122,6 +124,7 @@ export function getInitialFinanceState(): FinanceState {
     currentMonth: currentMonthStr(),
     preferences: getDefaultPreferences(),
     monthlyInvestmentPlan: [],
+    portfolioHoldings: [],
   };
 }
 
@@ -232,6 +235,8 @@ export function withFinanceStateDefaults(state: FinanceState): FinanceState {
   return {
     ...state,
     monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
+    portfolioHoldings: state.portfolioHoldings ?? [],
+    monitorStatus: state.monitorStatus,
   };
 }
 
@@ -269,6 +274,7 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
       challenges: o.challenges as FinanceState['challenges'],
       currentMonth: o.currentMonth,
       monthlyInvestmentPlan: normalizeMonthlyInvestmentPlan(o.monthlyInvestmentPlan),
+      portfolioHoldings: normalizePortfolioHoldings(o.portfolioHoldings),
     };
     if (typeof o.wealthTarget === 'number' && Number.isFinite(o.wealthTarget)) {
       state.wealthTarget = o.wealthTarget;
@@ -277,6 +283,9 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
       state.preferences = normalizePreferences(o.preferences as FinanceState['preferences']);
     } else {
       state.preferences = getDefaultPreferences();
+    }
+    if (o.monitorStatus && typeof o.monitorStatus === 'object') {
+      state.monitorStatus = normalizeMonitorStatus(o.monitorStatus);
     }
 
     return { ok: true, state: withPreferences(withFinanceStateDefaults(state)) };
