@@ -1,0 +1,75 @@
+name: Finance market monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Cada 15 minutos. La decisión final de horario (acciones vs cripto)
+    # se hace en el endpoint con America/Argentina/Buenos_Aires.
+    # Amplio a propósito: GitHub Actions usa UTC y no conviene hardcodear DST.
+    - cron: '*/15 * * * *'
+
+concurrency:
+  group: finance-market-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call finance market monitor
+        env:
+          FINANCE_MONITOR_URL: ${{ secrets.FINANCE_MONITOR_URL }}
+          FINANCE_MONITOR_SECRET: ${{ secrets.FINANCE_MONITOR_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FINANCE_MONITOR_URL:-}" ]; then
+            echo "FINANCE_MONITOR_URL secret is missing" >&2
+            exit 1
+          fi
+          if [ -z "${FINANCE_MONITOR_SECRET:-}" ]; then
+            echo "FINANCE_MONITOR_SECRET secret is missing" >&2
+            exit 1
+          fi
+          # No imprimir secretos ni el cuerpo completo si pudiera filtrar datos.
+          HTTP_CODE=$(curl -sS -o /tmp/finance-monitor-response.json -w "%{http_code}" \
+            --connect-timeout 15 \
+            --max-time 90 \
+            -X POST \
+            -H "Authorization: Bearer ${FINANCE_MONITOR_SECRET}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d '{"mode":"send"}' \
+            "${FINANCE_MONITOR_URL}")
+          echo "HTTP ${HTTP_CODE}"
+          # Resumen sin campos sensibles (el endpoint no los devuelve).
+          if command -v jq >/dev/null 2>&1; then
+            jq '{ok, runId, checkedAt, symbolsRequested, symbolsResolved, alertsDetected, alertsSent, alertsSkipped, durationMs, skipReason, errorCode}' \
+              /tmp/finance-monitor-response.json || cat /tmp/finance-monitor-response.json
+          else
+            cat /tmp/finance-monitor-response.json
+          fi
+          case "${HTTP_CODE}" in
+            200|409) ;;
+            *) exit 1 ;;
+          esac
+          if command -v jq >/dev/null 2>&1; then
+            OK=$(jq -r '.ok // false' /tmp/finance-monitor-response.json)
+            ERR=$(jq -r '.errorCode // empty' /tmp/finance-monitor-response.json)
+            # overlap (409) o skip normales no fallan el job.
+            if [ "${HTTP_CODE}" = "409" ]; then
+              exit 0
+            fi
+            if [ "${OK}" != "true" ] && [ -n "${ERR}" ] && [ "${ERR}" != "whatsapp_failed" ]; then
+              # whatsapp_failed ya se registró en monitorStatus; fallar para visibilidad.
+              if [ "${ERR}" = "supabase_not_configured" ] || [ "${ERR}" = "supabase_fetch_failed" ] || [ "${ERR}" = "prices_unavailable" ]; then
+                exit 1
+              fi
+            fi
+            if [ "${OK}" != "true" ] && [ "${ERR}" = "whatsapp_failed" ]; then
+              exit 1
+            fi
+          fi
