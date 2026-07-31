@@ -180,7 +180,50 @@ function parseNumberLoose(raw: string): number {
   return Number(t.replace(/,/g, ''));
 }
 
-export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult {
+export type ParsePortfolioCsvOptions = {
+  nowIso?: string;
+  /**
+   * Preset Balanz (default en la UI de importación):
+   * - broker = Balanz
+   * - CEDEAR / acciones locales → ARS (el Excel a veces marca Dólares por error)
+   * - sin avisos por falta de broker/fecha (el export no los trae)
+   */
+  brokerPreset?: 'balanz' | 'generic';
+  defaultBroker?: string;
+};
+
+function isBalanzEquityInstrument(instrumentType: string): boolean {
+  const t = instrumentType
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase();
+  return t.includes('cedear') || t.includes('accion') || t.includes('etf');
+}
+
+function marketFromInstrument(instrumentType: string): string | undefined {
+  const t = instrumentType
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase();
+  if (t.includes('cedear')) return 'CEDEAR';
+  if (t.includes('accion')) return 'BCBA';
+  if (t.includes('etf')) return 'ETF';
+  if (t.includes('fondo')) return 'FCI';
+  return undefined;
+}
+
+export function parsePortfolioCsv(
+  text: string,
+  nowIsoOrOpts?: string | ParsePortfolioCsvOptions,
+): CsvParseResult {
+  const opts: ParsePortfolioCsvOptions =
+    typeof nowIsoOrOpts === 'string'
+      ? { nowIso: nowIsoOrOpts }
+      : (nowIsoOrOpts ?? {});
+  const preset = opts.brokerPreset ?? 'generic';
+  const defaultBroker =
+    opts.defaultBroker ?? (preset === 'balanz' ? 'Balanz' : undefined);
+
   const matrix = parseCsvText(text);
   if (matrix.length < 2) {
     return {
@@ -225,35 +268,52 @@ export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult
     const cells = matrix[i];
     const raw: Record<string, string> = {};
     headers.forEach((h, idx) => {
-      // si hay columnas duplicadas mapeadas al mismo campo, priorizar la primera no vacía
-      // salvo averagePurchasePrice que nunca debe venir de _marketPrice
       const val = (cells[idx] ?? '').trim();
       if (!raw[h] || raw[h] === '') raw[h] = val;
     });
 
     const quantity = parseNumberLoose(raw.quantity ?? '');
     const averagePurchasePrice = parseNumberLoose(raw.averagePurchasePrice ?? '');
+    const instrument = raw.instrumentType ?? '';
+    let currency = raw.currency;
+    const warnings: string[] = [];
+
+    // Balanz: CEDEARs y acciones BCBA cotizan en pesos; el export a veces pone Dólares.
+    if (preset === 'balanz' && isBalanzEquityInstrument(instrument)) {
+      const normalized = (currency ?? '')
+        .normalize('NFD')
+        .replace(/\p{M}/gu, '')
+        .toUpperCase();
+      if (normalized.includes('DOLAR') || normalized === 'USD' || normalized === 'US$') {
+        warnings.push('Moneda corregida a ARS (CEDEAR/acción Balanz).');
+      }
+      currency = 'ARS';
+    }
+
+    const broker = raw.broker?.trim() || defaultBroker;
+    const market = raw.market || marketFromInstrument(instrument);
 
     const candidate = {
       ticker: raw.ticker,
       quantity,
       averagePurchasePrice,
-      currency: raw.currency,
-      broker: raw.broker || undefined,
+      currency,
+      broker,
       purchaseDate: raw.purchaseDate || undefined,
       displayName: raw.displayName || undefined,
-      market: raw.market || undefined,
+      market,
       notes: raw.notes || undefined,
       source: 'csv' as const,
     };
 
-    const result = normalizeAndValidateHolding(candidate, { nowIso });
-    const warnings: string[] = [];
-    if (!raw.broker) warnings.push('Sin broker.');
-    if (!raw.purchaseDate) warnings.push('Sin fecha de compra.');
+    const result = normalizeAndValidateHolding(candidate, { nowIso: opts.nowIso });
 
-    const instrument = (raw.instrumentType ?? '').toLowerCase();
-    if (instrument.includes('fondo')) {
+    if (preset === 'generic') {
+      if (!broker) warnings.push('Sin broker.');
+      if (!raw.purchaseDate) warnings.push('Sin fecha de compra.');
+    }
+
+    if (instrument.toLowerCase().includes('fondo')) {
       warnings.push('Fondo: la cotización automática puede no estar disponible.');
     }
 
@@ -265,7 +325,7 @@ export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult
           ticker: raw.ticker ?? '',
           quantity: raw.quantity ?? '',
           averagePurchasePrice: raw.averagePurchasePrice ?? '',
-          currency: raw.currency ?? '',
+          currency: currency ?? '',
         },
         status: 'invalid',
         errors: result.errors,
@@ -280,7 +340,8 @@ export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult
       averagePurchasePrice: String(result.holding.averagePurchasePrice),
       currency: result.holding.currency,
       displayName: result.holding.displayName ?? '',
-      instrumentType: raw.instrumentType ?? '',
+      instrumentType: instrument,
+      broker: result.holding.broker ?? '',
     };
 
     if (warnings.length > 0) {

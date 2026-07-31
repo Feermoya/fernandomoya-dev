@@ -120,6 +120,51 @@ describe('weighted average and merge', () => {
     expect(ignored.ignored).toBe(1);
     expect(ignored.holdings[0].quantity).toBe(1);
   });
+
+  it('replace_broker swaps Balanz portfolio and keeps other brokers', () => {
+    const balanzOld = baseHolding({
+      id: 'b1',
+      ticker: 'AMZN',
+      quantity: 10,
+      broker: 'Balanz',
+      source: 'csv',
+    });
+    const balanzGone = baseHolding({
+      id: 'b2',
+      ticker: 'ARM',
+      quantity: 12,
+      broker: 'Balanz',
+      source: 'csv',
+    });
+    const other = baseHolding({
+      id: 'm1',
+      ticker: 'BTC',
+      quantity: 0.1,
+      broker: 'Binance',
+      currency: 'USD',
+      source: 'manual',
+    });
+    const legacyCsv: FinancePortfolioHolding = {
+      ...baseHolding({ id: 'c1', ticker: 'OLD', quantity: 1, source: 'csv' }),
+    };
+    delete (legacyCsv as { broker?: string }).broker;
+
+    const result = mergePortfolioHoldings({
+      existing: [balanzOld, balanzGone, other, legacyCsv],
+      incoming: [
+        baseHolding({ ticker: 'AMZN', quantity: 61, broker: 'Balanz', source: 'csv' }),
+        baseHolding({ ticker: 'NVDA', quantity: 10, broker: 'Balanz', source: 'csv' }),
+      ],
+      strategy: 'replace_broker',
+      broker: 'Balanz',
+    });
+
+    expect(result.removedBroker).toBe(3);
+    expect(result.holdings.map((h) => h.ticker).sort()).toEqual(['AMZN', 'BTC', 'NVDA']);
+    expect(result.holdings.find((h) => h.ticker === 'AMZN')?.quantity).toBe(61);
+    expect(result.holdings.find((h) => h.ticker === 'BTC')?.broker).toBe('Binance');
+    expect(result.holdings.find((h) => h.ticker === 'ARM')).toBeUndefined();
+  });
 });
 
 describe('csv import', () => {
@@ -156,7 +201,7 @@ AAPL,0,100,USD`;
       'URA\tCedears\tCEDEAR URANIUM\t2\t12320\t15930\tDólares',
       'ESTRA1A\tFondos\tDolar Corto Plazo\t12677.82\t1.167125\t1.14315172\tDólares',
     ].join('\n');
-    const parsed = parsePortfolioCsv(tsv);
+    const parsed = parsePortfolioCsv(tsv, { brokerPreset: 'balanz' });
     expect(parsed.ok).toBe(true);
     expect(parsed.invalidCount).toBe(0);
 
@@ -164,13 +209,19 @@ AAPL,0,100,USD`;
     expect(amzn?.holding?.quantity).toBe(61);
     expect(amzn?.holding?.averagePurchasePrice).toBeCloseTo(2453.33606557, 5);
     expect(amzn?.holding?.currency).toBe('ARS');
+    expect(amzn?.holding?.broker).toBe('Balanz');
+    expect(amzn?.holding?.market).toBe('CEDEAR');
     expect(amzn?.holding?.displayName).toContain('AMAZON');
+    expect(amzn?.status).toBe('valid');
 
     const ura = parsed.rows.find((r) => r.holding?.ticker === 'URA');
-    expect(ura?.holding?.currency).toBe('USD');
+    expect(ura?.holding?.currency).toBe('ARS');
     expect(ura?.holding?.averagePurchasePrice).toBe(15930);
+    expect(ura?.warnings.some((w) => /ARS/i.test(w))).toBe(true);
 
     const fondo = parsed.rows.find((r) => r.holding?.ticker === 'ESTRA1A');
+    expect(fondo?.holding?.currency).toBe('USD');
+    expect(fondo?.holding?.broker).toBe('Balanz');
     expect(fondo?.status).toBe('warning');
     expect(fondo?.warnings.some((w) => /fondo/i.test(w))).toBe(true);
   });

@@ -11,7 +11,9 @@ export type {
 export {
   findHoldingByTickerCurrency,
   holdingKey,
+  isBalanzManagedHolding,
   mergePortfolioHoldings,
+  replaceBrokerPortfolioHoldings,
   type MergeHoldingsResult,
 } from '@/lib/finance/portfolio/mergeHoldings';
 

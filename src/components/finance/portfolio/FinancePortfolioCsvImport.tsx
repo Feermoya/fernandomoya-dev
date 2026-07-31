@@ -22,8 +22,13 @@ type Props = {
 export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props) {
   const [rows, setRows] = useState<CsvRowPreview[] | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
-  const [strategy, setStrategy] = useState<PortfolioDuplicateStrategy>('combine');
+  const [strategy, setStrategy] = useState<PortfolioDuplicateStrategy>('replace_broker');
   const [excluded, setExcluded] = useState<Set<number>>(new Set());
+
+  const balanzCount = useMemo(
+    () => existing.filter((h) => h.broker?.toLowerCase() === 'balanz' || (h.source === 'csv' && !h.broker)).length,
+    [existing],
+  );
 
   const importable = useMemo(() => {
     if (!rows) return [];
@@ -46,7 +51,7 @@ export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props)
       } else {
         text = await file.text();
       }
-      const parsed = parsePortfolioCsv(text);
+      const parsed = parsePortfolioCsv(text, { brokerPreset: 'balanz' });
       if (!parsed.ok) {
         setParseError(parsed.error || 'Archivo inválido');
         sileo.error({ title: 'Error de archivo', description: parsed.error });
@@ -82,16 +87,18 @@ export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props)
       existing,
       incoming: importable,
       strategy,
+      broker: 'Balanz',
     });
     onApply(merged.holdings);
-    sileo.success({
-      title: 'Importación lista',
-      description: `+${merged.added} · combinadas ${merged.combined} · reemplazadas ${merged.replaced} · ignoradas ${merged.ignored}`,
-    });
-    if (merged.ignored > 0) {
-      sileo.info({
-        title: 'Filas omitidas',
-        description: `${merged.ignored} duplicados ignorados según la estrategia.`,
+    if (strategy === 'replace_broker') {
+      sileo.success({
+        title: 'Cartera Balanz actualizada',
+        description: `Quitadas ${merged.removedBroker ?? 0} · nuevas ${merged.added} · total ${merged.holdings.length}`,
+      });
+    } else {
+      sileo.success({
+        title: 'Importación lista',
+        description: `+${merged.added} · combinadas ${merged.combined} · reemplazadas ${merged.replaced} · ignoradas ${merged.ignored}`,
       });
     }
     onClose();
@@ -100,10 +107,11 @@ export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props)
   return (
     <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-3">
       <div>
-        <p className="text-sm font-bold text-slate-900">Importar Excel / CSV del broker</p>
+        <p className="text-sm font-bold text-slate-900">Importar Excel Balanz</p>
         <p className="mt-0.5 text-[11px] font-medium text-slate-500">
-          Podés subir el .xlsx tal cual (Ticker, Nominales, Precio promedio de compra, Moneda). No hace
-          falta renombrar columnas. Los fondos se excluyen por defecto.
+          Subí el .xlsx tal cual. Por defecto reemplaza toda la cartera Balanz
+          {balanzCount > 0 ? ` (ahora hay ${balanzCount})` : ''} y deja el resto intacto. Los fondos
+          quedan fuera por defecto.
         </p>
       </div>
 
@@ -123,17 +131,25 @@ export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props)
       {rows ? (
         <>
           <label className="flex flex-col gap-1">
-            <span className="finance-label">Duplicados (mismo ticker + moneda)</span>
+            <span className="finance-label">Al confirmar</span>
             <select
               className="finance-input-mobile min-h-[40px] rounded-xl px-3 text-sm font-semibold"
               value={strategy}
               onChange={(e) => setStrategy(e.target.value as PortfolioDuplicateStrategy)}
             >
-              <option value="combine">Combinar (promedio ponderado)</option>
-              <option value="replace">Reemplazar</option>
-              <option value="ignore">Ignorar</option>
+              <option value="replace_broker">Reemplazar cartera Balanz (recomendado)</option>
+              <option value="combine">Combinar duplicados (promedio ponderado)</option>
+              <option value="replace">Reemplazar solo coincidencias ticker+moneda</option>
+              <option value="ignore">Ignorar duplicados</option>
             </select>
           </label>
+
+          {strategy === 'replace_broker' ? (
+            <p className="text-[11px] font-medium text-slate-600">
+              Se borran las posiciones Balanz actuales y se cargan las del Excel. Las que agregaste a
+              mano de otro broker se conservan.
+            </p>
+          ) : null}
 
           <ul className="max-h-56 space-y-1.5 overflow-y-auto">
             {rows.map((row) => (
@@ -151,7 +167,11 @@ export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props)
                   <div className="min-w-0">
                     <p className="font-bold text-slate-800">
                       Fila {row.rowIndex}: {row.raw.ticker || '—'} · {row.raw.quantity} @{' '}
-                      {row.raw.averagePurchasePrice} {row.raw.currency}
+                      {Number(row.raw.averagePurchasePrice).toLocaleString('es-AR', {
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      {row.raw.currency}
+                      {row.raw.broker ? ` · ${row.raw.broker}` : ''}
                     </p>
                     {row.errors.length > 0 ? (
                       <p className="mt-0.5 font-semibold text-red-700">

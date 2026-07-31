@@ -42,7 +42,12 @@ export type ConsolidatedPosition = {
   limitation?: string;
 };
 
-export type PortfolioDuplicateStrategy = 'combine' | 'replace' | 'ignore';
+export type PortfolioDuplicateStrategy =
+  | 'combine'
+  | 'replace'
+  | 'ignore'
+  /** Quita toda la cartera del broker (Balanz) y deja la del Excel. */
+  | 'replace_broker';
 
 export type FinanceSymbolSearchResult = {
   symbol: string;
