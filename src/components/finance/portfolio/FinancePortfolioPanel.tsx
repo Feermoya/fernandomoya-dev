@@ -199,7 +199,7 @@ export function FinancePortfolioPanel({ holdings, onChange }: Props) {
               className="finance-secondary-button inline-flex min-h-[36px] items-center gap-1.5 px-2.5 text-[11px] font-bold"
             >
               <Upload size={14} strokeWidth={2.25} aria-hidden />
-              Importar CSV
+              Importar Excel / CSV
             </button>
           </div>
         ) : null}

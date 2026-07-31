@@ -22,42 +22,98 @@ export type CsvParseResult = {
   invalidCount: number;
 };
 
+/**
+ * Aliases → campo interno.
+ * Formato broker AR (Balanz-like): Nominales, Precio promedio de compra, Moneda, etc.
+ * No mapear "Precio" (cotización actual) a averagePurchasePrice.
+ */
 const HEADER_ALIASES: Record<string, string> = {
   ticker: 'ticker',
   symbol: 'ticker',
   simbolo: 'ticker',
   símbolo: 'ticker',
+
   quantity: 'quantity',
   cantidad: 'quantity',
   qty: 'quantity',
+  nominales: 'quantity',
+  nominal: 'quantity',
+
   averagepurchaseprice: 'averagePurchasePrice',
   average_price: 'averagePurchasePrice',
   averageprice: 'averagePurchasePrice',
   precio_promedio: 'averagePurchasePrice',
   preciopromedio: 'averagePurchasePrice',
-  precio: 'averagePurchasePrice',
+  precio_promedio_de_compra: 'averagePurchasePrice',
+  preciopromediodecompra: 'averagePurchasePrice',
+  ppc: 'averagePurchasePrice',
+
+  // Cotización actual del broker — no usar como costo
+  precio: '_marketPrice',
+  price: '_marketPrice',
+  last: '_marketPrice',
+  ultimo: '_marketPrice',
+  último: '_marketPrice',
+
   currency: 'currency',
   moneda: 'currency',
+
   broker: 'broker',
   purchasedate: 'purchaseDate',
   fecha_compra: 'purchaseDate',
   fechacompra: 'purchaseDate',
+
   displayname: 'displayName',
   nombre: 'displayName',
   name: 'displayName',
+  descripcion: 'displayName',
+  descripción: 'displayName',
+  description: 'displayName',
+
   market: 'market',
   mercado: 'market',
+  tipo_de_instrumento: 'instrumentType',
+  tipodeinstrumento: 'instrumentType',
+  instrumento: 'instrumentType',
+  tipo: 'instrumentType',
+
   notes: 'notes',
   nota: 'notes',
 };
 
-function normalizeHeader(h: string): string {
-  const key = h.trim().toLowerCase().replace(/\s+/g, '_');
-  return HEADER_ALIASES[key] ?? HEADER_ALIASES[key.replace(/_/g, '')] ?? h.trim();
+function stripDiacritics(value: string): string {
+  return value.normalize('NFD').replace(/\p{M}/gu, '');
 }
 
-/** CSV mínimo: soporta comillas simples y comas. */
-export function parseCsvText(text: string): string[][] {
+function normalizeHeaderKey(h: string): string {
+  return stripDiacritics(h)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^\w]/g, '');
+}
+
+function normalizeHeader(h: string): string {
+  const key = normalizeHeaderKey(h);
+  if (HEADER_ALIASES[key]) return HEADER_ALIASES[key];
+  // sin guiones bajos
+  const compact = key.replace(/_/g, '');
+  return HEADER_ALIASES[compact] ?? HEADER_ALIASES[key] ?? h.trim();
+}
+
+export function detectDelimiter(sample: string): ',' | ';' | '\t' {
+  const firstLine = sample.split(/\r?\n/).find((l) => l.trim()) ?? '';
+  const tabs = (firstLine.match(/\t/g) ?? []).length;
+  const semis = (firstLine.match(/;/g) ?? []).length;
+  const commas = (firstLine.match(/,/g) ?? []).length;
+  if (tabs >= semis && tabs >= commas && tabs > 0) return '\t';
+  if (semis > commas) return ';';
+  return ',';
+}
+
+/** CSV/TSV/SSV: soporta comillas y delimitador auto. */
+export function parseCsvText(text: string, delimiter?: ',' | ';' | '\t'): string[][] {
+  const delim = delimiter ?? detectDelimiter(text);
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = '';
@@ -95,7 +151,7 @@ export function parseCsvText(text: string): string[][] {
       inQuotes = true;
       continue;
     }
-    if (ch === ',') {
+    if (ch === delim) {
       pushCell();
       continue;
     }
@@ -114,12 +170,22 @@ export function parseCsvText(text: string): string[][] {
   return rows.filter((r) => r.some((c) => c.trim() !== ''));
 }
 
+function parseNumberLoose(raw: string): number {
+  const t = raw.trim();
+  if (!t) return Number.NaN;
+  // 1.234,56 (es-AR) vs 1234.56
+  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(t) || /^\d+,\d+$/.test(t)) {
+    return Number(t.replace(/\./g, '').replace(',', '.'));
+  }
+  return Number(t.replace(/,/g, ''));
+}
+
 export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult {
   const matrix = parseCsvText(text);
   if (matrix.length < 2) {
     return {
       ok: false,
-      error: 'El CSV necesita encabezado y al menos una fila.',
+      error: 'El archivo necesita encabezado y al menos una fila.',
       rows: [],
       validCount: 0,
       warningCount: 0,
@@ -131,9 +197,17 @@ export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult
   const required = ['ticker', 'quantity', 'averagePurchasePrice', 'currency'];
   for (const req of required) {
     if (!headers.includes(req)) {
+      const hint =
+        req === 'quantity'
+          ? ' (ej. Nominales / cantidad)'
+          : req === 'averagePurchasePrice'
+            ? ' (ej. Precio promedio de compra)'
+            : req === 'currency'
+              ? ' (ej. Moneda)'
+              : '';
       return {
         ok: false,
-        error: `Falta la columna obligatoria: ${req}.`,
+        error: `Falta la columna obligatoria: ${req}${hint}.`,
         rows: [],
         validCount: 0,
         warningCount: 0,
@@ -151,13 +225,19 @@ export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult
     const cells = matrix[i];
     const raw: Record<string, string> = {};
     headers.forEach((h, idx) => {
-      raw[h] = (cells[idx] ?? '').trim();
+      // si hay columnas duplicadas mapeadas al mismo campo, priorizar la primera no vacía
+      // salvo averagePurchasePrice que nunca debe venir de _marketPrice
+      const val = (cells[idx] ?? '').trim();
+      if (!raw[h] || raw[h] === '') raw[h] = val;
     });
+
+    const quantity = parseNumberLoose(raw.quantity ?? '');
+    const averagePurchasePrice = parseNumberLoose(raw.averagePurchasePrice ?? '');
 
     const candidate = {
       ticker: raw.ticker,
-      quantity: Number(raw.quantity.replace(',', '.')),
-      averagePurchasePrice: Number(raw.averagePurchasePrice.replace(',', '.')),
+      quantity,
+      averagePurchasePrice,
       currency: raw.currency,
       broker: raw.broker || undefined,
       purchaseDate: raw.purchaseDate || undefined,
@@ -172,11 +252,21 @@ export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult
     if (!raw.broker) warnings.push('Sin broker.');
     if (!raw.purchaseDate) warnings.push('Sin fecha de compra.');
 
+    const instrument = (raw.instrumentType ?? '').toLowerCase();
+    if (instrument.includes('fondo')) {
+      warnings.push('Fondo: la cotización automática puede no estar disponible.');
+    }
+
     if (!result.ok) {
       invalidCount += 1;
       rows.push({
         rowIndex: i + 1,
-        raw,
+        raw: {
+          ticker: raw.ticker ?? '',
+          quantity: raw.quantity ?? '',
+          averagePurchasePrice: raw.averagePurchasePrice ?? '',
+          currency: raw.currency ?? '',
+        },
         status: 'invalid',
         errors: result.errors,
         warnings,
@@ -184,11 +274,20 @@ export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult
       continue;
     }
 
+    const previewRaw = {
+      ticker: result.holding.ticker,
+      quantity: String(result.holding.quantity),
+      averagePurchasePrice: String(result.holding.averagePurchasePrice),
+      currency: result.holding.currency,
+      displayName: result.holding.displayName ?? '',
+      instrumentType: raw.instrumentType ?? '',
+    };
+
     if (warnings.length > 0) {
       warningCount += 1;
       rows.push({
         rowIndex: i + 1,
-        raw,
+        raw: previewRaw,
         status: 'warning',
         errors: [],
         warnings,
@@ -198,7 +297,7 @@ export function parsePortfolioCsv(text: string, nowIso?: string): CsvParseResult
       validCount += 1;
       rows.push({
         rowIndex: i + 1,
-        raw,
+        raw: previewRaw,
         status: 'valid',
         errors: [],
         warnings: [],
@@ -223,4 +322,24 @@ export function holdingsFromCsvPreview(
   return rows
     .filter((r) => r.holding && (r.status === 'valid' || (includeWarnings && r.status === 'warning')))
     .map((r) => r.holding!);
+}
+
+/** Convierte la primera hoja de un .xlsx/.xls a texto CSV para el mismo parser. */
+export async function portfolioSpreadsheetToCsvText(buffer: ArrayBuffer): Promise<string> {
+  const XLSX = await import('xlsx');
+  const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+  const name = wb.SheetNames[0];
+  if (!name) throw new Error('El Excel no tiene hojas.');
+  const sheet = wb.Sheets[name];
+  return XLSX.utils.sheet_to_csv(sheet, { FS: ',', RS: '\n' });
+}
+
+export function isSpreadsheetFile(file: File): boolean {
+  const n = file.name.toLowerCase();
+  return (
+    n.endsWith('.xlsx') ||
+    n.endsWith('.xls') ||
+    file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    file.type === 'application/vnd.ms-excel'
+  );
 }

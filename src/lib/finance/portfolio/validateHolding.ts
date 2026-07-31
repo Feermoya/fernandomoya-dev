@@ -24,10 +24,24 @@ function newId(): string {
 
 function parseCurrency(raw: unknown): FinancePortfolioCurrency | null {
   if (typeof raw !== 'string') return null;
-  const c = raw.trim().toUpperCase();
+  const c = raw
+    .trim()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toUpperCase();
   if (c === 'ARS' || c === 'USD') return c;
-  if (c === 'PESOS' || c === '$') return 'ARS';
-  if (c === 'U$S' || c === 'US$') return 'USD';
+  if (c === 'PESOS' || c === 'PESO' || c === '$' || c === 'AR$') return 'ARS';
+  if (
+    c === 'USS' ||
+    c === 'US$' ||
+    c === 'U$S' ||
+    c === 'DOLARES' ||
+    c === 'DOLAR' ||
+    c === 'DOLLARS' ||
+    c === 'DOLLAR'
+  ) {
+    return 'USD';
+  }
   return null;
 }
 

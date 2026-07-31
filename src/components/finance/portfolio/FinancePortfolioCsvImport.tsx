@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { sileo } from 'sileo';
 import {
   holdingsFromCsvPreview,
+  isSpreadsheetFile,
   parsePortfolioCsv,
+  portfolioSpreadsheetToCsvText,
   type CsvRowPreview,
 } from '@/lib/finance/portfolio/csvImport';
 import { mergePortfolioHoldings } from '@/lib/finance/portfolio/mergeHoldings';
@@ -37,16 +39,31 @@ export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props)
     setRows(null);
     setExcluded(new Set());
     try {
-      const text = await file.text();
+      let text: string;
+      if (isSpreadsheetFile(file)) {
+        const buffer = await file.arrayBuffer();
+        text = await portfolioSpreadsheetToCsvText(buffer);
+      } else {
+        text = await file.text();
+      }
       const parsed = parsePortfolioCsv(text);
       if (!parsed.ok) {
-        setParseError(parsed.error || 'CSV inválido');
+        setParseError(parsed.error || 'Archivo inválido');
         sileo.error({ title: 'Error de archivo', description: parsed.error });
         return;
       }
+
+      // Fondos: excluidos por defecto (se pueden volver a marcar)
+      const autoExcluded = new Set<number>();
+      for (const row of parsed.rows) {
+        if ((row.raw.instrumentType ?? '').toLowerCase().includes('fondo')) {
+          autoExcluded.add(row.rowIndex);
+        }
+      }
+      setExcluded(autoExcluded);
       setRows(parsed.rows);
       sileo.info({
-        title: 'CSV leído',
+        title: 'Archivo leído',
         description: `${parsed.validCount} válidas · ${parsed.warningCount} con avisos · ${parsed.invalidCount} inválidas`,
       });
     } catch (e) {
@@ -68,7 +85,7 @@ export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props)
     });
     onApply(merged.holdings);
     sileo.success({
-      title: 'CSV importado',
+      title: 'Importación lista',
       description: `+${merged.added} · combinadas ${merged.combined} · reemplazadas ${merged.replaced} · ignoradas ${merged.ignored}`,
     });
     if (merged.ignored > 0) {
@@ -83,15 +100,16 @@ export function FinancePortfolioCsvImport({ existing, onApply, onClose }: Props)
   return (
     <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-3">
       <div>
-        <p className="text-sm font-bold text-slate-900">Importar CSV</p>
+        <p className="text-sm font-bold text-slate-900">Importar Excel / CSV del broker</p>
         <p className="mt-0.5 text-[11px] font-medium text-slate-500">
-          Columnas: ticker, quantity, averagePurchasePrice, currency (broker y fecha opcionales).
+          Podés subir el .xlsx tal cual (Ticker, Nominales, Precio promedio de compra, Moneda). No hace
+          falta renombrar columnas. Los fondos se excluyen por defecto.
         </p>
       </div>
 
       <input
         type="file"
-        accept=".csv,text/csv"
+        accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
         className="block w-full text-xs"
         onChange={(e) => void onFile(e.target.files?.[0] ?? null)}
       />

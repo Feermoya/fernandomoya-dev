@@ -148,6 +148,40 @@ AAPL,0,100,USD`;
     expect(parsed.ok).toBe(true);
     expect(parsed.invalidCount).toBe(1);
   });
+
+  it('parses broker AR export (Nominales + Precio promedio + Pesos/Dólares)', () => {
+    const tsv = [
+      'Ticker\tTipo de Instrumento\tDescripcion\tNominales\tPrecio\tPrecio promedio de compra\tMoneda',
+      'AMZN\tCedears\tCEDEAR AMAZON\t61\t2977.5\t2453.33606557\tPesos',
+      'URA\tCedears\tCEDEAR URANIUM\t2\t12320\t15930\tDólares',
+      'ESTRA1A\tFondos\tDolar Corto Plazo\t12677.82\t1.167125\t1.14315172\tDólares',
+    ].join('\n');
+    const parsed = parsePortfolioCsv(tsv);
+    expect(parsed.ok).toBe(true);
+    expect(parsed.invalidCount).toBe(0);
+
+    const amzn = parsed.rows.find((r) => r.holding?.ticker === 'AMZN');
+    expect(amzn?.holding?.quantity).toBe(61);
+    expect(amzn?.holding?.averagePurchasePrice).toBeCloseTo(2453.33606557, 5);
+    expect(amzn?.holding?.currency).toBe('ARS');
+    expect(amzn?.holding?.displayName).toContain('AMAZON');
+
+    const ura = parsed.rows.find((r) => r.holding?.ticker === 'URA');
+    expect(ura?.holding?.currency).toBe('USD');
+    expect(ura?.holding?.averagePurchasePrice).toBe(15930);
+
+    const fondo = parsed.rows.find((r) => r.holding?.ticker === 'ESTRA1A');
+    expect(fondo?.status).toBe('warning');
+    expect(fondo?.warnings.some((w) => /fondo/i.test(w))).toBe(true);
+  });
+
+  it('does not use current Precio as average purchase price', () => {
+    const csv = `Ticker,Nominales,Precio,Precio promedio de compra,Moneda
+MSFT,13,24340,19892.65,Pesos`;
+    const parsed = parsePortfolioCsv(csv);
+    expect(parsed.ok).toBe(true);
+    expect(parsed.rows[0].holding?.averagePurchasePrice).toBeCloseTo(19892.65, 2);
+  });
 });
 
 describe('consolidation and alerts', () => {

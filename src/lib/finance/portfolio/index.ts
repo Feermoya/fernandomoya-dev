@@ -31,8 +31,10 @@ export {
 
 export {
   holdingsFromCsvPreview,
+  isSpreadsheetFile,
   parseCsvText,
   parsePortfolioCsv,
+  portfolioSpreadsheetToCsvText,
   type CsvParseResult,
   type CsvRowPreview,
 } from '@/lib/finance/portfolio/csvImport';
