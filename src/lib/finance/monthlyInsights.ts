@@ -1,4 +1,5 @@
 import type { FinanceEntry, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
+import { formatARS } from '@/lib/finance/calculations';
 
 export type MonthlyInsightSeverity = 'good' | 'warning' | 'danger' | 'neutral';
 
@@ -65,10 +66,14 @@ function buildCandidates(params: {
   }
 
   if (planTotalCount > 0 && planCompletedCount < planTotalCount) {
+    const pending = planTotalCount - planCompletedCount;
     out.push({
       id: 'plan-pending',
-      title: 'Foco pendiente',
-      detail: 'Te faltan activos del plan de foco.',
+      title: pending === 1 ? 'Te falta 1 activo del plan' : `Te faltan ${pending} activos del plan`,
+      detail:
+        pendingReferenceTotal > 0
+          ? `Pendiente estimado ~${formatARS(pendingReferenceTotal)}.`
+          : 'Completá los pendientes del plan de foco.',
       severity: 'warning',
     });
   }

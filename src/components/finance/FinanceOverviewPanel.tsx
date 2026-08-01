@@ -25,22 +25,32 @@ function StatCell({
   delta,
   emphasis,
   compact,
+  primary,
 }: {
   label: string;
   value: string;
   delta?: ReactNode;
   emphasis?: boolean;
   compact?: boolean;
+  primary?: boolean;
 }) {
   return (
     <article
-      className={`rounded-xl border border-slate-200/90 bg-white px-2.5 py-2.5 ${
-        compact ? '' : 'sm:px-3 sm:py-3'
-      } ${emphasis ? 'sm:col-span-2' : ''}`}
+      className={`rounded-xl border px-2.5 py-2 ${
+        primary
+          ? 'border-blue-200/90 bg-blue-50/50 sm:col-span-1'
+          : 'border-slate-200/80 bg-white'
+      } ${compact ? '' : 'sm:px-3 sm:py-3'} ${emphasis ? 'sm:col-span-2' : ''}`}
     >
-      <p className="finance-label">{label}</p>
-      <p className={`mt-1 ${emphasis ? 'finance-metric' : 'finance-metric-sm'}`}>{value}</p>
-      {delta ? <div className="mt-1.5">{delta}</div> : null}
+      <p className={`finance-label ${primary ? 'text-blue-700' : ''}`}>{label}</p>
+      <p
+        className={`mt-0.5 tabular-nums tracking-tight text-slate-900 ${
+          primary ? 'text-xl font-black sm:text-2xl' : 'text-sm font-bold text-slate-700'
+        }`}
+      >
+        {value}
+      </p>
+      {delta ? <div className="mt-1">{delta}</div> : null}
     </article>
   );
 }
@@ -77,6 +87,64 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
   const yearPct = deltaPercent(yearInvested, prevYearInvested);
   const vsAvgPct = avgMonthly > 0 ? deltaPercent(monthInvested, avgMonthly) : null;
 
+  const secondary = (
+    <>
+      <StatCell
+        label="Promedio mensual"
+        value={formatARS(avgMonthly)}
+        compact={compact}
+        delta={
+          avgMonthly > 0 && monthInvested > 0 ? (
+            <FinanceDelta
+              absolute={monthInvested - avgMonthly}
+              percent={vsAvgPct}
+              versus="vs promedio"
+              sense="invest"
+            />
+          ) : (
+            <span className="text-[10px] font-medium text-slate-500">
+              {activeMonths > 0 ? `${activeMonths} meses` : 'Sin datos'}
+            </span>
+          )
+        }
+      />
+      <StatCell
+        label="Operaciones"
+        value={String(opsThisMonth)}
+        compact={compact}
+        delta={
+          opsPrevMonth > 0 ? (
+            <FinanceDelta
+              absolute={opsThisMonth - opsPrevMonth}
+              percent={opsPct}
+              versus={`vs ${formatMonthShort(prevMonth)}`}
+              sense="neutral"
+            />
+          ) : (
+            <span className="text-[10px] font-medium text-slate-500">En el mes</span>
+          )
+        }
+      />
+      <StatCell
+        label={`Año ${year}`}
+        value={formatARS(yearInvested)}
+        compact={compact}
+        delta={
+          prevYearInvested > 0 ? (
+            <FinanceDelta
+              absolute={yearInvested - prevYearInvested}
+              percent={yearPct}
+              versus={`vs ${year - 1}`}
+              sense="invest"
+            />
+          ) : (
+            <span className="text-[10px] font-medium text-slate-500">Acumulado</span>
+          )
+        }
+      />
+    </>
+  );
+
   return (
     <section
       className={`finance-card ${compact ? 'p-3' : 'p-3.5 sm:p-4'}`}
@@ -90,13 +158,11 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
         iconTone="blue"
       />
 
-      <div
-        className={`mt-3 grid gap-2 ${compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}
-      >
+      <div className="mt-2.5 grid grid-cols-2 gap-2">
         <StatCell
           label="Este mes"
           value={formatARS(monthInvested)}
-          emphasis={!compact}
+          primary
           compact={compact}
           delta={
             prevMonthInvested > 0 ? (
@@ -110,65 +176,24 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
           }
         />
         <StatCell
-          label="Promedio mensual"
-          value={formatARS(avgMonthly)}
-          compact={compact}
-          delta={
-            avgMonthly > 0 && monthInvested > 0 ? (
-              <FinanceDelta
-                absolute={monthInvested - avgMonthly}
-                percent={vsAvgPct}
-                versus="vs tu promedio"
-                sense="invest"
-              />
-            ) : (
-              <span className="text-[10px] font-medium text-slate-500">
-                {activeMonths > 0 ? `${activeMonths} meses activos` : 'Sin datos'}
-              </span>
-            )
-          }
-        />
-        <StatCell
-          label="Operaciones"
-          value={String(opsThisMonth)}
-          compact={compact}
-          delta={
-            opsPrevMonth > 0 ? (
-              <FinanceDelta
-                absolute={opsThisMonth - opsPrevMonth}
-                percent={opsPct}
-                versus={`vs ${formatMonthShort(prevMonth)}`}
-                sense="neutral"
-              />
-            ) : (
-              <span className="text-[10px] font-medium text-slate-500">En el mes</span>
-            )
-          }
-        />
-        <StatCell
-          label={`Año ${year}`}
-          value={formatARS(yearInvested)}
-          compact={compact}
-          delta={
-            prevYearInvested > 0 ? (
-              <FinanceDelta
-                absolute={yearInvested - prevYearInvested}
-                percent={yearPct}
-                versus={`vs ${year - 1}`}
-                sense="invest"
-              />
-            ) : (
-              <span className="text-[10px] font-medium text-slate-500">Acumulado</span>
-            )
-          }
-        />
-        <StatCell
           label="Total histórico"
           value={formatARS(total)}
+          primary
           compact={compact}
           delta={<span className="text-[10px] font-medium text-slate-500">Desde el inicio</span>}
         />
       </div>
+
+      {compact ? (
+        <details className="mt-2">
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-blue-700 underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+            Ver promedio, ops y año
+          </summary>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">{secondary}</div>
+        </details>
+      ) : (
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">{secondary}</div>
+      )}
     </section>
   );
 }

@@ -75,6 +75,20 @@
   --cs-window-shadow: 0 32px 72px rgba(42, 36, 36, 0.14);
 }
 
+.case-study-page--mendoza {
+  --cs-bg: #0b1f3a;
+  --cs-text: #f4f7fb;
+  --cs-muted: rgba(244, 247, 251, 0.68);
+  --cs-accent: #e87722;
+  --cs-border: rgba(244, 247, 251, 0.14);
+  --cs-btn-primary-bg: #e87722;
+  --cs-btn-primary-text: #ffffff;
+  --cs-result-bg: #081628;
+  --cs-result-text: #f4f7fb;
+  --cs-window-border: rgba(244, 247, 251, 0.14);
+  --cs-window-shadow: 0 32px 72px rgba(0, 0, 0, 0.4);
+}
+
 .case-study-page .project-showcase-window {
   border-color: var(--cs-window-border);
   box-shadow: var(--cs-window-shadow);

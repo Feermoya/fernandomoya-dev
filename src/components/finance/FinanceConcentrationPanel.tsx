@@ -13,26 +13,34 @@ type Props = {
 export function FinanceConcentrationPanel({ entries, month }: Props) {
   const breakdown = useMemo(() => getTickerMonthlyBreakdown(entries, month), [entries, month]);
   const topThree = breakdown.items.slice(0, 3);
+  const rest = breakdown.items.slice(3);
 
   if (breakdown.total <= 0 || topThree.length === 0) return null;
 
+  const statusLabel = breakdown.concentrationWarning
+    ? 'Concentración alta'
+    : topThree[0].percent >= 35
+      ? 'Concentración moderada'
+      : 'Concentración distribuida';
+
   return (
-    <section className="finance-card-compact p-3.5" aria-labelledby="concentration-heading">
+    <section className="finance-card-compact p-3" aria-labelledby="concentration-heading">
       <FinanceSectionHeading
         id="concentration-heading"
         title="Concentración"
-        subtitle="Dónde se fue el capital del mes"
+        subtitle={statusLabel}
         icon={ChartPie}
         iconTone="violet"
       />
 
-      {breakdown.concentrationWarning && breakdown.topItem ? (
-        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs font-semibold text-amber-800">
-          Alta concentración en {breakdown.topItem.label}
+      {breakdown.topItem ? (
+        <p className="mt-2 text-xs font-semibold leading-snug text-slate-700">
+          <span className="font-black text-slate-900">{breakdown.topItem.label}</span> representa el{' '}
+          {breakdown.topItem.percent.toFixed(0)}% del mes.
         </p>
       ) : null}
 
-      <ul className="mt-3 space-y-2.5">
+      <ul className="mt-2.5 space-y-2">
         {topThree.map((item) => (
           <li key={item.label}>
             <div className="flex items-baseline justify-between gap-2">
@@ -57,6 +65,27 @@ export function FinanceConcentrationPanel({ entries, month }: Props) {
           </li>
         ))}
       </ul>
+
+      {rest.length > 0 ? (
+        <details className="mt-2">
+          <summary className="cursor-pointer list-none text-[11px] font-bold text-blue-700 underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+            Ver distribución completa ({breakdown.items.length})
+          </summary>
+          <ul className="mt-2 space-y-1.5 border-t border-slate-100 pt-2">
+            {rest.map((item) => (
+              <li
+                key={item.label}
+                className="flex items-baseline justify-between gap-2 text-xs font-semibold text-slate-700"
+              >
+                <span className="truncate">{item.label}</span>
+                <span className="tabular-nums text-slate-500">
+                  {item.percent.toFixed(0)}% · {formatARS(item.amount)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </section>
   );
 }

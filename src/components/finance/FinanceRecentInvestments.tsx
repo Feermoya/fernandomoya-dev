@@ -116,7 +116,7 @@ export function FinanceRecentInvestments({ investments, onEdit, onRemove }: Prop
           label="Movimientos"
           trailing={
             <span className="ml-auto text-right text-[11px] font-bold tabular-nums text-slate-500">
-              {count} · {formatARS(total)}
+              {count} {count === 1 ? 'operación' : 'operaciones'} · {formatARS(total)}
             </span>
           }
         />

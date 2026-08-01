@@ -68,15 +68,15 @@ function TickerAvatar({
 
   if (logoUrl && !failed) {
     return (
-      <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm">
         <img
           src={logoUrl}
           alt=""
-          width={28}
-          height={28}
+          width={24}
+          height={24}
           loading="lazy"
           decoding="async"
-          className="h-7 w-7 rounded-full object-contain"
+          className="h-6 w-6 rounded-full object-contain"
           onError={() => setFailed(true)}
         />
         {checkBadge}
@@ -85,7 +85,7 @@ function TickerAvatar({
   }
 
   return (
-    <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 text-xs font-black text-slate-700 shadow-sm">
+    <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-[10px] font-black text-slate-700 shadow-sm">
       {initial}
       {checkBadge}
     </span>
@@ -98,12 +98,14 @@ function PlanChip({
   pricesLoading,
   onRemove,
   onSplit,
+  compact,
 }: {
   progressItem: MonthlyPlanProgressItem;
   prices: FinancePricesMap;
   pricesLoading: boolean;
   onRemove: () => void;
   onSplit?: () => void;
+  compact?: boolean;
 }) {
   const {
     item,
@@ -130,6 +132,61 @@ function PlanChip({
 
   const logoUrl = tickerLogoUrl(item.label, prices);
   const anchor = getMonthlyPlanAnchorDef(item);
+
+  if (compact) {
+    return (
+      <article
+        className={`group relative flex min-h-[52px] items-center gap-2 rounded-xl border px-2.5 py-2 transition hover:shadow-sm motion-reduce:transition-none ${shellClass} ${
+          anchor ? 'border-violet-200 bg-violet-50/80' : ''
+        }`}
+      >
+        <TickerAvatar ticker={item.label} logoUrl={logoUrl} completed={completed} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="truncate text-sm font-black tracking-wide text-slate-900">
+              {item.label}
+            </span>
+            <span className="shrink-0 text-xs font-bold tabular-nums text-slate-800">{priceLine}</span>
+          </div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1">
+            <span className="text-[10px] font-semibold text-slate-500">
+              {completed ? 'Cubierto' : 'Pendiente'}
+            </span>
+            {anchor ? (
+              <span className="rounded-md border border-violet-200 bg-violet-100 px-1 py-px text-[8px] font-black uppercase tracking-[0.1em] text-violet-700">
+                {anchor.badge}
+              </span>
+            ) : null}
+            {pendingWithHistory ? (
+              <span className="rounded-md border border-sky-200 bg-sky-100 px-1 py-px text-[8px] font-black uppercase tracking-[0.1em] text-sky-700">
+                Antes
+              </span>
+            ) : null}
+          </div>
+        </div>
+        {!anchor ? (
+          <div className="absolute right-1 top-1 flex gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+            {onSplit ? (
+              <button
+                type="button"
+                onClick={onSplit}
+                className="rounded-md px-1.5 py-0.5 text-[9px] font-bold text-blue-600"
+              >
+                Separar
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={onRemove}
+              className="rounded-md px-1.5 py-0.5 text-[9px] font-bold text-slate-400 hover:text-red-600"
+            >
+              Quitar
+            </button>
+          </div>
+        ) : null}
+      </article>
+    );
+  }
 
   return (
     <article
@@ -211,32 +268,55 @@ function ChipGrid({
 
   const isPending = variant === 'pending';
 
+  const grid = (
+    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+      {items.map((progressItem) => (
+        <PlanChip
+          key={progressItem.item.id}
+          progressItem={progressItem}
+          prices={prices}
+          pricesLoading={pricesLoading}
+          compact
+          onRemove={() => onRemoveItem(progressItem.item.id)}
+          onSplit={
+            planItemLabelLooksLikeMergedTickers(progressItem.item.label) && onSplitMergedItem
+              ? () => onSplitMergedItem(progressItem.item.id, progressItem.item.label)
+              : undefined
+          }
+        />
+      ))}
+    </div>
+  );
+
+  if (!isPending) {
+    return (
+      <details className="group/completed rounded-xl border border-emerald-200/80 bg-emerald-50/40 open:bg-emerald-50/70">
+        <summary className="flex min-h-[40px] cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-bold text-emerald-800 [&::-webkit-details-marker]:hidden">
+          <span className="inline-flex items-center gap-1.5">
+            <Check size={14} strokeWidth={2.5} aria-hidden />
+            {items.length === 1
+              ? '1 activo cubierto este mes'
+              : `${items.length} activos cubiertos este mes`}
+          </span>
+          <span className="text-[11px] font-semibold text-emerald-700 group-open/completed:hidden">
+            Ver detalle
+          </span>
+          <span className="hidden text-[11px] font-semibold text-emerald-700 group-open/completed:inline">
+            Ocultar
+          </span>
+        </summary>
+        <div className="border-t border-emerald-200/60 px-2.5 py-2.5">{grid}</div>
+      </details>
+    );
+  }
+
   return (
     <div>
-      <p
-        className={`mb-2 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.16em] ${
-          isPending ? 'text-amber-700' : 'text-emerald-700'
-        }`}
-      >
-        {isPending ? <Clock size={14} strokeWidth={2.25} aria-hidden /> : <Check size={14} strokeWidth={2.25} aria-hidden />}
-        {isPending ? 'Pendientes' : 'Comprados este mes'}
+      <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-amber-700">
+        <Clock size={14} strokeWidth={2.25} aria-hidden />
+        Pendientes
       </p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
-        {items.map((progressItem) => (
-          <PlanChip
-            key={progressItem.item.id}
-            progressItem={progressItem}
-            prices={prices}
-            pricesLoading={pricesLoading}
-            onRemove={() => onRemoveItem(progressItem.item.id)}
-            onSplit={
-              planItemLabelLooksLikeMergedTickers(progressItem.item.label) && onSplitMergedItem
-                ? () => onSplitMergedItem(progressItem.item.id, progressItem.item.label)
-                : undefined
-            }
-          />
-        ))}
-      </div>
+      {grid}
     </div>
   );
 }

@@ -10,7 +10,12 @@ import { projectListLabel } from '@/utils/project-label';
 import { byOrderThenDate } from '@/utils/sort';
 import { isCaseStudyId } from '@/data/case-studies';
 
-const SELECTED_IDS = ['hema', 'giacomelli-seguros', 'poletino-servicios'] as const;
+const SELECTED_IDS = [
+  'mendoza-insights',
+  'hema',
+  'giacomelli-seguros',
+  'poletino-servicios',
+] as const;
 
 const FEATURED_COPY: Record<
   (typeof SELECTED_IDS)[number],
@@ -22,26 +27,33 @@ const FEATURED_COPY: Record<
     mediaPosition: 'left' | 'right';
   }
 > = {
-  hema: {
+  'mendoza-insights': {
     number: '01',
+    typeLine: 'Producto digital inmobiliario',
+    phrase: 'Datos complejos, presentados con claridad.',
+    theme: 'mendoza',
+    mediaPosition: 'right',
+  },
+  hema: {
+    number: '02',
     typeLine: 'Laboratorio genético · Sitio institucional',
     phrase: 'Complejidad médica, explicada con claridad.',
     theme: 'hema',
-    mediaPosition: 'right',
+    mediaPosition: 'left',
   },
   'giacomelli-seguros': {
-    number: '02',
+    number: '03',
     typeLine: 'Seguros · Sitio institucional',
     phrase: 'Una empresa familiar, llevada al presente.',
     theme: 'giacomelli',
-    mediaPosition: 'left',
+    mediaPosition: 'right',
   },
   'poletino-servicios': {
-    number: '03',
+    number: '04',
     typeLine: 'Industria · Servicios y maquinaria',
     phrase: 'Maquinaria real. Comunicación directa.',
     theme: 'poletino',
-    mediaPosition: 'right',
+    mediaPosition: 'left',
   },
 };
 
@@ -98,7 +110,7 @@ const archiveSource = all
 
 const archive: ArchiveProjectData[] = archiveSource.map((entry, index) => ({
   id: entry.id,
-  number: String(index + 4).padStart(2, '0'),
+  number: String(index + SELECTED_IDS.length + 1).padStart(2, '0'),
   label: projectListLabel(entry.data),
   live: entry.data.links.live,
   caseUrl: isCaseStudyId(entry.id) ? `/proyectos/${entry.id}` : undefined,

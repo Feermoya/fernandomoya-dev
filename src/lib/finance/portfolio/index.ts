@@ -41,5 +41,14 @@ export {
   type CsvRowPreview,
 } from '@/lib/finance/portfolio/csvImport';
 
+export {
+  buildPortfolioHoldingViews,
+  filterPortfolioViews,
+  sortMarketAlertsForDisplay,
+  sortPortfolioViews,
+  summarizePortfolioViews,
+} from '@/lib/finance/portfolio/portfolioView';
+
+
 export { searchFinanceSymbols } from '@/lib/finance/portfolio/symbolSearch';
 export { searchFinanceSymbolsClient } from '@/lib/finance/portfolio/symbolSearchClient';

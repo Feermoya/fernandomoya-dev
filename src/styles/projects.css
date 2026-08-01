@@ -194,6 +194,19 @@
 }
 
 /* Temas */
+.featured-project--mendoza {
+  --fp-bg: #0b1f3a;
+  --fp-text: #f4f7fb;
+  --fp-muted: rgba(244, 247, 251, 0.68);
+  --fp-accent: #e87722;
+  --fp-cta-bg: #e87722;
+  --fp-cta-text: #ffffff;
+  --fp-window-border: rgba(244, 247, 251, 0.14);
+  --fp-window-shadow: 0 32px 72px rgba(0, 0, 0, 0.4);
+  background: var(--fp-bg);
+  color: var(--fp-text);
+}
+
 .featured-project--hema {
   --fp-bg: #f4f1ea;
   --fp-text: #070707;
@@ -234,20 +247,16 @@
 }
 
 .featured-project--hema .featured-project__number,
-.featured-project--poletino .featured-project__number {
-  color: var(--fp-text);
-}
-
-.featured-project--giacomelli .featured-project__number {
+.featured-project--poletino .featured-project__number,
+.featured-project--giacomelli .featured-project__number,
+.featured-project--mendoza .featured-project__number {
   color: var(--fp-text);
 }
 
 .featured-project--hema .featured-project__phrase,
-.featured-project--poletino .featured-project__phrase {
-  color: var(--fp-muted);
-}
-
-.featured-project--giacomelli .featured-project__phrase {
+.featured-project--poletino .featured-project__phrase,
+.featured-project--giacomelli .featured-project__phrase,
+.featured-project--mendoza .featured-project__phrase {
   color: var(--fp-muted);
 }
 

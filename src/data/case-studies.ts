@@ -1,5 +1,6 @@
 /** IDs con caso de estudio público (ETAPA 4). */
 export const CASE_STUDY_IDS = [
+  'mendoza-insights',
   'hema',
   'giacomelli-seguros',
   'poletino-servicios',
@@ -8,7 +9,7 @@ export const CASE_STUDY_IDS = [
 
 export type CaseStudyId = (typeof CASE_STUDY_IDS)[number];
 
-export type CaseStudyTheme = 'hema' | 'giacomelli' | 'poletino' | 'giuliana';
+export type CaseStudyTheme = 'mendoza' | 'hema' | 'giacomelli' | 'poletino' | 'giuliana';
 
 export type CaseStudyDecision = {
   title: string;
@@ -44,8 +45,78 @@ export type CaseStudyEditorial = {
  * No duplica frontmatter (client, stack, links, description).
  */
 export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
-  hema: {
+  'mendoza-insights': {
     number: '01',
+    phrase: 'Datos complejos, presentados con claridad.',
+    theme: 'mendoza',
+    nextId: 'hema',
+    context: [
+      'Mendoza Insights necesitaba presentar un producto poco habitual para el mercado local: información inmobiliaria ordenada, índices, precios de referencia y análisis para tomar mejores decisiones. No es una inmobiliaria ni un portal de propiedades: es un producto digital de inteligencia inmobiliaria.',
+      'El desafío fue transformar una propuesta compleja en una web clara, visual y fácil de recorrer. El sitio tenía que explicar datos sin hacerlo pesado, generar confianza y guiar hacia acciones concretas: comprar el índice, ver una muestra o consultar referencias del mercado.',
+    ],
+    objectives: [
+      'Presentar el producto de análisis inmobiliario con claridad comercial.',
+      'Mostrar indicadores de mercado sin abrumar al visitante.',
+      'Separar intenciones de búsqueda en páginas específicas (precio por m², valuación, inversión, mercado e índice).',
+      'Explicar la metodología de forma comprensible.',
+      'Facilitar la compra del índice y el acceso a una muestra gratuita.',
+      'Preparar la estructura para posicionamiento orgánico en búsquedas locales.',
+    ],
+    direction: {
+      estructura: [
+        'La estructura combina una home comercial con páginas específicas para distintas intenciones de búsqueda: precio por metro cuadrado, valor de una propiedad, inversión inmobiliaria, mercado inmobiliario e índice de valuaciones.',
+        'También se trabajaron indicadores, paneles de datos, sparklines, metodología, CTAs, formularios y bloques de confianza para que el usuario entienda qué está viendo y cómo usar esos datos.',
+      ],
+      identidad: [
+        'La home presenta el producto y las landings responden necesidades puntuales. La jerarquía visual prioriza el índice, los indicadores del mercado y los llamados a la acción.',
+        'Se buscó un tono sobrio y de confianza: datos visibles, metodología accesible y lenguaje concreto. El foco estuvo en claridad, confianza y posicionamiento orgánico.',
+      ],
+    },
+    decisions: [
+      {
+        title: 'Ordenar una propuesta compleja',
+        body: 'El sitio separa el producto comercial de las páginas que responden búsquedas concretas, sin mezclar todo en una sola landing.',
+      },
+      {
+        title: 'Explicar datos sin hacerlos pesados',
+        body: 'Indicadores, sparklines y paneles de mercado presentan referencias claras sin saturar la lectura.',
+      },
+      {
+        title: 'SEO por intención',
+        body: 'Páginas específicas para precio por m², valuación, inversión y mercado inmobiliario en Mendoza.',
+      },
+      {
+        title: 'CTAs concretos',
+        body: 'Comprar el índice, ver una muestra gratis y consultar metodología como acciones visibles desde la home.',
+      },
+    ],
+    result: [
+      'El sitio quedó preparado para comunicar el valor del producto, presentar datos de forma ordenada y guiar al usuario hacia acciones concretas como comprar el índice, ver una muestra o consultar referencias del mercado.',
+    ],
+    gallery: [
+      { id: 'full', caption: 'Vista general de la home', objectPosition: 'top center', aspectRatio: '16 / 10' },
+      {
+        id: 'market',
+        caption: 'Panel de indicadores de mercado',
+        objectPosition: '78% 45%',
+        aspectRatio: '16 / 9',
+      },
+      {
+        id: 'hero',
+        caption: 'Propuesta y CTAs principales',
+        objectPosition: '18% 40%',
+        aspectRatio: '21 / 9',
+      },
+      {
+        id: 'trust',
+        caption: 'Bloques de confianza y datos',
+        objectPosition: 'bottom left',
+        aspectRatio: '16 / 8',
+      },
+    ],
+  },
+  hema: {
+    number: '02',
     phrase: 'Complejidad médica, explicada con claridad.',
     theme: 'hema',
     nextId: 'giacomelli-seguros',
@@ -100,7 +171,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
   },
   'giacomelli-seguros': {
-    number: '02',
+    number: '03',
     phrase: 'Una empresa familiar, llevada al presente.',
     theme: 'giacomelli',
     nextId: 'poletino-servicios',
@@ -156,7 +227,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
   },
   'poletino-servicios': {
-    number: '03',
+    number: '04',
     phrase: 'Maquinaria real. Comunicación directa.',
     theme: 'poletino',
     nextId: 'dra-giuliana-macchiavello',
@@ -211,10 +282,10 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
   },
   'dra-giuliana-macchiavello': {
-    number: '04',
+    number: '05',
     phrase: 'Convertir tratamientos estéticos en decisiones más claras e informadas.',
     theme: 'giuliana',
-    nextId: 'giacomelli-seguros',
+    nextId: 'mendoza-insights',
     context: [
       'La Dra. Giuliana Macchiavello trabaja en armonización orofacial y odontología en Mendoza. Su público llega principalmente desde Instagram buscando información sobre tratamientos, resultados y formas de contacto.',
       'El desafío no era solamente mostrar procedimientos. En este tipo de servicio, antes de consultar aparecen dudas sobre la naturalidad del resultado, la seguridad, los tiempos y cuál es el tratamiento adecuado para cada rostro.',

@@ -21,7 +21,7 @@ export type FeaturedProjectData = {
   coverWidth: number;
   coverHeight: number;
   alt: string;
-  theme: 'hema' | 'giacomelli' | 'poletino';
+  theme: 'hema' | 'giacomelli' | 'poletino' | 'mendoza';
   mediaPosition: 'left' | 'right';
 };
 
