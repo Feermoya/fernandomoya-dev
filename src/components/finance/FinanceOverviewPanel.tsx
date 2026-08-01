@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Wallet } from 'lucide-react';
 import {
   formatARS,
+  formatEntryAmount,
   getMonthlyInvested,
   getTotalInvested,
   getYearFromMonthKey,
@@ -59,15 +60,20 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
   const compact = variant === 'compact';
   const entries = state.entries;
   const year = getYearFromMonthKey(month);
-  const yearInvested = useMemo(() => getYearInvested(entries, year), [entries, year]);
-  const prevYearInvested = useMemo(() => getYearInvested(entries, year - 1), [entries, year]);
-  const monthInvested = useMemo(() => getMonthlyInvested(entries, month), [entries, month]);
+  const yearInvested = useMemo(() => getYearInvested(entries, year, 'ARS'), [entries, year]);
+  const prevYearInvested = useMemo(() => getYearInvested(entries, year - 1, 'ARS'), [entries, year]);
+  const monthInvested = useMemo(() => getMonthlyInvested(entries, month, 'ARS'), [entries, month]);
+  const monthInvestedUsd = useMemo(
+    () => getMonthlyInvested(entries, month, 'USD'),
+    [entries, month],
+  );
   const prevMonth = addMonths(month, -1);
   const prevMonthInvested = useMemo(
-    () => getMonthlyInvested(entries, prevMonth),
+    () => getMonthlyInvested(entries, prevMonth, 'ARS'),
     [entries, prevMonth],
   );
-  const total = useMemo(() => getTotalInvested(entries), [entries]);
+  const total = useMemo(() => getTotalInvested(entries, 'ARS'), [entries]);
+  const totalUsd = useMemo(() => getTotalInvested(entries, 'USD'), [entries]);
   const opsThisMonth = useMemo(
     () => entries.filter((e) => e.month === month && e.type === 'investment').length,
     [entries, month],
@@ -77,7 +83,12 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
     [entries, prevMonth],
   );
   const activeMonths = useMemo(
-    () => new Set(entries.filter((x) => x.type === 'investment' && x.amount > 0).map((x) => x.month)).size,
+    () =>
+      new Set(
+        entries
+          .filter((x) => x.type === 'investment' && x.amount > 0 && (x.amountCurrency !== 'USD'))
+          .map((x) => x.month),
+      ).size,
     [entries],
   );
   const avgMonthly = activeMonths > 0 ? Math.round(total / activeMonths) : 0;
@@ -165,14 +176,21 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
           primary
           compact={compact}
           delta={
-            prevMonthInvested > 0 ? (
-              <FinanceDelta
-                absolute={monthInvested - prevMonthInvested}
-                percent={monthPct}
-                versus={`vs ${formatMonthShort(prevMonth)}`}
-                sense="invest"
-              />
-            ) : undefined
+            <>
+              {prevMonthInvested > 0 ? (
+                <FinanceDelta
+                  absolute={monthInvested - prevMonthInvested}
+                  percent={monthPct}
+                  versus={`vs ${formatMonthShort(prevMonth)}`}
+                  sense="invest"
+                />
+              ) : null}
+              {monthInvestedUsd > 0 ? (
+                <p className="mt-0.5 text-[10px] font-semibold tabular-nums text-slate-500">
+                  + {formatEntryAmount(monthInvestedUsd, 'USD')} en dólares
+                </p>
+              ) : null}
+            </>
           }
         />
         <StatCell
@@ -180,7 +198,16 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
           value={formatARS(total)}
           primary
           compact={compact}
-          delta={<span className="text-[10px] font-medium text-slate-500">Desde el inicio</span>}
+          delta={
+            <>
+              <span className="text-[10px] font-medium text-slate-500">Desde el inicio</span>
+              {totalUsd > 0 ? (
+                <p className="mt-0.5 text-[10px] font-semibold tabular-nums text-slate-500">
+                  + {formatEntryAmount(totalUsd, 'USD')} en dólares
+                </p>
+              ) : null}
+            </>
+          }
         />
       </div>
 

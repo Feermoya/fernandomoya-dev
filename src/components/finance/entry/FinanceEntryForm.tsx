@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Banknote, Hash } from 'lucide-react';
 import { sileo } from 'sileo';
-import { formatARS } from '@/lib/finance/calculations';
+import { formatEntryAmount } from '@/lib/finance/calculations';
 import {
   amountFromUnits,
   buildInvestmentEntry,
   fetchTickerPriceForEntry,
   formatUnits,
   parsePositiveNumber,
+  QUICK_AMOUNT_OPTIONS_USD,
   QUICK_UNIT_OPTIONS,
+  type EntryAmountCurrency,
   type EntryInputMode,
 } from '@/lib/finance/entry';
 import { formatFinancePrice, type FinancePrice } from '@/lib/finance/financePrices';
@@ -53,9 +55,10 @@ export function FinanceEntryForm({
   onAddEntry,
   onEntrySaved,
 }: Props) {
-  const quickList = quickAmounts?.length ? quickAmounts : [...DEFAULT_QUICK_AMOUNTS];
+  const quickListArs = quickAmounts?.length ? quickAmounts : [...DEFAULT_QUICK_AMOUNTS];
   const [formMonth, setFormMonth] = useState(month);
   const [mode, setMode] = useState<EntryInputMode>('amount');
+  const [amountCurrency, setAmountCurrency] = useState<EntryAmountCurrency>('ARS');
   const [amount, setAmount] = useState('');
   const [units, setUnits] = useState('');
   const [asset, setAsset] = useState<FinanceAsset | ''>('');
@@ -107,7 +110,12 @@ export function FinanceEntryForm({
   }, [mode, tickerHint]);
 
   const lastSameMonth = entries
-    .filter((e) => e.type === 'investment' && e.month === formMonth)
+    .filter(
+      (e) =>
+        e.type === 'investment' &&
+        e.month === formMonth &&
+        (e.amountCurrency === 'USD' ? 'USD' : 'ARS') === amountCurrency,
+    )
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0];
 
   const pendingLabels = pendingPlanLabels?.filter(Boolean) ?? [];
@@ -115,9 +123,10 @@ export function FinanceEntryForm({
   const hiddenPendingCount = Math.max(0, pendingLabels.length - MAX_PENDING_CHIPS);
 
   const unitsNum = parsePositiveNumber(units);
+  const priceCurrency = (livePrice?.currency ?? 'ARS').toUpperCase() === 'USD' ? 'USD' : 'ARS';
   const previewAmount =
     mode === 'units' && unitsNum && livePrice && livePrice.price > 0
-      ? amountFromUnits(unitsNum, livePrice.price)
+      ? amountFromUnits(unitsNum, livePrice.price, priceCurrency)
       : null;
 
   const addQuickAmount = (n: number) => {
@@ -136,6 +145,7 @@ export function FinanceEntryForm({
         mode,
         amountRaw: amount,
         unitsRaw: units,
+        amountCurrency,
         month: formMonth,
         asset,
         platform,
@@ -159,6 +169,8 @@ export function FinanceEntryForm({
       setSubmitting(false);
     }
   };
+
+  const quickList = amountCurrency === 'USD' ? [...QUICK_AMOUNT_OPTIONS_USD] : quickListArs;
 
   return (
     <form
@@ -185,15 +197,43 @@ export function FinanceEntryForm({
 
         {mode === 'amount' ? (
           <>
-            <label className="mt-3 flex flex-col gap-1">
-              <span className="finance-label">Monto a invertir</span>
+            <div
+              className="mt-3 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-0.5"
+              role="group"
+              aria-label="Moneda del monto"
+            >
+              {(['ARS', 'USD'] as const).map((cur) => (
+                <button
+                  key={cur}
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => {
+                    setAmountCurrency(cur);
+                    setAmount('');
+                  }}
+                  className={`min-h-[36px] rounded-[10px] px-3 text-xs font-black transition ${
+                    amountCurrency === cur
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  aria-pressed={amountCurrency === cur}
+                >
+                  {cur === 'ARS' ? 'Pesos' : 'Dólares'}
+                </button>
+              ))}
+            </div>
+
+            <label className="mt-2 flex flex-col gap-1">
+              <span className="finance-label">
+                Monto a invertir ({amountCurrency === 'ARS' ? 'ARS' : 'USD'})
+              </span>
               <input
                 type="number"
                 inputMode="decimal"
-                min={1}
-                step={1}
+                min={amountCurrency === 'USD' ? 0.01 : 1}
+                step={amountCurrency === 'USD' ? '0.01' : 1}
                 required
-                placeholder="$ 0"
+                placeholder={amountCurrency === 'USD' ? 'US$ 0' : '$ 0'}
                 className="finance-input-mobile finance-metric min-h-[52px] rounded-xl px-3 py-2.5 text-center sm:text-[1.75rem]"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -208,7 +248,11 @@ export function FinanceEntryForm({
                   onClick={() => addQuickAmount(n)}
                   className="finance-secondary-button min-h-[40px] px-3 text-xs font-black tabular-nums active:scale-[0.98]"
                 >
-                  {n >= 1_000_000 ? `+${(n / 1_000_000).toFixed(1)}M` : `+${Math.round(n / 1000)}k`}
+                  {amountCurrency === 'USD'
+                    ? `+${n}`
+                    : n >= 1_000_000
+                      ? `+${(n / 1_000_000).toFixed(1)}M`
+                      : `+${Math.round(n / 1000)}k`}
                 </button>
               ))}
               {lastSameMonth ? (
@@ -217,10 +261,15 @@ export function FinanceEntryForm({
                   onClick={() => setAmount(String(lastSameMonth.amount))}
                   className="min-h-[40px] rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-100 active:scale-[0.98]"
                 >
-                  Repetir {formatARS(lastSameMonth.amount)}
+                  Repetir {formatEntryAmount(lastSameMonth.amount, amountCurrency)}
                 </button>
               ) : null}
             </div>
+            {amountCurrency === 'USD' ? (
+              <p className="mt-1.5 text-[10px] font-medium text-slate-500">
+                Los dólares no suman al objetivo mensual en pesos; se llevan aparte.
+              </p>
+            ) : null}
           </>
         ) : (
           <>
@@ -234,7 +283,7 @@ export function FinanceEntryForm({
                 required
               />
               <p className="text-[10px] font-medium leading-snug text-slate-500">
-                Leemos el precio actual y calculamos el monto automáticamente.
+                El monto se calcula en la moneda del precio (ARS o USD).
               </p>
             </label>
 
@@ -286,7 +335,8 @@ export function FinanceEntryForm({
                   </p>
                   {previewAmount != null ? (
                     <p className="text-sm font-bold tabular-nums text-slate-900">
-                      {formatUnits(unitsNum ?? 0)} × precio ≈ {formatARS(previewAmount)}
+                      {formatUnits(unitsNum ?? 0)} × precio ≈{' '}
+                      {formatEntryAmount(previewAmount, priceCurrency)}
                     </p>
                   ) : (
                     <p className="text-[11px] font-medium text-slate-500">
@@ -312,7 +362,9 @@ export function FinanceEntryForm({
             ? 'Cargando…'
             : mode === 'units'
               ? 'Cargar por nominales'
-              : 'Cargar inversión'}
+              : amountCurrency === 'USD'
+                ? 'Cargar inversión en USD'
+                : 'Cargar inversión'}
         </button>
 
         {visiblePending.length > 0 ? (

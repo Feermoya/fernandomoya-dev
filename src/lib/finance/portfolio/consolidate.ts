@@ -71,7 +71,7 @@ export function buildConsolidatedPortfolio(
     const b = ensure(ticker);
     b.hasEntries = true;
 
-    const cur = (entry.buyCurrency ?? 'ARS').toUpperCase();
+    const cur = (entry.amountCurrency ?? entry.buyCurrency ?? 'ARS').toUpperCase();
     b.investedAmountByCurrency[cur] = (b.investedAmountByCurrency[cur] ?? 0) + entry.amount;
 
     if (

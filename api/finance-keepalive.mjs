@@ -907,25 +907,25 @@ var ars = new Intl.NumberFormat("es-AR", {
   currency: "ARS",
   maximumFractionDigits: 0
 });
+function entryAmountCurrency(entry) {
+  return entry.amountCurrency === "USD" ? "USD" : "ARS";
+}
 function formatARS(value) {
   return ars.format(Number.isFinite(value) ? value : 0);
 }
 function getEntriesByMonth(entries, month) {
   return entries.filter((e) => e.month === month);
 }
-function getMonthlyInvested(entries, month) {
-  return sumByType(entries, month, "investment");
+function getMonthlyInvested(entries, month, currency = "ARS") {
+  return getEntriesByMonth(entries, month).filter((e) => e.type === "investment" && entryAmountCurrency(e) === currency).reduce((s, e) => s + e.amount, 0);
 }
-function getTotalInvested(entries) {
-  return entries.filter((e) => e.type === "investment").reduce((s, e) => s + e.amount, 0);
+function getTotalInvested(entries, currency = "ARS") {
+  return entries.filter((e) => e.type === "investment" && entryAmountCurrency(e) === currency).reduce((s, e) => s + e.amount, 0);
 }
 function getEmergencyFundTotal(entries, goals) {
   const fromGoals = goals.filter((g) => g.category === "emergency").reduce((s, g) => s + g.currentAmount, 0);
   const fromEntries = entries.filter((e) => e.type === "saving" && e.asset === "EMERGENCY_FUND").reduce((s, e) => s + e.amount, 0);
   return Math.max(fromGoals, fromEntries);
-}
-function sumByType(entries, month, type) {
-  return getEntriesByMonth(entries, month).filter((e) => e.type === type).reduce((s, e) => s + e.amount, 0);
 }
 
 // src/lib/finance/whatsappCopy.ts

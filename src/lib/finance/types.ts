@@ -45,6 +45,11 @@ export type FinanceEntry = {
   month: string;
   type: FinanceEntryType;
   amount: number;
+  /**
+   * Moneda del monto invertido (`amount`).
+   * Legacy sin campo = ARS. No confundir con `buyCurrency` (precio unitario).
+   */
+  amountCurrency?: 'ARS' | 'USD';
   asset?: FinanceAsset;
   platform?: string;
   category?: string;

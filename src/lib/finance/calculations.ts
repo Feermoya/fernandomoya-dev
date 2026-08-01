@@ -1,4 +1,5 @@
 import type { FinanceEntry, FinanceGoal } from '@/lib/finance/types';
+import { formatFinancePrice } from '@/lib/finance/financePrices';
 
 const ars = new Intl.NumberFormat('es-AR', {
   style: 'currency',
@@ -6,8 +7,27 @@ const ars = new Intl.NumberFormat('es-AR', {
   maximumFractionDigits: 0,
 });
 
+export type FinanceAmountCurrency = 'ARS' | 'USD';
+
+/** Legacy sin `amountCurrency` = ARS. */
+export function entryAmountCurrency(
+  entry: Pick<FinanceEntry, 'amountCurrency'>,
+): FinanceAmountCurrency {
+  return entry.amountCurrency === 'USD' ? 'USD' : 'ARS';
+}
+
 export function formatARS(value: number): string {
   return ars.format(Number.isFinite(value) ? value : 0);
+}
+
+/** Formatea el monto de una entrada según su moneda. */
+export function formatEntryAmount(
+  amount: number,
+  currency: FinanceAmountCurrency | string | undefined = 'ARS',
+): string {
+  const cur = (currency ?? 'ARS').toUpperCase();
+  if (cur === 'USD') return formatFinancePrice(amount, 'USD');
+  return formatARS(amount);
 }
 
 export function getEntriesByMonth(entries: FinanceEntry[], month: string): FinanceEntry[] {
@@ -26,8 +46,18 @@ export function getMonthlyVariableExpenses(entries: FinanceEntry[], month: strin
   return sumByType(entries, month, 'variable_expense');
 }
 
-export function getMonthlyInvested(entries: FinanceEntry[], month: string): number {
-  return sumByType(entries, month, 'investment');
+/**
+ * Inversión del mes en una moneda (default ARS).
+ * El objetivo / niveles / racha usan ARS; USD se consulta aparte.
+ */
+export function getMonthlyInvested(
+  entries: FinanceEntry[],
+  month: string,
+  currency: FinanceAmountCurrency = 'ARS',
+): number {
+  return getEntriesByMonth(entries, month)
+    .filter((e) => e.type === 'investment' && entryAmountCurrency(e) === currency)
+    .reduce((s, e) => s + e.amount, 0);
 }
 
 export function getMonthlySaved(entries: FinanceEntry[], month: string): number {
@@ -54,13 +84,18 @@ export function getMonthlyRemaining(entries: FinanceEntry[], month: string): num
 export function getSavingRate(entries: FinanceEntry[], month: string): number {
   const income = getMonthlyIncome(entries, month);
   if (income <= 0) return 0;
-  const invested = getMonthlyInvested(entries, month);
+  const invested = getMonthlyInvested(entries, month, 'ARS');
   const saved = getMonthlySaved(entries, month);
   return ((invested + saved) / income) * 100;
 }
 
-export function getTotalInvested(entries: FinanceEntry[]): number {
-  return entries.filter((e) => e.type === 'investment').reduce((s, e) => s + e.amount, 0);
+export function getTotalInvested(
+  entries: FinanceEntry[],
+  currency: FinanceAmountCurrency = 'ARS',
+): number {
+  return entries
+    .filter((e) => e.type === 'investment' && entryAmountCurrency(e) === currency)
+    .reduce((s, e) => s + e.amount, 0);
 }
 
 export function getYearFromMonthKey(month: string): number {
@@ -69,10 +104,19 @@ export function getYearFromMonthKey(month: string): number {
 }
 
 /** Suma de inversiones en meses `YYYY-MM` del año calendario indicado. */
-export function getYearInvested(entries: FinanceEntry[], year: number): number {
+export function getYearInvested(
+  entries: FinanceEntry[],
+  year: number,
+  currency: FinanceAmountCurrency = 'ARS',
+): number {
   const prefix = `${year}-`;
   return entries
-    .filter((e) => e.type === 'investment' && e.month.startsWith(prefix))
+    .filter(
+      (e) =>
+        e.type === 'investment' &&
+        e.month.startsWith(prefix) &&
+        entryAmountCurrency(e) === currency,
+    )
     .reduce((s, e) => s + e.amount, 0);
 }
 

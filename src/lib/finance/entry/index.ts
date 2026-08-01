@@ -1,9 +1,11 @@
-export type { EntryInputMode } from '@/lib/finance/entry/inputModes';
+export type { EntryInputMode, EntryAmountCurrency } from '@/lib/finance/entry/inputModes';
 export {
   ENTRY_INPUT_MODE_LABELS,
+  QUICK_AMOUNT_OPTIONS_USD,
   QUICK_UNIT_OPTIONS,
   amountFromUnits,
   formatUnits,
+  normalizeAmountCurrency,
   parsePositiveNumber,
   unitsFromAmount,
 } from '@/lib/finance/entry/inputModes';

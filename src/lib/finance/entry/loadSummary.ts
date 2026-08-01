@@ -3,7 +3,7 @@
  * Separa copy de celebración / plan / nivel para UI y toasts.
  */
 
-import { formatARS, getMonthlyInvested } from '@/lib/finance/calculations';
+import { formatARS, formatEntryAmount, getMonthlyInvested } from '@/lib/finance/calculations';
 import { formatUnits } from '@/lib/finance/entry/inputModes';
 import { getEntryTicker } from '@/lib/finance/entryTicker';
 import {
@@ -14,6 +14,7 @@ import {
 import { getMonthlyLevel, getMonthlyMissionView } from '@/lib/finance/levels';
 import { getLevelTheme } from '@/lib/finance/levelTheme';
 import type { FinanceEntry, FinanceState } from '@/lib/finance/types';
+import { formatFinancePrice } from '@/lib/finance/financePrices';
 
 export type EntryLoadSummaryLineTone = 'positive' | 'info' | 'warning' | 'neutral';
 
@@ -36,6 +37,7 @@ export type EntryLoadSummary = {
   };
   entrySnapshot: {
     amount: number;
+    amountCurrency?: string;
     ticker?: string;
     units?: number;
     buyPrice?: number;
@@ -68,7 +70,9 @@ export function buildEntryLoadSummary(params: {
   });
   const prevLevel = getMonthlyLevel(prev, m).level;
   const newLevel = getMonthlyLevel(next, m).level;
-  const inv = getMonthlyInvested(next.entries, m);
+  const amountLabel = formatEntryAmount(entry.amount, entry.amountCurrency);
+  const invArs = getMonthlyInvested(next.entries, m, 'ARS');
+  const invUsd = getMonthlyInvested(next.entries, m, 'USD');
   const mv = getMonthlyMissionView(next, m);
 
   const lines: EntryLoadSummaryLine[] = [];
@@ -77,27 +81,28 @@ export function buildEntryLoadSummary(params: {
     lines.push({
       tone: 'neutral',
       text: entry.estimatedUnits
-        ? `${formatARS(entry.amount)} · ${formatUnits(entry.estimatedUnits)} nominales de ${ticker}`
-        : `${formatARS(entry.amount)} en ${ticker}`,
+        ? `${amountLabel} · ${formatUnits(entry.estimatedUnits)} nominales de ${ticker}`
+        : `${amountLabel} en ${ticker}`,
     });
   } else {
-    lines.push({ tone: 'neutral', text: formatARS(entry.amount) });
+    lines.push({ tone: 'neutral', text: amountLabel });
   }
 
   if (entry.buyPrice && entry.buyPrice > 0) {
     const cur = entry.buyCurrency ?? 'ARS';
     lines.push({
       tone: 'info',
-      text:
-        cur === 'ARS'
-          ? `Precio de referencia ${formatARS(entry.buyPrice)}`
-          : `Precio de referencia ${entry.buyPrice.toLocaleString('es-AR')} ${cur}`,
+      text: `Precio de referencia ${formatFinancePrice(entry.buyPrice, cur)}`,
     });
   }
 
+  const monthLine =
+    invUsd > 0
+      ? `${formatARS(invArs)} + ${formatEntryAmount(invUsd, 'USD')} este mes · ${mv.percent.toFixed(0)}% del objetivo ARS`
+      : `${formatARS(invArs)} este mes · ${mv.percent.toFixed(0)}% del objetivo`;
   lines.push({
     tone: 'info',
-    text: `${formatARS(inv)} este mes · ${mv.percent.toFixed(0)}% del objetivo`,
+    text: monthLine,
   });
 
   if (afterPlan.totalCount > 0 && afterPlan.completedCount > beforePlan.completedCount) {
@@ -151,10 +156,11 @@ export function buildEntryLoadSummary(params: {
     id: entry.id,
     headline: levelUp ? `Nivel ${levelUp.level} desbloqueado` : 'Inversión cargada',
     lines,
-    toastDescription: toastParts.join(' · ') || formatARS(entry.amount),
+    toastDescription: toastParts.join(' · ') || formatEntryAmount(entry.amount, entry.amountCurrency),
     levelUp,
     entrySnapshot: {
       amount: entry.amount,
+      amountCurrency: entry.amountCurrency,
       ticker: ticker || undefined,
       units: entry.estimatedUnits,
       buyPrice: entry.buyPrice,

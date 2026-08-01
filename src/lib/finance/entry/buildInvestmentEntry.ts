@@ -6,8 +6,10 @@
 import { getEntryTicker } from '@/lib/finance/entryTicker';
 import {
   amountFromUnits,
+  normalizeAmountCurrency,
   parsePositiveNumber,
   unitsFromAmount,
+  type EntryAmountCurrency,
   type EntryInputMode,
 } from '@/lib/finance/entry/inputModes';
 import { fetchFinancePrices, type FinancePrice } from '@/lib/finance/financePrices';
@@ -15,10 +17,12 @@ import type { FinanceAsset, FinanceEntry } from '@/lib/finance/types';
 
 export type BuildInvestmentEntryInput = {
   mode: EntryInputMode;
-  /** Monto en ARS (modo amount) o vacío. */
+  /** Monto (modo amount) o vacío. */
   amountRaw: string;
   /** Nominales (modo units) o vacío. */
   unitsRaw: string;
+  /** Moneda del monto en modo amount. En modo units se toma del precio. */
+  amountCurrency?: EntryAmountCurrency;
   month: string;
   asset: FinanceAsset | '';
   platform: string;
@@ -51,6 +55,11 @@ function attachMarketFields(entry: FinanceEntry, ticker: string, row: FinancePri
     exchange: row.exchange,
     url: row.url,
   };
+}
+
+function roundAmount(amount: number, currency: EntryAmountCurrency): number {
+  if (currency === 'USD') return Math.round(amount * 100) / 100;
+  return Math.round(amount);
 }
 
 export async function buildInvestmentEntry(
@@ -97,20 +106,15 @@ export async function buildInvestmentEntry(
         error: `No pudimos obtener el precio de ${ticker}. Probá por monto o actualizá el ticker.`,
       };
     }
-    const currency = priceRow.currency ?? 'ARS';
-    if (currency !== 'ARS') {
-      return {
-        ok: false,
-        error: `El precio de ${ticker} no está en ARS. Cargá por monto en pesos.`,
-      };
-    }
-
-    draft.amount = amountFromUnits(units, priceRow.price);
+    const currency = normalizeAmountCurrency(priceRow.currency);
+    draft.amountCurrency = currency;
+    draft.amount = amountFromUnits(units, priceRow.price, currency);
     if (draft.amount <= 0) {
       return { ok: false, error: 'El monto calculado es inválido.' };
     }
     attachMarketFields(draft, ticker, priceRow);
     draft.estimatedUnits = Math.round(units * 1000) / 1000;
+    if (!draft.asset && currency === 'USD') draft.asset = 'USD';
     return { ok: true, entry: draft, price: priceRow };
   }
 
@@ -118,12 +122,15 @@ export async function buildInvestmentEntry(
   if (amount == null) {
     return { ok: false, error: 'Indicá un monto válido.' };
   }
-  draft.amount = Math.round(amount);
+  const amountCurrency = normalizeAmountCurrency(input.amountCurrency);
+  draft.amountCurrency = amountCurrency;
+  draft.amount = roundAmount(amount, amountCurrency);
+  if (!draft.asset && amountCurrency === 'USD') draft.asset = 'USD';
 
   if (ticker && priceRow && priceRow.price > 0) {
     attachMarketFields(draft, ticker, priceRow);
-    const currency = priceRow.currency ?? 'ARS';
-    if (currency === 'ARS') {
+    const priceCurrency = normalizeAmountCurrency(priceRow.currency);
+    if (priceCurrency === amountCurrency) {
       draft.estimatedUnits = unitsFromAmount(draft.amount, priceRow.price);
     }
   }

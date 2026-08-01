@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { entryAmountCurrency } from '@/lib/finance/calculations';
+import { normalizeAmountCurrency, type EntryAmountCurrency } from '@/lib/finance/entry';
 import { formatFinancePrice } from '@/lib/finance/financePrices';
 import { getEntryTicker } from '@/lib/finance/entryTicker';
 import type { FinanceAsset, FinanceEntry } from '@/lib/finance/types';
@@ -23,9 +25,15 @@ type Props = {
   onSave: (entry: FinanceEntry) => void;
 };
 
+function roundAmount(amount: number, currency: EntryAmountCurrency): number {
+  if (currency === 'USD') return Math.round(amount * 100) / 100;
+  return Math.round(amount);
+}
+
 export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
   const [formMonth, setFormMonth] = useState('');
   const [amount, setAmount] = useState('');
+  const [amountCurrency, setAmountCurrency] = useState<EntryAmountCurrency>('ARS');
   const [asset, setAsset] = useState<FinanceAsset | ''>('');
   const [platform, setPlatform] = useState<(typeof PLATFORM_OPTIONS)[number]>('Balanz');
   const [category, setCategory] = useState('');
@@ -35,6 +43,7 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
     if (!entry) return;
     setFormMonth(entry.month);
     setAmount(String(entry.amount));
+    setAmountCurrency(entryAmountCurrency(entry));
     setAsset(entry.asset ?? '');
     setPlatform((entry.platform as (typeof PLATFORM_OPTIONS)[number]) || 'Balanz');
     setCategory(entry.category ?? '');
@@ -50,10 +59,12 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
     const n = Number(amount.replace(',', '.'));
     if (!Number.isFinite(n) || n <= 0) return;
 
+    const currency = normalizeAmountCurrency(amountCurrency);
     const updated: FinanceEntry = {
       ...entry,
       month: formMonth,
-      amount: Math.round(n),
+      amount: roundAmount(n, currency),
+      amountCurrency: currency,
       createdAt: entry.createdAt,
     };
     if (asset) updated.asset = asset;
@@ -89,7 +100,7 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
         <h2 id="edit-entry-title" className="text-base font-black text-slate-900">
           Editar inversión
         </h2>
-        <p className="mt-1 text-xs text-slate-500">Corregí monto, mes o detalles.</p>
+        <p className="mt-1 text-xs text-slate-500">Corregí monto, moneda, mes o detalles.</p>
 
         {displayTicker || entry.buyPrice ? (
           <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
@@ -108,12 +119,37 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
           </div>
         ) : null}
 
-        <label className="mt-4 flex flex-col gap-1.5">
-          <span className="finance-label">Monto</span>
+        <div
+          className="mt-4 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-0.5"
+          role="group"
+          aria-label="Moneda del monto"
+        >
+          {(['ARS', 'USD'] as const).map((cur) => (
+            <button
+              key={cur}
+              type="button"
+              onClick={() => setAmountCurrency(cur)}
+              className={`min-h-[36px] rounded-[10px] px-3 text-xs font-black transition ${
+                amountCurrency === cur
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              aria-pressed={amountCurrency === cur}
+            >
+              {cur === 'ARS' ? 'Pesos' : 'Dólares'}
+            </button>
+          ))}
+        </div>
+
+        <label className="mt-3 flex flex-col gap-1.5">
+          <span className="finance-label">
+            Monto ({amountCurrency === 'ARS' ? 'ARS' : 'USD'})
+          </span>
           <input
             type="number"
             inputMode="decimal"
-            min={1}
+            min={amountCurrency === 'USD' ? 0.01 : 1}
+            step={amountCurrency === 'USD' ? '0.01' : 1}
             required
             className="finance-input-mobile min-h-[48px] rounded-xl px-3 text-lg font-black"
             value={amount}

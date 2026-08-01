@@ -1,5 +1,9 @@
 import { ArrowLeftRight } from 'lucide-react';
-import { formatARS } from '@/lib/finance/calculations';
+import {
+  entryAmountCurrency,
+  formatARS,
+  formatEntryAmount,
+} from '@/lib/finance/calculations';
 import { formatFinancePrice } from '@/lib/finance/financePrices';
 import { getEntryTicker } from '@/lib/finance/entryTicker';
 import type { FinanceEntry } from '@/lib/finance/types';
@@ -54,7 +58,7 @@ function InvestmentRow({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <p className={`font-bold tabular-nums tracking-tight text-slate-900 ${compact ? 'text-base' : 'text-lg'}`}>
-            {formatARS(entry.amount)}
+            {formatEntryAmount(entry.amount, entryAmountCurrency(entry))}
           </p>
           {ticker ? <FinanceTickerBadge ticker={ticker} tone="blue" /> : null}
           {!ticker && entry.asset ? (
@@ -97,8 +101,17 @@ function InvestmentRow({
 }
 
 export function FinanceRecentInvestments({ investments, onEdit, onRemove }: Props) {
-  const total = investments.reduce((s, e) => s + e.amount, 0);
+  const totalArs = investments
+    .filter((e) => entryAmountCurrency(e) === 'ARS')
+    .reduce((s, e) => s + e.amount, 0);
+  const totalUsd = investments
+    .filter((e) => entryAmountCurrency(e) === 'USD')
+    .reduce((s, e) => s + e.amount, 0);
   const count = investments.length;
+  const totalLabel =
+    totalUsd > 0
+      ? `${formatARS(totalArs)} + ${formatEntryAmount(totalUsd, 'USD')}`
+      : formatARS(totalArs);
 
   if (count === 0) {
     return (
@@ -116,7 +129,7 @@ export function FinanceRecentInvestments({ investments, onEdit, onRemove }: Prop
           label="Movimientos"
           trailing={
             <span className="ml-auto text-right text-[11px] font-bold tabular-nums text-slate-500">
-              {count} {count === 1 ? 'operación' : 'operaciones'} · {formatARS(total)}
+              {count} {count === 1 ? 'operación' : 'operaciones'} · {totalLabel}
             </span>
           }
         />
