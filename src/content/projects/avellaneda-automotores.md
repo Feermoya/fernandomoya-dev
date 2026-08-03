@@ -1,16 +1,16 @@
 ---
-title: Catálogo de autos usados
-description: Sitio web para una concesionaria de autos usados, pensado para que el visitante vea el stock y pueda consultar sin dar vueltas. El foco estuvo en catálogo claro, contacto visible y buena lectura desde el celular.
+title: Avellaneda Automotores
+description: Catálogo web administrable para una agencia de autos usados de Mendoza. Permite publicar, actualizar y retirar vehículos, generar fichas individuales y centralizar consultas por WhatsApp.
 publishDate: 2024-04-15
 kind: client
-projectType: Sitio corporativo con catálogo
-listLabel: Web concesionaria · Avellaneda Automotores
+projectType: Catálogo web administrable
+listLabel: Catálogo administrable · Avellaneda Automotores
 stack:
   - HTML
   - CSS
   - JavaScript
-featured: false
-order: 20
+featured: true
+order: 0
 cover: avellaneda.webp
 client: Avellaneda Automotores
 links:
@@ -19,36 +19,35 @@ links:
 
 ## Contexto
 
-Avellaneda Automotores trabaja con stock real de vehículos y necesitaba una web que lo refleje: que quien entra pueda recorrer ofertas y entender cómo seguir sin sentirse perdido. Muchas consultas llegan desde el teléfono, así que la prioridad era una experiencia ágil y legible en pantallas chicas.
+Avellaneda Automotores necesitaba algo más que una web institucional. Su stock cambia constantemente: ingresan vehículos, se actualizan precios, se modifican condiciones y se retiran unidades vendidas.
 
-La página tenía que generar confianza en un rubro donde la claridad del precio, las fotos y el contacto rápido marcan la diferencia. El visitante suele buscar modelos, comparar y escribir en pocos pasos.
-
-En conjunto, el desafío fue ordenar la información del negocio para que el mensaje principal —qué hay disponible y cómo consultar— quede entendible al instante.
+Una agencia no puede depender de publicaciones dispersas en redes para mostrar su stock. Necesitaba un catálogo propio, actualizado y preparado para acompañar el movimiento real del negocio.
 
 ## Objetivo
 
-- Mostrar el catálogo de vehículos de forma ordenada y fácil de recorrer.
-- Reducir fricción para consultar precio, disponibilidad o coordinar una visita.
-- Mantener el contacto visible en todo el recorrido.
-- Que la navegación y la lectura funcionen bien en celular.
-- Transmitir una imagen clara y seria de la concesionaria.
+- Centralizar el stock en un catálogo web ordenado y actualizable.
+- Convertir cada vehículo en una ficha individual, completa y fácil de compartir.
+- Permitir publicar, modificar datos, actualizar precios y retirar unidades vendidas sin rehacer la web.
+- Conectar cada publicación con una consulta comercial directa por WhatsApp.
+- Preparar la estructura para búsquedas locales y páginas por vehículo.
+- Garantizar una experiencia clara en celular.
 
 ## Trabajo realizado
 
-Se armó una estructura de contenidos pensada para el flujo típico de compra de un usado: ver oferta, confirmar interés y contactar. El desarrollo frontend prioriza tiempos de carga razonables y componentes que no compiten con las fotos del vehículo.
+Desarrollé un catálogo web administrable que permite mantener la información organizada y convertir cada vehículo en una página individual. El resultado es una plataforma que forma parte de la operación cotidiana de la agencia: centraliza el stock, mejora la presentación de las unidades y conecta cada publicación con una consulta comercial.
 
-El diseño es responsive: grillas y tipografía que se adaptan para que el listado y las fichas se lean bien en vertical. La jerarquía visual destaca modelo, datos clave y llamados a la acción hacia WhatsApp u otros canales que el negocio usa para responder rápido.
-
-Las secciones principales conectan el catálogo con la forma de consulta, sin pasos innecesarios. Donde aplica, el contacto queda repetido de forma útil —no ruidosa— para quien ya decidió escribir.
+El catálogo incluye filtros, comparación de vehículos, galería de imágenes y datos comerciales clave. Cada ficha puede enviarse a un cliente y convertirse en una consulta por WhatsApp con contexto del vehículo. También se trabajó SEO local, páginas individuales optimizadas para compartir y una experiencia responsive pensada para uso real.
 
 ## Decisiones de diseño
 
-La información se ordenó priorizando lo que un comprador quiere ver primero: vehículo, estado general del aviso y cómo avanzar. El diseño acompaña el rubro automotor con un aspecto limpio, sin efectos que resten espacio al stock.
+La jerarquía prioriza el stock: listado claro, fichas completas y llamados a la acción hacia WhatsApp. Se buscó un tono comercial sobrio, con espacio para fotos reales y datos escaneables —marca, modelo, año, kilometraje, precio— sin ruido visual.
 
-Visualmente se buscó contraste y tamaños de texto cómodos para leer en la calle o entre turnos. La navegación está pensada para pocas decisiones: entrar, filtrar o recorrer, y contactar.
-
-El tono es directo y comercial, acorde a una concesionaria que vende confianza en cada publicación.
+La navegación acompaña el recorrido típico de quien busca un usado: explorar, filtrar o comparar, abrir una ficha y consultar. El diseño refuerza que esto no es un brochure: es una herramienta de venta en uso diario.
 
 ## Resultado
 
-Hoy la web funciona como vidriera y punto de contacto: ordena el stock, da contexto al visitante y deja claro cómo seguir la conversación. Quien entra puede orientarse rápido, comparar opciones y escribir sin buscar el botón escondido.
+Hoy el cliente utiliza el sistema de forma habitual. El catálogo se mantiene actualizado con vehículos reales, las fichas se comparten individualmente y la web centraliza información que antes podía quedar dispersa. El negocio tiene una presencia digital propia, con una presentación más profesional del stock y un proceso de consulta mejor organizado. El proyecto sigue activo y en evolución.
+
+<!-- TODO: crear/agregar cover para Avellaneda con composición de catálogo + ficha + mobile.
+     Nombre sugerido: src/assets/projects/avellaneda-automotores-cover.png
+     Alt: Catálogo web de Avellaneda Automotores con fichas individuales de vehículos -->

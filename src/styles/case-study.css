@@ -19,6 +19,20 @@
   overflow-x: clip;
 }
 
+.case-study-page--avellaneda {
+  --cs-bg: #111111;
+  --cs-text: #f5f5f5;
+  --cs-muted: rgba(245, 245, 245, 0.68);
+  --cs-accent: #c62828;
+  --cs-border: rgba(245, 245, 245, 0.14);
+  --cs-btn-primary-bg: #c62828;
+  --cs-btn-primary-text: #ffffff;
+  --cs-result-bg: #0a0a0a;
+  --cs-result-text: #f5f5f5;
+  --cs-window-border: rgba(245, 245, 245, 0.14);
+  --cs-window-shadow: 0 32px 72px rgba(0, 0, 0, 0.45);
+}
+
 .case-study-page--hema {
   --cs-bg: #f4f1ea;
   --cs-text: #070707;
@@ -92,6 +106,19 @@
 .case-study-page .project-showcase-window {
   border-color: var(--cs-window-border);
   box-shadow: var(--cs-window-shadow);
+}
+
+/* Mockups notebook + mobile: mostrar composición completa */
+.case-study-page--avellaneda .project-showcase-window__image,
+.case-study-page--hema .project-showcase-window__image {
+  object-fit: contain;
+  object-position: center;
+}
+
+.case-study-page--avellaneda .cs-gallery__image,
+.case-study-page--hema .cs-gallery__image {
+  object-fit: contain;
+  object-position: center;
 }
 
 /* —— Secciones —— */

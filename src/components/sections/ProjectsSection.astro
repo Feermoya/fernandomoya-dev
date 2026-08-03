@@ -11,10 +11,10 @@ import { byOrderThenDate } from '@/utils/sort';
 import { isCaseStudyId } from '@/data/case-studies';
 
 const SELECTED_IDS = [
+  'avellaneda-automotores',
   'mendoza-insights',
-  'hema',
   'giacomelli-seguros',
-  'poletino-servicios',
+  'hema',
 ] as const;
 
 const FEATURED_COPY: Record<
@@ -25,20 +25,22 @@ const FEATURED_COPY: Record<
     phrase: string;
     theme: FeaturedProjectData['theme'];
     mediaPosition: 'left' | 'right';
+    alt?: string;
   }
 > = {
-  'mendoza-insights': {
+  'avellaneda-automotores': {
     number: '01',
+    typeLine: 'Catálogo web administrable',
+    phrase: 'Un catálogo que acompaña el movimiento real de una agencia de autos.',
+    theme: 'avellaneda',
+    mediaPosition: 'right',
+    alt: 'Catálogo web de Avellaneda Automotores con fichas individuales de vehículos',
+  },
+  'mendoza-insights': {
+    number: '02',
     typeLine: 'Producto digital inmobiliario',
     phrase: 'Datos complejos, presentados con claridad.',
     theme: 'mendoza',
-    mediaPosition: 'right',
-  },
-  hema: {
-    number: '02',
-    typeLine: 'Laboratorio genético · Sitio institucional',
-    phrase: 'Complejidad médica, explicada con claridad.',
-    theme: 'hema',
     mediaPosition: 'left',
   },
   'giacomelli-seguros': {
@@ -48,11 +50,11 @@ const FEATURED_COPY: Record<
     theme: 'giacomelli',
     mediaPosition: 'right',
   },
-  'poletino-servicios': {
+  hema: {
     number: '04',
-    typeLine: 'Industria · Servicios y maquinaria',
-    phrase: 'Maquinaria real. Comunicación directa.',
-    theme: 'poletino',
+    typeLine: 'Laboratorio genético · Sitio institucional',
+    phrase: 'Complejidad médica, explicada con claridad.',
+    theme: 'hema',
     mediaPosition: 'left',
   },
 };
@@ -96,7 +98,7 @@ async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<Featur
     coverSrcSet: optimized.srcSet.attribute,
     coverWidth: optimized.attributes.width ?? 1280,
     coverHeight: optimized.attributes.height ?? 800,
-    alt: `Captura del sitio web de ${client}`,
+    alt: copy.alt ?? `Captura del sitio web de ${client}`,
     theme: copy.theme,
     mediaPosition: copy.mediaPosition,
   };

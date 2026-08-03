@@ -10,7 +10,7 @@ stack:
   - TypeScript
   - CSS
 featured: true
-order: 15
+order: 3
 cover: giacomelli.webp
 client: Giacomelli Seguros
 links:

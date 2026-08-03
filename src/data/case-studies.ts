@@ -1,5 +1,6 @@
 /** IDs con caso de estudio público (ETAPA 4). */
 export const CASE_STUDY_IDS = [
+  'avellaneda-automotores',
   'mendoza-insights',
   'hema',
   'giacomelli-seguros',
@@ -9,7 +10,7 @@ export const CASE_STUDY_IDS = [
 
 export type CaseStudyId = (typeof CASE_STUDY_IDS)[number];
 
-export type CaseStudyTheme = 'mendoza' | 'hema' | 'giacomelli' | 'poletino' | 'giuliana';
+export type CaseStudyTheme = 'avellaneda' | 'mendoza' | 'hema' | 'giacomelli' | 'poletino' | 'giuliana';
 
 export type CaseStudyDecision = {
   title: string;
@@ -45,8 +46,88 @@ export type CaseStudyEditorial = {
  * No duplica frontmatter (client, stack, links, description).
  */
 export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
-  'mendoza-insights': {
+  'avellaneda-automotores': {
     number: '01',
+    phrase: 'Un catálogo que acompaña el movimiento real de una agencia de autos.',
+    theme: 'avellaneda',
+    nextId: 'mendoza-insights',
+    context: [
+      'Avellaneda Automotores es una agencia de compra y venta de autos usados en Guaymallén, Mendoza. Su stock cambia constantemente: ingresan vehículos, se actualizan precios, se modifican condiciones y se retiran unidades vendidas.',
+      'Una agencia no puede depender de publicaciones dispersas en redes sociales para mostrar su stock. Necesitaba un catálogo propio, actualizado y preparado para acompañar el movimiento real del negocio.',
+      'No hacía falta solo una web institucional. Hacía falta una herramienta comercial para publicar, administrar y vender vehículos sin rehacer el sitio cada vez que cambia el inventario.',
+    ],
+    objectives: [
+      'Centralizar el stock en un catálogo web ordenado y actualizable.',
+      'Convertir cada vehículo en una ficha individual, completa y fácil de compartir.',
+      'Permitir publicar, modificar datos, actualizar precios y retirar unidades vendidas.',
+      'Conectar cada publicación con una consulta comercial directa por WhatsApp.',
+      'Preparar la estructura para búsquedas locales y SEO dinámico por vehículo.',
+      'Garantizar una experiencia clara y usable en celular.',
+    ],
+    direction: {
+      estructura: [
+        'La plataforma combina catálogo dinámico, fichas individuales, filtros, comparación y consultas por WhatsApp con contexto del vehículo. El recorrido típico es explorar el stock, abrir una ficha y escribir con la unidad ya identificada.',
+        'Cada vehículo puede incluir galería, precio, marca, modelo, año, kilometraje, motor, combustible, transmisión y descripción. El estado disponible o vendido forma parte de la lógica de stock que acompaña la operación diaria.',
+      ],
+      identidad: [
+        'La jerarquía prioriza el stock: listado claro, fichas completas y llamados a la acción hacia WhatsApp. Se buscó un tono comercial sobrio, con espacio para fotos reales y datos escaneables.',
+        'El diseño refuerza que no es un brochure: es una herramienta de venta en uso diario, con presencia digital propia para la agencia y una presentación profesional del inventario.',
+      ],
+    },
+    decisions: [
+      {
+        title: 'Catálogo administrable, no web estática',
+        body: 'La agencia puede publicar, actualizar y retirar vehículos sin rehacer la web cada vez que cambia el stock.',
+      },
+      {
+        title: 'Ficha individual por vehículo',
+        body: 'Cada unidad tiene su propia página, completa y fácil de compartir con un cliente potencial.',
+      },
+      {
+        title: 'Consulta con contexto',
+        body: 'WhatsApp recibe el interés ligado al vehículo publicado, no un mensaje genérico sin referencia.',
+      },
+      {
+        title: 'Filtros y comparación',
+        body: 'El visitante puede buscar por texto, tipo, transmisión, combustible o rango de años, y comparar opciones antes de consultar.',
+      },
+      {
+        title: 'SEO local y dinámico',
+        body: 'Estructura preparada para búsquedas como autos usados Mendoza, Guaymallén, permuta y catálogo de usados, con páginas individuales listas para compartir.',
+      },
+      {
+        title: 'Operación cotidiana',
+        body: 'El sitio acompaña el movimiento real: altas, cambios de precio, imágenes nuevas y retiros de unidades vendidas.',
+      },
+    ],
+    result: [
+      'Hoy el cliente utiliza el sistema de forma habitual. El catálogo se mantiene actualizado con vehículos reales, las fichas se comparten individualmente y la web centraliza información que antes podía quedar dispersa.',
+      'El negocio tiene una presencia digital propia, con una presentación más profesional del stock y un proceso de consulta mejor organizado. El proyecto sigue activo y en evolución.',
+    ],
+    gallery: [
+      { id: 'full', caption: 'Catálogo de vehículos publicados', objectPosition: 'top center', aspectRatio: '16 / 10' },
+      {
+        id: 'listing',
+        caption: 'Listado y datos comerciales',
+        objectPosition: '40% 30%',
+        aspectRatio: '16 / 9',
+      },
+      {
+        id: 'detail',
+        caption: 'Ficha individual de vehículo',
+        objectPosition: '55% 45%',
+        aspectRatio: '21 / 9',
+      },
+      {
+        id: 'cta',
+        caption: 'Consulta comercial por WhatsApp',
+        objectPosition: 'bottom center',
+        aspectRatio: '16 / 8',
+      },
+    ],
+  },
+  'mendoza-insights': {
+    number: '02',
     phrase: 'Datos complejos, presentados con claridad.',
     theme: 'mendoza',
     nextId: 'hema',
@@ -116,7 +197,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
   },
   hema: {
-    number: '02',
+    number: '03',
     phrase: 'Complejidad médica, explicada con claridad.',
     theme: 'hema',
     nextId: 'giacomelli-seguros',
@@ -171,7 +252,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
   },
   'giacomelli-seguros': {
-    number: '03',
+    number: '04',
     phrase: 'Una empresa familiar, llevada al presente.',
     theme: 'giacomelli',
     nextId: 'poletino-servicios',
@@ -227,7 +308,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
   },
   'poletino-servicios': {
-    number: '04',
+    number: '05',
     phrase: 'Maquinaria real. Comunicación directa.',
     theme: 'poletino',
     nextId: 'dra-giuliana-macchiavello',
@@ -282,10 +363,10 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
   },
   'dra-giuliana-macchiavello': {
-    number: '05',
+    number: '06',
     phrase: 'Convertir tratamientos estéticos en decisiones más claras e informadas.',
     theme: 'giuliana',
-    nextId: 'mendoza-insights',
+    nextId: 'avellaneda-automotores',
     context: [
       'La Dra. Giuliana Macchiavello trabaja en armonización orofacial y odontología en Mendoza. Su público llega principalmente desde Instagram buscando información sobre tratamientos, resultados y formas de contacto.',
       'El desafío no era solamente mostrar procedimientos. En este tipo de servicio, antes de consultar aparecen dudas sobre la naturalidad del resultado, la seguridad, los tiempos y cuál es el tratamiento adecuado para cada rostro.',

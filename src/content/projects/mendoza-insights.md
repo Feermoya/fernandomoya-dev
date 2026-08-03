@@ -10,7 +10,7 @@ stack:
   - CSS
   - JavaScript
 featured: true
-order: 1
+order: 2
 cover: mendoza-insights-home.webp
 client: Mendoza Insights
 links:

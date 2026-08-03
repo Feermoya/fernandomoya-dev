@@ -429,3 +429,8 @@
   object-fit: cover;
   object-position: top center;
 }
+
+.hero-editorial__window-slot--hema .hero-project-window__image {
+  object-fit: contain;
+  object-position: center;
+}
