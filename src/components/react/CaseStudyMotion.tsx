@@ -1,9 +1,6 @@
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useReducedMotion } from 'motion/react';
-import { useLayoutEffect } from 'react';
-
-gsap.registerPlugin(ScrollTrigger);
+import { gsap, ScrollTrigger } from '@/lib/gsap';
+import { prefersReducedMotion } from '@/lib/motion-prefs';
+import { useLayoutEffect, useState } from 'react';
 
 function resetMotionTargets(elements: Element[]) {
   gsap.set(elements, {
@@ -15,7 +12,7 @@ function resetMotionTargets(elements: Element[]) {
 }
 
 export default function CaseStudyMotion() {
-  const reduceMotion = useReducedMotion();
+  const [reduceMotion] = useState(() => prefersReducedMotion());
 
   useLayoutEffect(() => {
     const root = document.querySelector('.case-study-page');

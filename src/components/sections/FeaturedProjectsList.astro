@@ -1,0 +1,54 @@
+---
+import FeaturedProjectBlock from '@/components/sections/FeaturedProjectBlock.astro';
+import type { ArchiveProjectData, FeaturedProjectData } from '@/types/featured-project';
+
+type Props = {
+  featured: FeaturedProjectData[];
+  archive: ArchiveProjectData[];
+};
+
+const { featured, archive } = Astro.props;
+---
+
+<div class="featured-projects">
+  {featured.map((project) => <FeaturedProjectBlock project={project} />)}
+</div>
+
+<div class="projects-archive">
+  <div class="container-page projects-archive__inner">
+    <div class="projects-archive__header">
+      <p class="projects-archive__eyebrow">OTROS PROYECTOS</p>
+      <h3 class="projects-archive__title">Más trabajo publicado</h3>
+    </div>
+
+    <ol class="projects-archive__list">
+      {
+        archive.map((item) => (
+          <li class="projects-archive__item">
+            <a
+              href={item.caseUrl ?? item.live}
+              class="projects-archive__row"
+              {...(item.caseUrl ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+            >
+              <span class="projects-archive__number" aria-hidden="true">
+                {item.number}
+              </span>
+              <span class="projects-archive__label">{item.label}</span>
+              <span class="projects-archive__action">
+                {item.caseUrl ? 'Ver caso' : 'Visitar sitio'}
+              </span>
+              <span class="projects-archive__arrow" aria-hidden="true">
+                ↗
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</div>
+
+<script>
+  import { initFeaturedProjectsMotion } from '@/scripts/featured-projects-motion';
+  initFeaturedProjectsMotion();
+</script>

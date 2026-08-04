@@ -2191,8 +2191,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .about-photo-orbit {
     animation: none;
     background-position: 50% 50%;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
   }
 }

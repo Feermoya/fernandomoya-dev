@@ -7,25 +7,42 @@ import ProcessSection from '@/components/sections/ProcessSection.astro';
 import ProjectsSection from '@/components/sections/ProjectsSection.astro';
 import SeoImpactSection from '@/components/sections/SeoImpactSection.astro';
 import HomeContactSection from '@/components/sections/HomeContactSection.astro';
+import { getImage } from 'astro:assets';
+import hemaCover from '@/assets/case-studies/hema.webp';
 import { site } from '@/data/site';
 import { pageTitle } from '@/utils/seo';
+
+const ogImage = await getImage({
+  src: hemaCover,
+  width: 1200,
+  height: 630,
+  format: 'jpg',
+  quality: 82,
+  fit: 'cover',
+});
 
 const professionalServiceSchema = {
   '@context': 'https://schema.org',
   '@type': 'ProfessionalService',
   name: 'Fernando Moya',
   url: site.url,
-  description: 'Diseño y desarrollo web para negocios, profesionales y marcas.',
-  areaServed: ['Mendoza', 'Argentina', 'proyectos en español'],
+  description:
+    'Diseño y desarrollo web en Mendoza para negocios, profesionales y marcas. Sitios web claros pensados para presentarte mejor y facilitar el contacto.',
+  areaServed: {
+    '@type': 'AdministrativeArea',
+    name: 'Mendoza, Argentina',
+  },
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Mendoza',
+    addressRegion: 'Mendoza',
     addressCountry: 'AR',
   },
-  sameAs: [],
+  email: site.email,
   serviceType: [
     'Diseño web',
     'Desarrollo web',
+    'Sitios web para negocios',
     'Landing pages',
     'Sitios institucionales',
     'Catálogos online',
@@ -33,8 +50,17 @@ const professionalServiceSchema = {
 };
 ---
 
-<Layout title={pageTitle()} description={site.description} path="/">
-  <script type="application/ld+json" set:html={JSON.stringify(professionalServiceSchema)} />
+<Layout
+  title={pageTitle()}
+  description={site.description}
+  path="/"
+  ogImagePath={ogImage.src}
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(professionalServiceSchema)}
+  />
+
   <Hero />
   <ProjectsSection />
   <SeoImpactSection />

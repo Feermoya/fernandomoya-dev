@@ -1,25 +1,30 @@
 ---
 import '@/styles/process.css';
-import ProcessMotion from '@/components/react/ProcessMotion';
 
 const steps = [
   {
     number: '01',
-    label: 'ORDENAR',
-    title: 'Entender qué importa.',
-    body: 'Definimos qué necesita comunicar el negocio y qué debería encontrar primero la persona que entra.',
+    label: 'ENTENDER',
+    title: 'Entender el negocio.',
+    body: 'Definimos qué necesita resolver la web, a quién tiene que hablarle y qué información importa primero.',
   },
   {
     number: '02',
-    label: 'DISEÑAR',
-    title: 'Encontrar una dirección propia.',
-    body: 'Transformo esa información en una experiencia clara, reconocible y coherente con la marca.',
+    label: 'ORDENAR',
+    title: 'Ordenar el contenido.',
+    body: 'Organizo la información para que cada sección tenga una función y el recorrido sea fácil de entender.',
   },
   {
     number: '03',
-    label: 'CONSTRUIR',
-    title: 'Llevarlo a una web real.',
-    body: 'La propuesta se convierte en una página rápida, simple de usar y preparada para recibir consultas.',
+    label: 'DISEÑAR',
+    title: 'Crear una dirección propia.',
+    body: 'Diseño una identidad visual coherente con la marca, el rubro y el tipo de cliente que necesita atraer.',
+  },
+  {
+    number: '04',
+    label: 'PUBLICAR',
+    title: 'Desarrollar y publicar.',
+    body: 'Construyo la web, optimizo su funcionamiento y la dejo preparada para recibir visitas y consultas.',
   },
 ] as const;
 ---
@@ -29,12 +34,12 @@ const steps = [
     <div class="process-section__intro">
       <p class="process-section__eyebrow">CÓMO TRABAJO</p>
       <h2 id="process-heading" class="process-section__title">
-        Primero entiendo.<br aria-hidden="true" />
-        Después diseño.
+        Primero entiendo.
+        <span>Después diseño.</span>
       </h2>
       <p class="process-section__lead">
-        No hay una solución igual para todos.<br aria-hidden="true" />
-        Cada web se construye alrededor de un negocio real.
+        No tengo una plantilla que le aplico a todos los clientes. Cada etapa tiene una función
+        clara antes de empezar a desarrollar.
       </p>
     </div>
 
@@ -58,6 +63,8 @@ const steps = [
       </ol>
     </div>
   </div>
-
-  <ProcessMotion client:visible />
 </section>
+
+<script>
+  import '@/scripts/process-motion';
+</script>

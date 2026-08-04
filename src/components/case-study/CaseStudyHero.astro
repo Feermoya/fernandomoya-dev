@@ -1,5 +1,5 @@
 ---
-import ProjectShowcaseWindow from '@/components/react/ProjectShowcaseWindow';
+import ProjectShowcaseWindow from '@/components/sections/ProjectShowcaseWindow.astro';
 
 export type CaseStudyHeroProps = {
   theme: string;
@@ -66,7 +66,6 @@ const {
     <div class="cs-hero__media" data-cs-reveal="clip">
       <div class="cs-hero__media-scale" data-cs-parallax="light">
         <ProjectShowcaseWindow
-          client:visible
           name={client}
           domain={domain}
           imageSrc={coverSrc}

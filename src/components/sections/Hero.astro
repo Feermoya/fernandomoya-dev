@@ -8,25 +8,29 @@ import hemaCover from '@/assets/case-studies/hema.webp';
 import giacomelliCover from '@/assets/projects/giacomelli.webp';
 import poletinoCover from '@/assets/projects/poletino.webp';
 
-const heroSizes = '(min-width: 1280px) 35rem, (min-width: 1024px) 42vw, 88vw';
+const heroSizes = '(min-width: 1280px) 34rem, (min-width: 1024px) 42vw, 88vw';
+const heroWidths = [400, 640, 800, 1000];
 
 const hemaImage = await getImage({
   src: hemaCover,
-  widths: [400, 640, 800],
+  widths: heroWidths,
   sizes: heroSizes,
   format: 'webp',
+  quality: 80,
 });
 const giacomelliImage = await getImage({
   src: giacomelliCover,
-  widths: [400, 640, 800],
+  widths: heroWidths,
   sizes: heroSizes,
   format: 'webp',
+  quality: 78,
 });
 const poletinoImage = await getImage({
   src: poletinoCover,
-  widths: [400, 640, 800],
+  widths: heroWidths,
   sizes: heroSizes,
   format: 'webp',
+  quality: 78,
 });
 
 const projects: HeroProject[] = [

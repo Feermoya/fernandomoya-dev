@@ -164,7 +164,7 @@ function normalizePortfolioHoldings(raw) {
 var site = {
   name: "Fernando Moya",
   title: "Dise\xF1o y desarrollo web para negocios | Fernando Moya",
-  description: "Dise\xF1o y desarrollo sitios web claros, r\xE1pidos y profesionales para negocios, marcas y profesionales. Trabajo desde Mendoza para proyectos en espa\xF1ol.",
+  description: "Dise\xF1o y desarrollo web en Mendoza para negocios, profesionales y marcas. Sitios pensados para presentarte mejor y facilitar el contacto.",
   url: "https://www.fermoyadev.com.ar",
   locale: "es-AR",
   author: "Fernando Moya",

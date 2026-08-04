@@ -3,24 +3,27 @@
 .hero-editorial {
   position: relative;
   isolation: isolate;
-  min-height: min(860px, 100svh);
-  padding-top: clamp(5.5rem, 10vw, 7.5rem);
-  padding-bottom: clamp(3.5rem, 7vw, 6rem);
+  min-height: min(820px, 100svh);
+  /* site-shell-main ya reserva el header: solo un respiro corto */
+  padding-top: clamp(1.15rem, 2.2vw, 1.85rem);
+  padding-bottom: clamp(2.5rem, 4.5vw, 4rem);
   background: transparent;
   overflow: hidden;
 }
 
 .hero-editorial__inner {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns:
+    minmax(min(31rem, 100%), 0.96fr)
+    minmax(0, 1.04fr);
   gap: clamp(2rem, 5vw, 5rem);
   align-items: center;
-  min-height: calc(min(860px, 100svh) - 10rem);
+  min-height: calc(min(820px, 100svh) - 9rem);
 }
 
 @media (min-width: 1024px) and (max-width: 1199.98px) {
   .hero-editorial__inner {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    grid-template-columns: minmax(26rem, 0.96fr) minmax(0, 1.04fr);
     gap: 2rem;
   }
 }
@@ -28,7 +31,7 @@
 .hero-editorial__copy {
   position: relative;
   z-index: 5;
-  max-width: 39rem;
+  max-width: 42rem;
   min-width: 0;
 }
 
@@ -51,14 +54,15 @@
 }
 
 .hero-editorial__title {
-  margin: clamp(1.1rem, 2vw, 1.5rem) 0 0;
-  max-width: 11ch;
+  margin-top: 1.25rem;
+  margin-bottom: 0;
+  max-width: 12ch;
   color: var(--fm-text-primary);
   font-family: var(--fm-font-display);
-  font-size: clamp(3.4rem, 6vw, 6.4rem);
+  font-size: var(--fm-display-xl);
   font-weight: 400;
-  line-height: 0.88;
-  letter-spacing: -0.045em;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
   text-wrap: balance;
 }
 
@@ -66,20 +70,21 @@
   display: block;
 }
 
-.hero-editorial__title-line--accent {
+.hero-editorial__title em {
   color: var(--fm-accent);
   font-style: italic;
+  font-weight: inherit;
 }
 
 .hero-editorial__lead {
-  margin: clamp(1.35rem, 2.5vw, 1.75rem) 0 0;
-  max-width: 33rem;
+  margin: clamp(1.15rem, 2vw, 1.5rem) 0 0;
+  max-width: 34rem;
   color: var(--fm-text-secondary);
   font-family: var(--fm-font-body);
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-size: var(--fm-body-lg);
   font-weight: 400;
   line-height: 1.65;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.01em;
 }
 
 .hero-editorial__actions {
@@ -214,7 +219,6 @@
 
 .hero-editorial__window-slot {
   position: absolute;
-  will-change: transform;
 }
 
 .hero-editorial__window-slot--hema {
@@ -243,12 +247,10 @@
 
 .hero-editorial__window-motion {
   transform: translate3d(0, 0, 0);
-  will-change: transform, opacity;
 }
 
 .hero-editorial__window-parallax {
   transform: translate3d(0, 0, 0);
-  will-change: transform;
 }
 
 /* Ventana tipo navegador claro */
@@ -360,8 +362,9 @@
   }
 
   .hero-editorial__title {
-    max-width: 12ch;
-    font-size: clamp(4rem, 9vw, 6rem);
+    max-width: 11ch;
+    font-size: clamp(3.25rem, 8vw, 5rem);
+    line-height: 0.94;
   }
 
   .hero-editorial__stage {
@@ -375,7 +378,7 @@
 @media (max-width: 767.98px) {
   .hero-editorial {
     min-height: auto;
-    padding-top: calc(var(--fm-header-offset) + 1.5rem);
+    padding-top: calc(var(--fm-header-offset) + 1.25rem);
     padding-bottom: 2.75rem;
   }
 
@@ -391,9 +394,9 @@
 
   .hero-editorial__title {
     margin-top: 1rem;
-    max-width: 10ch;
-    font-size: clamp(3rem, 14vw, 4.35rem);
-    line-height: 0.9;
+    max-width: 11ch;
+    font-size: clamp(2.85rem, 12vw, 3.75rem);
+    line-height: 0.94;
   }
 
   .hero-editorial__lead {
@@ -512,11 +515,5 @@
   .hero-editorial__cta:hover,
   .hero-editorial__cta:active {
     transform: none;
-  }
-
-  .hero-editorial__window-slot,
-  .hero-editorial__window-motion,
-  .hero-editorial__window-parallax {
-    will-change: auto;
   }
 }

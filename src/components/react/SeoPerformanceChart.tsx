@@ -1,11 +1,8 @@
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useReducedMotion } from 'motion/react';
+import { gsap, ScrollTrigger } from '@/lib/gsap';
+import { prefersReducedMotion } from '@/lib/motion-prefs';
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { SeoPerformancePoint } from '@/data/seo-performance';
 import { seoPerformanceSummary } from '@/data/seo-performance';
-
-gsap.registerPlugin(ScrollTrigger);
 
 type Summary = typeof seoPerformanceSummary;
 
@@ -144,7 +141,7 @@ function buildChartSummary(series: CumulativePoint[], summary: Summary): string 
 }
 
 export default function SeoPerformanceChart({ series, summary }: Props) {
-  const reduceMotion = useReducedMotion();
+  const [reduceMotion] = useState(() => prefersReducedMotion());
   const rootRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const impressionsPathRef = useRef<SVGPathElement>(null);
@@ -312,7 +309,7 @@ export default function SeoPerformanceChart({ series, summary }: Props) {
           proxy,
           {
             value: target,
-            duration: 1.1,
+            duration: 0.65,
             ease: 'power2.out',
             onUpdate: () => {
               el.textContent = formatMetric(proxy.value, key);
@@ -321,26 +318,26 @@ export default function SeoPerformanceChart({ series, summary }: Props) {
               el.textContent = formatMetric(target, key);
             },
           },
-          0.2,
+          0.15,
         );
       });
 
-      tl.to([gridGroup, axisGroup], { opacity: 1, duration: 0.28 }, 0.25);
+      tl.to([gridGroup, axisGroup], { opacity: 1, duration: 0.28 }, 0.2);
 
       if (impressionsPath && impressionsLength > 0) {
-        tl.to(impressionsPath, { strokeDashoffset: 0, duration: 0.55, ease: 'power2.out' }, 0.4);
+        tl.to(impressionsPath, { strokeDashoffset: 0, duration: 0.45, ease: 'power2.out' }, 0.28);
       }
       if (clicksPath && clicksLength > 0) {
-        tl.to(clicksPath, { strokeDashoffset: 0, duration: 0.55, ease: 'power2.out' }, 0.62);
+        tl.to(clicksPath, { strokeDashoffset: 0, duration: 0.45, ease: 'power2.out' }, 0.4);
       }
       if (areaPath) {
-        tl.to(areaPath, { opacity: 1, duration: 0.35 }, 0.75);
+        tl.to(areaPath, { opacity: 1, duration: 0.3 }, 0.55);
       }
 
-      tl.to(pointsGroup, { opacity: 1, duration: 0.28 }, 1.1);
-      tl.to(endLabels, { opacity: 1, duration: 0.3 }, 1.2);
-      if (legend) tl.to(legend, { opacity: 1, duration: 0.28 }, 1.2);
-      tl.to(noteTargets, { opacity: 1, y: 0, duration: 0.3 }, 1.25);
+      tl.to(pointsGroup, { opacity: 1, duration: 0.25 }, 0.62);
+      tl.to(endLabels, { opacity: 1, duration: 0.25 }, 0.65);
+      if (legend) tl.to(legend, { opacity: 1, duration: 0.25 }, 0.65);
+      tl.to(noteTargets, { opacity: 1, y: 0, duration: 0.28 }, 0.68);
     };
 
     let scrollTrigger: ScrollTrigger | null = null;
@@ -355,9 +352,8 @@ export default function SeoPerformanceChart({ series, summary }: Props) {
       scrollTrigger = ScrollTrigger.create({
         trigger: section,
         start: 'top 78%',
-        end: 'bottom top',
+        once: true,
         onEnter: playAnimation,
-        onEnterBack: playAnimation,
       });
 
       ScrollTrigger.refresh();

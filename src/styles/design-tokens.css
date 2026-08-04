@@ -75,6 +75,16 @@
     sans-serif;
   --fm-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
+  /* Escala tipográfica (ETAPA 4.1) */
+  --fm-display-xl: clamp(3.25rem, 6.3vw, 6.25rem);
+  --fm-display-lg: clamp(2.75rem, 5vw, 5rem);
+  --fm-display-md: clamp(2.25rem, 3.8vw, 3.75rem);
+  --fm-heading-lg: clamp(1.75rem, 2.8vw, 2.75rem);
+  --fm-heading-md: clamp(1.35rem, 2vw, 2rem);
+  --fm-body-lg: clamp(1rem, 1.2vw, 1.125rem);
+  --fm-body-md: 0.9375rem;
+  --fm-body-sm: 0.8125rem;
+
   /* Shell */
   --fm-header-offset: calc(env(safe-area-inset-top, 0px) + 5.5rem);
   --fm-container-max: 72rem;

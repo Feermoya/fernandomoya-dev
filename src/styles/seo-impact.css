@@ -1,153 +1,111 @@
-/* Sección resultados SEO — home */
+/* ETAPA 4 — Resultados SEO (panel claro) */
 
 .seo-impact {
-  --seo-bg: #0b0d12;
-  --seo-text: #f5f0e8;
-  --seo-muted: rgba(245, 240, 232, 0.62);
-  --seo-panel-bg: #f4f5f7;
-  --seo-panel-text: #1a1d24;
-  --seo-panel-muted: rgba(26, 29, 36, 0.58);
-  --seo-panel-border: rgba(26, 29, 36, 0.1);
-  --seo-line-clicks: #3b6fd9;
-  --seo-line-impressions: #6b5b8a;
-  --seo-grid-line: rgba(26, 29, 36, 0.08);
+  --seo-line-clicks: #ed5a36;
+  --seo-line-impressions: #8a7c6f;
+  --seo-grid-line: rgba(17, 17, 17, 0.08);
+  --seo-panel-text: var(--fm-text-primary);
+  --seo-panel-muted: var(--fm-text-secondary);
+  --seo-panel-border: var(--fm-border-light);
 
-  background: var(--seo-bg);
-  color: var(--seo-text);
-  overflow-x: clip;
+  position: relative;
+  padding-block: clamp(5rem, 10vw, 9rem);
+  background: var(--fm-bg-surface);
+  color: var(--fm-text-primary);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
 }
 
-.seo-impact__grid {
-  display: grid;
-  gap: clamp(2rem, 5vw, 3.5rem);
-  padding-block: clamp(4rem, 9vw, 6.5rem);
-}
-
-@media (min-width: 1024px) {
-  .seo-impact__grid {
-    grid-template-columns: minmax(0, 0.38fr) minmax(0, 0.62fr);
-    gap: clamp(2.5rem, 5vw, 4rem);
-    align-items: start;
-  }
-}
-
-.seo-impact__copy {
-  max-width: 30rem;
+.seo-impact__header {
+  margin-bottom: clamp(2.5rem, 6vw, 5rem);
 }
 
 .seo-impact__eyebrow {
   margin: 0;
-  font-family: var(--fm-font-body);
-  font-size: clamp(0.625rem, 0.55rem + 0.3vw, 0.6875rem);
+  color: var(--fm-accent);
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--seo-muted);
+}
+
+.seo-impact__header-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.05fr)
+    minmax(20rem, 0.55fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  align-items: end;
+  margin-top: 1rem;
 }
 
 .seo-impact__title {
-  margin: clamp(0.9rem, 2vw, 1.2rem) 0 0;
+  margin: 0;
+  max-width: 12ch;
+  color: var(--fm-text-primary);
   font-family: var(--fm-font-display);
-  font-size: clamp(2rem, 4.5vw + 0.5rem, 3.25rem);
+  font-size: clamp(3rem, 6vw, 5.75rem);
   font-weight: 400;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  color: var(--seo-text);
+  line-height: 0.93;
+  letter-spacing: -0.045em;
   text-wrap: balance;
 }
 
+.seo-impact__title span {
+  display: block;
+  color: var(--fm-accent);
+  font-style: italic;
+}
+
 .seo-impact__lead {
-  margin: clamp(1rem, 2.2vw, 1.35rem) 0 0;
-  max-width: 28rem;
-  font-family: var(--fm-font-body);
-  font-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1.0625rem);
+  margin: 0;
+  color: var(--fm-text-secondary);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
   line-height: 1.7;
-  color: var(--seo-muted);
 }
 
 .seo-impact__case-id {
-  margin: clamp(1.25rem, 2.5vw, 1.75rem) 0 0;
-  font-family: var(--fm-font-body);
-  font-size: clamp(0.8125rem, 0.78rem + 0.12vw, 0.875rem);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: rgba(245, 240, 232, 0.78);
-}
-
-.seo-impact__note--copy {
-  margin: clamp(0.75rem, 1.5vw, 1rem) 0 0;
-  max-width: 26rem;
-  font-family: var(--fm-font-body);
-  font-size: clamp(0.8125rem, 0.78rem + 0.1vw, 0.875rem);
-  line-height: 1.55;
-  color: var(--seo-muted);
-}
-
-@media (min-width: 1024px) {
-  .seo-impact__note--copy {
-    display: none;
-  }
-}
-
-.seo-impact__visual {
-  min-width: 0;
+  margin: 1rem 0 0;
+  color: var(--fm-text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .seo-impact__panel {
-  border: 1px solid var(--seo-panel-border);
-  border-radius: 1.125rem;
-  background: var(--seo-panel-bg);
-  color: var(--seo-panel-text);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
   overflow: hidden;
+  border: 1px solid var(--fm-border-light);
+  border-radius: 2rem;
+  background: var(--fm-bg-surface-raised);
+  box-shadow: var(--shadow-soft);
 }
 
 .seo-impact__metrics {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(0.55rem, 1.5vw, 0.85rem) clamp(0.75rem, 2vw, 1rem);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0;
-  padding: clamp(0.85rem, 2vw, 1.1rem) clamp(0.9rem, 2.2vw, 1.25rem);
-  border-bottom: 1px solid var(--seo-panel-border);
+  border-bottom: 1px solid var(--fm-border-light);
 }
 
 .seo-impact__metric {
-  margin: 0;
   min-width: 0;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.seo-impact__metric + .seo-impact__metric {
+  border-left: 1px solid var(--fm-border-light);
 }
 
 .seo-impact__metric dt {
   margin: 0;
-  font-family: var(--fm-font-body);
-  font-size: clamp(0.625rem, 0.6rem + 0.08vw, 0.6875rem);
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  color: var(--fm-text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--seo-panel-muted);
 }
 
 .seo-impact__metric dd {
-  position: relative;
-  margin: 0.28rem 0 0;
-  font-family: var(--fm-font-display);
-  font-weight: 400;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: var(--seo-panel-text);
-  font-variant-numeric: tabular-nums;
-}
-
-.seo-impact__metric--primary dd {
-  font-size: clamp(1.5rem, 2.8vw + 0.25rem, 2rem);
-}
-
-.seo-impact__metric--secondary dd {
-  font-size: clamp(1.2rem, 2vw + 0.15rem, 1.55rem);
-  color: rgba(26, 29, 36, 0.88);
-}
-
-.seo-impact__metric--secondary dt {
-  color: rgba(26, 29, 36, 0.5);
+  margin: 0;
 }
 
 .seo-impact__metric-sr {
@@ -164,51 +122,66 @@
 
 .seo-impact__metric-value {
   display: block;
+  margin-top: 0.75rem;
+  color: var(--fm-text-primary);
+  font-family: var(--fm-font-display);
+  font-size: clamp(2rem, 4vw, 3.75rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.seo-impact__metric--primary .seo-impact__metric-value {
+  color: var(--fm-accent);
 }
 
 .seo-impact__metric-hint {
-  margin: 0.35rem 0 0;
-  max-width: 14rem;
-  font-family: var(--fm-font-body);
-  font-size: clamp(0.625rem, 0.6rem + 0.08vw, 0.6875rem);
-  font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--seo-panel-muted);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+  margin: 0.75rem 0 0;
+  color: var(--fm-text-tertiary);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.seo-impact__chart-area {
+  display: grid;
+  grid-template-columns:
+    minmax(16rem, 0.35fr)
+    minmax(0, 0.65fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+  padding: clamp(1.75rem, 4vw, 3rem);
 }
 
 .seo-impact__highlight {
   margin: 0;
-  padding: clamp(0.75rem, 2vw, 1rem) clamp(0.9rem, 2.2vw, 1.25rem);
-  border-top: 1px solid var(--seo-panel-border);
-  border-bottom: 1px solid var(--seo-panel-border);
+  color: var(--fm-text-primary);
   font-family: var(--fm-font-display);
-  font-size: clamp(1rem, 1.5vw + 0.35rem, 1.2rem);
-  font-weight: 400;
-  line-height: 1.35;
-  letter-spacing: -0.015em;
-  color: var(--seo-panel-text);
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
+.seo-impact__note {
+  margin: 1rem 0 0;
+  color: var(--fm-text-tertiary);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* Chart internals */
 .seo-impact__chart-wrap {
   position: relative;
-  padding: clamp(0.55rem, 1.5vw, 0.75rem) clamp(0.35rem, 1.2vw, 0.55rem) 0.25rem;
+  min-width: 0;
 }
 
 .seo-impact__chart-heading {
   margin: 0 0 0.35rem;
-  padding-inline: clamp(0.55rem, 1.5vw, 0.85rem);
   font-family: var(--fm-font-body);
-  font-size: clamp(0.6875rem, 0.66rem + 0.08vw, 0.75rem);
+  font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: var(--seo-panel-muted);
+  color: var(--fm-text-tertiary);
 }
 
 .seo-impact__chart {
@@ -231,17 +204,16 @@
 .seo-impact__legend {
   display: flex;
   flex-wrap: wrap;
-  gap: clamp(0.75rem, 2vw, 1.25rem);
-  padding: 0.35rem clamp(0.9rem, 2.2vw, 1.25rem) 0.65rem;
+  gap: 1rem;
+  margin-top: 0.75rem;
 }
 
 .seo-impact__legend-item {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-family: var(--fm-font-body);
-  font-size: clamp(0.75rem, 0.72rem + 0.08vw, 0.8125rem);
-  color: var(--seo-panel-muted);
+  font-size: 0.75rem;
+  color: var(--fm-text-secondary);
 }
 
 .seo-impact__legend-swatch {
@@ -278,14 +250,13 @@
   min-width: 10.5rem;
   max-width: calc(100% - 1.5rem);
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--seo-panel-border);
+  border: 1px solid var(--fm-border-light);
   border-radius: var(--fm-radius-sm);
   background: #fff;
-  box-shadow: 0 8px 24px rgba(26, 29, 36, 0.12);
-  font-family: var(--fm-font-body);
+  box-shadow: var(--shadow-soft);
   font-size: 0.75rem;
   line-height: 1.45;
-  color: var(--seo-panel-text);
+  color: var(--fm-text-primary);
   opacity: 0;
   transform: translate(-50%, -100%) translateY(-0.55rem);
   transition: opacity 0.15s ease;
@@ -299,66 +270,42 @@
   display: block;
   margin-bottom: 0.25rem;
   font-weight: 600;
-  color: var(--seo-panel-text);
 }
 
 .seo-impact__tooltip-row {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
-  color: var(--seo-panel-muted);
+  color: var(--fm-text-secondary);
 }
 
 .seo-impact__tooltip-row strong {
   font-weight: 600;
-  color: var(--seo-panel-text);
+  color: var(--fm-text-primary);
   font-variant-numeric: tabular-nums;
 }
 
 .seo-impact__tooltip-day {
   margin: 0.4rem 0 0;
   padding-top: 0.35rem;
-  border-top: 1px solid var(--seo-panel-border);
+  border-top: 1px solid var(--fm-border-light);
   font-size: 0.6875rem;
-  line-height: 1.4;
-  color: var(--seo-panel-muted);
+  color: var(--fm-text-tertiary);
 }
 
-.seo-impact__note--panel {
-  display: none;
-  margin: 0;
-  padding: 0.7rem clamp(0.9rem, 2.2vw, 1.25rem) 0.9rem;
-  border-top: 1px solid var(--seo-panel-border);
-  font-family: var(--fm-font-body);
-  font-size: clamp(0.6875rem, 0.66rem + 0.08vw, 0.75rem);
-  line-height: 1.5;
-  color: var(--seo-panel-muted);
-}
-
-@media (min-width: 1024px) {
-  .seo-impact__note--panel {
-    display: block;
-  }
-}
-
-/* Chart SVG internals */
 .seo-chart__grid-line {
   stroke: var(--seo-grid-line);
   stroke-width: 1;
 }
 
 .seo-chart__axis-label {
-  fill: var(--seo-panel-muted);
+  fill: var(--fm-text-tertiary);
   font-family: var(--fm-font-body);
   font-size: 10px;
 }
 
-.seo-chart__axis-label--date {
-  font-size: 10px;
-}
-
 .seo-chart__area {
-  fill: rgba(59, 111, 217, 0.1);
+  fill: rgba(237, 90, 54, 0.08);
 }
 
 .seo-chart__line {
@@ -389,10 +336,6 @@
   stroke: var(--seo-line-impressions);
 }
 
-.seo-chart__point--final {
-  stroke-width: 2.25;
-}
-
 .seo-chart__end-label {
   font-family: var(--fm-font-body);
   font-size: 10px;
@@ -408,9 +351,63 @@
 }
 
 .seo-chart__guide {
-  stroke: rgba(26, 29, 36, 0.18);
+  stroke: rgba(17, 17, 17, 0.16);
   stroke-width: 1;
   stroke-dasharray: 4 3;
+}
+
+@media (max-width: 1023.98px) {
+  .seo-impact__header-grid,
+  .seo-impact__chart-area {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .seo-impact {
+    padding-block: 4.5rem;
+  }
+
+  .seo-impact__title {
+    font-size: clamp(2.8rem, 13vw, 4rem);
+  }
+
+  .seo-impact__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .seo-impact__metric:nth-child(3) {
+    border-left: 0;
+    border-top: 1px solid var(--fm-border-light);
+  }
+
+  .seo-impact__metric:nth-child(4) {
+    border-top: 1px solid var(--fm-border-light);
+  }
+
+  .seo-impact__panel {
+    border-radius: 1.25rem;
+  }
+
+  .seo-impact__chart {
+    min-height: 13.125rem;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .seo-impact__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .seo-impact__metric + .seo-impact__metric {
+    border-left: 0;
+    border-top: 1px solid var(--fm-border-light);
+  }
+
+  .seo-chart__end-labels {
+    display: none;
+  }
 }
 
 @media (max-width: 389px) {
@@ -419,44 +416,8 @@
   }
 }
 
-@media (max-width: 359px) {
-  .seo-impact__metrics {
-    gap: 0.5rem 0.625rem;
-    padding: 0.75rem 0.75rem;
-  }
-
-  .seo-impact__metric--primary dd {
-    font-size: 1.35rem;
-  }
-
-  .seo-impact__metric--secondary dd {
-    font-size: 1.125rem;
-  }
-
-  .seo-impact__highlight {
-    font-size: 0.9375rem;
-    padding-inline: 0.75rem;
-  }
-
-  .seo-impact__metric-hint {
-    font-size: 0.5625rem;
-    line-height: 1.35;
-    max-width: 100%;
-  }
-
-  .seo-impact__chart {
-    min-height: 13.125rem;
-  }
-
-  .seo-impact__chart-wrap {
-    padding-inline: 0.2rem;
-  }
-
-  .seo-chart__axis-label {
-    font-size: 9px;
-  }
-
-  .seo-chart__end-labels {
-    display: none;
+@media (prefers-reduced-motion: reduce) {
+  .seo-impact__tooltip {
+    transition: none;
   }
 }

@@ -1,10 +1,7 @@
 import ProjectWindow, { type ProjectWindowData } from '@/components/react/ProjectWindow';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useReducedMotion } from 'motion/react';
-import { useLayoutEffect, useRef } from 'react';
-
-gsap.registerPlugin(ScrollTrigger);
+import { gsap, ScrollTrigger } from '@/lib/gsap';
+import { canUsePointerParallax, prefersReducedMotion } from '@/lib/motion-prefs';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 export type HeroProject = ProjectWindowData & {
   slotClass: string;
@@ -15,18 +12,8 @@ type Props = {
   projects: HeroProject[];
 };
 
-const TITLE_LINES = [
-  'Diseño webs que',
-  'hacen ver mejor',
-  'a tu negocio.',
-] as const;
-
-function isMobileViewport(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
-}
-
 export default function HeroShowcase({ projects }: Props) {
-  const reduceMotion = useReducedMotion();
+  const [reduceMotion] = useState(() => prefersReducedMotion());
   const sectionRef = useRef<HTMLElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -45,7 +32,6 @@ export default function HeroShowcase({ projects }: Props) {
     if (!section || !copy || !stage) return;
 
     const slots = slotRefs.current.filter(Boolean) as HTMLDivElement[];
-    const parallaxLayers = parallaxRefs.current.filter(Boolean) as HTMLDivElement[];
     const titleLineEls = titleRef.current
       ? ([...titleRef.current.querySelectorAll('.hero-editorial__title-line')] as HTMLElement[])
       : [];
@@ -53,6 +39,7 @@ export default function HeroShowcase({ projects }: Props) {
     const lead = leadRef.current;
     const actions = actionsRef.current;
     const meta = metaRef.current;
+    const mobile = window.matchMedia('(max-width: 767px)').matches;
 
     if (reduceMotion) {
       gsap.set([copy, stage, eyebrow, ...titleLineEls, lead, actions, meta, ...slots], {
@@ -62,17 +49,12 @@ export default function HeroShowcase({ projects }: Props) {
         scale: 1,
         x: 0,
       });
-      parallaxLayers.forEach((layer) => {
-        layer.style.transform = 'translate3d(0,0,0)';
-      });
       return;
     }
 
-    const mobile = isMobileViewport();
     const centerIndex = projects.findIndex((p) => p.slotClass.includes('hema'));
     const centerSlot = centerIndex >= 0 ? slots[centerIndex] : slots[0];
     const sideSlots = slots.filter((_, i) => i !== centerIndex);
-    // Si la hidratación llegó tarde (client:idle), no ocultar el SSR: evita flash.
     const skipEntrance = typeof performance !== 'undefined' && performance.now() > 900;
 
     const ctx = gsap.context(() => {
@@ -85,36 +67,36 @@ export default function HeroShowcase({ projects }: Props) {
           scale: 1,
         });
       } else {
-        gsap.set(stage, { opacity: 0, scale: 0.97 });
-        gsap.set([eyebrow, titleLineEls, lead, actions, meta], { opacity: 0, y: 16 });
-        gsap.set(centerSlot, { opacity: 0, y: 48, scale: 0.94 });
-        gsap.set(sideSlots, { opacity: 0, y: 36, scale: 0.96 });
+        const yShift = mobile ? 10 : 12;
+        gsap.set(eyebrow, { opacity: 0, y: yShift });
+        gsap.set(titleLineEls, { opacity: 0, y: yShift });
+        gsap.set([lead, actions, meta], { opacity: 0, y: yShift });
+        gsap.set(slots, { opacity: 0, scale: 0.985, y: 16 });
 
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-        tl.to(stage, { opacity: 1, scale: 1, duration: 0.4 }, 0)
-          .to(centerSlot, { opacity: 1, y: 0, scale: 1, duration: 0.5 }, 0.12)
-          .to(sideSlots, { opacity: 1, y: 0, scale: 1, duration: 0.4, stagger: 0.08 }, 0.28)
-          .to(eyebrow, { opacity: 1, y: 0, duration: 0.32 }, 0.42)
-          .to(titleLineEls, { opacity: 1, y: 0, duration: 0.4, stagger: 0.06 }, 0.52)
-          .to(lead, { opacity: 1, y: 0, duration: 0.35 }, 0.78)
-          .to(actions, { opacity: 1, y: 0, duration: 0.32 }, 0.9)
-          .to(meta, { opacity: 1, y: 0, duration: 0.3 }, 1.0);
+        tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.32 }, 0)
+          .to(titleLineEls, { opacity: 1, y: 0, duration: 0.38, stagger: 0.06 }, 0.06)
+          .to(lead, { opacity: 1, y: 0, duration: 0.32 }, 0.28)
+          .to(actions, { opacity: 1, y: 0, duration: 0.28 }, 0.38)
+          .to(meta, { opacity: 1, y: 0, duration: 0.26 }, 0.46)
+          .to(centerSlot, { opacity: 1, scale: 1, y: 0, duration: 0.42 }, 0.22)
+          .to(sideSlots, { opacity: 1, scale: 1, y: 0, duration: 0.38, stagger: 0.05 }, 0.34);
       }
 
       if (!mobile) {
         ScrollTrigger.create({
           trigger: section,
           start: 'top top',
-          end: 'bottom top+=140',
-          scrub: 0.55,
+          end: 'bottom top+=120',
+          scrub: 0.45,
           onUpdate: (self) => {
             const p = self.progress;
-            gsap.set(stage, { y: -p * 20 });
-            gsap.set(copy, { opacity: Math.max(0.8, 1 - p * 0.2) });
+            gsap.set(stage, { y: -p * 16 });
+            gsap.set(copy, { opacity: Math.max(0.9, 1 - p * 0.1) });
             slots.forEach((slot, index) => {
-              const spread = (index - 1) * p * 8;
-              gsap.set(slot, { x: spread, y: -p * Math.min(10, 6 + index * 2) });
+              const spread = (index - 1) * p * 6;
+              gsap.set(slot, { x: spread });
             });
           },
         });
@@ -126,13 +108,13 @@ export default function HeroShowcase({ projects }: Props) {
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
-    if (!section || reduceMotion || isMobileViewport()) return;
+    if (!section || reduceMotion || !canUsePointerParallax()) return;
 
     const parallaxLayers = parallaxRefs.current.filter(Boolean) as HTMLDivElement[];
     if (parallaxLayers.length === 0) return;
 
-    const maxShift = [6, 10, 8];
-    const maxRotate = [0.35, 0.7, 0.55];
+    const maxShift = 6;
+    const maxRotate = 0.4;
 
     let targetX = 0;
     let targetY = 0;
@@ -146,10 +128,10 @@ export default function HeroShowcase({ projects }: Props) {
 
       parallaxLayers.forEach((layer, index) => {
         const depth = projects[index]?.depth ?? 1;
-        const factor = depth === 0 ? 0.35 : depth === 1 ? 0.75 : 1;
-        const tx = currentX * maxShift[index] * factor;
-        const ty = currentY * maxShift[index] * factor;
-        const rot = currentX * maxRotate[index] * factor;
+        const factor = depth === 0 ? 0.35 : depth === 1 ? 0.7 : 1;
+        const tx = currentX * maxShift * factor;
+        const ty = currentY * maxShift * factor;
+        const rot = currentX * maxRotate * factor;
         layer.style.transform = `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, 0) rotate(${rot.toFixed(3)}deg)`;
       });
 
@@ -204,20 +186,15 @@ export default function HeroShowcase({ projects }: Props) {
             DISEÑO + DESARROLLO WEB · MENDOZA
           </p>
           <h1 ref={titleRef} id="hero-heading" className="hero-editorial__title">
-            {TITLE_LINES.map((line, index) => (
-              <span
-                key={line}
-                className={`hero-editorial__title-line ${
-                  index === 1 ? 'hero-editorial__title-line--accent' : ''
-                }`}
-              >
-                {line}
-              </span>
-            ))}
+            <span className="hero-editorial__title-line">Diseño webs</span>
+            <span className="hero-editorial__title-line">
+              que hacen <em>ver mejor</em>
+            </span>
+            <span className="hero-editorial__title-line">tu negocio.</span>
           </h1>
           <p ref={leadRef} className="hero-editorial__lead">
-            Creo sitios claros, rápidos y fáciles de usar para empresas, profesionales y marcas que
-            necesitan mostrarse mejor.
+            Diseño webs para negocios que necesitan verse bien y, sobre todo, que la gente
+            entienda qué hacen apenas entra.
           </p>
           <div ref={actionsRef} className="hero-editorial__actions">
             <a href="#proyectos" className="hero-editorial__cta hero-editorial__cta--primary">

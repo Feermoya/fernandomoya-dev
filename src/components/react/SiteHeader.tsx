@@ -1,4 +1,3 @@
-import { useMotionValueEvent, useScroll } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -23,7 +22,6 @@ export default function SiteHeader({
   backLabel = 'Volver al trabajo',
   logoHref = '#inicio',
 }: Props) {
-  const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuPanelRef = useRef<HTMLElement>(null);
@@ -31,9 +29,14 @@ export default function SiteHeader({
   const menuButtonId = 'site-header-menu-btn';
   const menuPanelId = 'site-header-menu-panel';
 
-  useMotionValueEvent(scrollY, 'change', (y) => {
-    setIsScrolled(y > 24);
-  });
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 24);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const closeMenu = useCallback((returnFocus = false) => {
     setMenuOpen(false);

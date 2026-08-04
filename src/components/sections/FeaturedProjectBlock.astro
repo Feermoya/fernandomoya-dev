@@ -1,0 +1,86 @@
+---
+import ProjectShowcaseWindow from '@/components/sections/ProjectShowcaseWindow.astro';
+import type { FeaturedProjectData } from '@/types/featured-project';
+
+type Props = {
+  project: FeaturedProjectData;
+};
+
+const { project } = Astro.props;
+const mediaLeft = project.mediaPosition === 'left';
+const highlights = project.highlights.slice(0, 4);
+---
+
+<article
+  class:list={[
+    'featured-project',
+    `featured-project--${project.theme}`,
+    mediaLeft && 'featured-project--media-left',
+  ]}
+  aria-labelledby={`featured-project-${project.id}`}
+  data-featured-project
+>
+  <div class="featured-project__inner container-page">
+    <div class="featured-project__grid">
+      <div class="featured-project__copy" data-featured-copy-root>
+        <span class="featured-project__ghost" aria-hidden="true">{project.number}</span>
+
+        <div class="featured-project__topline" data-featured-copy>
+          <span class="featured-project__number" aria-hidden="true">{project.number}</span>
+          <span class="featured-project__category">{project.category}</span>
+        </div>
+
+        <p class="featured-project__client" data-featured-copy>{project.listLabel}</p>
+
+        <h3 id={`featured-project-${project.id}`} class="featured-project__headline" data-featured-copy>
+          {project.headline}
+        </h3>
+
+        <p class="featured-project__summary" data-featured-copy>{project.summary}</p>
+
+        <div class="featured-project__context" data-featured-copy>
+          <span>Qué resolvió</span>
+          <p>{project.result}</p>
+        </div>
+
+        <ul
+          class="featured-project__highlights"
+          aria-label={`Características del proyecto ${project.client}`}
+          data-featured-copy
+        >
+          {highlights.map((highlight) => <li data-featured-chip>{highlight}</li>)}
+        </ul>
+
+        <div class="featured-project__links" data-featured-copy>
+          <a href={project.caseUrl} class="featured-project__cta">
+            Ver caso completo
+            <span aria-hidden="true">→</span>
+          </a>
+          <a
+            href={project.live}
+            class="featured-project__site-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Visitar sitio
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="featured-project__media" data-featured-media>
+        <div class="featured-project__scale">
+          <ProjectShowcaseWindow
+            name={project.client}
+            domain={project.domain}
+            imageSrc={project.coverSrc}
+            imageSrcSet={project.coverSrcSet}
+            imageWidth={project.coverWidth}
+            imageHeight={project.coverHeight}
+            alt={project.alt}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</article>

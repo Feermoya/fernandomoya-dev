@@ -1,0 +1,53 @@
+---
+import '@/styles/project-showcase-window.css';
+
+type Props = {
+  name: string;
+  domain: string;
+  imageSrc: string;
+  imageSrcSet?: string;
+  imageWidth: number;
+  imageHeight: number;
+  alt: string;
+  sizes?: string;
+};
+
+const {
+  name,
+  domain,
+  imageSrc,
+  imageSrcSet,
+  imageWidth,
+  imageHeight,
+  alt,
+  sizes = '(min-width: 1280px) 56vw, (min-width: 1024px) 54vw, 100vw',
+} = Astro.props;
+---
+
+<figure class="project-showcase-window">
+  <div class="project-showcase-window__chrome" aria-hidden="true">
+    <span class="project-showcase-window__dots">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <span class="project-showcase-window__meta">
+      <span class="project-showcase-window__name">{name}</span>
+      <span class="project-showcase-window__sep" aria-hidden="true">·</span>
+      <span class="project-showcase-window__domain">{domain}</span>
+    </span>
+  </div>
+  <div class="project-showcase-window__viewport">
+    <img
+      src={imageSrc}
+      srcset={imageSrcSet}
+      alt={alt}
+      width={imageWidth}
+      height={imageHeight}
+      loading="lazy"
+      decoding="async"
+      sizes={sizes}
+      class="project-showcase-window__image"
+    />
+  </div>
+</figure>

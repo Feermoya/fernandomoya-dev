@@ -6,85 +6,113 @@ import calcosImg from '@/assets/calcos.png';
 import qrImg from '@/assets/qr.png';
 import detallesImg from '@/assets/detalles.png';
 
-const tarjetas = await getImage({ src: tarjetasImg, width: 1400, format: 'webp' });
-const calcos = await getImage({ src: calcosImg, width: 1000, format: 'webp' });
-const qr = await getImage({ src: qrImg, width: 800, format: 'webp' });
-const material = await getImage({ src: detallesImg, width: 900, format: 'webp' });
+const imageOpts = {
+  widths: [360, 540, 720, 960, 1200],
+  format: 'webp' as const,
+  quality: 80,
+};
+
+const tarjetas = await getImage({
+  src: tarjetasImg,
+  ...imageOpts,
+  sizes: '(min-width: 1024px) 42vw, (min-width: 768px) 50vw, 100vw',
+});
+const calcos = await getImage({
+  src: calcosImg,
+  ...imageOpts,
+  sizes: '(min-width: 1024px) 50vw, (min-width: 768px) 50vw, 100vw',
+});
+const qr = await getImage({
+  src: qrImg,
+  ...imageOpts,
+  sizes: '(min-width: 1024px) 22vw, (min-width: 768px) 50vw, 50vw',
+});
+const material = await getImage({
+  src: detallesImg,
+  ...imageOpts,
+  sizes: '(min-width: 1024px) 22vw, (min-width: 768px) 50vw, 50vw',
+});
 ---
 
 <section id="piezas-marca" class="brand-work" aria-labelledby="brand-work-heading">
   <div class="container-page brand-work__inner">
     <header class="brand-work__header">
-      <p class="brand-work__eyebrow">MÁS ALLÁ DE LA PANTALLA</p>
-      <h2 id="brand-work-heading" class="brand-work__title">
-        La identidad no termina<br class="brand-work__title-break" aria-hidden="true" />
-        en la web.
-      </h2>
-      <p class="brand-work__lead">
-        También diseño piezas físicas y digitales<br class="brand-work__lead-break" aria-hidden="true" />
-        que ayudan a que una marca se vea consistente.
-      </p>
+      <p class="brand-work__eyebrow">MÁS ALLÁ DE LA WEB</p>
+      <div class="brand-work__header-grid">
+        <h2 id="brand-work-heading" class="brand-work__title">
+          La identidad no termina
+          <span>en la web.</span>
+        </h2>
+        <p class="brand-work__lead">
+          Cuando el proyecto lo necesita, diseño piezas impresas y digitales para que la marca
+          mantenga una imagen consistente.
+        </p>
+      </div>
     </header>
 
-    <div class="brand-work__gallery">
-      <figure class="brand-work__piece brand-work__piece--lead">
+    <div class="brand-work__gallery" data-brand-gallery>
+      <figure class="brand-work__piece brand-work__piece--lead" data-brand-piece>
         <div class="brand-work__frame">
           <img
             src={tarjetas.src}
+            srcset={tarjetas.srcSet.attribute}
             alt="Diseño de tarjetas personales para clientes"
             width={tarjetas.attributes.width ?? 1400}
             height={tarjetas.attributes.height ?? 1750}
             loading="lazy"
             decoding="async"
-            sizes="(min-width: 1024px) 42vw, (min-width: 768px) 46vw, 100vw"
+            sizes="(min-width: 1024px) 42vw, (min-width: 768px) 50vw, 100vw"
             class="brand-work__image"
           />
         </div>
         <figcaption class="brand-work__label">Tarjetas</figcaption>
       </figure>
 
-      <figure class="brand-work__piece brand-work__piece--calcos">
+      <figure class="brand-work__piece brand-work__piece--calcos" data-brand-piece>
         <div class="brand-work__frame">
           <img
             src={calcos.src}
+            srcset={calcos.srcSet.attribute}
             alt="Calcomanías y stickers personalizados para marcas"
             width={calcos.attributes.width ?? 1000}
             height={calcos.attributes.height ?? 800}
             loading="lazy"
             decoding="async"
-            sizes="(min-width: 1024px) 58vw, (min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 1024px) 50vw, (min-width: 768px) 50vw, 100vw"
             class="brand-work__image"
           />
         </div>
         <figcaption class="brand-work__label">Calcomanías</figcaption>
       </figure>
 
-      <figure class="brand-work__piece brand-work__piece--qr">
+      <figure class="brand-work__piece brand-work__piece--qr" data-brand-piece>
         <div class="brand-work__frame">
           <img
             src={qr.src}
+            srcset={qr.srcSet.attribute}
             alt="Piezas impresas con código QR para negocios"
             width={qr.attributes.width ?? 800}
             height={qr.attributes.height ?? 800}
             loading="lazy"
             decoding="async"
-            sizes="(min-width: 1024px) 22vw, (min-width: 768px) 50vw, 46vw"
+            sizes="(min-width: 1024px) 22vw, (min-width: 768px) 50vw, 50vw"
             class="brand-work__image"
           />
         </div>
         <figcaption class="brand-work__label">Piezas con QR</figcaption>
       </figure>
 
-      <figure class="brand-work__piece brand-work__piece--material">
+      <figure class="brand-work__piece brand-work__piece--material" data-brand-piece>
         <div class="brand-work__frame">
           <img
             src={material.src}
+            srcset={material.srcSet.attribute}
             alt="Material de marca aplicado en piezas impresas"
             width={material.attributes.width ?? 900}
             height={material.attributes.height ?? 675}
             loading="lazy"
             decoding="async"
-            sizes="(min-width: 1024px) 22vw, (min-width: 768px) 50vw, 46vw"
+            sizes="(min-width: 1024px) 22vw, (min-width: 768px) 50vw, 50vw"
             class="brand-work__image"
           />
         </div>
@@ -93,3 +121,49 @@ const material = await getImage({ src: detallesImg, width: 900, format: 'webp' }
     </div>
   </div>
 </section>
+
+<script>
+  function initBrandReveal() {
+    const gallery = document.querySelector('[data-brand-gallery]');
+    if (!gallery || gallery instanceof HTMLElement === false) return;
+    if (gallery.dataset.observed === 'true') return;
+
+    const pieces = gallery.querySelectorAll('[data-brand-piece]');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduce) {
+      gallery.classList.add('is-visible');
+      pieces.forEach((piece) => piece.classList.add('is-visible'));
+      return;
+    }
+
+    gallery.dataset.observed = 'true';
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          gallery.classList.add('is-visible');
+          pieces.forEach((piece, index) => {
+            window.setTimeout(() => piece.classList.add('is-visible'), index * 45);
+          });
+          observer.disconnect();
+        });
+      },
+      { rootMargin: '0px 0px -12% 0px', threshold: 0.12 },
+    );
+    observer.observe(gallery);
+  }
+
+  initBrandReveal();
+  document.addEventListener('astro:page-load', () => {
+    const gallery = document.querySelector('[data-brand-gallery]');
+    if (gallery instanceof HTMLElement) {
+      gallery.dataset.observed = '';
+      gallery.classList.remove('is-visible');
+      gallery.querySelectorAll('[data-brand-piece]').forEach((piece) => {
+        piece.classList.remove('is-visible');
+      });
+    }
+    initBrandReveal();
+  });
+</script>

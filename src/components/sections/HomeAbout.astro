@@ -4,52 +4,99 @@ import { getImage } from 'astro:assets';
 import profilePhoto from '@/assets/profile.png';
 import { site } from '@/data/site';
 
-const profile = await getImage({ src: profilePhoto, width: 900, height: 1125, format: 'webp' });
+const profile = await getImage({
+  src: profilePhoto,
+  widths: [360, 540, 720, 960],
+  sizes: '(min-width: 1024px) 38vw, 90vw',
+  format: 'webp',
+  quality: 80,
+});
 ---
 
 <section id="sobre-mi" class="about-section" aria-labelledby="about-heading">
   <div class="container-page about-section__inner">
-    <p class="about-section__eyebrow">SOBRE MÍ</p>
+    <div class="about-section__copy" data-about-copy>
+      <p class="about-section__eyebrow">SOBRE MÍ</p>
 
-    <h2 id="about-heading" class="about-section__title">
-      Una web puede verse bien y seguir sin decir nada.
-    </h2>
+      <h2 id="about-heading" class="about-section__title">
+        Una web puede verse bien
+        <span>y seguir sin decir nada.</span>
+      </h2>
 
-    <figure class="about-section__photo">
+      <div class="about-section__body">
+        <p class="about-section__text">
+          Soy Fernando, desarrollador frontend y diseñador web en Mendoza. Trabajo con empresas,
+          profesionales y marcas que necesitan mejorar la forma en la que se presentan online.
+        </p>
+        <p class="about-section__text about-section__text--muted">
+          Trabajo yo solo con cada proyecto, de principio a fin: no hay tercerización ni
+          intermediarios en el medio.
+        </p>
+      </div>
+
+      <ul class="about-section__highlights">
+        <li>Trabajo directo conmigo</li>
+        <li>Diseño y desarrollo en un mismo proceso</li>
+        <li>Acompañamiento después de publicar</li>
+      </ul>
+
+      <div class="about-section__actions">
+        <a href="#contacto" class="about-section__cta">Contame tu proyecto</a>
+        <a href="#proyectos" class="about-section__link">Ver proyectos</a>
+      </div>
+    </div>
+
+    <figure class="about-section__photo" data-about-photo>
       <div class="about-section__photo-frame">
         <img
           src={profile.src}
+          srcset={profile.srcSet.attribute}
           alt={`Retrato de ${site.name}`}
-          width={profile.attributes.width ?? 900}
-          height={profile.attributes.height ?? 1125}
+          width={profile.attributes.width ?? 960}
+          height={profile.attributes.height ?? 1200}
           loading="lazy"
           decoding="async"
-          sizes="(min-width: 1024px) 38vw, 100vw"
+          sizes="(min-width: 1024px) 38vw, 90vw"
           class="about-section__photo-image"
         />
       </div>
     </figure>
-
-    <div class="about-section__body">
-      <p class="about-section__text">
-        Soy Fernando. Diseño y desarrollo webs desde Mendoza para negocios que necesitan comunicar
-        mejor lo que hacen.
-      </p>
-      <p class="about-section__text about-section__text--muted">
-        Trabajo de forma directa con cada proyecto: ordeno la información, encuentro una dirección
-        visual y la convierto en una experiencia fácil de entender.
-      </p>
-    </div>
-
-    <ul class="about-section__highlights">
-      <li class="about-section__highlight">Trabajo directo, sin intermediarios</li>
-      <li class="about-section__highlight">Mendoza, Argentina</li>
-      <li class="about-section__highlight">Proyectos para negocios y profesionales</li>
-    </ul>
-
-    <div class="about-section__actions">
-      <a href="#contacto" class="about-section__cta">Hablemos</a>
-      <a href="#proyectos" class="about-section__link">Ver trabajo</a>
-    </div>
   </div>
 </section>
+
+<script>
+  function initAboutReveal() {
+    const section = document.querySelector('.about-section');
+    if (!(section instanceof HTMLElement)) return;
+    if (section.dataset.observed === 'true') return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      section.classList.add('is-visible');
+      return;
+    }
+
+    section.dataset.observed = 'true';
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          section.classList.add('is-visible');
+          observer.disconnect();
+        });
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.15 },
+    );
+    observer.observe(section);
+  }
+
+  initAboutReveal();
+  document.addEventListener('astro:page-load', () => {
+    const section = document.querySelector('.about-section');
+    if (section instanceof HTMLElement) {
+      section.dataset.observed = '';
+      section.classList.remove('is-visible');
+    }
+    initAboutReveal();
+  });
+</script>
