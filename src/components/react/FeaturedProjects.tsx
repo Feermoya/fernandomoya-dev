@@ -24,7 +24,11 @@ export default function FeaturedProjects({ featured, archive }: Props) {
 
       <div className="projects-archive">
         <div className="container-page projects-archive__inner">
-          <h3 className="projects-archive__title">Más trabajo</h3>
+          <div className="projects-archive__header">
+            <p className="projects-archive__eyebrow">OTROS PROYECTOS</p>
+            <h3 className="projects-archive__title">Más trabajo publicado</h3>
+          </div>
+
           <ol className="projects-archive__list">
             {archive.map((item) => (
               <li key={item.id} className="projects-archive__item">
@@ -37,8 +41,11 @@ export default function FeaturedProjects({ featured, archive }: Props) {
                     {item.number}
                   </span>
                   <span className="projects-archive__label">{item.label}</span>
+                  <span className="projects-archive__action">
+                    {item.caseUrl ? 'Ver caso' : 'Visitar sitio'}
+                  </span>
                   <span className="projects-archive__arrow" aria-hidden="true">
-                    →
+                    ↗
                   </span>
                 </a>
               </li>

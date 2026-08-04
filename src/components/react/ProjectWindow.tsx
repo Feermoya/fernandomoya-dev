@@ -50,7 +50,7 @@ export default function ProjectWindow({
           loading={priority ? 'eager' : 'lazy'}
           fetchPriority={priority ? 'high' : 'auto'}
           decoding={priority ? 'async' : 'async'}
-          sizes="(min-width: 1024px) 34rem, 88vw"
+          sizes="(min-width: 1280px) 35rem, (min-width: 1024px) 42vw, 88vw"
           className="hero-project-window__image"
         />
       </div>

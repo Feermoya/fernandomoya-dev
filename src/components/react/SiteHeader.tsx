@@ -18,7 +18,7 @@ export default function SiteHeader({
   siteName,
   links,
   ctaHref = '#contacto',
-  ctaLabel = 'Hablemos',
+  ctaLabel = 'Contame tu idea',
   backHref,
   backLabel = 'Volver al trabajo',
   logoHref = '#inicio',
@@ -74,10 +74,8 @@ export default function SiteHeader({
           data-scrolled={isScrolled ? 'true' : 'false'}
         >
           <a href={logoHref} className="site-header-logo" aria-label={`${siteName} — Inicio`}>
-            <span className="site-header-logo-mark" aria-hidden="true">
-              FM
-            </span>
-            <span className="site-header-logo-name">{siteName}</span>
+            <span className="site-header-logo-name">Fernando Moya</span>
+            <span className="site-header-logo-role">Diseño + desarrollo web</span>
           </a>
 
           {backHref ? (
@@ -96,12 +94,12 @@ export default function SiteHeader({
             </nav>
           )}
 
-          <div className="flex shrink-0 items-center gap-2">
-            <a href={ctaHref} className="site-header-cta">
+          <div className="site-header-actions">
+            <a href={ctaHref} className="site-header-cta site-header-cta--bar">
               {ctaLabel}
             </a>
 
-            <div className="site-header-menu-btn-wrap shrink-0">
+            <div className="site-header-menu-btn-wrap">
               <button
                 ref={menuButtonRef}
                 id={menuButtonId}

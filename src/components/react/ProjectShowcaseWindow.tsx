@@ -17,7 +17,7 @@ export default function ProjectShowcaseWindow({
   imageWidth,
   imageHeight,
   alt,
-  sizes = '(min-width: 1280px) 62vw, (min-width: 1024px) 58vw, 100vw',
+  sizes = '(min-width: 1280px) 58vw, (min-width: 1024px) 56vw, 100vw',
 }: Props) {
   return (
     <figure className="project-showcase-window">

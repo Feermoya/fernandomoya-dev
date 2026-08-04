@@ -11,17 +11,30 @@ export type FeaturedProjectData = {
   number: string;
   client: string;
   listLabel: string;
-  typeLine: string;
-  phrase: string;
+
+  category: string;
+  headline: string;
+  summary: string;
+
+  challengeLabel: string;
+  challenge: string;
+
+  solutionLabel: string;
+  solution: string;
+
+  highlights: string[];
+
   domain: string;
   live: string;
   caseUrl: string;
+
   coverSrc: string;
   coverSrcSet?: string;
   coverWidth: number;
   coverHeight: number;
   alt: string;
-  theme: 'avellaneda' | 'hema' | 'giacomelli' | 'poletino' | 'mendoza';
+
+  theme: 'avellaneda' | 'mendoza' | 'giacomelli' | 'hema';
   mediaPosition: 'left' | 'right';
 };
 
@@ -59,21 +72,53 @@ export default function FeaturedProject({ project }: Props) {
     }
 
     gsap.set(number, { opacity: 0 });
-    gsap.set(copyTargets, { opacity: 0, y: 20 });
-    gsap.set(reveal, { clipPath: 'inset(100% 0% 0% 0%)' });
-    gsap.set(scale, { scale: 1.035 });
+    gsap.set(copyTargets, { opacity: 0, y: 18 });
+    gsap.set(reveal, { clipPath: 'inset(8% 0% 8% 0%)', opacity: 0 });
+    gsap.set(scale, { scale: 1.025 });
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
         trigger: root,
-        start: 'top 80%',
+        start: 'top 78%',
         once: true,
         onEnter: () => {
-          const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-          tl.to(number, { opacity: 1, duration: 0.55 })
-            .to(copyTargets, { opacity: 1, y: 0, duration: 0.62, stagger: 0.07 }, '-=0.38')
-            .to(reveal, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.72 }, '-=0.42')
-            .to(scale, { scale: 1, duration: 0.72 }, '<');
+          const tl = gsap.timeline({
+            defaults: {
+              ease: 'power3.out',
+            },
+          });
+
+          tl.to(number, {
+            opacity: 1,
+            duration: 0.4,
+          })
+            .to(
+              copyTargets,
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.55,
+                stagger: 0.065,
+              },
+              '-=0.25',
+            )
+            .to(
+              reveal,
+              {
+                clipPath: 'inset(0% 0% 0% 0%)',
+                opacity: 1,
+                duration: 0.75,
+              },
+              '-=0.65',
+            )
+            .to(
+              scale,
+              {
+                scale: 1,
+                duration: 0.75,
+              },
+              '<',
+            );
         },
       });
     }, root);
@@ -92,31 +137,62 @@ export default function FeaturedProject({ project }: Props) {
       <div className="featured-project__inner container-page">
         <div className="featured-project__grid">
           <div ref={copyItemsRef} className="featured-project__copy">
-            <span ref={numberRef} className="featured-project__number" aria-hidden="true">
-              {project.number}
-            </span>
+            <div className="featured-project__topline" data-featured-copy>
+              <span ref={numberRef} className="featured-project__number" aria-hidden="true">
+                {project.number}
+              </span>
+              <span className="featured-project__category">{project.category}</span>
+            </div>
+
             <h3 id={`featured-project-${project.id}`} className="featured-project__name" data-featured-copy>
               {project.listLabel}
             </h3>
-            <p className="featured-project__phrase" data-featured-copy>
-              {project.phrase}
+
+            <p className="featured-project__headline" data-featured-copy>
+              {project.headline}
             </p>
-            <p className="featured-project__type" data-featured-copy>
-              {project.typeLine}
+
+            <p className="featured-project__summary" data-featured-copy>
+              {project.summary}
             </p>
+
+            <div className="featured-project__details" data-featured-copy>
+              <div className="featured-project__detail">
+                <span className="featured-project__detail-label">{project.challengeLabel}</span>
+                <p>{project.challenge}</p>
+              </div>
+
+              <div className="featured-project__detail">
+                <span className="featured-project__detail-label">{project.solutionLabel}</span>
+                <p>{project.solution}</p>
+              </div>
+            </div>
+
+            <ul
+              className="featured-project__highlights"
+              aria-label={`Características del proyecto ${project.client}`}
+              data-featured-copy
+            >
+              {project.highlights.map((highlight) => (
+                <li key={highlight}>{highlight}</li>
+              ))}
+            </ul>
+
             <div className="featured-project__links" data-featured-copy>
               <a href={project.caseUrl} className="featured-project__cta">
-                Ver caso
+                Ver caso completo
+                <span aria-hidden="true">→</span>
               </a>
+
               <a
                 href={project.live}
-                className="featured-project__cta featured-project__cta--secondary"
+                className="featured-project__site-link"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Visitar sitio <span aria-hidden="true">↗</span>
+                Visitar sitio
+                <span aria-hidden="true">↗</span>
               </a>
-              <span className="featured-project__domain">{project.domain}</span>
             </div>
           </div>
 

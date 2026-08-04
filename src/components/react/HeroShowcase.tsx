@@ -15,7 +15,11 @@ type Props = {
   projects: HeroProject[];
 };
 
-const TITLE_LINES = ['Hagamos algo', 'difícil de ignorar.'] as const;
+const TITLE_LINES = [
+  'Diseño webs que',
+  'hacen ver mejor',
+  'a tu negocio.',
+] as const;
 
 function isMobileViewport(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
@@ -30,6 +34,7 @@ export default function HeroShowcase({ projects }: Props) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const leadRef = useRef<HTMLParagraphElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const metaRef = useRef<HTMLDivElement>(null);
   const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
   const parallaxRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -47,9 +52,10 @@ export default function HeroShowcase({ projects }: Props) {
     const eyebrow = eyebrowRef.current;
     const lead = leadRef.current;
     const actions = actionsRef.current;
+    const meta = metaRef.current;
 
     if (reduceMotion) {
-      gsap.set([copy, stage, eyebrow, ...titleLineEls, lead, actions, ...slots], {
+      gsap.set([copy, stage, eyebrow, ...titleLineEls, lead, actions, meta, ...slots], {
         clearProps: 'all',
         opacity: 1,
         y: 0,
@@ -71,42 +77,44 @@ export default function HeroShowcase({ projects }: Props) {
 
     const ctx = gsap.context(() => {
       gsap.set(copy, { opacity: 1 });
-      gsap.set(stage, { opacity: 1 });
 
       if (skipEntrance) {
-        gsap.set([eyebrow, ...titleLineEls, lead, actions, ...slots], {
+        gsap.set([stage, eyebrow, ...titleLineEls, lead, actions, meta, ...slots], {
           opacity: 1,
           y: 0,
           scale: 1,
         });
       } else {
-        gsap.set([eyebrow, titleLineEls, lead, actions], { opacity: 0, y: 18 });
-        gsap.set(centerSlot, { opacity: 0, y: 56, scale: 0.94 });
-        gsap.set(sideSlots, { opacity: 0, y: 40, scale: 0.96 });
+        gsap.set(stage, { opacity: 0, scale: 0.97 });
+        gsap.set([eyebrow, titleLineEls, lead, actions, meta], { opacity: 0, y: 16 });
+        gsap.set(centerSlot, { opacity: 0, y: 48, scale: 0.94 });
+        gsap.set(sideSlots, { opacity: 0, y: 36, scale: 0.96 });
 
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-        tl.to(centerSlot, { opacity: 1, y: 0, scale: 1, duration: 0.42 }, 0)
-          .to(sideSlots, { opacity: 1, y: 0, scale: 1, duration: 0.32, stagger: 0.08 }, 0.14)
-          .to(eyebrow, { opacity: 1, y: 0, duration: 0.24 }, 0.36)
-          .to(titleLineEls, { opacity: 1, y: 0, duration: 0.28, stagger: 0.06 }, 0.46)
-          .to(lead, { opacity: 1, y: 0, duration: 0.24 }, 0.68)
-          .to(actions, { opacity: 1, y: 0, duration: 0.24 }, 0.76);
+        tl.to(stage, { opacity: 1, scale: 1, duration: 0.4 }, 0)
+          .to(centerSlot, { opacity: 1, y: 0, scale: 1, duration: 0.5 }, 0.12)
+          .to(sideSlots, { opacity: 1, y: 0, scale: 1, duration: 0.4, stagger: 0.08 }, 0.28)
+          .to(eyebrow, { opacity: 1, y: 0, duration: 0.32 }, 0.42)
+          .to(titleLineEls, { opacity: 1, y: 0, duration: 0.4, stagger: 0.06 }, 0.52)
+          .to(lead, { opacity: 1, y: 0, duration: 0.35 }, 0.78)
+          .to(actions, { opacity: 1, y: 0, duration: 0.32 }, 0.9)
+          .to(meta, { opacity: 1, y: 0, duration: 0.3 }, 1.0);
       }
 
       if (!mobile) {
         ScrollTrigger.create({
           trigger: section,
           start: 'top top',
-          end: 'bottom top+=120',
-          scrub: 0.45,
+          end: 'bottom top+=140',
+          scrub: 0.55,
           onUpdate: (self) => {
             const p = self.progress;
-            gsap.set(stage, { y: -p * 28 });
-            gsap.set(copy, { opacity: 1 - p * 0.28 });
+            gsap.set(stage, { y: -p * 20 });
+            gsap.set(copy, { opacity: Math.max(0.8, 1 - p * 0.2) });
             slots.forEach((slot, index) => {
-              const spread = (index - 1) * p * 10;
-              gsap.set(slot, { x: spread, y: -p * (6 + index * 2) });
+              const spread = (index - 1) * p * 8;
+              gsap.set(slot, { x: spread, y: -p * Math.min(10, 6 + index * 2) });
             });
           },
         });
@@ -123,8 +131,8 @@ export default function HeroShowcase({ projects }: Props) {
     const parallaxLayers = parallaxRefs.current.filter(Boolean) as HTMLDivElement[];
     if (parallaxLayers.length === 0) return;
 
-    const maxShift = [10, 14, 12];
-    const maxRotate = [0.6, 1.1, 0.9];
+    const maxShift = [6, 10, 8];
+    const maxRotate = [0.35, 0.7, 0.55];
 
     let targetX = 0;
     let targetY = 0;
@@ -193,29 +201,47 @@ export default function HeroShowcase({ projects }: Props) {
       <div className="container-page hero-editorial__inner">
         <div ref={copyRef} className="hero-editorial__copy">
           <p ref={eyebrowRef} className="hero-editorial__eyebrow">
-            FERNANDO MOYA — DISEÑO + DESARROLLO WEB
+            DISEÑO + DESARROLLO WEB · MENDOZA
           </p>
           <h1 ref={titleRef} id="hero-heading" className="hero-editorial__title">
-            {TITLE_LINES.map((line) => (
-              <span key={line} className="hero-editorial__title-line">
+            {TITLE_LINES.map((line, index) => (
+              <span
+                key={line}
+                className={`hero-editorial__title-line ${
+                  index === 1 ? 'hero-editorial__title-line--accent' : ''
+                }`}
+              >
                 {line}
               </span>
             ))}
           </h1>
           <p ref={leadRef} className="hero-editorial__lead">
-            Diseño y desarrollo webs con identidad propia.
+            Creo sitios claros, rápidos y fáciles de usar para empresas, profesionales y marcas que
+            necesitan mostrarse mejor.
           </p>
           <div ref={actionsRef} className="hero-editorial__actions">
             <a href="#proyectos" className="hero-editorial__cta hero-editorial__cta--primary">
               Ver proyectos
             </a>
             <a href="#contacto" className="hero-editorial__cta hero-editorial__cta--secondary">
-              Hablemos
+              Contame tu idea
             </a>
+          </div>
+          <div ref={metaRef} className="hero-editorial__meta">
+            <span className="hero-editorial__status-dot" aria-hidden="true" />
+            <span>Disponible para nuevos proyectos</span>
+            <span className="hero-editorial__meta-separator" aria-hidden="true">
+              ·
+            </span>
+            <span>Mendoza, Argentina</span>
           </div>
         </div>
 
-        <div ref={stageRef} className="hero-editorial__stage" aria-hidden="false">
+        <div
+          ref={stageRef}
+          className="hero-editorial__stage"
+          aria-label="Selección de proyectos web realizados"
+        >
           {projects.map((project, index) => (
             <div
               key={project.name}

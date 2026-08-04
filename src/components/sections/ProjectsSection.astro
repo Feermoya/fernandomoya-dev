@@ -19,43 +19,111 @@ const SELECTED_IDS = [
 
 const FEATURED_COPY: Record<
   (typeof SELECTED_IDS)[number],
-  {
-    number: string;
-    typeLine: string;
-    phrase: string;
-    theme: FeaturedProjectData['theme'];
-    mediaPosition: 'left' | 'right';
-    alt?: string;
-  }
+  Omit<
+    FeaturedProjectData,
+    | 'id'
+    | 'client'
+    | 'listLabel'
+    | 'domain'
+    | 'live'
+    | 'caseUrl'
+    | 'coverSrc'
+    | 'coverSrcSet'
+    | 'coverWidth'
+    | 'coverHeight'
+  >
 > = {
   'avellaneda-automotores': {
     number: '01',
-    typeLine: 'Catálogo web administrable',
-    phrase: 'Un catálogo que acompaña el movimiento real de una agencia de autos.',
+    category: 'Catálogo web administrable',
+    headline: 'Una concesionaria que puede actualizar su stock todos los días.',
+    summary:
+      'Diseño y desarrollo de un catálogo online preparado para publicar, editar, reservar y vender vehículos de manera constante.',
+    challengeLabel: 'El desafío',
+    challenge:
+      'Mostrar un stock cambiante de autos y motos sin depender de publicaciones aisladas o catálogos desactualizados.',
+    solutionLabel: 'La solución',
+    solution:
+      'Una plataforma administrable con catálogo, fichas individuales, filtros, consultas por WhatsApp y herramientas comerciales para cada vehículo.',
+    highlights: [
+      'Stock administrable',
+      'Fichas de vehículos',
+      'Autos y motos',
+      'Consultas por WhatsApp',
+      'SEO local',
+    ],
     theme: 'avellaneda',
     mediaPosition: 'right',
-    alt: 'Catálogo web de Avellaneda Automotores con fichas individuales de vehículos',
+    alt: 'Catálogo web administrable de Avellaneda Automotores con fichas individuales de vehículos',
   },
   'mendoza-insights': {
     number: '02',
-    typeLine: 'Producto digital inmobiliario',
-    phrase: 'Datos complejos, presentados con claridad.',
+    category: 'Producto digital inmobiliario',
+    headline: 'Datos inmobiliarios complejos convertidos en información clara.',
+    summary:
+      'Diseño de una plataforma que presenta indicadores, valuaciones y análisis de mercado inmobiliario de Mendoza.',
+    challengeLabel: 'El desafío',
+    challenge:
+      'Comunicar un producto técnico basado en datos sin que la información resulte confusa, fría o difícil de interpretar.',
+    solutionLabel: 'La solución',
+    solution:
+      'Una interfaz editorial y financiera que organiza indicadores, zonas, tendencias y productos digitales mediante una jerarquía visual clara.',
+    highlights: [
+      'Indicadores inmobiliarios',
+      'Análisis por zonas',
+      'Visualización de datos',
+      'Productos digitales',
+      'Diseño responsive',
+    ],
     theme: 'mendoza',
     mediaPosition: 'left',
+    alt: 'Plataforma Mendoza Insights con indicadores y análisis del mercado inmobiliario',
   },
   'giacomelli-seguros': {
     number: '03',
-    typeLine: 'Seguros · Sitio institucional',
-    phrase: 'Una empresa familiar, llevada al presente.',
+    category: 'Sitio institucional para seguros',
+    headline: 'Una empresa familiar presentada con más claridad y confianza.',
+    summary:
+      'Rediseño de la presencia digital de una productora de seguros, orientado a explicar servicios y generar consultas.',
+    challengeLabel: 'El desafío',
+    challenge:
+      'Ordenar una oferta amplia de seguros y transmitir cercanía, respaldo profesional y atención personalizada.',
+    solutionLabel: 'La solución',
+    solution:
+      'Un sitio institucional rápido y accesible, con servicios organizados, llamados a la acción claros y contacto directo por WhatsApp.',
+    highlights: [
+      'Sitio institucional',
+      'Servicios organizados',
+      'SEO local',
+      'Meta Pixel',
+      'Contacto directo',
+    ],
     theme: 'giacomelli',
     mediaPosition: 'right',
+    alt: 'Sitio institucional de Giacomelli Seguros con sus servicios y vías de contacto',
   },
   hema: {
     number: '04',
-    typeLine: 'Laboratorio genético · Sitio institucional',
-    phrase: 'Complejidad médica, explicada con claridad.',
+    category: 'Sitio institucional médico',
+    headline: 'Información médica compleja explicada de una forma más humana.',
+    summary:
+      'Diseño y desarrollo de una experiencia digital para comunicar estudios genéticos, servicios médicos y contenidos de prevención.',
+    challengeLabel: 'El desafío',
+    challenge:
+      'Presentar servicios médicos y genéticos complejos de manera comprensible, profesional y cercana para pacientes.',
+    solutionLabel: 'La solución',
+    solution:
+      'Una interfaz accesible con jerarquía clara, contenido educativo, páginas especializadas y recorridos orientados a la consulta.',
+    highlights: [
+      'Información médica',
+      'Estudios genéticos',
+      'Contenido educativo',
+      'Diseño accesible',
+      'SEO especializado',
+    ],
     theme: 'hema',
     mediaPosition: 'left',
+    alt: 'Sitio web de HEMA con información sobre estudios genéticos y servicios médicos',
   },
 };
 
@@ -76,8 +144,8 @@ async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<Featur
 
   const optimized = await getImage({
     src: cover,
-    widths: [640, 960, 1280],
-    sizes: '(min-width: 1280px) 62vw, (min-width: 1024px) 58vw, 100vw',
+    widths: [640, 960, 1280, 1600],
+    sizes: '(min-width: 1280px) 58vw, (min-width: 1024px) 56vw, 100vw',
     format: 'webp',
   });
   const client = entry.data.client ?? entry.data.title;
@@ -89,8 +157,14 @@ async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<Featur
     number: copy.number,
     client,
     listLabel,
-    typeLine: copy.typeLine,
-    phrase: copy.phrase,
+    category: copy.category,
+    headline: copy.headline,
+    summary: copy.summary,
+    challengeLabel: copy.challengeLabel,
+    challenge: copy.challenge,
+    solutionLabel: copy.solutionLabel,
+    solution: copy.solution,
+    highlights: copy.highlights,
     domain: domainFromLive(live),
     live,
     caseUrl: `/proyectos/${id}`,
@@ -98,7 +172,7 @@ async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<Featur
     coverSrcSet: optimized.srcSet.attribute,
     coverWidth: optimized.attributes.width ?? 1280,
     coverHeight: optimized.attributes.height ?? 800,
-    alt: copy.alt ?? `Captura del sitio web de ${client}`,
+    alt: copy.alt,
     theme: copy.theme,
     mediaPosition: copy.mediaPosition,
   };
@@ -121,15 +195,23 @@ const archive: ArchiveProjectData[] = archiveSource.map((entry, index) => ({
 
 <section id="proyectos" class="projects-editorial" aria-labelledby="projects-heading">
   <div class="projects-editorial__intro container-page">
-    <p class="projects-editorial__eyebrow">TRABAJO SELECCIONADO</p>
-    <h2 id="projects-heading" class="projects-editorial__title">
-      No hago webs<br aria-hidden="true" />
-      para llenar espacio.
-    </h2>
-    <p class="projects-editorial__lead">
-      Cada proyecto parte de un problema distinto.<br aria-hidden="true" />
-      La solución también debería serlo.
-    </p>
+    <div class="projects-editorial__intro-grid">
+      <div>
+        <p class="projects-editorial__eyebrow">PROYECTOS SELECCIONADOS</p>
+        <h2 id="projects-heading" class="projects-editorial__title">
+          No muestro solamente
+          <span>cómo se ven.</span>
+        </h2>
+      </div>
+
+      <div class="projects-editorial__intro-copy">
+        <p class="projects-editorial__lead">
+          Cada proyecto parte de una necesidad real del negocio. El diseño, la tecnología y el
+          contenido se organizan alrededor de ese problema.
+        </p>
+        <p class="projects-editorial__count">04 casos seleccionados</p>
+      </div>
+    </div>
   </div>
 
   <FeaturedProjects client:visible featured={featured} archive={archive} />

@@ -4,8 +4,8 @@
   "description": "Diseño web, desarrollo e identidad digital.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d0f14",
-  "theme_color": "#0d0f14",
+  "background_color": "#F4F1EB",
+  "theme_color": "#F4F1EB",
   "icons": [
     {
       "src": "/icon-192.png",
