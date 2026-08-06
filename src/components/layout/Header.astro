@@ -2,10 +2,15 @@
 import SiteHeader from '@/components/react/SiteHeader';
 import { site } from '@/data/site';
 
+const isHome = Astro.url.pathname === '/';
+
+function sectionHref(id: string): string {
+  return isHome ? `#${id}` : `/#${id}`;
+}
+
 const links = [
-  { href: '#proyectos', label: 'Proyectos' },
-  { href: '#proceso', label: 'Cómo trabajo' },
-  { href: '#sobre-mi', label: 'Sobre mí' },
+  { href: sectionHref('proyectos'), label: 'Proyectos' },
+  { href: sectionHref('sobre-mi'), label: 'Sobre mí' },
 ] as const;
 ---
 
@@ -13,6 +18,7 @@ const links = [
   client:idle
   siteName={site.name}
   links={links}
-  ctaHref="#contacto"
+  logoHref={isHome ? '#inicio' : '/'}
+  ctaHref={sectionHref('contacto')}
   ctaLabel="Contame tu idea"
 />

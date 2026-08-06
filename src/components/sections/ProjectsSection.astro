@@ -38,15 +38,6 @@ const FEATURED_COPY: Record<
     headline: 'Un catálogo preparado para vender todos los días.',
     summary:
       'Diseño y desarrollo de un catálogo online preparado para publicar, editar, reservar y vender vehículos de manera constante.',
-    result:
-      'Armamos un catálogo que ellos mismos actualizan todos los días: suben un auto, sale publicado, y el cliente ya puede consultar por WhatsApp desde la ficha.',
-    highlights: [
-      'Stock administrable',
-      'Fichas de vehículos',
-      'Autos y motos',
-      'Consultas por WhatsApp',
-      'SEO local',
-    ],
     theme: 'avellaneda',
     mediaPosition: 'right',
     alt: 'Catálogo web administrable de Avellaneda Automotores con fichas individuales de vehículos',
@@ -57,15 +48,6 @@ const FEATURED_COPY: Record<
     headline: 'Datos inmobiliarios que se pueden entender.',
     summary:
       'Diseño de una plataforma que presenta indicadores, valuaciones y análisis de mercado inmobiliario de Mendoza.',
-    result:
-      'La interfaz ordena todo ese volumen de datos como si fuera una nota de diario: primero lo importante, después el detalle para el que quiera meterse más a fondo.',
-    highlights: [
-      'Indicadores inmobiliarios',
-      'Análisis por zonas',
-      'Visualización de datos',
-      'Productos digitales',
-      'Diseño responsive',
-    ],
     theme: 'mendoza',
     mediaPosition: 'left',
     alt: 'Plataforma Mendoza Insights con indicadores y análisis del mercado inmobiliario',
@@ -76,15 +58,6 @@ const FEATURED_COPY: Record<
     headline: 'Seguros explicados con claridad.',
     summary:
       'Rediseño de la presencia digital de una productora de seguros, orientado a explicar servicios y generar consultas.',
-    result:
-      'Ordenamos los seguros por necesidades concretas y dejamos accesos directos para que una persona pueda entender qué cobertura necesita y consultar sin dar vueltas.',
-    highlights: [
-      'Sitio institucional',
-      'Servicios organizados',
-      'SEO local',
-      'Meta Pixel',
-      'Contacto directo',
-    ],
     theme: 'giacomelli',
     mediaPosition: 'right',
     alt: 'Sitio institucional de Giacomelli Seguros con sus servicios y vías de contacto',
@@ -95,15 +68,6 @@ const FEATURED_COPY: Record<
     headline: 'Información médica más fácil de comprender.',
     summary:
       'Diseño y desarrollo de una experiencia digital para comunicar estudios genéticos, servicios médicos y contenidos de prevención.',
-    result:
-      'Separamos la información médica por temas y recorridos claros, para que cada paciente pueda entender qué estudio necesita antes de ponerse en contacto.',
-    highlights: [
-      'Información médica',
-      'Estudios genéticos',
-      'Contenido educativo',
-      'Diseño accesible',
-      'SEO especializado',
-    ],
     theme: 'hema',
     mediaPosition: 'left',
     alt: 'Sitio web de HEMA con información sobre estudios genéticos y servicios médicos',
@@ -144,8 +108,6 @@ async function toFeaturedData(id: (typeof SELECTED_IDS)[number]): Promise<Featur
     category: copy.category,
     headline: copy.headline,
     summary: copy.summary,
-    result: copy.result,
-    highlights: copy.highlights,
     domain: domainFromLive(live),
     live,
     caseUrl: `/proyectos/${id}`,

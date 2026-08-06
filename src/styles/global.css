@@ -39,7 +39,7 @@
     scroll-behavior: smooth;
     background-color: var(--fm-bg-base);
     color: var(--fm-text-primary);
-    scrollbar-color: #bdb7ad #f4f1eb;
+    scrollbar-color: #bdb7ad #f1efeb;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -68,7 +68,6 @@
 
   #inicio,
   #proyectos,
-  #proceso,
   #piezas-marca,
   #sobre-mi,
   #contacto,
@@ -137,7 +136,7 @@
   }
 
   ::selection {
-    background: var(--fm-accent-soft);
+    background: rgba(255, 90, 47, 0.18);
     color: var(--fm-text-primary);
   }
 
@@ -521,16 +520,14 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    min-height: 3.75rem;
-    padding: 0.45rem 0.55rem 0.45rem 1rem;
-    border: 1px solid rgba(17, 17, 17, 0.08);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.78);
-    box-shadow:
-      0 1px 2px rgba(17, 17, 17, 0.04),
-      0 12px 32px rgba(17, 17, 17, 0.06);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    min-height: 3.5rem;
+    padding: 0.35rem 0.4rem 0.35rem 1rem;
+    border: 1px solid rgba(8, 8, 8, 0.1);
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: var(--shadow-header);
+    backdrop-filter: blur(var(--fm-header-blur));
+    -webkit-backdrop-filter: blur(var(--fm-header-blur));
     transition:
       background-color 180ms ease,
       border-color 180ms ease,
@@ -540,10 +537,8 @@
 
   .site-header-bar[data-scrolled='true'] {
     background: rgba(255, 255, 255, 0.94);
-    border-color: rgba(17, 17, 17, 0.12);
-    box-shadow:
-      0 2px 4px rgba(17, 17, 17, 0.04),
-      0 16px 44px rgba(17, 17, 17, 0.1);
+    border-color: rgba(8, 8, 8, 0.14);
+    box-shadow: 0 10px 28px rgba(8, 8, 8, 0.09);
   }
 
   .site-header-logo {
@@ -603,7 +598,7 @@
     align-items: center;
     min-height: 2.5rem;
     padding-inline: 0.85rem;
-    border-radius: 999px;
+    border-radius: 0.55rem;
     color: var(--fm-text-secondary);
     font-family: var(--fm-font-body);
     font-size: 0.8125rem;
@@ -639,17 +634,17 @@
     justify-content: center;
     min-height: 2.75rem;
     padding-inline: 1.1rem;
-    border: 1px solid var(--fm-accent);
-    border-radius: 999px;
-    background: var(--fm-accent);
+    border: 1px solid var(--hero-dark, var(--fm-bg-dark));
+    border-radius: 0.65rem;
+    background: var(--hero-dark, var(--fm-bg-dark));
     color: var(--fm-text-on-accent);
     font-family: var(--fm-font-body);
     font-size: 0.8125rem;
-    font-weight: 600;
+    font-weight: 650;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
-    box-shadow: 0 8px 18px rgba(237, 90, 54, 0.2);
+    box-shadow: none;
     transition:
       background-color 160ms ease,
       border-color 160ms ease,
@@ -658,9 +653,9 @@
   }
 
   .site-header-cta:hover {
-    background: var(--fm-accent-hover);
-    border-color: var(--fm-accent-hover);
-    box-shadow: 0 10px 24px rgba(237, 90, 54, 0.27);
+    background: var(--fm-accent);
+    border-color: var(--fm-accent);
+    box-shadow: none;
     transform: translateY(-1px);
   }
 
@@ -691,7 +686,7 @@
     min-height: 2.75rem;
     padding-inline: 0.75rem;
     border: 1px solid var(--fm-border-light);
-    border-radius: 999px;
+    border-radius: 0.65rem;
     background: var(--fm-bg-surface);
     color: var(--fm-text-primary);
     font-family: var(--fm-font-body);
@@ -905,7 +900,7 @@
       0 4px 6px rgba(0, 0, 0, 0.35);
   }
 
-  /** Fondo shell — atmósfera clara editorial */
+  /** Fondo shell — neutro técnico */
   .ambient-backdrop {
     position: fixed;
     inset: 0;
@@ -915,19 +910,19 @@
     background:
       radial-gradient(
         circle at 82% 12%,
-        rgba(237, 90, 54, 0.08),
+        rgba(255, 255, 255, 0.55),
         transparent 34rem
       ),
       radial-gradient(
         circle at 10% 42%,
-        rgba(255, 255, 255, 0.78),
+        rgba(255, 255, 255, 0.4),
         transparent 30rem
       ),
       linear-gradient(
         180deg,
-        #f7f4ee 0%,
-        #f4f1eb 45%,
-        #f1ede6 100%
+        #f3f1ed 0%,
+        #f1efeb 45%,
+        #efede8 100%
       );
   }
 
@@ -1163,8 +1158,8 @@
     margin-top: 1rem;
     height: 1px;
     width: 2.5rem;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--fm-accent), var(--fm-accent-soft));
+    border-radius: 0;
+    background: var(--fm-accent);
   }
 
   /** Hero — hover por palabra en el título estático */

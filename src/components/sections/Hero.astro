@@ -1,74 +1,147 @@
 ---
 import '@/styles/hero.css';
 import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import HeroShowcase from '@/components/react/HeroShowcase';
-import type { HeroProject } from '@/components/react/HeroShowcase';
+import type { HeroCarouselProject } from '@/types/hero-carousel';
+import { isCaseStudyId } from '@/data/case-studies';
 
 import hemaCover from '@/assets/case-studies/hema.webp';
+import avellanedaCover from '@/assets/case-studies/avellaneda.webp';
+import mendozaCover from '@/assets/projects/mendoza-insights-home.webp';
 import giacomelliCover from '@/assets/projects/giacomelli.webp';
 import poletinoCover from '@/assets/projects/poletino.webp';
+import patriciaCover from '@/assets/projects/patricia.webp';
+import pasoChileCover from '@/assets/projects/pasoChile.webp';
+import sanacionCover from '@/assets/projects/sanacion.webp';
 
-const heroSizes = '(min-width: 1280px) 34rem, (min-width: 1024px) 42vw, 88vw';
-const heroWidths = [400, 640, 800, 1000];
+/* Las capturas solo se muestran desde 768px: por debajo el hero cierra con la tira de dominios. */
+const heroCarouselWidths = [640, 800, 1000, 1200];
+const heroSizes = '(min-width: 1024px) 16.75rem, min(20rem, 48vw)';
 
-const hemaImage = await getImage({
-  src: hemaCover,
-  widths: heroWidths,
-  sizes: heroSizes,
-  format: 'webp',
-  quality: 80,
-});
-const giacomelliImage = await getImage({
-  src: giacomelliCover,
-  widths: heroWidths,
-  sizes: heroSizes,
-  format: 'webp',
-  quality: 78,
-});
-const poletinoImage = await getImage({
-  src: poletinoCover,
-  widths: heroWidths,
-  sizes: heroSizes,
-  format: 'webp',
-  quality: 78,
-});
+type ProjectSeed = {
+  id: string;
+  name: string;
+  domain: string;
+  live: string;
+  cover: ImageMetadata;
+  alt: string;
+  fit?: 'cover' | 'contain';
+  position?: string;
+};
 
-const projects: HeroProject[] = [
+const seeds: ProjectSeed[] = [
   {
+    id: 'hema',
     name: 'HEMA',
     domain: 'hema.com.ar',
-    imageSrc: hemaImage.src,
-    imageSrcSet: hemaImage.srcSet.attribute,
-    imageWidth: hemaImage.attributes.width ?? 800,
-    imageHeight: hemaImage.attributes.height ?? 500,
+    live: 'https://hema.com.ar/',
+    cover: hemaCover,
     alt: 'Captura del sitio web de HEMA, laboratorio de diagnóstico genético',
-    priority: true,
-    slotClass: 'hero-editorial__window-slot--hema',
-    depth: 0,
+    fit: 'contain',
+    position: 'center',
   },
   {
-    name: 'Giacomelli',
+    id: 'avellaneda-automotores',
+    name: 'Avellaneda Automotores',
+    domain: 'avellanedaautomotores.com.ar',
+    live: 'https://avellanedaautomotores.com.ar/',
+    cover: avellanedaCover,
+    alt: 'Catálogo web de Avellaneda Automotores con fichas de vehículos',
+    fit: 'contain',
+    position: 'center',
+  },
+  {
+    id: 'mendoza-insights',
+    name: 'Mendoza Insights',
+    domain: 'mendozainsights.com.ar',
+    live: 'https://www.mendozainsights.com.ar/',
+    cover: mendozaCover,
+    alt: 'Plataforma Mendoza Insights con indicadores inmobiliarios',
+    fit: 'cover',
+    position: 'top center',
+  },
+  {
+    id: 'giacomelli-seguros',
+    name: 'Giacomelli Seguros',
     domain: 'giacomelliseguros.com',
-    imageSrc: giacomelliImage.src,
-    imageSrcSet: giacomelliImage.srcSet.attribute,
-    imageWidth: giacomelliImage.attributes.width ?? 800,
-    imageHeight: giacomelliImage.attributes.height ?? 500,
-    alt: 'Captura del sitio web de Giacomelli Seguros, productor de seguros en Mendoza',
-    slotClass: 'hero-editorial__window-slot--giacomelli',
-    depth: 2,
+    live: 'https://giacomelliseguros.com/',
+    cover: giacomelliCover,
+    alt: 'Sitio institucional de Giacomelli Seguros',
+    fit: 'cover',
+    position: 'top center',
   },
   {
+    id: 'poletino-servicios',
     name: 'Poletino',
     domain: 'poletinosg.com.ar',
-    imageSrc: poletinoImage.src,
-    imageSrcSet: poletinoImage.srcSet.attribute,
-    imageWidth: poletinoImage.attributes.width ?? 800,
-    imageHeight: poletinoImage.attributes.height ?? 500,
-    alt: 'Captura del sitio web de Poletino Servicios, alquiler de hidrogrúas y transporte',
-    slotClass: 'hero-editorial__window-slot--poletino',
-    depth: 1,
+    live: 'https://www.poletinosg.com.ar/',
+    cover: poletinoCover,
+    alt: 'Sitio web de Poletino Servicios, hidrogrúas y transporte',
+    fit: 'cover',
+    position: 'top center',
+  },
+  {
+    id: 'patricia-moya',
+    name: 'Patricia Moya',
+    domain: 'soypatriciamoya.com',
+    live: 'https://www.soypatriciamoya.com/',
+    cover: patriciaCover,
+    alt: 'Sitio web de la psicóloga Patricia Moya',
+    fit: 'cover',
+    position: 'top center',
+  },
+  {
+    id: 'paso-chile-hoy',
+    name: 'Paso Chile Hoy',
+    domain: 'pasochilehoy.com',
+    live: 'https://www.pasochilehoy.com/',
+    cover: pasoChileCover,
+    alt: 'Sitio de noticias Paso Chile Hoy',
+    fit: 'cover',
+    position: 'top center',
+  },
+  {
+    id: 'sanacion-en-movimiento',
+    name: 'Sanación en Movimiento',
+    domain: 'sanacionenmovimientooficial.com',
+    live: 'https://sanacionenmovimientooficial.com/',
+    cover: sanacionCover,
+    alt: 'Sitio web de Sanación en Movimiento',
+    fit: 'cover',
+    position: 'top center',
   },
 ];
+
+async function toCarouselProject(seed: ProjectSeed): Promise<HeroCarouselProject> {
+  const optimized = await getImage({
+    src: seed.cover,
+    widths: heroCarouselWidths,
+    sizes: heroSizes,
+    format: 'webp',
+    quality: 76,
+  });
+
+  const hasCase = isCaseStudyId(seed.id);
+
+  return {
+    id: seed.id,
+    name: seed.name,
+    domain: seed.domain,
+    href: hasCase ? `/proyectos/${seed.id}` : seed.live,
+    external: !hasCase,
+    imageSrc: optimized.src,
+    imageSrcSet: optimized.srcSet.attribute,
+    imageWidth: optimized.attributes.width ?? 800,
+    imageHeight: optimized.attributes.height ?? 500,
+    alt: seed.alt,
+    fit: seed.fit ?? 'cover',
+    position: seed.position ?? 'top center',
+  };
+}
+
+const projects = await Promise.all(seeds.map(toCarouselProject));
 ---
 
-<HeroShowcase client:idle projects={projects} />
+{/* Con timeout: si el navegador nunca reporta idle, las capturas igual montan. */}
+<HeroShowcase client:idle={{ timeout: 600 }} projects={projects} sizes={heroSizes} />

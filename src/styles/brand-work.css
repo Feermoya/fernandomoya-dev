@@ -29,20 +29,24 @@
 
 .brand-work__title {
   margin: 0;
-  max-width: 12ch;
+  max-width: 14ch;
   color: var(--fm-text-primary);
-  font-family: var(--fm-font-display);
-  font-size: clamp(3rem, 6vw, 5.5rem);
-  font-weight: 400;
+  font-family: var(--fm-font-body);
+  font-size: clamp(2.8rem, 5vw, 5rem);
+  font-weight: 650;
   line-height: 0.94;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.055em;
   text-wrap: balance;
 }
 
 .brand-work__title span {
   display: block;
-  color: var(--fm-accent);
-  font-style: italic;
+  margin-top: 0.25rem;
+  color: var(--fm-text-primary);
+  font-family: var(--fm-font-display);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.025em;
 }
 
 .brand-work__lead {
@@ -108,14 +112,13 @@
   position: absolute;
   left: 0.75rem;
   bottom: 0.75rem;
-  padding: 0.5rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.94);
   color: var(--fm-text-primary);
   font-size: 0.6875rem;
   font-weight: 600;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(8, 8, 8, 0.08);
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -6,8 +6,6 @@ export type FeaturedProjectData = {
   category: string;
   headline: string;
   summary: string;
-  result: string;
-  highlights: string[];
   domain: string;
   live: string;
   caseUrl: string;

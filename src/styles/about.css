@@ -2,7 +2,7 @@
 
 .about-section {
   padding-block: clamp(5rem, 10vw, 9rem);
-  background: var(--fm-bg-surface-raised);
+  background: var(--fm-bg-soft);
   color: var(--fm-text-primary);
   content-visibility: auto;
   contain-intrinsic-size: auto 700px;
@@ -32,20 +32,24 @@
 
 .about-section__title {
   margin: 1rem 0 0;
-  max-width: 12ch;
+  max-width: 14ch;
   color: var(--fm-text-primary);
-  font-family: var(--fm-font-display);
-  font-size: clamp(3rem, 5.5vw, 5rem);
-  font-weight: 400;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+  font-family: var(--fm-font-body);
+  font-size: clamp(2.8rem, 5vw, 5rem);
+  font-weight: 650;
+  line-height: 0.94;
+  letter-spacing: -0.055em;
   text-wrap: balance;
 }
 
 .about-section__title span {
   display: block;
-  color: var(--fm-accent);
-  font-style: italic;
+  margin-top: 0.25rem;
+  color: var(--fm-text-primary);
+  font-family: var(--fm-font-display);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.025em;
 }
 
 .about-section__body {
@@ -109,11 +113,11 @@
   justify-content: center;
   min-height: 3rem;
   padding-inline: 1.2rem;
-  border-radius: 999px;
+  border-radius: 0.75rem;
   background: var(--fm-text-primary);
   color: var(--fm-text-on-dark);
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 650;
   text-decoration: none;
   transition: background-color 180ms ease;
 }
@@ -159,16 +163,11 @@
 .about-section__photo::before {
   content: '';
   position: absolute;
-  inset: -5% 8% 5% -8%;
-  border-radius: 2.5rem;
-  background:
-    radial-gradient(
-      circle at 75% 20%,
-      rgba(237, 90, 54, 0.18),
-      transparent 48%
-    ),
-    var(--fm-bg-soft);
-  transform: rotate(-3deg);
+  inset: -4% 6% 4% -6%;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(8, 8, 8, 0.08);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.55), rgba(229, 226, 219, 0.5));
+  transform: rotate(-1.5deg);
 }
 
 .about-section__photo-frame {

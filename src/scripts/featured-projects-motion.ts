@@ -23,7 +23,6 @@ export function initFeaturedProjectsMotion() {
 
   articles.forEach((article) => {
     const copyTargets = article.querySelectorAll('[data-featured-copy]');
-    const chips = article.querySelectorAll('[data-featured-chip]');
     const media = article.querySelector('[data-featured-media]');
     const scale = article.querySelector('.featured-project__scale');
 
@@ -66,15 +65,6 @@ export function initFeaturedProjectsMotion() {
               duration: 0.55,
             },
             0.08,
-          );
-        }
-
-        if (chips.length > 0) {
-          tl.fromTo(
-            chips,
-            { opacity: 0.4 },
-            { opacity: 1, stagger: 0.03, duration: 0.28 },
-            0.22,
           );
         }
       },

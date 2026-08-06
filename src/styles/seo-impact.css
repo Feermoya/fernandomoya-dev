@@ -1,9 +1,9 @@
 /* ETAPA 4 — Resultados SEO (panel claro) */
 
 .seo-impact {
-  --seo-line-clicks: #ed5a36;
+  --seo-line-clicks: #ff5a2f;
   --seo-line-impressions: #8a7c6f;
-  --seo-grid-line: rgba(17, 17, 17, 0.08);
+  --seo-grid-line: rgba(8, 8, 8, 0.08);
   --seo-panel-text: var(--fm-text-primary);
   --seo-panel-muted: var(--fm-text-secondary);
   --seo-panel-border: var(--fm-border-light);
@@ -41,20 +41,24 @@
 
 .seo-impact__title {
   margin: 0;
-  max-width: 12ch;
+  max-width: 14ch;
   color: var(--fm-text-primary);
-  font-family: var(--fm-font-display);
-  font-size: clamp(3rem, 6vw, 5.75rem);
-  font-weight: 400;
-  line-height: 0.93;
-  letter-spacing: -0.045em;
+  font-family: var(--fm-font-body);
+  font-size: clamp(2.8rem, 5vw, 5rem);
+  font-weight: 650;
+  line-height: 0.94;
+  letter-spacing: -0.055em;
   text-wrap: balance;
 }
 
 .seo-impact__title span {
   display: block;
-  color: var(--fm-accent);
-  font-style: italic;
+  margin-top: 0.25rem;
+  color: var(--fm-text-primary);
+  font-family: var(--fm-font-display);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.025em;
 }
 
 .seo-impact__lead {
