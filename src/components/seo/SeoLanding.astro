@@ -285,14 +285,10 @@ const CheckIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18
     </section>
   </article>
 
-  <script type="application/ld+json" is:inline>
-    {JSON.stringify(breadcrumbSchema)}
-  </script>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
   {
     faqSchema ? (
-      <script type="application/ld+json" is:inline>
-        {JSON.stringify(faqSchema)}
-      </script>
+      <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
     ) : null
   }
 </Layout>
