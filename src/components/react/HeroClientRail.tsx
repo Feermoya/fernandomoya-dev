@@ -19,7 +19,7 @@ export default function HeroClientRail({ projects }: Props) {
             <a
               className="hero-rail__link"
               href={project.href}
-              aria-label={`${project.name} — ${project.domain}`}
+              aria-label={`${project.name}, ${project.domain}`}
               {...(project.external
                 ? { target: '_blank' as const, rel: 'noopener noreferrer' }
                 : {})}

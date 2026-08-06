@@ -21,7 +21,7 @@ links:
 
 Mendoza Insights necesitaba presentar un producto poco habitual para el mercado local: información inmobiliaria ordenada, índices, precios de referencia y análisis para tomar mejores decisiones. No es una inmobiliaria ni un portal de propiedades: es un producto digital de inteligencia inmobiliaria.
 
-El desafío fue transformar una propuesta compleja en una web clara, visual y fácil de recorrer. El sitio tenía que explicar datos sin hacerlo pesado, generar confianza y guiar hacia acciones concretas: comprar el índice, ver una muestra o consultar referencias del mercado.
+Había que presentar una propuesta compleja en una web clara, visual y fácil de recorrer. El sitio tenía que explicar datos sin hacerlo pesado, generar confianza y guiar hacia acciones concretas: comprar el índice, ver una muestra o consultar referencias del mercado.
 
 ## Objetivo
 

@@ -133,11 +133,11 @@ export default function HeroShowcase({ projects, sizes }: Props) {
             <span className="hero-editorial__title-line">que quieren&nbsp;crecer.</span>
           </h1>
           <p ref={statementRef} className="hero-editorial__statement">
-            Una web puede verse bien y seguir sin vender.
+            Tu web se ve bien y igual no vende.
           </p>
           <p ref={leadRef} className="hero-editorial__lead">
-            Diseño y desarrollo sitios para negocios que necesitan explicar mejor lo que hacen,
-            generar confianza y convertir visitas en consultas.
+            Diseño y desarrollo sitios para negocios que necesitan explicar qué hacen, generar
+            confianza y convertir visitas en consultas.
           </p>
           <div ref={actionsRef} className="hero-editorial__actions">
             <a href="#proyectos" className="hero-editorial__cta hero-editorial__cta--primary">

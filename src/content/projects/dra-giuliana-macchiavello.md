@@ -1,6 +1,6 @@
 ---
 title: Armonización orofacial
-description: Sitio web para la Dra. Giuliana Macchiavello, profesional especializada en armonización orofacial en Mendoza. La web organiza sus tratamientos, explica su criterio de trabajo y facilita la consulta por WhatsApp, con foco en resultados naturales y decisiones informadas.
+description: Sitio web para la Dra. Giuliana Macchiavello, profesional de armonización orofacial en Mendoza. Organiza tratamientos, explica su criterio de trabajo y facilita la consulta por WhatsApp, con foco en resultados naturales y decisiones informadas.
 publishDate: 2026-07-01
 kind: client
 projectType: Armonización orofacial · Sitio institucional
@@ -18,9 +18,9 @@ links:
 
 La Dra. Giuliana Macchiavello trabaja en armonización orofacial y odontología en Mendoza. Su público llega principalmente desde Instagram buscando información sobre tratamientos, resultados y formas de contacto.
 
-El desafío no era solamente mostrar procedimientos. En este tipo de servicio, antes de consultar aparecen dudas sobre la naturalidad del resultado, la seguridad, los tiempos y cuál es el tratamiento adecuado para cada rostro.
+Mostrar procedimientos no alcanzaba. Antes de consultar aparecen dudas sobre la naturalidad del resultado, la seguridad, los tiempos y cuál es el tratamiento adecuado para cada rostro.
 
-La web debía ordenar esa información y convertir el criterio profesional de Giuliana en el centro de la marca.
+La web debía ordenar esa información y poner el criterio profesional de Giuliana en el centro de la marca.
 
 ## Objetivo
 
@@ -34,7 +34,7 @@ La web debía ordenar esa información y convertir el criterio profesional de Gi
 
 ## Trabajo realizado
 
-La información se organizó alrededor de las necesidades de las pacientes y no como un listado técnico de procedimientos. Cada tratamiento explica qué aspecto permite trabajar, cómo se evalúa y por qué la indicación depende de cada caso.
+La información se organizó alrededor de las necesidades de las pacientes y no como un listado técnico de procedimientos. Cada tratamiento explica qué aspecto ayuda a trabajar, cómo se evalúa y por qué la indicación depende de cada caso.
 
 Se diseñaron secciones para presentar a la doctora, explicar su criterio profesional, recorrer los tratamientos, responder preguntas frecuentes y consultar directamente por WhatsApp.
 
@@ -44,12 +44,12 @@ El desarrollo priorizó velocidad de carga, adaptación a celulares, navegación
 
 La dirección visual combina fondos crema, blanco cálido, rosa empolvado y tonos neutros. El rosa se utiliza como acento para conservar una estética femenina sin convertir la web en algo infantil o excesivamente romántico.
 
-La composición utiliza espacios amplios, tipografía editorial y fotografías de evaluación profesional. Se buscó transmitir cercanía y cuidado, pero manteniendo la seriedad necesaria para un servicio médico.
+La composición utiliza espacios amplios, tipografía editorial y fotografías de evaluación profesional. Se buscó transmitir cercanía y cuidado, manteniendo la seriedad necesaria para un servicio médico.
 
 La jerarquía presenta primero el enfoque de la doctora, después las necesidades de la paciente y finalmente los tratamientos disponibles. De esta forma, la web vende confianza y criterio antes que procedimientos aislados.
 
 ## Resultado
 
-La web funciona como una extensión más clara y completa de su comunicación en redes. Una persona puede conocer a la doctora, entender qué tipo de resultados prioriza, explorar los tratamientos y resolver sus principales dudas antes de escribirle.
+La web funciona como una extensión más clara y completa de su comunicación en redes. Una persona conoce a la doctora, entiende qué tipo de resultados prioriza, explora los tratamientos y resuelve sus principales dudas antes de escribirle.
 
 El recorrido termina con una acción concreta: solicitar una evaluación o consultar disponibilidad por WhatsApp.

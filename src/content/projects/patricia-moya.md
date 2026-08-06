@@ -1,6 +1,6 @@
 ---
 title: Psicología profesional
-description: Sitio web para consulta psicológica en Mendoza, con atención presencial y online, pensado para que la persona entienda modalidades, enfoque y cómo pedir turno o escribir sin fricción. El foco estuvo en ordenar servicios, límites claros del espacio terapéutico y contacto por WhatsApp y correo.
+description: Sitio web para consulta psicológica en Mendoza, con atención presencial y online. La persona entiende modalidades, enfoque y cómo pedir turno o escribir sin fricción. El foco estuvo en ordenar servicios, el encuadre del espacio terapéutico y contacto por WhatsApp y correo.
 publishDate: 2024-09-01
 kind: client
 projectType: Sitio profesional
@@ -19,7 +19,7 @@ links:
 
 ## Contexto
 
-Patricia Moya ofrece acompañamiento psicológico y necesitaba un sitio que hable a personas que pueden estar en vulnerabilidad o inseguridad al buscar ayuda. La prioridad no era “vender un estilo”, sino ordenar qué ofrece, cómo es el trabajo terapéutico y por dónde iniciar contacto con respeto y claridad.
+Patricia Moya ofrece acompañamiento psicológico y necesitaba un sitio que hable a personas que llegan con inseguridad al buscar ayuda. La prioridad no era vender un estilo: era ordenar qué ofrece, cómo es el trabajo terapéutico y por dónde iniciar contacto con respeto y claridad.
 
 Quien entra suele preguntarse si encaja con la profesional, qué modalidades hay y cómo es el proceso para solicitar primera sesión o información. La web debía bajar la ansiedad del primer clic: textos legibles, secciones bien separadas y rutas cortas hacia WhatsApp o correo.
 
@@ -28,10 +28,10 @@ En conjunto, el proyecto buscaba equilibrio entre calidez humana y precisión en
 ## Objetivo
 
 - Presentar servicios y modalidades (presencial u online) de forma explícita.
-- Comunicar el encuadre del espacio terapéutico con claridad y límites entendibles.
+- Comunicar el encuadre del espacio terapéutico con claridad.
 - Facilitar solicitud de contacto o turno con mensajes armados desde el sitio.
 - Ofrecer rutas a información complementaria (por ejemplo cursos o contenidos) sin confundir al visitante nuevo.
-- Garantizar buena lectura en celular, donde muchas búsquedas empiezan.
+- Ofrecer buena lectura en celular, donde muchas búsquedas empiezan.
 
 ## Trabajo realizado
 
@@ -39,11 +39,13 @@ Se estructuró el contenido en bloques que siguen el viaje del visitante: quién
 
 El diseño responsive prioriza tipografía cómoda y espaciado amplio para lecturas sensibles. Los llamados a la acción están ubicados después de secciones que ya respondieron dudas básicas, para no presionar antes de tiempo.
 
-Las secciones de servicios y modalidades usan títulos directos; donde aplica, se enlaza a recursos adicionales sin mezclarlos con el flujo de primera consulta. El contacto queda visible para reducir fricción cuando la persona decide escribir.
+Las secciones de servicios y modalidades usan títulos directos. Donde aplica, se enlaza a recursos adicionales sin mezclarlos con el flujo de primera consulta. El contacto queda visible para reducir fricción cuando la persona decide escribir.
 
 ## Decisiones de diseño
 
-La jerarquía visual separa lo emocional —presentación humana del espacio— de lo operativo —cómo solicitar turno o información— para que no compitan. Se priorizó un tono sobrio y cercano, acorde al rubro de salud mental, evitando saturación de elementos decorativos.
+La jerarquía visual separa dos capas. De un lado, lo emocional: presentación humana del espacio. Del otro, lo operativo: cómo solicitar turno o información. Así no compiten entre sí.
+
+Se priorizó un tono sobrio y cercano, acorde al rubro de salud mental, evitando saturación de elementos decorativos.
 
 La navegación está pensada para pocas decisiones: leer, ubicarse y contactar. Los colores y el ritmo de la página buscan calma sin parecer distantes: la profesional tiene presencia, pero el foco sigue en la utilidad para quien busca ayuda.
 

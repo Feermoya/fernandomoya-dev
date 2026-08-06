@@ -27,7 +27,7 @@ const { theme, client, coverSrc, coverWidth, coverHeight, alt, frames } = Astro.
             <div class="cs-gallery__viewport" style={`aspect-ratio: ${frame.aspectRatio};`}>
               <img
                 src={coverSrc}
-                alt={`${alt} — ${frame.caption}`}
+                alt={`${alt}: ${frame.caption}`}
                 width={coverWidth}
                 height={coverHeight}
                 loading="lazy"

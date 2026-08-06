@@ -52,22 +52,22 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     theme: 'avellaneda',
     nextId: 'mendoza-insights',
     context: [
-      'Avellaneda Automotores es una agencia de compra y venta de autos usados en Guaymallén, Mendoza. Su stock cambia constantemente: ingresan vehículos, se actualizan precios, se modifican condiciones y se retiran unidades vendidas.',
-      'Una agencia no puede depender de publicaciones dispersas en redes sociales para mostrar su stock. Necesitaba un catálogo propio, actualizado y preparado para acompañar el movimiento real del negocio.',
-      'No hacía falta solo una web institucional. Hacía falta una herramienta comercial para publicar, administrar y vender vehículos sin rehacer el sitio cada vez que cambia el inventario.',
+      'Avellaneda Automotores es una agencia de compra y venta de autos usados en Guaymallén, Mendoza. Su stock cambia todo el tiempo: ingresan vehículos, se actualizan precios, se modifican condiciones y se retiran unidades vendidas.',
+      'Una agencia no alcanza con publicaciones dispersas en redes sociales para mostrar su stock. Necesitaba un catálogo propio, actualizado y listo para acompañar el movimiento real del negocio.',
+      'No bastaba una web institucional. Hacía falta una herramienta comercial para publicar, administrar y vender vehículos sin rehacer el sitio cada vez que cambia el inventario.',
     ],
     objectives: [
       'Centralizar el stock en un catálogo web ordenado y actualizable.',
       'Convertir cada vehículo en una ficha individual, completa y fácil de compartir.',
-      'Permitir publicar, modificar datos, actualizar precios y retirar unidades vendidas.',
+      'Publicar, modificar datos, actualizar precios y retirar unidades vendidas desde el panel.',
       'Conectar cada publicación con una consulta comercial directa por WhatsApp.',
       'Preparar la estructura para búsquedas locales y SEO dinámico por vehículo.',
-      'Garantizar una experiencia clara y usable en celular.',
+      'Ofrecer una experiencia clara y usable en celular.',
     ],
     direction: {
       estructura: [
         'La plataforma combina catálogo dinámico, fichas individuales, filtros, comparación y consultas por WhatsApp con contexto del vehículo. El recorrido típico es explorar el stock, abrir una ficha y escribir con la unidad ya identificada.',
-        'Cada vehículo puede incluir galería, precio, marca, modelo, año, kilometraje, motor, combustible, transmisión y descripción. El estado disponible o vendido forma parte de la lógica de stock que acompaña la operación diaria.',
+        'Cada vehículo incluye galería, precio, marca, modelo, año, kilometraje, motor, combustible, transmisión y descripción. El estado disponible o vendido forma parte de la lógica de stock que acompaña la operación diaria.',
       ],
       identidad: [
         'La jerarquía prioriza el stock: listado claro, fichas completas y llamados a la acción hacia WhatsApp. Se buscó un tono comercial sobrio, con espacio para fotos reales y datos escaneables.',
@@ -77,7 +77,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     decisions: [
       {
         title: 'Catálogo administrable, no web estática',
-        body: 'La agencia puede publicar, actualizar y retirar vehículos sin rehacer la web cada vez que cambia el stock.',
+        body: 'La agencia publica, actualiza y retira vehículos sin rehacer la web cada vez que cambia el stock.',
       },
       {
         title: 'Ficha individual por vehículo',
@@ -89,7 +89,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
       {
         title: 'Filtros y comparación',
-        body: 'El visitante puede buscar por texto, tipo, transmisión, combustible o rango de años, y comparar opciones antes de consultar.',
+        body: 'El visitante busca por texto, tipo, transmisión, combustible o rango de años, y compara opciones antes de consultar.',
       },
       {
         title: 'SEO local y dinámico',
@@ -101,8 +101,8 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
     ],
     result: [
-      'Hoy el cliente utiliza el sistema de forma habitual. El catálogo se mantiene actualizado con vehículos reales, las fichas se comparten individualmente y la web centraliza información que antes podía quedar dispersa.',
-      'El negocio tiene una presencia digital propia, con una presentación más profesional del stock y un proceso de consulta mejor organizado. El proyecto sigue activo y en evolución.',
+      'Hoy el cliente utiliza el sistema de forma habitual. El catálogo se mantiene actualizado con vehículos reales, las fichas se comparten individualmente y la web centraliza información que antes quedaba dispersa.',
+      'El negocio tiene una presencia digital propia, con una presentación más profesional del stock y un proceso de consulta mejor organizado. El proyecto sigue activo.',
     ],
     gallery: [
       { id: 'full', caption: 'Catálogo de vehículos publicados', objectPosition: 'top center', aspectRatio: '16 / 10' },
@@ -133,7 +133,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     nextId: 'hema',
     context: [
       'Mendoza Insights necesitaba presentar un producto poco habitual para el mercado local: información inmobiliaria ordenada, índices, precios de referencia y análisis para tomar mejores decisiones. No es una inmobiliaria ni un portal de propiedades: es un producto digital de inteligencia inmobiliaria.',
-      'El desafío fue transformar una propuesta compleja en una web clara, visual y fácil de recorrer. El sitio tenía que explicar datos sin hacerlo pesado, generar confianza y guiar hacia acciones concretas: comprar el índice, ver una muestra o consultar referencias del mercado.',
+      'Había que presentar una propuesta compleja en una web clara, visual y fácil de recorrer. El sitio tenía que explicar datos sin hacerlo pesado, generar confianza y guiar hacia acciones concretas: comprar el índice, ver una muestra o consultar referencias del mercado.',
     ],
     objectives: [
       'Presentar el producto de análisis inmobiliario con claridad comercial.',
@@ -156,7 +156,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     decisions: [
       {
         title: 'Ordenar una propuesta compleja',
-        body: 'El sitio separa el producto comercial de las páginas que responden búsquedas concretas, sin mezclar todo en una sola landing.',
+        body: 'El sitio separa el producto comercial de las páginas que responden búsquedas concretas, sin mezclar todo en la misma landing.',
       },
       {
         title: 'Explicar datos sin hacerlos pesados',
@@ -204,14 +204,14 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     context: [
       'HEMA es un laboratorio de diagnóstico genético y molecular: ofrece estudios complejos y necesita que pacientes, familias y derivadores entiendan qué hace el equipo y cómo avanzar sin sentirse abrumados. El sitio no es una tienda de productos: es un canal institucional donde la claridad y la seriedad son parte del mensaje.',
       'Quien entra suele buscar información sobre tipos de estudios, coberturas o una vía humana para consultar. La web tiene que ordenar temas sensibles en bloques legibles y ofrecer un camino claro hacia el contacto, incluyendo WhatsApp para consultas iniciales.',
-      'El desafío fue equilibrar rigor —que se entienda la complejidad del servicio— con legibilidad para personas sin formación técnica en genética.',
+      'Había que equilibrar rigor y legibilidad: que se entienda la complejidad del servicio, y que una persona sin formación técnica en genética también siga el contenido.',
     ],
     objectives: [
       'Presentar servicios y líneas de trabajo del laboratorio de forma estructurada.',
       'Facilitar que el visitante encuentre el área que le corresponde (por ejemplo, estudios prenatales, oncología hereditaria u otras líneas).',
       'Reflejar respaldo institucional y equipo sin saturar la página.',
       'Centralizar consultas y derivación con enlaces claros a WhatsApp y secciones de contacto.',
-      'Garantizar buena lectura y navegación en dispositivos móviles.',
+      'Ofrecer buena lectura y navegación en dispositivos móviles.',
     ],
     direction: {
       estructura: [
@@ -230,7 +230,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
       {
         title: 'Reducir muros de texto',
-        body: 'Bloques legibles, tipografía y espaciado adecuados; en mobile se evita la sensación de muro cortando en secciones y CTAs.',
+        body: 'Bloques legibles, tipografía y espaciado adecuados. En mobile se evita la sensación de muro cortando en secciones y CTAs.',
       },
       {
         title: 'Reforzar confianza institucional',
@@ -242,7 +242,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
     ],
     result: [
-      'La web cumple hoy un rol claro: presentar al laboratorio, explicar líneas de diagnóstico de forma ordenada y reducir fricción para consultar. Una persona puede informarse, ubicarse en el tipo de estudio o área que le interesa y escribir por el canal que el laboratorio prioriza.',
+      'La web cumple hoy un rol claro: presentar al laboratorio, explicar líneas de diagnóstico de forma ordenada y reducir fricción para consultar. Una persona se informa, se ubica en el tipo de estudio o área que le interesa y escribe por el canal que el laboratorio prioriza.',
     ],
     gallery: [
       { id: 'full', caption: 'Vista general', objectPosition: 'top center', aspectRatio: '16 / 10' },
@@ -257,17 +257,17 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     theme: 'giacomelli',
     nextId: 'poletino-servicios',
     context: [
-      'Giacomelli Seguros es un productor de seguros con más de 48 años de trayectoria en Mendoza y Zona Cuyo. Atienden personas y empresas que necesitan orientación para elegir coberturas —auto, retiro, salud, comercio, caución, ART— y también quienes ya tienen póliza y quieren revisar si sigue siendo conveniente.',
+      'Giacomelli Seguros es un productor de seguros con más de 48 años de trayectoria en Mendoza y Zona Cuyo. Atienden personas y empresas que necesitan orientación para elegir coberturas: auto, retiro, salud, comercio, caución y ART. También atienden a quienes ya tienen póliza y quieren revisar si sigue siendo conveniente.',
       'Muchas consultas llegan desde el celular y el visitante suele buscar confianza antes que promesas vacías: saber con quién habla, qué alternativas existen y cómo dar el primer paso. La web debía reflejar atención familiar y directa, sin parecer un comparador genérico ni un trámite frío.',
-      'En conjunto, el desafío fue ordenar un catálogo amplio de servicios sin abrumar, destacar el acompañamiento real y dejar visible el contacto cuando más importa —incluida la guía ante siniestros.',
+      'Había que ordenar un catálogo amplio de servicios sin abrumar, destacar el acompañamiento real y dejar visible el contacto cuando más importa, incluida la guía ante siniestros.',
     ],
     objectives: [
       'Presentar coberturas para personas y empresas con lenguaje claro y sin jerga innecesaria.',
-      'Comunicar trayectoria, valores y diferencia del asesoramiento humano frente a contratar solo por precio.',
+      'Comunicar trayectoria, valores y la diferencia del asesoramiento humano frente a elegir cobertura por precio.',
       'Facilitar cotización y consultas por WhatsApp con mensajes contextualizados desde el sitio.',
       'Ofrecer una ruta útil para quien ya tiene seguro y quiere revisar su póliza actual.',
       'Orientar ante siniestros con información práctica de primeros pasos.',
-      'Garantizar buena lectura y navegación en celular.',
+      'Ofrecer buena lectura y navegación en celular.',
     ],
     direction: {
       estructura: [
@@ -275,7 +275,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
         'Cada cobertura tiene su página con contexto, beneficios y llamados a la acción hacia WhatsApp. La home concentra lo esencial para quien llega sin saber por dónde empezar.',
       ],
       identidad: [
-        'La jerarquía visual separa confianza —años de trayectoria, tono cercano— de utilidad —qué cubre cada seguro y cómo avanzar— para que no compitan.',
+        'La jerarquía visual separa dos capas. De un lado, confianza: años de trayectoria y tono cercano. Del otro, utilidad: qué cubre cada seguro y cómo avanzar. Así no compiten entre sí.',
         'Los colores y la tipografía acompañan un rubro que pide seriedad sin distancia. La navegación está pensada para pocas decisiones: explorar servicios, revisar si conviene cambiar, contactar o consultar ante un siniestro.',
       ],
     },
@@ -290,7 +290,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
       {
         title: 'Diferenciar asesoramiento de precio',
-        body: 'El mensaje central es acompañamiento humano, no solo cotización. WhatsApp con texto prearmado según intención.',
+        body: 'El mensaje central es acompañamiento humano, no una cotización suelta. WhatsApp con texto prearmado según intención.',
       },
       {
         title: 'Mantener el contacto visible',
@@ -298,7 +298,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
     ],
     result: [
-      'La web funciona hoy como puerta de entrada al asesoramiento de Giacomelli: ordena coberturas, transmite trayectoria y deja claro cómo cotizar o pedir orientación. Quien entra puede entender opciones, revisar su situación actual y escribir por WhatsApp con contexto, sin buscar el contacto escondido.',
+      'La web funciona hoy como puerta de entrada al asesoramiento de Giacomelli: ordena coberturas, transmite trayectoria y deja claro cómo cotizar o pedir orientación. Quien entra entiende opciones, revisa su situación actual y escribe por WhatsApp con contexto, sin buscar el contacto escondido.',
     ],
     gallery: [
       { id: 'full', caption: 'Vista general', objectPosition: 'top center', aspectRatio: '16 / 10' },
@@ -313,9 +313,9 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     theme: 'poletino',
     nextId: 'dra-giuliana-macchiavello',
     context: [
-      'Poletino ofrece alquiler de hidrogrúas, transporte de cargas pesadas y maquinaria para obras en Mendoza y alrededores, y la web tenía que hablarle a otro comprador B2B: alguien que busca resolver un problema operativo y necesita saber si pueden cubrirlo, en qué zona y cómo contactar.',
+      'Poletino ofrece alquiler de hidrogrúas, transporte de cargas pesadas y maquinaria para obras en Mendoza y alrededores. La web tenía que hablarle a un comprador B2B: alguien que busca resolver un problema operativo y necesita saber si la empresa lo cubre, en qué zona y cómo contactar.',
       'En este tipo de rubro, la página falla si queda vaga: listados incompletos o un tono demasiado genérico generan desconfianza. El visitante suele comparar pocos proveedores y decide rápido si sigue leyendo o cierra.',
-      'El sitio debía transmitir solidez y practicidad: empresa que trabaja en obra, planta o ruta, no un brochure decorativo.',
+      'El sitio debía transmitir firmeza y practicidad: empresa que trabaja en obra, planta o ruta, no un brochure decorativo.',
     ],
     objectives: [
       'Presentar servicios y líneas de negocio de forma explícita y escaneable.',
@@ -330,14 +330,14 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
         'El diseño responsive asegura que fotos de equipamiento, tablas resumidas o bloques de texto se apilen en un orden lógico en pantallas chicas. Donde aplica, se enfatizó la cobertura geográfica o modalidad de trabajo.',
       ],
       identidad: [
-        'Visualmente se buscó fuerza y claridad: contrastes firmes, poco ruido decorativo y tipografía legible en contextos de trabajo real.',
-        'El tono es directo y profesional, alineado a un proveedor industrial. No se priorizó marketing creativo sino que el visitante reconozca servicios concretos y entienda el siguiente paso.',
+        'Visualmente se buscó fuerza y claridad: contrastes firmes, tipografía legible y poco adorno en contextos de trabajo real.',
+        'El tono es directo y profesional, alineado a un proveedor industrial. El foco está en que el visitante reconozca servicios concretos y entienda el siguiente paso, por encima del marketing creativo.',
       ],
     },
     decisions: [
       {
         title: 'Hablar directo al comprador B2B',
-        body: 'Tono operativo para quien necesita resolver un problema en obra, planta o ruta — no un brochure decorativo.',
+        body: 'Tono operativo para quien necesita resolver un problema en obra, planta o ruta, no un brochure decorativo.',
       },
       {
         title: 'Mostrar servicios concretos',
@@ -353,7 +353,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
     ],
     result: [
-      'La web cumple un rol práctico para el negocio: resume qué ofrece Poletino, da confianza de operación real y deja el canal de consulta a mano. Quien entra desde otro taller o empresa puede ubicarse en minutos y pedir cotización sin recorridos confusos.',
+      'La web cumple un rol práctico para el negocio: resume qué ofrece Poletino, da confianza de operación real y deja el canal de consulta a mano. Quien entra desde otro taller o empresa se ubica en minutos y pide cotización sin recorridos confusos.',
     ],
     gallery: [
       { id: 'full', caption: 'Vista general', objectPosition: 'top center', aspectRatio: '16 / 10' },
@@ -364,13 +364,13 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
   },
   'dra-giuliana-macchiavello': {
     number: '06',
-    phrase: 'Convertir tratamientos estéticos en decisiones más claras e informadas.',
+    phrase: 'Tratamientos estéticos convertidos en decisiones claras e informadas.',
     theme: 'giuliana',
     nextId: 'avellaneda-automotores',
     context: [
       'La Dra. Giuliana Macchiavello trabaja en armonización orofacial y odontología en Mendoza. Su público llega principalmente desde Instagram buscando información sobre tratamientos, resultados y formas de contacto.',
-      'El desafío no era solamente mostrar procedimientos. En este tipo de servicio, antes de consultar aparecen dudas sobre la naturalidad del resultado, la seguridad, los tiempos y cuál es el tratamiento adecuado para cada rostro.',
-      'La web debía ordenar esa información y convertir el criterio profesional de Giuliana en el centro de la marca.',
+      'Mostrar procedimientos no alcanzaba. Antes de consultar aparecen dudas sobre la naturalidad del resultado, la seguridad, los tiempos y cuál es el tratamiento adecuado para cada rostro.',
+      'La web debía ordenar esa información y poner el criterio profesional de Giuliana en el centro de la marca.',
     ],
     objectives: [
       'Presentar a la doctora y su forma de trabajar.',
@@ -383,7 +383,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
     ],
     direction: {
       estructura: [
-        'La información se organizó alrededor de las necesidades de las pacientes y no como un listado técnico de procedimientos. Cada tratamiento explica qué aspecto permite trabajar, cómo se evalúa y por qué la indicación depende de cada caso.',
+        'La información se organizó alrededor de las necesidades de las pacientes y no como un listado técnico de procedimientos. Cada tratamiento explica qué aspecto ayuda a trabajar, cómo se evalúa y por qué la indicación depende de cada caso.',
         'Se diseñaron secciones para presentar a la doctora, explicar su criterio profesional, recorrer los tratamientos, responder preguntas frecuentes y consultar directamente por WhatsApp. El sitio prioriza velocidad de carga, adaptación a celulares, navegación clara y una estructura semántica preparada para SEO.',
       ],
       identidad: [
@@ -398,7 +398,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
       {
         title: 'Tratamientos ordenados por necesidad',
-        body: 'La persona puede comenzar por lo que quiere mejorar, aunque todavía no conozca el nombre del procedimiento.',
+        body: 'La persona empieza por lo que quiere mejorar, aunque todavía no conozca el nombre del procedimiento.',
       },
       {
         title: 'Una estética femenina y profesional',
@@ -410,7 +410,7 @@ export const CASE_STUDY_EDITORIAL: Record<CaseStudyId, CaseStudyEditorial> = {
       },
     ],
     result: [
-      'La web funciona como una extensión más clara y completa de su comunicación en redes. Una persona puede conocer a la doctora, entender qué tipo de resultados prioriza, explorar los tratamientos y resolver sus principales dudas antes de escribirle.',
+      'La web funciona como una extensión más clara y completa de su comunicación en redes. Una persona conoce a la doctora, entiende qué tipo de resultados prioriza, explora los tratamientos y resuelve sus principales dudas antes de escribirle.',
       'El recorrido termina con una acción concreta: solicitar una evaluación o consultar disponibilidad por WhatsApp.',
     ],
     gallery: [

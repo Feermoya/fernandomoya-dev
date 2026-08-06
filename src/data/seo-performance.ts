@@ -8,7 +8,7 @@ export const seoPerformanceSummary = {
 
 export const seoPerformanceCase = {
   identification: 'Caso real · sector automotor',
-  note: 'Resultados reales acumulados durante el período. La evolución diaria se muestra de forma ilustrativa.',
+  note: 'Resultados reales del período. El gráfico diario es ilustrativo.',
 } as const;
 
 export type SeoPerformancePoint = {

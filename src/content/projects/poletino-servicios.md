@@ -1,6 +1,6 @@
 ---
 title: Servicios industriales
-description: Sitio web para una empresa de servicios industriales, maquinaria y transporte especializado, pensado para que otro negocio entienda la oferta y pida presupuesto sin ambigüedades. El foco estuvo en listar servicios con claridad, tono operativo y contacto directo.
+description: Sitio web para una empresa de servicios industriales, maquinaria y transporte especializado. Otro negocio entiende la oferta y pide presupuesto sin ambigüedades. El foco estuvo en listar servicios con claridad, tono operativo y contacto directo.
 publishDate: 2024-02-10
 kind: client
 projectType: Sitio de servicios industriales
@@ -19,11 +19,11 @@ links:
 
 ## Contexto
 
-Poletino ofrece alquiler de hidrogrúas, transporte de cargas pesadas y maquinaria para obras en Mendoza y alrededores, y la web tenía que hablarle a otro comprador B2B: alguien que busca resolver un problema operativo y necesita saber si pueden cubrirlo, en qué zona y cómo contactar.
+Poletino ofrece alquiler de hidrogrúas, transporte de cargas pesadas y maquinaria para obras en Mendoza y alrededores. La web tenía que hablarle a un comprador B2B: alguien que busca resolver un problema operativo y necesita saber si la empresa lo cubre, en qué zona y cómo contactar.
 
 En este tipo de rubro, la página falla si queda vaga: listados incompletos o un tono demasiado genérico generan desconfianza. El visitante suele comparar pocos proveedores y decide rápido si sigue leyendo o cierra.
 
-El sitio debía transmitir solidez y practicidad: empresa que trabaja en obra, planta o ruta, no un brochure decorativo.
+El sitio debía transmitir firmeza y practicidad: empresa que trabaja en obra, planta o ruta, no un brochure decorativo.
 
 ## Objetivo
 
@@ -43,12 +43,12 @@ Donde aplica, se enfatizó la cobertura geográfica o modalidad de trabajo para 
 
 ## Decisiones de diseño
 
-Visualmente se buscó fuerza y claridad: contrastes firmes, poco ruido decorativo y tipografía legible en contextos de trabajo real. La navegación está pensada para quien escanea: secciones cortas, títulos descriptivos y repetición estratégica del contacto al final de bloques clave.
+Visualmente se buscó fuerza y claridad: contrastes firmes, tipografía legible y poco adorno en contextos de trabajo real. La navegación está pensada para quien escanea: secciones cortas, títulos descriptivos y repetición estratégica del contacto al final de bloques clave.
 
-El tono es directo y profesional, alineado a un proveedor industrial. No se priorizó “marketing creativo” sino que el visitante reconozca servicios concretos —maquinaria, transporte, asistencia— y entienda el siguiente paso.
+El tono es directo y profesional, alineado a un proveedor industrial. El foco está en que el visitante reconozca servicios concretos (maquinaria, transporte, asistencia) y entienda el siguiente paso, por encima del marketing creativo.
 
-El diseño acompaña el rubro sin competir con la información: las fotos y listados mandan; el layout ordena.
+El diseño acompaña el rubro sin competir con la información: las fotos y listados mandan. El layout ordena.
 
 ## Resultado
 
-La web cumple un rol práctico para el negocio: resume qué ofrece Poletino, da confianza de operación real y deja el canal de consulta a mano. Quien entra desde otro taller o empresa puede ubicarse en minutos y pedir cotización sin recorridos confusos.
+La web cumple un rol práctico para el negocio: resume qué ofrece Poletino, da confianza de operación real y deja el canal de consulta a mano. Quien entra desde otro taller o empresa se ubica en minutos y pide cotización sin recorridos confusos.

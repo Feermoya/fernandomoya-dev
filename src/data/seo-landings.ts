@@ -21,16 +21,16 @@ export type SeoLanding = {
 
 export const seoProcessSteps = [
   {
-    title: 'Entendemos tu negocio',
-    text: 'Qué vendés, a quién le hablás y qué tiene que entender alguien en los primeros segundos.',
+    title: 'Escuchamos tu negocio',
+    text: 'Qué vendés, a quién le hablás y qué tiene que quedar claro en los primeros segundos.',
   },
   {
-    title: 'Ordenamos mensaje y secciones',
-    text: 'Estructura, textos y recorrido visual para que lo importante quede a la vista sin ruido.',
+    title: 'Armamos mensaje y secciones',
+    text: 'Estructura, textos y recorrido visual para que lo importante quede a la vista.',
   },
   {
     title: 'Desarrollamos y publicamos',
-    text: 'Sitio rápido en celular, contacto visible y base lista para sumar contenido después.',
+    text: 'Sitio rápido en celular, contacto a mano y base lista para sumar contenido más adelante.',
   },
 ] as const;
 
@@ -52,13 +52,13 @@ export const seoLandings: SeoLanding[] = [
     title: 'Diseño web en Mendoza para negocios | FermoyaDev',
     description:
       'Diseño y desarrollo web en Mendoza para negocios, profesionales y marcas. Sitios claros, rápidos y pensados para generar consultas por WhatsApp.',
-    h1: 'Diseño web en Mendoza para negocios que quieren verse profesionales',
+    h1: 'Diseño web en Mendoza para negocios que buscan verse profesionales',
     intro:
-      'Trabajo con negocios, profesionales y marcas que necesitan una web clara, rápida y fácil de entender. La idea no es llenar la página de efectos, sino ordenar el mensaje: qué ofrecés, para quién es, por qué confiar y cómo contactarte. Estoy en Mendoza y también tomo proyectos de otras provincias o del exterior en español.',
+      'Trabajo con negocios, profesionales y marcas que necesitan una web clara, rápida y fácil de entender. El foco va en ordenar el mensaje: qué ofrecés, para quién es, por qué confiar y cómo contactarte. Estoy en Mendoza y tomo proyectos de otras provincias o del exterior en español.',
     problem:
       'Muchos negocios en Mendoza tienen buen servicio, pero en la web no se entiende rápido qué hacen, para quién es ni cómo contactarlos. Eso genera desconfianza y consultas que nunca llegan.',
     outcome:
-      'Un sitio que se ve profesional, explica tu propuesta en segundos y deja el contacto —WhatsApp, mail o formulario— donde el visitante lo espera.',
+      'Un sitio que se ve profesional, explica tu propuesta en segundos y deja el contacto (WhatsApp, mail o formulario) donde el visitante lo espera.',
     relatedPaths: ['/paginas-web-para-negocios', '/landing-page-para-negocios', '/desarrollo-web-en-espanol'],
     bullets: [
       'Diseño y desarrollo web para negocios locales',
@@ -69,8 +69,8 @@ export const seoLandings: SeoLanding[] = [
     ],
     faqs: [
       {
-        q: '¿Trabajás solo con negocios de Mendoza?',
-        a: 'No. Estoy en Mendoza, pero puedo tomar proyectos de otras provincias o del exterior si la comunicación es en español. Coordinamos por WhatsApp, mail o videollamada.',
+        q: '¿Atendés negocios fuera de Mendoza?',
+        a: 'Sí. Estoy en Mendoza y tomo proyectos de otras provincias o del exterior si la comunicación es en español. Coordinamos por WhatsApp, mail o videollamada.',
       },
       {
         q: '¿La web incluye ayuda con los textos?',
@@ -78,7 +78,7 @@ export const seoLandings: SeoLanding[] = [
       },
       {
         q: '¿También hacés diseño para imprimir?',
-        a: 'En algunos proyectos puedo sumar piezas simples —tarjetas, calcos, etiquetas— si encaja con el trabajo de la web.',
+        a: 'En algunos proyectos sumo piezas simples (tarjetas, calcos, etiquetas) si encaja con el trabajo de la web.',
       },
     ],
   },
@@ -90,7 +90,7 @@ export const seoLandings: SeoLanding[] = [
       'Desarrollo sitios web en Mendoza: código ordenado, buena carga en celular y base lista para crecer. Para negocios que necesitan un sitio nuevo y estable.',
     h1: 'Desarrollo web en Mendoza para sitios que tienen que funcionar bien',
     intro:
-      'Un sitio no alcanza con verse bien: tiene que cargar rápido, abrir bien en el teléfono y ser fácil de mantener. Desde Mendoza desarrollo sitios nuevos con esa base desde el arranque —sin parches encima de algo viejo que ya no sirve.',
+      'Un sitio no alcanza con verse bien: tiene que cargar rápido, abrir bien en el teléfono y ser fácil de mantener. Desde Mendoza desarrollo sitios nuevos con esa base desde el arranque, sin parches encima de algo viejo que ya no sirve.',
     bullets: [
       'Sitios nuevos desarrollados desde cero',
       'Buen rendimiento en celular y escritorio',
@@ -99,12 +99,12 @@ export const seoLandings: SeoLanding[] = [
     ],
     faqs: [
       {
-        q: '¿Hacés solo el desarrollo o también el diseño?',
+        q: '¿Hacés el desarrollo y también el diseño?',
         a: 'Lo habitual es diseño y desarrollo juntos. Así el sitio queda coherente de punta a punta.',
       },
       {
         q: '¿Cuánto tarda un sitio nuevo?',
-        a: 'Depende del alcance. En proyectos acotados se puede tener una primera versión en pocas semanas.',
+        a: 'Depende del alcance. En proyectos acotados tenés una primera versión en pocas semanas.',
       },
     ],
   },
@@ -116,11 +116,11 @@ export const seoLandings: SeoLanding[] = [
       'Páginas web para negocios que necesitan explicar qué venden, generar confianza y dejar claro cómo consultar. Estructura simple y contacto visible.',
     h1: 'Páginas web para negocios que necesitan ordenar su mensaje',
     intro:
-      'Muchos negocios llegan con el mismo problema: tienen buen producto o servicio, pero en internet no se entiende rápido qué hacen ni cómo contactarlos. Armo páginas con secciones concretas —qué ofrecés, para quién, cómo trabajás, contacto— sin llenar todo de texto que nadie lee.',
+      'Muchos negocios llegan con el mismo problema: tienen buen producto o servicio, pero en internet no se entiende rápido qué hacen ni cómo contactarlos. Armo páginas con secciones concretas (qué ofrecés, para quién, cómo trabajás, contacto), sin llenar todo de texto que nadie lee.',
     problem:
-      'Si alguien entra a tu web y tiene que adivinar qué vendés o buscar el botón de contacto, lo más probable es que se vaya antes de escribirte.',
+      'Si alguien entra a tu web y tiene que adivinar qué vendés o buscar el botón de contacto, lo más común es que se vaya antes de escribirte.',
     outcome:
-      'Una página que responde lo esencial en orden: qué ofrecés, para quién, por qué confiar y cómo avanzar —con lectura cómoda desde el celular.',
+      'Una página que responde lo esencial en orden: qué ofrecés, para quién, por qué confiar y cómo avanzar, con lectura cómoda desde el celular.',
     relatedPaths: ['/diseno-web-mendoza', '/landing-page-para-negocios', '/diseno-web-para-negocios'],
     bullets: [
       'Estructura pensada para quien entra sin conocerte',
@@ -134,7 +134,7 @@ export const seoLandings: SeoLanding[] = [
         a: 'Sí. Muchos proyectos son para negocios locales que necesitan una página seria sin complicarse.',
       },
       {
-        q: '¿Puedo sumar más secciones después?',
+        q: '¿Sumo más secciones después?',
         a: 'Sí. La base queda preparada para agregar servicios, fotos o landings cuando lo necesites.',
       },
     ],
@@ -147,7 +147,7 @@ export const seoLandings: SeoLanding[] = [
       'Diseño web para negocios: jerarquía clara, buena lectura y un aspecto profesional sin recargar la página. Pensado para convertir visitas en consultas.',
     h1: 'Diseño web para negocios que quieren verse en serio',
     intro:
-      'El diseño no es decoración: ordena la información para que alguien entienda tu negocio en segundos. Trabajo tipografía, espaciado y recorrido visual para que lo importante —qué hacés y cómo escribirte— quede a la vista sin gritar.',
+      'El diseño no es decoración: ordena la información para que alguien entienda tu negocio en segundos. Trabajo tipografía, espaciado y recorrido visual para que lo importante (qué hacés y cómo escribirte) quede a la vista, sin gritar.',
     bullets: [
       'Jerarquía visual clara en cada sección',
       'Estilo acorde a tu rubro, sin plantillas genéricas',
@@ -157,7 +157,7 @@ export const seoLandings: SeoLanding[] = [
     faqs: [
       {
         q: '¿Necesito tener todo el contenido listo?',
-        a: 'No hace falta tener todo cerrado. Podemos armar la estructura y ajustar textos en el proceso.',
+        a: 'No hace falta tener todo cerrado. Armamos la estructura y ajustamos textos en el proceso.',
       },
       {
         q: '¿Incluye logo o identidad completa?',
@@ -171,16 +171,16 @@ export const seoLandings: SeoLanding[] = [
     title: 'Landing page para negocios | FermoyaDev',
     description:
       'Landing pages para negocios: una oferta, un mensaje directo y un contacto claro. Útil para campañas, servicios puntuales o anuncios.',
-    h1: 'Landing page para negocios con un solo objetivo',
+    h1: 'Landing page para negocios con un objetivo claro',
     intro:
-      'Cuando necesitás presentar una oferta concreta —un servicio, una promo, una campaña— una landing concentra todo en una sola página. Menos distracciones, mensaje directo y un botón de contacto que se ve.',
+      'Cuando necesitás presentar una oferta concreta (un servicio, una promo, una campaña), una landing concentra todo en una página. Menos distracciones, mensaje directo y un botón de contacto que se ve.',
     problem:
       'Mandar tráfico de anuncios o redes a una web genérica diluye el mensaje: el visitante no sabe qué hacer y la campaña pierde fuerza.',
     outcome:
-      'Una sola página con oferta clara, beneficios concretos y contacto repetido donde tiene sentido —pensada para convertir visitas en consultas.',
+      'Una página con oferta clara, beneficios concretos y contacto repetido donde tiene sentido. Pensada para convertir visitas en consultas.',
     relatedPaths: ['/paginas-web-para-negocios', '/diseno-web-mendoza', '/seo-tecnico'],
     bullets: [
-      'Mensaje principal arriba, sin dar vueltas',
+      'Mensaje principal arriba, directo',
       'Beneficios en pocas líneas',
       'Contacto repetido donde tiene sentido',
       'Carga rápida para no perder visitas de anuncios',
@@ -188,10 +188,10 @@ export const seoLandings: SeoLanding[] = [
     faqs: [
       {
         q: '¿Es distinto de un sitio completo?',
-        a: 'Sí. Una landing va a un solo objetivo. Un sitio completo tiene más secciones y recorridos.',
+        a: 'Sí. Una landing apunta a un objetivo claro. Un sitio completo tiene más secciones y recorridos.',
       },
       {
-        q: '¿Puedo usarla para Google Ads o Meta?',
+        q: '¿Sirve para Google Ads o Meta?',
         a: 'Sí. Está pensada para recibir tráfico de campañas y que el visitante entienda rápido qué hacer.',
       },
     ],
@@ -204,14 +204,14 @@ export const seoLandings: SeoLanding[] = [
       'Desarrollo web en español para negocios que necesitan coordinar a distancia. Comunicación clara, entregas ordenadas y sitios pensados para su mercado.',
     h1: 'Desarrollo web en español, con comunicación directa',
     intro:
-      'Trabajo con negocios que están en distintas ciudades o países y necesitan un sitio en español, bien explicado y fácil de coordinar. La comunicación es por WhatsApp, mail o videollamada —sin vueltas ni jerga innecesaria.',
+      'Trabajo con negocios que están en distintas ciudades o países y necesitan un sitio en español, bien explicado y fácil de coordinar. La comunicación es por WhatsApp, mail o videollamada, con lenguaje claro.',
     problem:
-      'Coordinar un sitio a distancia puede ser confuso si nadie te explica en claro qué se hace en cada etapa o si la comunicación se complica con tecnicismos.',
+      'Coordinar un sitio a distancia confunde si nadie te explica en claro qué se hace en cada etapa o si la comunicación se complica con tecnicismos.',
     outcome:
-      'Un proyecto en español, con entregas por etapas, feedback en cada paso y un sitio pensado para tu mercado —sin depender de estar en la misma ciudad.',
+      'Un proyecto en español, con entregas por etapas, feedback en cada paso y un sitio pensado para tu mercado, sin depender de estar en la misma ciudad.',
     relatedPaths: ['/diseno-web-mendoza', '/desarrollo-web-mendoza', '/paginas-web-para-negocios'],
     bullets: [
-      'Proyectos coordinados a distancia sin problema',
+      'Proyectos coordinados a distancia sin fricción',
       'Sitios en español, con textos claros para tu público',
       'Entregas por etapas con feedback en cada paso',
       'Horarios de Argentina, con flexibilidad según el proyecto',
@@ -219,7 +219,7 @@ export const seoLandings: SeoLanding[] = [
     faqs: [
       {
         q: '¿Trabajás con clientes fuera de Argentina?',
-        a: 'Sí, siempre que el proyecto sea en español y podamos coordinar por los canales habituales.',
+        a: 'Sí, siempre que el proyecto sea en español y coordinemos por los canales habituales.',
       },
       {
         q: '¿Cómo se manejan los pagos?',
@@ -235,7 +235,7 @@ export const seoLandings: SeoLanding[] = [
       'Diseño web claro para negocios, marcas y profesionales: estructura, jerarquía y recorridos simples para explicar qué ofrecés y acercar el contacto. Sitios nuevos, desarrollados desde cero.',
     h1: 'Diseño web para presentar tu negocio con claridad',
     intro:
-      'Desarrollo sitios web para negocios que necesitan mostrarse mejor, ordenar su mensaje y que el visitante entienda en pocos segundos qué hacés y cómo avanzar. Trabajo el diseño como un sistema: textos y secciones con intención, jerarquía visual y un recorrido que lleva hacia el contacto. El foco no es el adorno, sino una presentación profesional, coherente y fácil de leer en celular, con base lista para el desarrollo sin sorpresas.',
+      'Desarrollo sitios web para negocios que necesitan mostrarse mejor, ordenar su mensaje y que el visitante entienda en pocos segundos qué hacés y cómo avanzar. Trabajo el diseño como un sistema: textos y secciones con intención, jerarquía visual y un recorrido que lleva hacia el contacto. El foco va en una presentación profesional, coherente y fácil de leer en celular, con base lista para el desarrollo sin sorpresas.',
     bullets: [
       'Estructura de secciones alineada a lo que el visitante necesita saber',
       'Diseño responsive (mobile first, legible y estable)',
@@ -253,7 +253,7 @@ export const seoLandings: SeoLanding[] = [
       },
       {
         q: '¿Cuánto tarda una propuesta de diseño?',
-        a: 'Depende del alcance. En proyectos acotados se puede avanzar rápido con una primera versión y ajustes cortos.',
+        a: 'Depende del alcance. En proyectos acotados avanzamos rápido con una primera versión y ajustes cortos.',
       },
     ],
   },
@@ -274,8 +274,8 @@ export const seoLandings: SeoLanding[] = [
     ],
     faqs: [
       {
-        q: '¿Solo hacés sitios nuevos?',
-        a: 'Es el foco principal: desarrollo sitios desde cero con arquitectura y código pensados para durar. Así evitamos parches que compiten con decisiones viejas.',
+        q: '¿Tu foco son sitios nuevos?',
+        a: 'Sí, ese es el foco principal: desarrollo sitios desde cero con arquitectura y código pensados para durar. Así evitamos parches que compiten con decisiones viejas.',
       },
       {
         q: '¿Mi web va a verse bien en celular?',
@@ -291,7 +291,7 @@ export const seoLandings: SeoLanding[] = [
       'Página web profesional para negocios y profesionales: estructura clara, secciones útiles, contacto visible y base técnica preparada para SEO.',
     h1: 'Una página web profesional que genera confianza',
     intro:
-      'Diseño webs profesionales para mostrar servicios, generar confianza y que una persona entienda rápido cómo consultar. Una página seria no es solo estética: ordena la información, responde preguntas habituales y deja el contacto a mano. La construyo con foco en claridad, velocidad y coherencia visual, para que el sitio sea una herramienta útil para presentar tu negocio.',
+      'Diseño webs profesionales para mostrar servicios, generar confianza y que una persona entienda rápido cómo consultar. Una página seria ordena la información, responde preguntas habituales y deja el contacto a mano. La construyo con foco en claridad, velocidad y coherencia visual, para que el sitio sea una herramienta útil para presentar tu negocio.',
     bullets: [
       'Secciones clave: qué hacés, para quién, cómo trabajás, referencias si aplica, contacto',
       'Llamados a la acción visibles (WhatsApp, formulario, mail) sin saturar',
@@ -304,13 +304,13 @@ export const seoLandings: SeoLanding[] = [
     title: 'Landing page para campañas y anuncios | FermoyaDev',
     description:
       'Landing pages para presentar una oferta concreta: mensaje directo, secciones cortas y contacto claro. Ideal para campañas y anuncios.',
-    h1: 'Landing page enfocada en una sola acción',
+    h1: 'Landing page enfocada en una acción concreta',
     intro:
-      'Landing pages pensadas para presentar una oferta concreta, ordenar la información y llevar al visitante hacia una consulta o pedido de contacto. Si vas a invertir en anuncios o necesitás una página específica para un servicio, una landing concentra el mensaje en un solo recorrido: beneficios concretos, prueba social si aplica y un llamado a la acción visible. El objetivo es claridad y poca fricción, sin inflar el sitio completo.',
+      'Landing pages pensadas para presentar una oferta concreta, ordenar la información y llevar al visitante hacia una consulta o pedido de contacto. Si vas a invertir en anuncios o necesitás una página específica para un servicio, una landing concentra el mensaje en un recorrido claro: beneficios concretos, referencias de clientes si aplica y un llamado a la acción visible. El objetivo es claridad y poca fricción, sin inflar el sitio completo.',
     bullets: [
       'Mensaje principal y beneficios en lenguaje simple',
-      'Secciones cortas (pasos, dudas frecuentes, testimonios si aplica)',
-      'Contacto repetido con intención, sin ruido',
+      'Secciones cortas (pasos, dudas frecuentes, referencias de clientes si aplica)',
+      'Contacto repetido con intención, en los puntos clave',
     ],
   },
   {
@@ -337,7 +337,7 @@ export const seoLandings: SeoLanding[] = [
       'SEO técnico base en sitios nuevos: títulos, metadatos, estructura, sitemap y buenas prácticas de rendimiento para una indexación ordenada.',
     h1: 'SEO técnico base (sin humo)',
     intro:
-      'El SEO empieza por lo técnico: títulos y descripciones coherentes, estructura de encabezados, URLs y sitemap claros, y un sitio que cargue bien. En cada proyecto nuevo dejo la base lista para que los buscadores entiendan tus páginas y puedas sumar contenidos útiles después (servicios, landings, textos de ayuda) sin duplicar ni ensuciar la estructura.',
+      'El SEO empieza por lo técnico: títulos y descripciones coherentes, estructura de encabezados, URLs y sitemap claros, y un sitio que cargue bien. En cada proyecto nuevo dejo la base lista para que los buscadores entiendan tus páginas y sumes contenidos útiles después (servicios, landings, textos de ayuda) sin duplicar ni ensuciar la estructura.',
     faqs: [
       {
         q: '¿SEO técnico alcanza para posicionar?',
@@ -345,7 +345,7 @@ export const seoLandings: SeoLanding[] = [
       },
       {
         q: '¿Incluye preparación para Search Console?',
-        a: 'Se puede dejar listo el conjunto: sitemap, robots, buenas URLs y un checklist para publicar e indexar.',
+        a: 'Dejamos listo el conjunto: sitemap, robots, buenas URLs y un checklist para publicar e indexar.',
       },
     ],
   },

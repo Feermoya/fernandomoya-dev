@@ -30,9 +30,9 @@ const {
 } = Astro.props;
 
 const defaultProblem =
-  'Si tu web no explica bien qué hacés, para quién es o cómo contactarte, muchas visitas se van antes de convertirse en consulta.';
+  'Si tu web no explica qué hacés, para quién es o cómo contactarte, muchas visitas se van sin consultar.';
 const defaultOutcome =
-  'Un sitio claro, profesional y fácil de recorrer —con el mensaje ordenado y el contacto visible donde el visitante lo espera.';
+  'Un sitio claro y fácil de recorrer. Mensaje ordenado y contacto visible donde el visitante lo espera.';
 
 const canonical = absoluteUrl(path);
 const landingData = seoLandings.find((l) => l.path === path);
@@ -155,7 +155,7 @@ const CheckIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18
             Tres pasos, sin sorpresas
           </h2>
           <p class="home-section-lead">
-            Comunicación directa en español y entregas ordenadas —desde Mendoza o a distancia.
+            Comunicación directa en español y entregas ordenadas. Desde Mendoza o a distancia.
           </p>
         </div>
 
@@ -270,7 +270,7 @@ const CheckIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18
             Contame qué negocio tenés
           </h2>
           <p class="mx-auto mt-3 max-w-lg text-[0.9375rem] leading-[1.7] text-muted">
-            Escribime por WhatsApp o mail. Te respondo con una idea clara de alcance y tiempos —sin compromiso.
+            Escribime por WhatsApp o mail. Te respondo con alcance y tiempos claros, sin compromiso.
           </p>
           <div class="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <ButtonLink href={site.social.whatsapp} external>

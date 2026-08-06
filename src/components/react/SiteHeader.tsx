@@ -76,7 +76,7 @@ export default function SiteHeader({
           className="site-header-bar"
           data-scrolled={isScrolled ? 'true' : 'false'}
         >
-          <a href={logoHref} className="site-header-logo" aria-label={`${siteName} — Inicio`}>
+          <a href={logoHref} className="site-header-logo" aria-label={`${siteName}, inicio`}>
             <span className="site-header-logo-name">Fernando Moya</span>
             <span className="site-header-logo-role">Diseño + desarrollo web</span>
           </a>

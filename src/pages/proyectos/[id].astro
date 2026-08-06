@@ -63,7 +63,7 @@ const projectType = entry.data.projectType;
 const description = entry.data.description;
 const alt = `Captura del sitio web de ${client}`;
 
-const pageTitle = `${client} — Caso de estudio | Fernando Moya`;
+const pageTitle = `${client} · Caso de estudio | Fernando Moya`;
 const pagePath = `/proyectos/${id}`;
 const nextClient = nextEntry.data.client ?? nextEntry.data.title;
 const nextHref = `/proyectos/${editorial.nextId}`;
@@ -71,7 +71,7 @@ const nextHref = `/proyectos/${editorial.nextId}`;
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'CreativeWork',
-  name: `${client} — Caso de estudio`,
+  name: `${client} · Caso de estudio`,
   description,
   url: `https://www.fermoyadev.com.ar${pagePath}`,
   author: {

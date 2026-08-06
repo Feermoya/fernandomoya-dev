@@ -14,7 +14,7 @@ export default function NotFoundClient() {
       <p className="text-eyebrow">404</p>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-text">No encontrado</h1>
       <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted">
-        Esta URL no existe. Volvé al inicio de la landing.
+        Esta URL no existe. Volvé al inicio.
       </p>
       <div className="mt-10 flex justify-center gap-3">
         <a
