@@ -7,6 +7,7 @@ import { Button } from '@/components/panel/ui/button';
 import {
   PAYMENT_METHODS,
   expectedArsFromUsd,
+  suggestedReceivedArsFromUsd,
 } from '@/lib/panel/payments/register';
 
 type Props = {
@@ -15,6 +16,12 @@ type Props = {
   onClose: () => void;
   onSuccess: () => void;
 };
+
+type MepState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'ok'; value: number; ageMinutes: number; source: string }
+  | { status: 'error'; message: string };
 
 function toInputNumber(value: string): string {
   return value.replace(/[^\d.,]/g, '');
@@ -31,6 +38,9 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [mepState, setMepState] = useState<MepState>({ status: 'idle' });
+  const [mepTouched, setMepTouched] = useState(false);
+  const [amountTouched, setAmountTouched] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -50,11 +60,57 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
     setError(null);
     setDone(false);
     setSubmitting(false);
+    setMepTouched(false);
+    setAmountTouched(false);
+    setMepState({ status: 'idle' });
     if (charge.referenceCurrency === 'ARS') {
-      setAmount(String(charge.referenceAmount));
+      setAmount(String(Math.round(charge.referenceAmount)));
     } else {
       setAmount('');
     }
+  }, [open, charge]);
+
+  useEffect(() => {
+    if (!open || !charge || charge.referenceCurrency !== 'USD') return;
+    let cancelled = false;
+    setMepState({ status: 'loading' });
+    fetch('/panel/api/exchange/mep', { credentials: 'same-origin' })
+      .then(async (res) => {
+        const data = (await res.json()) as {
+          ok: boolean;
+          value?: number;
+          ageMinutes?: number;
+          source?: string;
+          error?: string;
+        };
+        if (cancelled) return;
+        if (!res.ok || !data.ok || !(data.value && data.value > 0)) {
+          setMepState({
+            status: 'error',
+            message: data.error || 'No se pudo obtener el MEP',
+          });
+          return;
+        }
+        setMepState({
+          status: 'ok',
+          value: data.value,
+          ageMinutes: data.ageMinutes ?? 0,
+          source: data.source || 'mep',
+        });
+        if (!mepTouched) {
+          setMep(String(data.value));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMepState({ status: 'error', message: 'No se pudo obtener el MEP' });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+    // mepTouched intentionally omitted: only auto-fill on open/charge
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, charge]);
 
   const mepNumber = useMemo(() => {
@@ -62,16 +118,22 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
     return Number.isFinite(n) && n > 0 ? n : null;
   }, [mep]);
 
-  const expectedArs = useMemo(() => {
+  const expectedExact = useMemo(() => {
     if (!charge || !isUsd || mepNumber == null) return null;
     return expectedArsFromUsd(charge.referenceAmount, mepNumber);
   }, [charge, isUsd, mepNumber]);
 
+  const suggestedAmount = useMemo(() => {
+    if (!charge || !isUsd || mepNumber == null) return null;
+    return suggestedReceivedArsFromUsd(charge.referenceAmount, mepNumber);
+  }, [charge, isUsd, mepNumber]);
+
   useEffect(() => {
     if (!open || !charge || !isUsd) return;
-    if (expectedArs == null) return;
-    setAmount(String(expectedArs));
-  }, [expectedArs, open, charge, isUsd]);
+    if (suggestedAmount == null) return;
+    if (amountTouched) return;
+    setAmount(String(suggestedAmount));
+  }, [suggestedAmount, open, charge, isUsd, amountTouched]);
 
   if (!open || !charge) return null;
 
@@ -132,10 +194,6 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
 
         <div className="panel-sheet__summary">
           <div>
-            <p className="panel-metric__label">Período</p>
-            <p className="panel-sheet__summary-value">{formatPeriodLabel(charge.period)}</p>
-          </div>
-          <div>
             <p className="panel-metric__label">Tarifa</p>
             <p className="panel-sheet__summary-value">
               {formatCurrencyAmount(charge.referenceAmount, charge.referenceCurrency)}
@@ -144,6 +202,10 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
           <div>
             <p className="panel-metric__label">Vencimiento</p>
             <p className="panel-sheet__summary-value">{formatDueLabel(charge.dueDate)}</p>
+          </div>
+          <div>
+            <p className="panel-metric__label">Período</p>
+            <p className="panel-sheet__summary-value">{formatPeriodLabel(charge.period)}</p>
           </div>
         </div>
 
@@ -163,18 +225,32 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
                     autoComplete="off"
                     placeholder="Ej. 1512.48"
                     value={mep}
-                    onChange={(e) => setMep(toInputNumber(e.target.value))}
+                    onChange={(e) => {
+                      setMepTouched(true);
+                      setMep(toInputNumber(e.target.value));
+                    }}
                     required
                   />
                 </label>
-                {expectedArs != null ? (
+                {mepState.status === 'loading' ? (
+                  <p className="panel-sheet__calc">Obteniendo MEP…</p>
+                ) : null}
+                {mepState.status === 'ok' ? (
                   <p className="panel-sheet__calc">
-                    {formatCurrencyAmount(charge.referenceAmount, 'USD')} × {mepNumber} ={' '}
-                    <strong>{formatCurrencyAmount(expectedArs, 'ARS')}</strong>
+                    MEP actualizado hace {mepState.ageMinutes} min
                   </p>
-                ) : (
-                  <p className="panel-sheet__calc">Ingresá el MEP para calcular el monto esperado.</p>
-                )}
+                ) : null}
+                {mepState.status === 'error' ? (
+                  <p className="panel-sheet__calc panel-sheet__calc--warn">
+                    No se pudo obtener el MEP · ingresalo manualmente
+                  </p>
+                ) : null}
+                {expectedExact != null && mepNumber != null ? (
+                  <p className="panel-sheet__calc">
+                    Equivalente: {formatCurrencyAmount(charge.referenceAmount, 'USD')} × {mepNumber}{' '}
+                    = <strong>{formatCurrencyAmount(expectedExact, 'ARS')}</strong>
+                  </p>
+                ) : null}
               </>
             ) : null}
 
@@ -185,7 +261,10 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
                 inputMode="decimal"
                 autoComplete="off"
                 value={amount}
-                onChange={(e) => setAmount(toInputNumber(e.target.value))}
+                onChange={(e) => {
+                  setAmountTouched(true);
+                  setAmount(toInputNumber(e.target.value));
+                }}
                 required
               />
             </label>
@@ -238,7 +317,7 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
                 Cancelar
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? 'Guardando…' : 'Guardar pago'}
+                {submitting ? 'Guardando…' : 'Registrar pago'}
               </Button>
             </div>
           </form>

@@ -52,10 +52,19 @@ function parseCurrency(value: string): Currency {
   throw new Error('Moneda inválida');
 }
 
-/** Monto esperado ARS = USD × MEP (solo UI / precarga). */
+/** Monto esperado ARS exacto (2 decimales) = USD × MEP (UI). */
 export function expectedArsFromUsd(referenceUsd: number, exchangeRate: number): number {
   if (!(referenceUsd >= 0) || !(exchangeRate > 0)) return 0;
   return Math.round(referenceUsd * exchangeRate * 100) / 100;
+}
+
+/** Monto recibido sugerido en pesos enteros. */
+export function suggestedReceivedArsFromUsd(
+  referenceUsd: number,
+  exchangeRate: number,
+): number {
+  if (!(referenceUsd >= 0) || !(exchangeRate > 0)) return 0;
+  return Math.round(referenceUsd * exchangeRate);
 }
 
 /**

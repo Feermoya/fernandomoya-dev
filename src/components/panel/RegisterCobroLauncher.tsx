@@ -20,20 +20,44 @@ export function RegisterCobroLauncher({ unpaidCharges }: Props) {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const clients = useMemo(() => {
-    const map = new Map<string, { id: string; name: string; count: number }>();
-    for (const c of unpaidCharges) {
+    const priority = (status: ChargeListItemData['status']) =>
+      status === 'overdue' ? 0 : status === 'due_today' ? 1 : 2;
+
+    const sortedCharges = [...unpaidCharges].sort((a, b) => {
+      const p = priority(a.status) - priority(b.status);
+      if (p !== 0) return p;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+
+    const map = new Map<
+      string,
+      { id: string; name: string; count: number; topStatus: ChargeListItemData['status'] }
+    >();
+    for (const c of sortedCharges) {
       const prev = map.get(c.clientId);
       if (prev) prev.count += 1;
-      else map.set(c.clientId, { id: c.clientId, name: c.clientName, count: 1 });
+      else
+        map.set(c.clientId, {
+          id: c.clientId,
+          name: c.clientName,
+          count: 1,
+          topStatus: c.status,
+        });
     }
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    return [...map.values()];
   }, [unpaidCharges]);
 
   const clientCharges = useMemo(() => {
     if (!clientId) return [];
+    const priority = (status: ChargeListItemData['status']) =>
+      status === 'overdue' ? 0 : status === 'due_today' ? 1 : 2;
     return unpaidCharges
       .filter((c) => c.clientId === clientId)
-      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      .sort((a, b) => {
+        const p = priority(a.status) - priority(b.status);
+        if (p !== 0) return p;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
   }, [unpaidCharges, clientId]);
 
   function open() {

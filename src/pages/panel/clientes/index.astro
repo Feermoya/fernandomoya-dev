@@ -2,8 +2,8 @@
 export const prerender = false;
 
 import PanelLayout from '@/layouts/PanelLayout.astro';
-import { PanelHeader } from '@/components/panel/PanelHeader';
 import { ClientListItem } from '@/components/panel/ClientListItem';
+import { ClientCreateLauncher } from '@/components/panel/ClientCreateLauncher';
 import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
 import { listClientsWithActiveServices } from '@/lib/panel/repositories/clients';
 
@@ -20,13 +20,28 @@ const result = access.ok
 
 const clients = result.data;
 const loadError = result.error;
+const ok = Astro.url.searchParams.get('ok');
 ---
 
 <PanelLayout title="Clientes" path="/panel/clientes">
-  <PanelHeader
-    title="Clientes"
-    subtitle={loadError ? 'Error al cargar' : `${clients.length} en total`}
-  />
+  <header class="panel-header">
+    <div class="min-w-0">
+      <p class="panel-header__eyebrow">Panel de cobros</p>
+      <h1 class="panel-header__title">Clientes</h1>
+      <p class="panel-header__subtitle">
+        {loadError ? 'Error al cargar' : `${clients.length} en total`}
+      </p>
+    </div>
+    <ClientCreateLauncher client:load />
+  </header>
+
+  {
+    ok === 'cliente' ? (
+      <p class="panel-toast" role="status">
+        Cliente creado
+      </p>
+    ) : null
+  }
 
   {
     loadError ? (

@@ -33,8 +33,9 @@ export async function ensureRecurringChargesForMonth(
 ): Promise<EnsureRecurringChargesResult> {
   const { data: rows, error: servicesError } = await supabase
     .from('services')
-    .select('*')
-    .eq('billing_type', 'recurring');
+    .select('*, clients!inner(id, active)')
+    .eq('billing_type', 'recurring')
+    .eq('clients.active', true);
 
   if (servicesError) {
     logEnsureError(servicesError);

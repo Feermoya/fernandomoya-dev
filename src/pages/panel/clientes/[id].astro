@@ -5,6 +5,11 @@ import PanelLayout from '@/layouts/PanelLayout.astro';
 import { formatCurrencyAmount } from '@/components/panel/CurrencyAmount';
 import { StatusBadge } from '@/components/panel/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/panel/ui/card';
+import { ClientEditSheet } from '@/components/panel/ClientEditSheet';
+import { ServiceCreateLauncher } from '@/components/panel/ServiceCreateLauncher';
+import { ServiceTariffSheet } from '@/components/panel/ServiceTariffSheet';
+import { ServiceDeactivateButton } from '@/components/panel/ServiceDeactivateButton';
+import { ClientDetailActions } from '@/components/panel/ClientDetailActions';
 import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
 import { getClientDetail } from '@/lib/panel/repositories/clients';
 import { formatDueLabel, formatPeriodLabel, todayIsoDate } from '@/lib/panel/view-types';
@@ -43,12 +48,28 @@ const nextCharge = detail
       .filter((c) => c.status === 'upcoming' || c.status === 'due_today' || c.status === 'overdue')
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0]
   : undefined;
+
+const autoOpenService = Astro.url.searchParams.get('nuevoServicio') === '1';
+const ok = Astro.url.searchParams.get('ok');
+const unpaidCharges = detail
+  ? detail.charges.filter(
+      (c) => c.status === 'upcoming' || c.status === 'due_today' || c.status === 'overdue',
+    )
+  : [];
 ---
 
 <PanelLayout title={detail?.client.name ?? 'Cliente'} path={`/panel/clientes/${id}`}>
   <p class="mb-3">
     <a href="/panel/clientes" class="panel-section__link">← Clientes</a>
   </p>
+
+  {
+    ok === 'servicio' ? (
+      <p class="panel-toast" role="status">
+        Servicio creado
+      </p>
+    ) : null
+  }
 
   {
     loadError || !detail ? (
@@ -66,9 +87,12 @@ const nextCharge = detail
               {detail.client.ended_at ? ` · Baja ${formatDueLabel(detail.client.ended_at)}` : ''}
             </p>
           </div>
-          <span class={`panel-badge ${detail.client.active ? 'panel-badge--paid' : 'panel-badge--muted'}`}>
-            {detail.client.active ? 'Activo' : 'Inactivo'}
-          </span>
+          <div class="panel-header__actions">
+            <span class={`panel-badge ${detail.client.active ? 'panel-badge--paid' : 'panel-badge--muted'}`}>
+              {detail.client.active ? 'Activo' : 'Inactivo'}
+            </span>
+            <ClientEditSheet client:load client={detail.client} />
+          </div>
         </header>
 
         <section class="panel-metrics" aria-label="Resumen del cliente">
@@ -97,9 +121,21 @@ const nextCharge = detail
           </article>
         </section>
 
+        {
+          unpaidCharges.length > 0 ? (
+            <section class="panel-section" aria-label="Cobros pendientes">
+              <div class="panel-section__head">
+                <h2 class="panel-section__title">Pendientes</h2>
+              </div>
+              <ClientDetailActions client:load unpaidCharges={unpaidCharges} />
+            </section>
+          ) : null
+        }
+
         <section class="panel-section" aria-label="Servicios">
           <div class="panel-section__head">
             <h2 class="panel-section__title">Servicios</h2>
+            <ServiceCreateLauncher client:load clientId={detail.client.id} autoOpen={autoOpenService} />
           </div>
           {detail.services.length === 0 ? (
             <p class="panel-empty">Sin servicios.</p>
@@ -134,6 +170,18 @@ const nextCharge = detail
                         Inicio {formatDueLabel(service.start_date)}
                         {service.ended_at ? ` · Baja ${formatDueLabel(service.ended_at)}` : ''}
                       </p>
+                      {service.active ? (
+                        <div class="panel-service-actions">
+                          <ServiceTariffSheet
+                            client:load
+                            serviceId={service.id}
+                            serviceName={service.name}
+                            currentAmount={service.reference_amount}
+                            currency={service.reference_currency}
+                          />
+                          <ServiceDeactivateButton client:load service={service} />
+                        </div>
+                      ) : null}
                     </CardContent>
                   </Card>
                 </li>
