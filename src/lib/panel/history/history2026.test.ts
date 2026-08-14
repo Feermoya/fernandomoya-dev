@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AUGUST_2026_COLLECTED_ARS,
   HISTORY_PAYMENTS_2026,
+  HISTORY_UNPAID_AUGUST_2026,
+  august2026ExpectedOverdueCount,
   august2026TotalArs,
   collectedByMonthArs,
   historicalChargeStatus,
@@ -10,11 +13,12 @@ import {
 } from '@/lib/panel/history/history2026';
 
 describe('historial 2026 · totales', () => {
-  it('agosto = ARS 476250', () => {
-    expect(august2026TotalArs()).toBe(476250);
+  it('agosto cobrado (celdas verdes) = ARS 315610', () => {
+    expect(august2026TotalArs()).toBe(AUGUST_2026_COLLECTED_ARS);
+    expect(AUGUST_2026_COLLECTED_ARS).toBe(30000 + 90900 + 58000 + 60830 + 75880);
   });
 
-  it('totales mensuales desde payments (paid_at)', () => {
+  it('totales mensuales desde payments (paid_at) — ago corregido', () => {
     expect(collectedByMonthArs()).toEqual({
       '2026-01': 7580,
       '2026-02': 10000,
@@ -23,13 +27,24 @@ describe('historial 2026 · totales', () => {
       '2026-05': 248345,
       '2026-06': 271768,
       '2026-07': 376409,
-      '2026-08': 476250,
+      '2026-08': 315610,
     });
+  });
+
+  it('agosto unpaid sin verde → 2 overdue esperados', () => {
+    expect(HISTORY_UNPAID_AUGUST_2026).toEqual([
+      { clientKey: 'avellaneda', dueMonth: '2026-08-01', amountArs: 100000 },
+      { clientKey: 'hema', dueMonth: '2026-08-01', amountArs: 60640 },
+    ]);
+    expect(august2026ExpectedOverdueCount()).toBe(2);
+    expect(
+      historicalChargeStatus(false, '2026-08-10', '2026-08-14'),
+    ).toBe('overdue');
   });
 
   it('no incluye Ingreso Fijo', () => {
     expect(mentionsIngresoFijo()).toBe(false);
-    expect(HISTORY_PAYMENTS_2026).toHaveLength(30);
+    expect(HISTORY_PAYMENTS_2026).toHaveLength(28);
   });
 });
 
@@ -97,7 +112,7 @@ describe('historial 2026 · estados', () => {
     const a = resolveHistoryRows();
     const b = resolveHistoryRows();
     expect(b).toEqual(a);
-    expect(a).toHaveLength(30);
+    expect(a).toHaveLength(28);
   });
 });
 

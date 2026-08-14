@@ -265,6 +265,80 @@ export async function listActiveRecurringServices(
   return { data: (data ?? []).map((r) => mapService(r as Record<string, unknown>)), error: null };
 }
 
+export type ActiveRecurringServiceWithClient = ServiceRow & {
+  client_name: string;
+};
+
+/** Recurring activos + nombre de cliente (para proyección de próximos). */
+export async function listActiveRecurringServicesWithClients(
+  supabase: SupabaseClient,
+): Promise<{ data: ActiveRecurringServiceWithClient[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from('services')
+    .select(
+      `
+      *,
+      clients!inner (
+        id,
+        name,
+        active
+      )
+    `,
+    )
+    .eq('active', true)
+    .eq('billing_type', 'recurring')
+    .eq('clients.active', true);
+
+  if (error) {
+    logPanelError('listActiveRecurringServicesWithClients', error);
+    return { data: [], error: 'No se pudieron cargar los servicios.' };
+  }
+
+  const rows = (data ?? []) as Array<
+    Record<string, unknown> & {
+      clients?: Record<string, unknown> | Record<string, unknown>[] | null;
+    }
+  >;
+
+  const mapped: ActiveRecurringServiceWithClient[] = rows.map((row) => {
+    const service = mapService(row);
+    const client = asOne(row.clients);
+    return {
+      ...service,
+      client_name: client ? String(client.name) : 'Cliente',
+    };
+  });
+
+  return { data: mapped, error: null };
+}
+
+/** Payments ARS para la serie “Cobrado por mes”. */
+export async function listArsPaymentsForCollectedSeries(
+  supabase: SupabaseClient,
+): Promise<{
+  data: Array<{ paid_at: string; amount_received: number; currency_received: string }>;
+  error: string | null;
+}> {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('paid_at, amount_received, currency_received')
+    .eq('currency_received', 'ARS');
+
+  if (error) {
+    logPanelError('listArsPaymentsForCollectedSeries', error);
+    return { data: [], error: 'No se pudo cargar el historial de cobrado.' };
+  }
+
+  return {
+    data: (data ?? []).map((r) => ({
+      paid_at: String((r as { paid_at: string }).paid_at),
+      amount_received: Number((r as { amount_received: number }).amount_received),
+      currency_received: String((r as { currency_received: string }).currency_received),
+    })),
+    error: null,
+  };
+}
+
 export async function listPaymentsInMonth(
   supabase: SupabaseClient,
   monthStart: string,

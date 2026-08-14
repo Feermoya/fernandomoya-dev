@@ -3,18 +3,21 @@ import { calculateCollectedInMonth, calculateMrr } from '@/lib/panel/mrr';
 import { parseIsoDateParts, toPeriodStart } from '@/lib/panel/dates';
 import { ensureRecurringChargesForMonth } from '@/lib/panel/charges/ensureRecurring';
 import { sortChargesForList } from '@/lib/panel/charges/sort';
+import { listNextExpectedCharges } from '@/lib/panel/charges/nextExpected';
+import { buildCollectedArsByMonth } from '@/lib/panel/charges/collectedByMonth';
 import {
   countActiveClients,
-  listActiveRecurringServices,
+  listActiveRecurringServicesWithClients,
+  listArsPaymentsForCollectedSeries,
   listChargesWithRelations,
   listPaymentsInMonth,
-  listUsdRecurringChargePeriods,
 } from '@/lib/panel/repositories/reads';
 import {
   formatMonthTitle,
   monthLabelFromPeriod,
   type DashboardData,
   type MrrSeriesPoint,
+  type UpcomingExpectationItem,
   todayIsoDate,
 } from '@/lib/panel/view-types';
 
@@ -25,10 +28,139 @@ function nextMonthStart(monthStart: string): string {
     : `${year}-${String(month + 1).padStart(2, '0')}-01`;
 }
 
+export async function loadDashboard(
+  supabase: SupabaseClient,
+  now = new Date(),
+): Promise<{ data: DashboardData | null; error: string | null }> {
+  const today = todayIsoDate(now);
+  const monthStart = toPeriodStart(today);
+  const nextStart = nextMonthStart(monthStart);
+
+  // Idempotente: crea charges del mes operativo si faltan (previous_month → período anterior).
+  const ensure = await ensureRecurringChargesForMonth(supabase, today);
+  if (ensure.error) {
+    return { data: null, error: ensure.error };
+  }
+
+  const [clientsRes, servicesRes, chargesRes, paymentsRes, collectedHistoryRes] =
+    await Promise.all([
+      countActiveClients(supabase),
+      listActiveRecurringServicesWithClients(supabase),
+      listChargesWithRelations(supabase),
+      listPaymentsInMonth(supabase, monthStart, nextStart),
+      listArsPaymentsForCollectedSeries(supabase),
+    ]);
+
+  const firstError =
+    clientsRes.error ||
+    servicesRes.error ||
+    chargesRes.error ||
+    paymentsRes.error ||
+    collectedHistoryRes.error;
+
+  if (firstError) {
+    return { data: null, error: firstError };
+  }
+
+  const mrr = calculateMrr(servicesRes.data, today);
+  const collected = calculateCollectedInMonth(paymentsRes.data, today);
+  const charges = sortChargesForList(chargesRes.data);
+
+  const overdueCount = charges.filter((c) => c.status === 'overdue').length;
+  const dueTodayCount = charges.filter((c) => c.status === 'due_today').length;
+
+  const unpaidCharges = charges
+    .filter(
+      (c) => c.status === 'upcoming' || c.status === 'due_today' || c.status === 'overdue',
+    )
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+  const attentionCharges = unpaidCharges
+    .filter((c) => c.status === 'overdue' || c.status === 'due_today')
+    .slice(0, 5);
+
+  const existingForProjection = charges.map((c) => ({
+    id: c.id,
+    service_id: c.serviceId,
+    period: c.period,
+    due_date: c.dueDate,
+    hasPayment: Boolean(c.payment) || c.status === 'paid',
+  }));
+
+  const nextExpected = listNextExpectedCharges(
+    servicesRes.data.map((s) => ({
+      id: s.id,
+      active: s.active,
+      billing_type: s.billing_type,
+      billing_mode: s.billing_mode,
+      due_day: s.due_day,
+      reference_amount: s.reference_amount,
+      reference_currency: s.reference_currency,
+      start_date: s.start_date,
+      ended_at: s.ended_at,
+      client_id: s.client_id,
+      name: s.name,
+      client_name: s.client_name,
+    })),
+    existingForProjection,
+    today,
+  );
+
+  const upcomingExpectations: UpcomingExpectationItem[] = nextExpected.map((n) => ({
+    serviceId: n.serviceId,
+    clientId: n.clientId,
+    clientName: n.clientName,
+    serviceName: n.serviceName,
+    period: n.period,
+    dueDate: n.dueDate,
+    referenceAmount: n.referenceAmount,
+    referenceCurrency: n.referenceCurrency,
+    chargeId: n.chargeId,
+  }));
+
+  const upcomingCharges = upcomingExpectations.slice(0, 8).map((n) => ({
+    id: n.chargeId ?? `expected:${n.serviceId}:${n.period}`,
+    serviceId: n.serviceId,
+    clientId: n.clientId,
+    clientName: n.clientName,
+    serviceName: n.serviceName,
+    period: n.period,
+    referenceAmount: n.referenceAmount,
+    referenceCurrency: n.referenceCurrency,
+    dueDate: n.dueDate,
+    status: 'upcoming' as const,
+    payment: null,
+  }));
+
+  const collectedSeries = buildCollectedArsByMonth(collectedHistoryRes.data);
+
+  return {
+    data: {
+      today,
+      monthLabel: formatMonthTitle(today),
+      activeClients: clientsRes.count,
+      activeServices: servicesRes.data.length,
+      mrrUsd: mrr.usd,
+      mrrArs: mrr.ars,
+      collectedThisMonthArs: collected.ars,
+      collectedThisMonthUsd: collected.usd,
+      overdueCount,
+      upcomingCount: upcomingExpectations.length,
+      dueTodayCount,
+      upcomingCharges,
+      upcomingExpectations,
+      attentionCharges,
+      unpaidCharges,
+      mrrSeries: [],
+      collectedSeries,
+    },
+    error: null,
+  };
+}
+
 /**
  * Serie mensual de MRR USD a partir de charges históricos recurrentes.
- * Un mes = suma de reference_amount USD de charges con ese period.
- * No inventa meses: solo períodos presentes en DB.
+ * Conservada para tests; el Dashboard ya no la usa como gráfico principal.
  */
 export function buildHistoricalMrrUsdSeries(
   rows: Array<{ period: string; reference_amount: number }>,
@@ -47,86 +179,6 @@ export function buildHistoricalMrrUsdSeries(
       label: monthLabelFromPeriod(period),
       mrrUsd,
     }));
-}
-
-export async function loadDashboard(
-  supabase: SupabaseClient,
-  now = new Date(),
-): Promise<{ data: DashboardData | null; error: string | null }> {
-  const today = todayIsoDate(now);
-  const monthStart = toPeriodStart(today);
-  const nextStart = nextMonthStart(monthStart);
-
-  // Idempotente: crea charges del mes operativo si faltan (previous_month → período anterior).
-  const ensure = await ensureRecurringChargesForMonth(supabase, today);
-  if (ensure.error) {
-    return { data: null, error: ensure.error };
-  }
-
-  const [clientsRes, servicesRes, chargesRes, paymentsRes, historyRes] = await Promise.all([
-    countActiveClients(supabase),
-    listActiveRecurringServices(supabase),
-    listChargesWithRelations(supabase),
-    listPaymentsInMonth(supabase, monthStart, nextStart),
-    listUsdRecurringChargePeriods(supabase),
-  ]);
-
-  const firstError =
-    clientsRes.error ||
-    servicesRes.error ||
-    chargesRes.error ||
-    paymentsRes.error ||
-    historyRes.error;
-
-  if (firstError) {
-    return { data: null, error: firstError };
-  }
-
-  const mrr = calculateMrr(servicesRes.data, today);
-  const collected = calculateCollectedInMonth(paymentsRes.data, today);
-  const charges = sortChargesForList(chargesRes.data);
-
-  const overdueCount = charges.filter((c) => c.status === 'overdue').length;
-  const upcomingCount = charges.filter((c) => c.status === 'upcoming').length;
-  const dueTodayCount = charges.filter((c) => c.status === 'due_today').length;
-
-  const unpaidCharges = charges
-    .filter(
-      (c) => c.status === 'upcoming' || c.status === 'due_today' || c.status === 'overdue',
-    )
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-
-  const upcomingCharges = unpaidCharges
-    .filter((c) => c.status === 'upcoming' || c.status === 'due_today')
-    .slice(0, 5);
-
-  const attentionCharges = unpaidCharges
-    .filter((c) => c.status === 'overdue' || c.status === 'due_today')
-    .slice(0, 5);
-
-  const historySeries = buildHistoricalMrrUsdSeries(historyRes.data);
-  const mrrSeries = appendCurrentMrrPoint(historySeries, mrr.usd, today);
-
-  return {
-    data: {
-      today,
-      monthLabel: formatMonthTitle(today),
-      activeClients: clientsRes.count,
-      activeServices: servicesRes.data.length,
-      mrrUsd: mrr.usd,
-      mrrArs: mrr.ars,
-      collectedThisMonthArs: collected.ars,
-      collectedThisMonthUsd: collected.usd,
-      overdueCount,
-      upcomingCount,
-      dueTodayCount,
-      upcomingCharges,
-      attentionCharges,
-      unpaidCharges,
-      mrrSeries,
-    },
-    error: null,
-  };
 }
 
 /** Añade/actualiza el mes corriente con el MRR contractual vivo (no inventa pasado). */

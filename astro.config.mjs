@@ -132,6 +132,16 @@ export default defineConfig({
    */
   adapter: vercel(),
   compressHTML: true,
+  /**
+   * Dev Toolbar: desactivada en este proyecto.
+   * Motivo: en Astro 6 + Vite 7 dispara 404 de sourcemaps, re-optimizaciones
+   * y errores WebSocket/HMR (`failed to connect to websocket`, `send` undefined)
+   * que no aportan al flujo del panel. Preferimos `npm run dev` estable.
+   * React 19 / jsxDEV se mantiene con NODE_ENV=development + optimizeDeps.
+   */
+  devToolbar: {
+    enabled: false,
+  },
   /** Landing de una sola vista: sin prefetch de otras rutas. */
   prefetch: false,
   vite: {
@@ -144,8 +154,10 @@ export default defineConfig({
       },
     },
     optimizeDeps: {
-      // Prebundle explícito en modo development: si se optimiza con
-      // NODE_ENV=production, React 19 deja jsxDEV = void 0 → crash en islands.
+      // Prebundle explícito en modo development.
+      // Si una dep se descubre mid-session, Vite re-optimiza → 504 Outdated
+      // Optimize Dep → fallan islands (HeroShowcase) y React 19 deja
+      // jsxDEV = void 0 si el cache se regeneró con NODE_ENV=production.
       include: [
         'react',
         'react-dom',
@@ -153,6 +165,10 @@ export default defineConfig({
         'react/jsx-dev-runtime',
         'react-dom/client',
         'chart.js',
+        'gsap',
+        'gsap/ScrollTrigger',
+        'lenis',
+        'lucide-react',
       ],
     },
     server: {
@@ -169,7 +185,8 @@ export default defineConfig({
       filter: (page) =>
         !page.includes('/precios') &&
         !page.includes('/foco-financiero') &&
-        !page.includes('/panel'),
+        !page.includes('/panel') &&
+        !page.includes('/admin'),
     }),
   ],
 });

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Panel de cobros — import HISTÓRICO 2026 (pagos reales de planilla)
+-- Panel de cobros — import HISTÓRICO 2026 (planilla)
 -- Marcador: payments.notes contienen '[seed-history-2026]'
 --   (charges NO tiene columna notes — schema real de 20260814180000_panel_cobros)
 --
@@ -12,29 +12,35 @@
 --   Standard:  (service_id, period)  — index charges_service_period_unique
 --   Bootstrap: (service_id, period IS NULL, due_date)
 --
+-- ⚠ REGLA DE LA PLANILLA (fuente de verdad):
+--   · Importe escrito  = cuánto corresponde cobrar (obligación / charge).
+--   · Celda VERDE      = ese cliente EFECTIVAMENTE pagó → crear payment.
+--   · Importe SIN verde = todavía NO pagó → crear charge, NO crear payment.
+--
+--   El import original trató “importe existente = pago”. Eso es INCORRECTO.
+--   Agosto 2026 ya corregido aquí (Avellaneda + HEMA unpaid).
+--   Otros meses: pendientes de revisión con el color verde; NO corregir en masa aún.
+--   Si ya corriste el seed viejo de agosto, aplicar también:
+--     panel_cobros_fix_august_2026_unpaid.sql
+--
 -- Estrategia reference_*:
---   Solo conocemos amount_received en ARS. No inventamos MEP ni USD contractual
---   histórico. Por eso charge+payment usan reference_amount = amount_received
+--   Solo conocemos amount en ARS de la planilla. No inventamos MEP ni USD contractual
+--   histórico. Por eso charge (+payment si paid) usan reference_amount = amount_ars
 --   y reference_currency = 'ARS', exchange_rate = NULL (cumple constraint).
 --
 -- Estrategia period (billing_mode previous_month):
---   Pago en mes M → period = mes M-1, due_date/paid_at = due_day en mes M.
---   Si M-1 < start_date → BOOTSTRAP: period NULL (conserva el pago sin inventar
---   un período anterior al alta y evita colisión unique con el primer period
---   recurrente). Caso Giuliana documentado en payments.notes.
+--   Cobro del mes M → period = mes M-1, due_date = due_day en mes M.
+--   Si M-1 < start_date → BOOTSTRAP: period NULL.
 --
--- paid_at: due_day del mes de cobro (día exacto desconocido).
+-- paid_at: due_day del mes de cobro (día exacto desconocido) — solo si create_payment.
 -- payment_method: Transferencia
 --
--- Totales esperados (ARS por paid_at month):
---   2026-01: 7580
---   2026-02: 10000
---   2026-03: 169530
---   2026-04: 233345
---   2026-05: 248345
---   2026-06: 271768
---   2026-07: 376409
---   2026-08: 476250
+-- Totales esperados (ARS cobrado = solo celdas verdes / create_payment=true):
+--   2026-01..07: sin revisión verde todavía (pueden incluir falsos pagos)
+--   2026-08: 315610
+--     pagados: pato 30000 + poletino 90900 + sanacion 58000
+--              + giacomelli 60830 + giuliana 75880
+--     unpaid (charge sin payment): avellaneda 100000 + hema 60640
 -- =============================================================================
 
 begin;
@@ -48,44 +54,46 @@ begin
     select *
     from (
       values
-        ('22222222-2222-4222-8222-222222222201'::uuid, NULL::date, '2026-01-10'::date, 7580.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-01 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-01-01'::date, '2026-02-10'::date, 10000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-02 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-02-01'::date, '2026-03-10'::date, 15000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-03 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-03-01'::date, '2026-04-10'::date, 15000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-04 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-04-01'::date, '2026-05-10'::date, 30000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-05 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-05-01'::date, '2026-06-10'::date, 30000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-06 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-06-01'::date, '2026-07-10'::date, 30320.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-07 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-07-01'::date, '2026-08-10'::date, 30000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222202'::uuid, NULL::date, '2026-03-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-03 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-03-01'::date, '2026-04-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-04 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-04-01'::date, '2026-05-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-05 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-05-01'::date, '2026-06-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-06 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-06-01'::date, '2026-07-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-07 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-07-01'::date, '2026-08-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222203'::uuid, NULL::date, '2026-04-10'::date, 63815.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-04 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222203'::uuid, '2026-04-01'::date, '2026-05-10'::date, 63815.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-05 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222203'::uuid, '2026-05-01'::date, '2026-06-10'::date, 87600.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-06 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222203'::uuid, '2026-06-01'::date, '2026-07-10'::date, 68000.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-07 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222203'::uuid, '2026-07-01'::date, '2026-08-10'::date, 90900.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222204'::uuid, NULL::date, '2026-03-24'::date, 54530.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-03 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-03-01'::date, '2026-04-24'::date, 54530.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-04 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-04-01'::date, '2026-05-24'::date, 54530.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-05 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-05-01'::date, '2026-06-24'::date, 54168.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-06 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-06-01'::date, '2026-07-24'::date, 57449.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-07 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-07-01'::date, '2026-08-24'::date, 58000.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222205'::uuid, NULL::date, '2026-07-10'::date, 60640.00::numeric, '[seed-history-2026] | client=giacomelli | paid_month=2026-07 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222205'::uuid, '2026-07-01'::date, '2026-08-10'::date, 60830.00::numeric, '[seed-history-2026] | client=giacomelli | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222206'::uuid, NULL::date, '2026-08-10'::date, 75880.00::numeric, '[seed-history-2026] | client=giuliana | paid_month=2026-08 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null | EXCEPTION Giuliana: start_date 2026-08-01 + previous_month would skip July; August payment preserved as bootstrap charge (period null)'::text),
-        ('22222222-2222-4222-8222-222222222207'::uuid, NULL::date, '2026-07-10'::date, 60000.00::numeric, '[seed-history-2026] | client=hema | paid_month=2026-07 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text),
-        ('22222222-2222-4222-8222-222222222207'::uuid, '2026-07-01'::date, '2026-08-10'::date, 60640.00::numeric, '[seed-history-2026] | client=hema | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text)
-    ) as history_rows(service_id, period, due_date, amount_ars, note)
+        -- columnas: service_id, period, due_date, amount_ars, note, create_payment
+        ('22222222-2222-4222-8222-222222222201'::uuid, NULL::date, '2026-01-10'::date, 7580.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-01 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-01-01'::date, '2026-02-10'::date, 10000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-02 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-02-01'::date, '2026-03-10'::date, 15000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-03 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-03-01'::date, '2026-04-10'::date, 15000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-04 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-04-01'::date, '2026-05-10'::date, 30000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-05 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-05-01'::date, '2026-06-10'::date, 30000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-06 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-06-01'::date, '2026-07-10'::date, 30320.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-07 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222201'::uuid, '2026-07-01'::date, '2026-08-10'::date, 30000.00::numeric, '[seed-history-2026] | client=pato | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222202'::uuid, NULL::date, '2026-03-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-03 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-03-01'::date, '2026-04-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-04 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-04-01'::date, '2026-05-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-05 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-05-01'::date, '2026-06-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-06 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-06-01'::date, '2026-07-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | paid_month=2026-07 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        -- Agosto Avellaneda: importe SIN verde → charge sí, payment NO
+        ('22222222-2222-4222-8222-222222222202'::uuid, '2026-07-01'::date, '2026-08-10'::date, 100000.00::numeric, '[seed-history-2026] | client=avellaneda | due_month=2026-08 | kind=standard | unpaid | Spreadsheet amount without green fill — charge only, no payment'::text, false),
+        ('22222222-2222-4222-8222-222222222203'::uuid, NULL::date, '2026-04-10'::date, 63815.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-04 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222203'::uuid, '2026-04-01'::date, '2026-05-10'::date, 63815.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-05 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222203'::uuid, '2026-05-01'::date, '2026-06-10'::date, 87600.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-06 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222203'::uuid, '2026-06-01'::date, '2026-07-10'::date, 68000.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-07 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222203'::uuid, '2026-07-01'::date, '2026-08-10'::date, 90900.00::numeric, '[seed-history-2026] | client=poletino | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222204'::uuid, NULL::date, '2026-03-24'::date, 54530.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-03 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-03-01'::date, '2026-04-24'::date, 54530.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-04 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-04-01'::date, '2026-05-24'::date, 54530.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-05 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-05-01'::date, '2026-06-24'::date, 54168.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-06 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-06-01'::date, '2026-07-24'::date, 57449.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-07 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222204'::uuid, '2026-07-01'::date, '2026-08-24'::date, 58000.00::numeric, '[seed-history-2026] | client=sanacion | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222205'::uuid, NULL::date, '2026-07-10'::date, 60640.00::numeric, '[seed-history-2026] | client=giacomelli | paid_month=2026-07 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222205'::uuid, '2026-07-01'::date, '2026-08-10'::date, 60830.00::numeric, '[seed-history-2026] | client=giacomelli | paid_month=2026-08 | kind=standard | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        ('22222222-2222-4222-8222-222222222206'::uuid, NULL::date, '2026-08-10'::date, 75880.00::numeric, '[seed-history-2026] | client=giuliana | paid_month=2026-08 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null | EXCEPTION Giuliana: start_date 2026-08-01 + previous_month would skip July; August payment preserved as bootstrap charge (period null)'::text, true),
+        ('22222222-2222-4222-8222-222222222207'::uuid, NULL::date, '2026-07-10'::date, 60000.00::numeric, '[seed-history-2026] | client=hema | paid_month=2026-07 | kind=bootstrap | Imported from 2026 spreadsheet, exact payment day unavailable | Historical reference stored in ARS (amount received); contractual USD for that month unknown; exchange_rate null'::text, true),
+        -- Agosto HEMA: importe SIN verde → charge sí, payment NO
+        ('22222222-2222-4222-8222-222222222207'::uuid, '2026-07-01'::date, '2026-08-10'::date, 60640.00::numeric, '[seed-history-2026] | client=hema | due_month=2026-08 | kind=standard | unpaid | Spreadsheet amount without green fill — charge only, no payment'::text, false)
+    ) as history_rows(service_id, period, due_date, amount_ars, note, create_payment)
     order by service_id, due_date, amount_ars
   loop
     v_charge_id := null;
 
     -- Lookup solo con columnas reales de charges (sin notes).
     if r.period is null then
-      -- Bootstrap / Giuliana: service_id + period null + due_date
       select c.id into v_charge_id
       from public.charges c
       where c.service_id = r.service_id
@@ -93,7 +101,6 @@ begin
         and c.due_date = r.due_date
       limit 1;
     else
-      -- Recurrente: unique (service_id, period) where period is not null
       select c.id into v_charge_id
       from public.charges c
       where c.service_id = r.service_id
@@ -117,7 +124,6 @@ begin
       )
       returning id into v_charge_id;
     else
-      -- Alinea foto histórica con el ARS real (p.ej. charge auto USD de julio).
       update public.charges
       set
         reference_amount = r.amount_ars,
@@ -127,7 +133,8 @@ begin
       where id = v_charge_id;
     end if;
 
-    if not exists (
+    -- Solo celdas verdes (create_payment = true) generan payment.
+    if r.create_payment and not exists (
       select 1 from public.payments p where p.charge_id = v_charge_id
     ) then
       insert into public.payments (
@@ -155,11 +162,11 @@ begin
   end loop;
 end $$;
 
--- Verificación rápida (opcional): total agosto 2026
+-- Verificación rápida (opcional): total agosto 2026 cobrado (seed)
 -- select sum(amount_received) from public.payments
 -- where currency_received = 'ARS'
 --   and paid_at >= '2026-08-01' and paid_at < '2026-09-01'
 --   and notes like '%[seed-history-2026]%';
--- Esperado: 476250
+-- Esperado: 315610
 
 commit;

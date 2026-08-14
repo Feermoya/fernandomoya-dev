@@ -107,8 +107,12 @@ export const HISTORY_CLIENTS: HistoryClientMeta[] = [
 ];
 
 /**
- * Pagos reales 2026 (planilla). Solo ARS.
- * NO incluye “Ingreso Fijo”.
+ * Pagos reales 2026 (planilla) — solo celdas VERDES.
+ * Importe sin verde ≠ pago. NO incluye “Ingreso Fijo”.
+ *
+ * Agosto 2026 corregido: Avellaneda y HEMA NO están en esta lista
+ * (tenían importe sin verde → unpaid / overdue).
+ * Meses 01–07: pendientes de revisión verde (pueden incluir falsos pagos).
  */
 export const HISTORY_PAYMENTS_2026: HistoryPaymentRow[] = [
   // Página Pato
@@ -120,13 +124,12 @@ export const HISTORY_PAYMENTS_2026: HistoryPaymentRow[] = [
   { clientKey: 'pato', paymentMonth: '2026-06-01', amountReceivedArs: 30000 },
   { clientKey: 'pato', paymentMonth: '2026-07-01', amountReceivedArs: 30320 },
   { clientKey: 'pato', paymentMonth: '2026-08-01', amountReceivedArs: 30000 },
-  // Avellaneda
+  // Avellaneda (sin agosto: unpaid / sin verde)
   { clientKey: 'avellaneda', paymentMonth: '2026-03-01', amountReceivedArs: 100000 },
   { clientKey: 'avellaneda', paymentMonth: '2026-04-01', amountReceivedArs: 100000 },
   { clientKey: 'avellaneda', paymentMonth: '2026-05-01', amountReceivedArs: 100000 },
   { clientKey: 'avellaneda', paymentMonth: '2026-06-01', amountReceivedArs: 100000 },
   { clientKey: 'avellaneda', paymentMonth: '2026-07-01', amountReceivedArs: 100000 },
-  { clientKey: 'avellaneda', paymentMonth: '2026-08-01', amountReceivedArs: 100000 },
   // Poletino
   { clientKey: 'poletino', paymentMonth: '2026-04-01', amountReceivedArs: 63815 },
   { clientKey: 'poletino', paymentMonth: '2026-05-01', amountReceivedArs: 63815 },
@@ -145,10 +148,25 @@ export const HISTORY_PAYMENTS_2026: HistoryPaymentRow[] = [
   { clientKey: 'giacomelli', paymentMonth: '2026-08-01', amountReceivedArs: 60830 },
   // Giuliana
   { clientKey: 'giuliana', paymentMonth: '2026-08-01', amountReceivedArs: 75880 },
-  // HEMA
+  // HEMA (sin agosto: unpaid / sin verde)
   { clientKey: 'hema', paymentMonth: '2026-07-01', amountReceivedArs: 60000 },
-  { clientKey: 'hema', paymentMonth: '2026-08-01', amountReceivedArs: 60640 },
 ];
+
+/**
+ * Cargos con importe en planilla pero SIN verde (no pagados).
+ * Solo agosto corregido por ahora.
+ */
+export const HISTORY_UNPAID_AUGUST_2026: Array<{
+  clientKey: HistoryClientKey;
+  dueMonth: IsoDate;
+  amountArs: number;
+}> = [
+  { clientKey: 'avellaneda', dueMonth: '2026-08-01', amountArs: 100000 },
+  { clientKey: 'hema', dueMonth: '2026-08-01', amountArs: 60640 },
+];
+
+/** Cobrado agosto corregido: 30000+90900+58000+60830+75880. */
+export const AUGUST_2026_COLLECTED_ARS = 315610;
 
 export type ResolvedHistoryCharge = {
   clientKey: HistoryClientKey;
@@ -263,6 +281,11 @@ export function collectedByMonthArs(
 
 export function august2026TotalArs(): number {
   return collectedByMonthArs()['2026-08'] ?? 0;
+}
+
+/** Vencidos esperados hoy si Avellaneda/HEMA agosto no tienen payment. */
+export function august2026ExpectedOverdueCount(): number {
+  return HISTORY_UNPAID_AUGUST_2026.length;
 }
 
 /** Simula charge+payment histórico → status paid (no overdue). */

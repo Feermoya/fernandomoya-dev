@@ -15,6 +15,7 @@
     /* Panel siempre claro — no sigue prefers-color-scheme del sistema. */
     color-scheme: light;
     background: #e8eaf0;
+    overflow-x: hidden;
   }
 
   .panel-app {
@@ -52,7 +53,11 @@
     background: var(--panel-bg);
     color: var(--panel-text);
     font-family: var(--panel-font);
-    overflow-x: clip;
+    /*
+     * overflow-x: clip solo fuerza overflow-y: clip (spec CSS) y bloquea el scroll
+     * vertical en Safari/iOS. Usamos hidden en X; el eje Y queda scrolleable.
+     */
+    overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
   }
@@ -86,7 +91,9 @@
       min-height: calc(100dvh - 2rem);
       margin-block: 1rem;
       border-radius: 1.25rem;
-      overflow: clip;
+      /* No clippear el eje Y: el documento debe poder scrollear con contenido largo. */
+      overflow-x: hidden;
+      overflow-y: visible;
       box-shadow: 0 18px 50px rgba(17, 24, 39, 0.1);
     }
   }
@@ -100,6 +107,80 @@
 
   .panel-shell--with-nav .panel-main {
     padding-bottom: calc(var(--panel-nav-h) + env(safe-area-inset-bottom) + 1.25rem);
+  }
+
+  .panel-mrr-strip {
+    margin: 0.85rem 0 0;
+    padding: 0.65rem 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--panel-muted);
+    background: var(--panel-surface);
+    border: 1px solid var(--panel-border);
+    border-radius: 0.85rem;
+  }
+
+  .panel-mrr-strip strong {
+    color: var(--panel-text);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .panel-mrr-strip__sep {
+    opacity: 0.55;
+  }
+
+  .panel-upcoming-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .panel-upcoming-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 0.95rem;
+    background: var(--panel-surface);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--panel-radius);
+    box-shadow: var(--panel-shadow);
+  }
+
+  .panel-upcoming-item__main {
+    min-width: 0;
+  }
+
+  .panel-upcoming-item__name {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .panel-upcoming-item__amount {
+    margin: 0.2rem 0 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--panel-muted);
+  }
+
+  .panel-upcoming-item__date {
+    margin: 0;
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--panel-accent);
+    text-transform: lowercase;
   }
 
   /* —— Bottom nav (no depende de utilidades Tailwind) —— */
@@ -1227,5 +1308,26 @@
     font-weight: 700;
     color: var(--panel-muted);
     text-decoration: none;
+  }
+
+  .panel-utility {
+    margin: 1.25rem 0 0;
+    text-align: center;
+  }
+
+  .panel-utility__link {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--panel-muted);
+    text-decoration: none;
+    opacity: 0.65;
+  }
+
+  .panel-utility__link:hover {
+    opacity: 1;
+    color: var(--panel-text);
   }
 }

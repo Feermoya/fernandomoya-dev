@@ -7,9 +7,18 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
  */
 
 function readEnv(name: string): string {
-  const fromProcess = typeof process !== 'undefined' ? process.env[name]?.trim() : undefined;
-  const fromImport = (import.meta.env as Record<string, string | undefined>)[name]?.trim();
-  return (fromProcess || fromImport || '').trim();
+  // Misma estrategia que auth.ts: process.env (prod) → import.meta.env (Vite) + sync.
+  const fromProcess =
+    typeof process !== 'undefined' ? (process.env[name] ?? '').trim() : '';
+  if (fromProcess) return fromProcess;
+
+  const fromImport = String(
+    (import.meta.env as Record<string, string | undefined>)[name] ?? '',
+  ).trim();
+  if (fromImport && typeof process !== 'undefined') {
+    process.env[name] = fromImport;
+  }
+  return fromImport;
 }
 
 export function getPanelSupabaseUrl(): string {

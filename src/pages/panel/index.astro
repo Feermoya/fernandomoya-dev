@@ -5,11 +5,12 @@ import PanelLayout from '@/layouts/PanelLayout.astro';
 import { SummaryCard } from '@/components/panel/SummaryCard';
 import { formatCurrencyAmount } from '@/components/panel/CurrencyAmount';
 import { ChargeListItem } from '@/components/panel/ChargeListItem';
-import { MrrTrendChart } from '@/components/panel/MrrTrendChart';
+import { CollectedMonthChart } from '@/components/panel/CollectedMonthChart';
 import { RegisterCobroLauncher } from '@/components/panel/RegisterCobroLauncher';
 import { PANEL_PATHS } from '@/lib/panel/auth';
 import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
 import { loadDashboard } from '@/lib/panel/repositories/dashboard';
+import { formatDueShortLabel } from '@/lib/panel/view-types';
 
 const access = requirePanelDataAccess(Astro.cookies);
 if (!access.ok) {
@@ -72,9 +73,7 @@ const upcomingCount = dash?.upcomingCount ?? 0;
             value={`${upcomingCount}`}
             hint={
               upcomingCount > 0
-                ? dash.dueTodayCount > 0
-                  ? `${dash.dueTodayCount} vencen hoy`
-                  : 'Sin pago · fecha futura'
+                ? 'Próximos vencimientos a controlar'
                 : 'No hay cobros próximos'
             }
             tone={upcomingCount > 0 ? 'warning' : 'default'}
@@ -93,12 +92,18 @@ const upcomingCount = dash?.upcomingCount ?? 0;
           />
         </section>
 
-        <section class="panel-section" aria-label="Evolución">
-          <MrrTrendChart
-            client:load
-            series={dash.mrrSeries}
-            currentMrrUsd={dash.mrrUsd}
-          />
+        <p class="panel-mrr-strip" aria-label="MRR actual">
+          <span>
+            MRR USD: <strong>{formatCurrencyAmount(dash.mrrUsd, 'USD')}</strong>
+          </span>
+          <span class="panel-mrr-strip__sep" aria-hidden="true">·</span>
+          <span>
+            MRR ARS: <strong>{formatCurrencyAmount(dash.mrrArs, 'ARS')}</strong>
+          </span>
+        </p>
+
+        <section class="panel-section" aria-label="Cobrado por mes">
+          <CollectedMonthChart client:load series={dash.collectedSeries} />
         </section>
 
         <section class="panel-section" aria-label="Próximos cobros">
@@ -107,13 +112,19 @@ const upcomingCount = dash?.upcomingCount ?? 0;
             <a href="/panel/cobros" class="panel-section__link">Ver todos</a>
           </div>
           {
-            dash.upcomingCharges.length === 0 ? (
+            dash.upcomingExpectations.length === 0 ? (
               <p class="panel-empty">No hay cobros próximos.</p>
             ) : (
-              <ul class="panel-list">
-                {dash.upcomingCharges.map((charge) => (
-                  <li>
-                    <ChargeListItem charge={charge} />
+              <ul class="panel-upcoming-list">
+                {dash.upcomingExpectations.map((item) => (
+                  <li class="panel-upcoming-item">
+                    <div class="panel-upcoming-item__main">
+                      <p class="panel-upcoming-item__name">{item.clientName}</p>
+                      <p class="panel-upcoming-item__amount">
+                        {formatCurrencyAmount(item.referenceAmount, item.referenceCurrency)}
+                      </p>
+                    </div>
+                    <p class="panel-upcoming-item__date">{formatDueShortLabel(item.dueDate)}</p>
                   </li>
                 ))}
               </ul>

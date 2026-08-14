@@ -156,6 +156,7 @@
 .site-footer__private-link {
   display: inline-flex;
   align-items: center;
+  gap: 0.35rem;
   min-height: 44px;
   font-family: var(--fm-font-body);
   font-size: 0.75rem;
@@ -164,8 +165,13 @@
   text-transform: uppercase;
   color: var(--fm-text-tertiary);
   text-decoration: none;
-  opacity: 0.7;
+  opacity: 0.55;
   transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.site-footer__private-icon {
+  flex-shrink: 0;
+  opacity: 0.9;
 }
 
 .site-footer__private-link:hover {

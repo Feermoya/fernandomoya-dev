@@ -3,6 +3,7 @@ import {
   Cloud,
   Coins,
   Goal,
+  Lock,
   MessageCircle,
   Settings,
   ShieldAlert,
@@ -297,6 +298,14 @@ export default function FinanceGameApp() {
             <p className="finance-brand-sub mt-1">Inversión mensual con claridad</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
+            <a
+              href="/admin"
+              className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+              aria-label="Admin"
+            >
+              <Lock size={12} strokeWidth={2.25} aria-hidden />
+              Admin
+            </a>
             {isFinanceCloudConfigured() ? (
               <button
                 type="button"

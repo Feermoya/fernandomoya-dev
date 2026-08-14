@@ -62,6 +62,26 @@ export type MrrSeriesPoint = {
   mrrUsd: number;
 };
 
+/** Punto de serie “Cobrado por mes” (ARS reales por paid_at). */
+export type CollectedSeriesPoint = {
+  month: string; // YYYY-MM
+  label: string;
+  collectedArs: number;
+};
+
+/** Próximo vencimiento (proyección o charge unpaid futuro). */
+export type UpcomingExpectationItem = {
+  serviceId: string;
+  clientId: string;
+  clientName: string;
+  serviceName: string;
+  period: string;
+  dueDate: string;
+  referenceAmount: number;
+  referenceCurrency: Currency;
+  chargeId: string | null;
+};
+
 export type DashboardData = {
   today: string;
   monthLabel: string;
@@ -73,13 +93,18 @@ export type DashboardData = {
   collectedThisMonthArs: number;
   collectedThisMonthUsd: number;
   overdueCount: number;
+  /** Cantidad de próximos vencimientos proyectados (recurring activos). */
   upcomingCount: number;
   dueTodayCount: number;
   upcomingCharges: ChargeListItemData[];
+  /** Lista ordenada de próximos vencimientos (proyección). */
+  upcomingExpectations: UpcomingExpectationItem[];
   attentionCharges: ChargeListItemData[];
   /** Charges pendientes (upcoming / hoy / overdue) para Registrar cobro. */
   unpaidCharges: ChargeListItemData[];
+  /** @deprecated Preferir collectedSeries; se mantiene vacío. */
   mrrSeries: MrrSeriesPoint[];
+  collectedSeries: CollectedSeriesPoint[];
 };
 
 export function formatPeriodLabel(period: string | null): string {
@@ -108,6 +133,28 @@ export function formatPeriodLabel(period: string | null): string {
 export function formatDueLabel(iso: string): string {
   const [, m, d] = iso.split('-');
   return `${Number(d)}/${m}`;
+}
+
+const SHORT_MONTH_ES = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+] as const;
+
+/** Etiqueta corta tipo “10 sep”. */
+export function formatDueShortLabel(iso: string): string {
+  const [, m, d] = iso.split('-');
+  const monthIdx = Number(m) - 1;
+  return `${Number(d)} ${SHORT_MONTH_ES[monthIdx] ?? m}`;
 }
 
 

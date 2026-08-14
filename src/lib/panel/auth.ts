@@ -23,9 +23,24 @@ export function isPanelPublicAuthPath(pathname: string): boolean {
 }
 
 function readServerEnv(name: 'PANEL_ACCESS_SECRET' | 'PANEL_SESSION_SECRET'): string {
-  const fromProcess = typeof process !== 'undefined' ? process.env[name]?.trim() : undefined;
-  const fromImport = (import.meta.env as Record<string, string | undefined>)[name]?.trim();
-  return (fromProcess || fromImport || '').trim();
+  /**
+   * Fuente única con sync:
+   * - Vercel/prod: process.env
+   * - Astro/Vite local: import.meta.env (loadEnv); process.env suele estar vacío
+   * Tras el primer hit positivo, se copia a process.env para que middleware,
+   * login y endpoints vean el mismo valor (evita el aviso intermitente).
+   */
+  const fromProcess =
+    typeof process !== 'undefined' ? (process.env[name] ?? '').trim() : '';
+  if (fromProcess) return fromProcess;
+
+  const fromImport = String(
+    (import.meta.env as Record<string, string | undefined>)[name] ?? '',
+  ).trim();
+  if (fromImport && typeof process !== 'undefined') {
+    process.env[name] = fromImport;
+  }
+  return fromImport;
 }
 
 export function getPanelAccessSecret(): string {

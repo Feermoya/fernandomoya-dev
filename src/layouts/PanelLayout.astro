@@ -51,6 +51,13 @@ const currentPath = Astro.url.pathname;
     <div class:list={['panel-shell', showNav && 'panel-shell--with-nav']}>
       <div class="panel-main">
         <slot />
+        {
+          showNav ? (
+            <p class="panel-utility">
+              <a href="/admin" class="panel-utility__link">Admin</a>
+            </p>
+          ) : null
+        }
       </div>
       {showNav ? <BottomNavigation currentPath={currentPath} /> : null}
     </div>
