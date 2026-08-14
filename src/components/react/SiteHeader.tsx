@@ -11,6 +11,9 @@ type Props = {
   backHref?: string;
   backLabel?: string;
   logoHref?: string;
+  /** Acceso discreto a herramientas privadas. */
+  adminHref?: string;
+  adminLabel?: string;
 };
 
 export default function SiteHeader({
@@ -21,6 +24,8 @@ export default function SiteHeader({
   backHref,
   backLabel = 'Volver al trabajo',
   logoHref = '#inicio',
+  adminHref = '/admin',
+  adminLabel = 'Admin',
 }: Props) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -98,6 +103,15 @@ export default function SiteHeader({
           )}
 
           <div className="site-header-actions">
+            {adminHref && !backHref ? (
+              <a
+                href={adminHref}
+                className="site-header-admin site-header-admin--bar"
+                aria-label={adminLabel}
+              >
+                {adminLabel}
+              </a>
+            ) : null}
             <a href={ctaHref} className="site-header-cta site-header-cta--bar">
               {ctaLabel}
             </a>
@@ -164,6 +178,15 @@ export default function SiteHeader({
                     {ctaLabel}
                   </a>
                 </div>
+                {adminHref && !backHref ? (
+                  <a
+                    href={adminHref}
+                    className="site-header-mobile-admin motion-reduce:transition-none"
+                    onClick={handleMobileNavClick}
+                  >
+                    {adminLabel}
+                  </a>
+                ) : null}
               </nav>
             </>,
             document.body,

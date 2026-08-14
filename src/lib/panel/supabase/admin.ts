@@ -52,7 +52,7 @@ export function createPanelSupabaseAdmin(): SupabaseClient {
   const url = getPanelSupabaseUrl();
   const key = getPanelServiceRoleKey();
   if (!url || !key) {
-    throw new Error('Faltan SUPABASE_URL y/o SUPABASE_SERVICE_ROLE_KEY');
+    throw new Error('Panel data access is not configured');
   }
 
   if (cached) return cached;

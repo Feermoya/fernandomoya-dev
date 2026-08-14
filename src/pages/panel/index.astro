@@ -27,6 +27,7 @@ const loadError = result.error;
 const collectedArs = dash?.collectedThisMonthArs ?? 0;
 const overdueCount = dash?.overdueCount ?? 0;
 const upcomingCount = dash?.upcomingCount ?? 0;
+const upcomingPreview = dash?.upcomingExpectations.slice(0, 6) ?? [];
 ---
 
 <PanelLayout title="Inicio" path={PANEL_PATHS.root}>
@@ -51,8 +52,23 @@ const upcomingCount = dash?.upcomingCount ?? 0;
   }
 
   {
+    !dash && !loadError ? (
+      <div class="panel-skeleton-stack" aria-busy="true" aria-label="Cargando panel">
+        <div class="panel-skeleton-metrics">
+          <div class="panel-skeleton panel-skeleton--card" />
+          <div class="panel-skeleton panel-skeleton--card" />
+          <div class="panel-skeleton panel-skeleton--card" />
+          <div class="panel-skeleton panel-skeleton--card" />
+        </div>
+        <div class="panel-skeleton panel-skeleton--strip" />
+        <div class="panel-skeleton panel-skeleton--chart" />
+      </div>
+    ) : null
+  }
+
+  {
     dash ? (
-      <>
+      <div class="panel-dash">
         <section class="panel-metrics" aria-label="Resumen">
           <SummaryCard
             label="Cobrado este mes"
@@ -92,63 +108,84 @@ const upcomingCount = dash?.upcomingCount ?? 0;
           />
         </section>
 
-        <p class="panel-mrr-strip" aria-label="MRR actual">
-          <span>
-            MRR USD: <strong>{formatCurrencyAmount(dash.mrrUsd, 'USD')}</strong>
-          </span>
-          <span class="panel-mrr-strip__sep" aria-hidden="true">·</span>
-          <span>
-            MRR ARS: <strong>{formatCurrencyAmount(dash.mrrArs, 'ARS')}</strong>
-          </span>
-        </p>
+        <div class="panel-dash-mid">
+          <div class="panel-dash-mid__side">
+            <p class="panel-mrr-strip" aria-label="MRR actual">
+              <span>
+                MRR USD: <strong>{formatCurrencyAmount(dash.mrrUsd, 'USD')}</strong>
+              </span>
+              <span class="panel-mrr-strip__sep" aria-hidden="true">·</span>
+              <span>
+                MRR ARS: <strong>{formatCurrencyAmount(dash.mrrArs, 'ARS')}</strong>
+              </span>
+            </p>
 
-        <section class="panel-section" aria-label="Cobrado por mes">
-          <CollectedMonthChart client:load series={dash.collectedSeries} />
-        </section>
-
-        <section class="panel-section" aria-label="Próximos cobros">
-          <div class="panel-section__head">
-            <h2 class="panel-section__title">Próximos cobros</h2>
-            <a href="/panel/cobros" class="panel-section__link">Ver todos</a>
+            <section class="panel-total-card" aria-label="Total cobrado histórico">
+              <div class="panel-total-card__body">
+                <p class="panel-total-card__label">Total cobrado</p>
+                <p class="panel-total-card__value">
+                  {formatCurrencyAmount(dash.totalCollectedArs, 'ARS')}
+                </p>
+                <p class="panel-total-card__hint">Desde el inicio</p>
+                {
+                  dash.totalCollectedUsd > 0 ? (
+                    <p class="panel-total-card__usd">
+                      + {formatCurrencyAmount(dash.totalCollectedUsd, 'USD')} cobrados en USD
+                    </p>
+                  ) : null
+                }
+              </div>
+            </section>
           </div>
-          {
-            dash.upcomingExpectations.length === 0 ? (
-              <p class="panel-empty">No hay cobros próximos.</p>
-            ) : (
-              <ul class="panel-upcoming-list">
-                {dash.upcomingExpectations.map((item) => (
-                  <li class="panel-upcoming-item">
-                    <div class="panel-upcoming-item__main">
-                      <p class="panel-upcoming-item__name">{item.clientName}</p>
-                      <p class="panel-upcoming-item__amount">
+
+          <section class="panel-dash-mid__chart" aria-label="Cobrado por mes">
+            <CollectedMonthChart client:load series={dash.collectedSeries} />
+          </section>
+        </div>
+
+        <div class="panel-dash-lower">
+          <section class="panel-section" aria-label="Próximos cobros">
+            <div class="panel-section__head">
+              <h2 class="panel-section__title">Próximos cobros</h2>
+              <a href="/panel/cobros" class="panel-section__link">Ver todos</a>
+            </div>
+            {
+              upcomingPreview.length === 0 ? (
+                <p class="panel-empty">No hay cobros próximos.</p>
+              ) : (
+                <ul class="panel-upcoming-grid">
+                  {upcomingPreview.map((item) => (
+                    <li class="panel-upcoming-mini">
+                      <p class="panel-upcoming-mini__name">{item.clientName}</p>
+                      <p class="panel-upcoming-mini__amount">
                         {formatCurrencyAmount(item.referenceAmount, item.referenceCurrency)}
                       </p>
-                    </div>
-                    <p class="panel-upcoming-item__date">{formatDueShortLabel(item.dueDate)}</p>
-                  </li>
-                ))}
-              </ul>
-            )
-          }
-        </section>
+                      <p class="panel-upcoming-mini__date">{formatDueShortLabel(item.dueDate)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )
+            }
+          </section>
 
-        {
-          dash.attentionCharges.length > 0 ? (
-            <section class="panel-section" aria-label="Requieren atención">
-              <div class="panel-section__head">
-                <h2 class="panel-section__title">Requieren atención</h2>
-              </div>
-              <ul class="panel-list">
-                {dash.attentionCharges.map((charge) => (
-                  <li>
-                    <ChargeListItem charge={charge} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null
-        }
-      </>
+          {
+            dash.attentionCharges.length > 0 ? (
+              <section class="panel-section" aria-label="Requieren atención">
+                <div class="panel-section__head">
+                  <h2 class="panel-section__title">Requieren atención</h2>
+                </div>
+                <ul class="panel-list panel-attention-grid">
+                  {dash.attentionCharges.map((charge) => (
+                    <li>
+                      <ChargeListItem charge={charge} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null
+          }
+        </div>
+      </div>
     ) : null
   }
 

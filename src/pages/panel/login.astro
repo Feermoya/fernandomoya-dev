@@ -3,35 +3,47 @@ export const prerender = false;
 
 import PanelLayout from '@/layouts/PanelLayout.astro';
 import { site } from '@/data/site';
-import { isPanelAuthConfigured, PANEL_PATHS } from '@/lib/panel/auth';
+import { isPanelAuthConfigured, PANEL_PATHS, safePostLoginPath } from '@/lib/panel/auth';
 
 const configured = isPanelAuthConfigured();
 const error = Astro.url.searchParams.get('error');
+const next = safePostLoginPath(Astro.url.searchParams.get('next'));
 
 const errorMessage =
   error === 'config'
-    ? 'Falta PANEL_ACCESS_SECRET en el entorno.'
+    ? 'El acceso privado no está disponible por ahora.'
     : error === 'pin'
       ? 'Clave incorrecta. Probá de nuevo.'
       : null;
+
+const nextHint =
+  next === '/foco-financiero'
+    ? 'Vas a entrar a Foco financiero.'
+    : next === '/admin'
+      ? 'Vas a entrar a Admin.'
+      : null;
 ---
 
-<PanelLayout title="Ingresar" path={PANEL_PATHS.login} description="Acceso privado al panel." showNav={false}>
+<PanelLayout title="Ingresar" path={PANEL_PATHS.login} description="Acceso privado." showNav={false}>
   <p class="panel-brand">{site.name}</p>
-  <h1 class="panel-title">Panel privado</h1>
-  <p class="panel-copy">Ingresá la clave de acceso. Solo vos tenés que conocerla.</p>
+  <h1 class="panel-title">Acceso privado</h1>
+  <p class="panel-copy">
+    Ingresá la clave de acceso. Solo vos tenés que conocerla.
+    {nextHint ? ` ${nextHint}` : ''}
+  </p>
 
   <div class="panel-card">
     {
       !configured ? (
         <div class="panel-alert" role="alert">
-          Falta configurar <code>PANEL_ACCESS_SECRET</code> en <code>.env.local</code>.
+          El acceso privado no está configurado. Contactá al administrador del sitio.
         </div>
       ) : null
     }
     {errorMessage ? <div class="panel-alert" role="alert">{errorMessage}</div> : null}
 
     <form method="POST" action={PANEL_PATHS.loginAction} class="panel-stack">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <label class="panel-meta" for="pin" style="margin-top:0">
         Clave
       </label>

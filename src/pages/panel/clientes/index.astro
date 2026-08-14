@@ -2,10 +2,14 @@
 export const prerender = false;
 
 import PanelLayout from '@/layouts/PanelLayout.astro';
-import { ClientListItem } from '@/components/panel/ClientListItem';
+import PanelHeader from '@/components/panel/PanelHeader.astro';
 import { ClientCreateLauncher } from '@/components/panel/ClientCreateLauncher';
+import { ClientsWorkspace } from '@/components/panel/ClientsWorkspace';
+import { formatCurrencyAmount } from '@/components/panel/CurrencyAmount';
 import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
 import { listClientsWithActiveServices } from '@/lib/panel/repositories/clients';
+import { resolvePanelBackLink } from '@/lib/panel/navigation';
+import { sortClientsForManagement } from '@/lib/panel/clients/listStatus';
 
 const access = requirePanelDataAccess(Astro.cookies);
 if (!access.ok) {
@@ -18,22 +22,27 @@ const result = access.ok
   ? await listClientsWithActiveServices(access.supabase)
   : { data: [], error: access.message };
 
-const clients = result.data;
+const clients = sortClientsForManagement(result.data);
 const loadError = result.error;
 const ok = Astro.url.searchParams.get('ok');
+const back = resolvePanelBackLink('/panel/clientes');
+
+const activeClients = clients.filter((c) => c.active);
+const activeCount = activeClients.length;
+const mrrUsd = activeClients.reduce((sum, c) => sum + c.mrrUsd, 0);
+const mrrArs = activeClients.reduce((sum, c) => sum + c.mrrArs, 0);
+const attentionCount = activeClients.filter((c) => c.billingStatus === 'overdue').length;
 ---
 
 <PanelLayout title="Clientes" path="/panel/clientes">
-  <header class="panel-header">
-    <div class="min-w-0">
-      <p class="panel-header__eyebrow">Panel de cobros</p>
-      <h1 class="panel-header__title">Clientes</h1>
-      <p class="panel-header__subtitle">
-        {loadError ? 'Error al cargar' : `${clients.length} en total`}
-      </p>
-    </div>
-    <ClientCreateLauncher client:load />
-  </header>
+  <PanelHeader
+    title="Clientes"
+    subtitle={loadError ? 'Error al cargar' : `${activeCount} clientes activos`}
+    backHref={back?.href}
+    backLabel={back?.label}
+  >
+    <ClientCreateLauncher slot="action" client:load />
+  </PanelHeader>
 
   {
     ok === 'cliente' ? (
@@ -48,16 +57,51 @@ const ok = Astro.url.searchParams.get('ok');
       <div class="panel-alert" role="alert">
         No se pudieron cargar los clientes. Probá de nuevo más tarde.
       </div>
-    ) : clients.length === 0 ? (
-      <p class="panel-empty">Aún no hay clientes.</p>
     ) : (
-      <ul class="panel-list">
-        {clients.map((client) => (
-          <li>
-            <ClientListItem client={client} href={`/panel/clientes/${client.id}`} />
-          </li>
-        ))}
-      </ul>
+      <>
+        <section class="panel-clients-summary" aria-label="Resumen de clientes">
+          <div class="panel-clients-summary__cell">
+            <p class="panel-clients-summary__label">Activos</p>
+            <p class="panel-clients-summary__value">{activeCount}</p>
+          </div>
+          <div class="panel-clients-summary__cell">
+            <p class="panel-clients-summary__label">MRR USD</p>
+            <p class="panel-clients-summary__value">
+              {formatCurrencyAmount(mrrUsd, 'USD')}
+            </p>
+          </div>
+          <div class="panel-clients-summary__cell">
+            <p class="panel-clients-summary__label">MRR ARS</p>
+            <p class="panel-clients-summary__value">
+              {formatCurrencyAmount(mrrArs, 'ARS')}
+            </p>
+          </div>
+          <div
+            class:list={[
+              'panel-clients-summary__cell',
+              attentionCount > 0
+                ? 'panel-clients-summary__cell--warn'
+                : 'panel-clients-summary__cell--ok',
+            ]}
+          >
+            <p class="panel-clients-summary__label">Atención</p>
+            <p class="panel-clients-summary__value">{attentionCount}</p>
+          </div>
+        </section>
+
+        {
+          clients.length === 0 ? (
+            <div class="panel-empty-state" role="status">
+              <p class="panel-empty-state__title">Todavía no hay clientes</p>
+              <p class="panel-empty-state__body">
+                Agregá tu primer cliente para empezar a controlar cobros.
+              </p>
+            </div>
+          ) : (
+            <ClientsWorkspace client:load clients={clients} />
+          )
+        }
+      </>
     )
   }
 </PanelLayout>

@@ -169,6 +169,7 @@ export default defineConfig({
         'gsap/ScrollTrigger',
         'lenis',
         'lucide-react',
+        'sileo',
       ],
     },
     server: {

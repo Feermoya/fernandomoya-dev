@@ -1,15 +1,30 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { Pencil, X } from 'lucide-react';
 import { Button } from '@/components/panel/ui/button';
+import { PanelPortal } from '@/components/panel/PanelPortal';
 import type { ClientRow } from '@/lib/panel/view-types';
 
 type Props = {
   client: ClientRow;
+  /** Control externo (acciones de lista). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 };
 
-export function ClientEditSheet({ client }: Props) {
+export function ClientEditSheet({
+  client,
+  open: openProp,
+  onOpenChange,
+  hideTrigger = false,
+}: Props) {
   const titleId = useId();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = openProp ?? uncontrolledOpen;
+  const setOpen = (next: boolean) => {
+    onOpenChange?.(next);
+    if (openProp === undefined) setUncontrolledOpen(next);
+  };
   const [mode, setMode] = useState<'edit' | 'deactivate'>('edit');
   const [name, setName] = useState(client.name);
   const [startDate, setStartDate] = useState(client.start_date);
@@ -99,12 +114,19 @@ export function ClientEditSheet({ client }: Props) {
 
   return (
     <>
-      <button type="button" className="panel-header__cta panel-header__cta--ghost" onClick={() => setOpen(true)}>
-        <Pencil size={15} strokeWidth={2.25} aria-hidden />
-        <span>Editar</span>
-      </button>
+      {hideTrigger ? null : (
+        <button
+          type="button"
+          className="panel-header__cta panel-header__cta--ghost"
+          onClick={() => setOpen(true)}
+        >
+          <Pencil size={15} strokeWidth={2.25} aria-hidden />
+          <span>Editar</span>
+        </button>
+      )}
 
       {open ? (
+        <PanelPortal>
         <div className="panel-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
           <button type="button" className="panel-sheet__backdrop" aria-label="Cerrar" onClick={() => setOpen(false)} />
           <div className="panel-sheet__panel">
@@ -140,7 +162,7 @@ export function ClientEditSheet({ client }: Props) {
                   <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={submitting}>
+                  <Button type="submit" loading={submitting}>
                     {submitting ? 'Guardando…' : 'Guardar'}
                   </Button>
                 </div>
@@ -169,7 +191,7 @@ export function ClientEditSheet({ client }: Props) {
                   <Button type="button" variant="outline" onClick={() => setMode('edit')} disabled={submitting}>
                     Volver
                   </Button>
-                  <Button type="submit" disabled={submitting}>
+                  <Button type="submit" loading={submitting}>
                     {submitting ? 'Guardando…' : 'Confirmar baja'}
                   </Button>
                 </div>
@@ -177,6 +199,7 @@ export function ClientEditSheet({ client }: Props) {
             )}
           </div>
         </div>
+        </PanelPortal>
       ) : null}
     </>
   );

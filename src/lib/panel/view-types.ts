@@ -9,6 +9,14 @@ import type {
   Service,
 } from '@/lib/panel/types';
 
+/** Estado de cobro agregado del cliente (UI). */
+export type ClientBillingStatus =
+  | 'overdue'
+  | 'due_today'
+  | 'upcoming'
+  | 'current'
+  | 'inactive';
+
 export type ClientRow = Client;
 export type ServiceRow = Service;
 export type ChargeRow = Charge;
@@ -36,6 +44,7 @@ export type ClientListItemData = {
   active: boolean;
   startDate: string;
   endedAt: string | null;
+  notes: string | null;
   activeServiceCount: number;
   services: Array<{
     id: string;
@@ -48,6 +57,16 @@ export type ClientListItemData = {
   }>;
   mrrUsd: number;
   mrrArs: number;
+  /** Estado de cobro agregado para gestión. */
+  billingStatus: ClientBillingStatus;
+  /** Próximo o actual vencimiento relevante (ISO). */
+  nextDueDate: string | null;
+  primaryServiceName: string | null;
+  primaryAmount: number | null;
+  primaryCurrency: Currency | null;
+  primaryBillingType: BillingType | null;
+  /** Pendientes del cliente (para acciones rápidas). */
+  unpaidCharges: ChargeListItemData[];
 };
 
 export type ClientDetailData = {
@@ -92,6 +111,10 @@ export type DashboardData = {
   mrrArs: number;
   collectedThisMonthArs: number;
   collectedThisMonthUsd: number;
+  /** Suma histórica ARS (payments currency_received = ARS). */
+  totalCollectedArs: number;
+  /** Suma histórica USD (sin convertir). 0 si no hay. */
+  totalCollectedUsd: number;
   overdueCount: number;
   /** Cantidad de próximos vencimientos proyectados (recurring activos). */
   upcomingCount: number;

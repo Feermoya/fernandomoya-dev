@@ -1,5 +1,5 @@
 ---
-import { Home, Receipt, Users } from 'lucide-react';
+import { Home, Receipt, Users, Shield } from 'lucide-react';
 
 interface Props {
   currentPath: string;
@@ -26,17 +26,23 @@ const items = [
     Icon: Users,
     active: currentPath.startsWith('/panel/clientes'),
   },
+  {
+    href: '/admin',
+    label: 'Admin',
+    Icon: Shield,
+    active: currentPath.startsWith('/admin'),
+  },
 ] as const;
 ---
 
-<nav class="panel-bottom-nav" aria-label="Navegación principal del panel">
-  <ul class="panel-bottom-nav__list">
+<nav class="panel-nav" aria-label="Navegación principal del panel">
+  <ul class="panel-nav__list">
     {
       items.map(({ href, label, Icon, active }) => (
-        <li class="panel-bottom-nav__item">
+        <li class="panel-nav__item">
           <a
             href={href}
-            class:list={['panel-bottom-nav__link', active && 'is-active']}
+            class:list={['panel-nav__link', active && 'is-active']}
             aria-current={active ? 'page' : undefined}
           >
             <Icon size={20} strokeWidth={active ? 2.5 : 2} aria-hidden="true" />

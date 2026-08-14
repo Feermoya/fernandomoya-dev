@@ -1,0 +1,32 @@
+---
+import { ArrowLeft } from 'lucide-react';
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  backHref?: string;
+  backLabel?: string;
+}
+
+const { title, subtitle, backHref, backLabel = 'Volver' } = Astro.props;
+---
+
+<header class="panel-header">
+  <div class="min-w-0">
+    {
+      backHref ? (
+        <a href={backHref} class="panel-header__back">
+          <ArrowLeft size={16} strokeWidth={2.25} aria-hidden="true" />
+          <span>{backLabel}</span>
+        </a>
+      ) : (
+        <p class="panel-header__eyebrow">Panel de cobros</p>
+      )
+    }
+    <h1 class="panel-header__title">{title}</h1>
+    {subtitle ? <p class="panel-header__subtitle">{subtitle}</p> : null}
+  </div>
+  <div class="shrink-0 panel-header__actions">
+    <slot name="action" />
+  </div>
+</header>

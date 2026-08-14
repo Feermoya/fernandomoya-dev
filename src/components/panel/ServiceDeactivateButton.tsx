@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/panel/ui/button';
+import { PanelPortal } from '@/components/panel/PanelPortal';
 import type { ServiceRow } from '@/lib/panel/view-types';
 
 type Props = {
@@ -55,6 +56,7 @@ export function ServiceDeactivateButton({ service }: Props) {
         Dar de baja
       </button>
       {open ? (
+        <PanelPortal>
         <div className="panel-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
           <button type="button" className="panel-sheet__backdrop" aria-label="Cerrar" onClick={() => setOpen(false)} />
           <div className="panel-sheet__panel">
@@ -81,13 +83,14 @@ export function ServiceDeactivateButton({ service }: Props) {
                 <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={submitting}>
+                <Button type="submit" loading={submitting}>
                   {submitting ? 'Guardando…' : 'Confirmar baja'}
                 </Button>
               </div>
             </form>
           </div>
         </div>
+        </PanelPortal>
       ) : null}
     </>
   );

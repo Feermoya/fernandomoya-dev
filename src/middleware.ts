@@ -1,21 +1,22 @@
 import { defineMiddleware } from 'astro:middleware';
 import {
   isPanelAuthConfigured,
-  isPanelPath,
   isPanelPublicAuthPath,
+  isSessionProtectedPath,
+  panelLoginUrl,
   PANEL_PATHS,
   PANEL_SESSION_COOKIE,
+  safePostLoginPath,
   verifyPanelSessionToken,
 } from '@/lib/panel/auth';
 
 /**
- * Protege `/panel/*` en el servidor con cookie firmada.
- * No interviene en portfolio ni en `/foco-financiero`.
+ * Protege `/panel/*`, `/foco-financiero` y `/admin` con la misma cookie/PIN.
  */
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
 
-  if (!isPanelPath(pathname)) {
+  if (!isSessionProtectedPath(pathname)) {
     return next();
   }
 
@@ -33,12 +34,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (!hasSession) {
     if (isPublic) return next();
-    return context.redirect(PANEL_PATHS.login);
+    const nextPath = `${pathname}${context.url.search || ''}`;
+    return context.redirect(panelLoginUrl(nextPath));
   }
 
-  // Ya autenticado: login → panel
+  // Ya autenticado: login → destino (next) o panel
   if (pathname === PANEL_PATHS.login) {
-    return context.redirect(PANEL_PATHS.root);
+    const dest =
+      safePostLoginPath(context.url.searchParams.get('next')) ?? PANEL_PATHS.root;
+    return context.redirect(dest);
   }
 
   return next();

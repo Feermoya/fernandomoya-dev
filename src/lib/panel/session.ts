@@ -41,8 +41,7 @@ export function requirePanelDataAccess(cookies: AstroCookies): PanelSessionResul
     return {
       ok: false,
       reason: 'supabase_config',
-      message:
-        'Faltan SUPABASE_URL y/o SUPABASE_SERVICE_ROLE_KEY en el entorno del servidor.',
+      message: 'No se pudo conectar con los datos. Probá de nuevo más tarde.',
     };
   }
 
@@ -53,8 +52,7 @@ export function requirePanelDataAccess(cookies: AstroCookies): PanelSessionResul
     return {
       ok: false,
       reason: 'supabase_config',
-      message:
-        'No se pudo inicializar el acceso a datos. Revisá SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY.',
+      message: 'No se pudo inicializar el acceso a datos. Probá de nuevo más tarde.',
     };
   }
 }

@@ -3,6 +3,7 @@ import '@/styles/panel.css';
 import { site } from '@/data/site';
 import { absoluteUrl } from '@/utils/seo';
 import BottomNavigation from '@/components/panel/BottomNavigation.astro';
+import { PanelRouteLoading } from '@/components/panel/PanelRouteLoading';
 
 interface Props {
   title: string;
@@ -49,17 +50,11 @@ const currentPath = Astro.url.pathname;
   </head>
   <body class="panel-app m-0">
     <div class:list={['panel-shell', showNav && 'panel-shell--with-nav']}>
+      {showNav ? <BottomNavigation currentPath={currentPath} /> : null}
       <div class="panel-main">
         <slot />
-        {
-          showNav ? (
-            <p class="panel-utility">
-              <a href="/admin" class="panel-utility__link">Admin</a>
-            </p>
-          ) : null
-        }
       </div>
-      {showNav ? <BottomNavigation currentPath={currentPath} /> : null}
     </div>
+    {showNav ? <PanelRouteLoading client:load /> : null}
   </body>
 </html>

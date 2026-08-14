@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { Pencil, X } from 'lucide-react';
 import { Button } from '@/components/panel/ui/button';
+import { PanelPortal } from '@/components/panel/PanelPortal';
 import { formatCurrencyAmount } from '@/components/panel/CurrencyAmount';
 import type { Currency } from '@/lib/panel/types';
 
@@ -9,12 +10,28 @@ type Props = {
   serviceName: string;
   currentAmount: number;
   currency: Currency;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 };
 
 /** Sheet corto: solo cambia la tarifa contractual (no toca charges históricos). */
-export function ServiceTariffSheet({ serviceId, serviceName, currentAmount, currency }: Props) {
+export function ServiceTariffSheet({
+  serviceId,
+  serviceName,
+  currentAmount,
+  currency,
+  open: openProp,
+  onOpenChange,
+  hideTrigger = false,
+}: Props) {
   const titleId = useId();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = openProp ?? uncontrolledOpen;
+  const setOpen = (next: boolean) => {
+    onOpenChange?.(next);
+    if (openProp === undefined) setUncontrolledOpen(next);
+  };
   const [amount, setAmount] = useState(String(currentAmount));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,12 +73,15 @@ export function ServiceTariffSheet({ serviceId, serviceName, currentAmount, curr
 
   return (
     <>
-      <button type="button" className="panel-mini-btn" onClick={() => setOpen(true)}>
-        <Pencil size={13} strokeWidth={2.25} aria-hidden />
-        Editar tarifa
-      </button>
+      {hideTrigger ? null : (
+        <button type="button" className="panel-mini-btn" onClick={() => setOpen(true)}>
+          <Pencil size={13} strokeWidth={2.25} aria-hidden />
+          Editar tarifa
+        </button>
+      )}
 
       {open ? (
+        <PanelPortal>
         <div className="panel-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
           <button type="button" className="panel-sheet__backdrop" aria-label="Cerrar" onClick={() => setOpen(false)} />
           <div className="panel-sheet__panel">
@@ -99,13 +119,14 @@ export function ServiceTariffSheet({ serviceId, serviceName, currentAmount, curr
                 <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={submitting}>
+                <Button type="submit" loading={submitting}>
                   {submitting ? 'Guardando…' : 'Guardar tarifa'}
                 </Button>
               </div>
             </form>
           </div>
         </div>
+        </PanelPortal>
       ) : null}
     </>
   );

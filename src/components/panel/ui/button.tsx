@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/panel/cn';
@@ -28,11 +29,23 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+    VariantProps<typeof buttonVariants> {
+  /** Muestra spinner y deshabilita (además de disabled). */
+  loading?: boolean;
+}
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => (
-    <button className={cn(buttonVariants({ variant, size }), className)} ref={ref} {...props} />
+  ({ className, variant, size, loading, disabled, children, ...props }, ref) => (
+    <button
+      className={cn(buttonVariants({ variant, size }), className)}
+      ref={ref}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...props}
+    >
+      {loading ? <Loader2 size={16} className="animate-spin" aria-hidden /> : null}
+      {children}
+    </button>
   ),
 );
 Button.displayName = 'Button';

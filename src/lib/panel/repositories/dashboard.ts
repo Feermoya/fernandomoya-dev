@@ -5,11 +5,13 @@ import { ensureRecurringChargesForMonth } from '@/lib/panel/charges/ensureRecurr
 import { sortChargesForList } from '@/lib/panel/charges/sort';
 import { listNextExpectedCharges } from '@/lib/panel/charges/nextExpected';
 import { buildCollectedArsByMonth } from '@/lib/panel/charges/collectedByMonth';
+import { sumCollectedByCurrency } from '@/lib/panel/charges/collectedTotals';
 import {
   countActiveClients,
   listActiveRecurringServicesWithClients,
   listArsPaymentsForCollectedSeries,
   listChargesWithRelations,
+  listPaymentAmountsForTotals,
   listPaymentsInMonth,
 } from '@/lib/panel/repositories/reads';
 import {
@@ -42,13 +44,14 @@ export async function loadDashboard(
     return { data: null, error: ensure.error };
   }
 
-  const [clientsRes, servicesRes, chargesRes, paymentsRes, collectedHistoryRes] =
+  const [clientsRes, servicesRes, chargesRes, paymentsRes, collectedHistoryRes, totalsRes] =
     await Promise.all([
       countActiveClients(supabase),
       listActiveRecurringServicesWithClients(supabase),
       listChargesWithRelations(supabase),
       listPaymentsInMonth(supabase, monthStart, nextStart),
       listArsPaymentsForCollectedSeries(supabase),
+      listPaymentAmountsForTotals(supabase),
     ]);
 
   const firstError =
@@ -56,7 +59,8 @@ export async function loadDashboard(
     servicesRes.error ||
     chargesRes.error ||
     paymentsRes.error ||
-    collectedHistoryRes.error;
+    collectedHistoryRes.error ||
+    totalsRes.error;
 
   if (firstError) {
     return { data: null, error: firstError };
@@ -133,6 +137,7 @@ export async function loadDashboard(
   }));
 
   const collectedSeries = buildCollectedArsByMonth(collectedHistoryRes.data);
+  const totals = sumCollectedByCurrency(totalsRes.data);
 
   return {
     data: {
@@ -144,6 +149,8 @@ export async function loadDashboard(
       mrrArs: mrr.ars,
       collectedThisMonthArs: collected.ars,
       collectedThisMonthUsd: collected.usd,
+      totalCollectedArs: totals.totalCollectedARS,
+      totalCollectedUsd: totals.totalCollectedUSD,
       overdueCount,
       upcomingCount: upcomingExpectations.length,
       dueTodayCount,

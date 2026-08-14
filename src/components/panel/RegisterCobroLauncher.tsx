@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Banknote, ChevronRight, X } from 'lucide-react';
 import type { ChargeListItemData } from '@/lib/panel/view-types';
 import { formatCurrencyAmount } from '@/components/panel/CurrencyAmount';
 import { formatDueLabel, formatPeriodLabel } from '@/lib/panel/view-types';
 import { StatusBadge } from '@/components/panel/StatusBadge';
 import { RegisterPaymentSheet } from '@/components/panel/RegisterPaymentSheet';
+import { PanelPortal } from '@/components/panel/PanelPortal';
 import { Button } from '@/components/panel/ui/button';
 
 type Step = 'closed' | 'clients' | 'charges' | 'payment';
@@ -18,6 +19,15 @@ export function RegisterCobroLauncher({ unpaidCharges }: Props) {
   const [clientId, setClientId] = useState<string | null>(null);
   const [selected, setSelected] = useState<ChargeListItemData | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (step !== 'clients' && step !== 'charges') return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [step]);
 
   const clients = useMemo(() => {
     const priority = (status: ChargeListItemData['status']) =>
@@ -89,51 +99,42 @@ export function RegisterCobroLauncher({ unpaidCharges }: Props) {
     setStep('payment');
   }
 
-  return (
-    <>
-      <button type="button" className="panel-header__cta" onClick={open}>
-        <Banknote size={16} strokeWidth={2.25} aria-hidden />
-        <span>Registrar cobro</span>
-      </button>
+  const pickerOpen = step === 'clients' || step === 'charges';
 
-      {feedback ? (
-        <p className="panel-toast panel-toast--fixed" role="status">
-          {feedback}
-        </p>
-      ) : null}
+  const picker = pickerOpen ? (
+    <PanelPortal>
+      <div className="panel-sheet" role="dialog" aria-modal="true" aria-label="Registrar cobro">
+        <button
+          type="button"
+          className="panel-sheet__backdrop"
+          aria-label="Cerrar"
+          onClick={closePicker}
+        />
+        <div className="panel-sheet__panel panel-sheet__panel--picker">
+          <div className="panel-sheet__handle" aria-hidden />
+          <header className="panel-sheet__header">
+            <div className="min-w-0">
+              <p className="panel-sheet__eyebrow">Registrar cobro</p>
+              <h2 className="panel-sheet__title">
+                {step === 'clients' ? 'Elegí el cliente' : 'Elegí el cobro'}
+              </h2>
+              <p className="panel-sheet__meta">
+                {step === 'clients'
+                  ? 'Solo cobros pendientes (próximos, hoy o vencidos).'
+                  : clients.find((c) => c.id === clientId)?.name}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="panel-sheet__close"
+              onClick={closePicker}
+              aria-label="Cerrar"
+            >
+              <X size={18} strokeWidth={2.25} />
+            </button>
+          </header>
 
-      {step === 'clients' || step === 'charges' ? (
-        <div className="panel-sheet" role="dialog" aria-modal="true" aria-label="Registrar cobro">
-          <button
-            type="button"
-            className="panel-sheet__backdrop"
-            aria-label="Cerrar"
-            onClick={closePicker}
-          />
-          <div className="panel-sheet__panel">
-            <div className="panel-sheet__handle" aria-hidden />
-            <header className="panel-sheet__header">
-              <div className="min-w-0">
-                <p className="panel-sheet__eyebrow">Registrar cobro</p>
-                <h2 className="panel-sheet__title">
-                  {step === 'clients' ? 'Elegí el cliente' : 'Elegí el cobro'}
-                </h2>
-                <p className="panel-sheet__meta">
-                  {step === 'clients'
-                    ? 'Solo cobros pendientes (próximos, hoy o vencidos).'
-                    : clients.find((c) => c.id === clientId)?.name}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="panel-sheet__close"
-                onClick={closePicker}
-                aria-label="Cerrar"
-              >
-                <X size={18} strokeWidth={2.25} />
-              </button>
-            </header>
-
+          <div className="panel-sheet__body">
             {step === 'clients' ? (
               unpaidCharges.length === 0 ? (
                 <p className="panel-empty" style={{ marginTop: '1rem' }}>
@@ -164,7 +165,7 @@ export function RegisterCobroLauncher({ unpaidCharges }: Props) {
               )
             ) : (
               <>
-                <div className="panel-sheet__actions" style={{ marginTop: '0.75rem' }}>
+                <div className="panel-sheet__actions panel-sheet__actions--single">
                   <Button type="button" variant="outline" onClick={() => setStep('clients')}>
                     Volver
                   </Button>
@@ -195,7 +196,24 @@ export function RegisterCobroLauncher({ unpaidCharges }: Props) {
             )}
           </div>
         </div>
+      </div>
+    </PanelPortal>
+  ) : null;
+
+  return (
+    <>
+      <button type="button" className="panel-header__cta" onClick={open}>
+        <Banknote size={16} strokeWidth={2.25} aria-hidden />
+        <span>Registrar cobro</span>
+      </button>
+
+      {feedback ? (
+        <p className="panel-toast panel-toast--fixed" role="status">
+          {feedback}
+        </p>
       ) : null}
+
+      {picker}
 
       <RegisterPaymentSheet
         open={step === 'payment'}

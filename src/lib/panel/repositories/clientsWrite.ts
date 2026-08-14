@@ -110,3 +110,30 @@ export async function deactivateClient(
   if (!data) return { ok: false, error: 'Cliente no encontrado.', code: 'not_found' };
   return { ok: true, data: mapClient(data as Record<string, unknown>) };
 }
+
+export async function reactivateClient(
+  supabase: SupabaseClient,
+  id: string,
+): Promise<WriteResult<ClientRow>> {
+  const clientId = String(id || '').trim();
+  if (!clientId) {
+    return { ok: false, error: 'Falta el cliente', code: 'validation' };
+  }
+
+  const { data, error } = await supabase
+    .from('clients')
+    .update({
+      active: true,
+      ended_at: null,
+    })
+    .eq('id', clientId)
+    .select('*')
+    .maybeSingle();
+
+  if (error) {
+    logErr('reactivate', error);
+    return { ok: false, error: 'No se pudo reactivar el cliente.', code: 'db' };
+  }
+  if (!data) return { ok: false, error: 'Cliente no encontrado.', code: 'not_found' };
+  return { ok: true, data: mapClient(data as Record<string, unknown>) };
+}

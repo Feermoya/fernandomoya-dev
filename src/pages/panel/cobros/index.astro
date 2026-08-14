@@ -2,12 +2,13 @@
 export const prerender = false;
 
 import PanelLayout from '@/layouts/PanelLayout.astro';
-import { PanelHeader } from '@/components/panel/PanelHeader';
+import PanelHeader from '@/components/panel/PanelHeader.astro';
 import { ChargesFilterList } from '@/components/panel/ChargesFilterList';
 import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
 import { ensureRecurringChargesForMonth } from '@/lib/panel/charges/ensureRecurring';
 import { sortChargesForList } from '@/lib/panel/charges/sort';
 import { listChargesWithRelations } from '@/lib/panel/repositories/charges';
+import { resolvePanelBackLink } from '@/lib/panel/navigation';
 import { todayIsoDate, type ChargeListItemData } from '@/lib/panel/view-types';
 
 const access = requirePanelDataAccess(Astro.cookies);
@@ -30,12 +31,16 @@ if (access.ok) {
     loadError = result.error;
   }
 }
+
+const back = resolvePanelBackLink('/panel/cobros');
 ---
 
 <PanelLayout title="Cobros" path="/panel/cobros">
   <PanelHeader
     title="Cobros"
     subtitle={loadError ? 'Error al cargar' : `${charges.length} obligaciones`}
+    backHref={back?.href}
+    backLabel={back?.label}
   />
 
   {

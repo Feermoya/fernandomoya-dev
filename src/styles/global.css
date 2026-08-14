@@ -709,6 +709,38 @@
     outline-offset: 2px;
   }
 
+  .site-header-admin {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding-inline: 0.55rem;
+    border-radius: 0.55rem;
+    font-family: var(--fm-font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--fm-text-tertiary, #8a8278);
+    opacity: 0.65;
+    transition: opacity 160ms ease, color 160ms ease;
+  }
+
+  .site-header-admin:hover {
+    opacity: 1;
+    color: var(--fm-text-secondary, #5c564c);
+  }
+
+  .site-header-admin--bar {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .site-header-admin--bar {
+      display: inline-flex;
+    }
+  }
+
   @media (min-width: 1024px) {
     .site-header-menu-btn-wrap {
       display: none;
@@ -776,6 +808,29 @@
     display: flex;
     width: 100%;
     min-height: 3rem;
+  }
+
+  .site-header-mobile-admin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    margin-top: 0.15rem;
+    border-radius: 1rem;
+    font-family: var(--fm-font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--fm-text-tertiary, #8a8278);
+    opacity: 0.7;
+  }
+
+  .site-header-mobile-admin:hover {
+    opacity: 1;
+    color: var(--fm-text-secondary, #5c564c);
+    background: var(--fm-bg-surface-raised);
   }
 
   @media (max-width: 479.98px) {

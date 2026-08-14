@@ -152,23 +152,9 @@ export function FinanceJsonTools({
         <div className="mt-2 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
           <p className="font-semibold text-slate-700">Sincronización no activa en esta sesión</p>
           <p>
-            Las variables de Vercel <span className="font-medium text-slate-800">no se usan en tu PC</span> cuando corrés{' '}
-            <code className="rounded bg-white px-1 text-slate-700">npm run dev</code>. Astro solo las ve si están en un archivo en el
-            proyecto.
+            En este dispositivo la nube no está disponible. Los datos quedan solo en este navegador.
           </p>
-          <p>
-            <span className="font-medium text-slate-800">En local:</span> en la raíz del repo creá{' '}
-            <code className="rounded bg-white px-1 text-slate-700">.env.local</code> con las mismas dos variables que en Vercel (
-            <code className="rounded bg-white px-1 text-slate-700">PUBLIC_FINANCE_SUPABASE_URL</code> y{' '}
-            <code className="rounded bg-white px-1 text-slate-700">PUBLIC_FINANCE_SUPABASE_ANON_KEY</code>, valores copiados desde Supabase
-            → Settings → API). Guardá el archivo, <span className="font-medium text-slate-800">pará y volvé a levantar</span>{' '}
-            <code className="rounded bg-white px-1 text-slate-700">npm run dev</code>.
-          </p>
-          <p>
-            <span className="font-medium text-slate-800">En producción:</span> las variables van en Vercel + redeploy; si
-            ya lo hiciste, abrí el sitio publicado (no localhost).
-          </p>
-          <p className="text-slate-500">Sin eso, los datos quedan solo en este navegador: usá los botones de abajo.</p>
+          <p className="text-slate-500">Podés seguir usando los botones de exportar e importar abajo.</p>
         </div>
       ) : null}
 

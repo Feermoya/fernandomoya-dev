@@ -4,6 +4,7 @@ import type { ChargeListItemData } from '@/lib/panel/view-types';
 import { formatDueLabel, formatPeriodLabel, todayIsoDate } from '@/lib/panel/view-types';
 import { formatCurrencyAmount } from '@/components/panel/CurrencyAmount';
 import { Button } from '@/components/panel/ui/button';
+import { PanelPortal } from '@/components/panel/PanelPortal';
 import {
   PAYMENT_METHODS,
   expectedArsFromUsd,
@@ -136,14 +137,16 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
   }, [suggestedAmount, open, charge, isUsd, amountTouched]);
 
   if (!open || !charge) return null;
+  const activeCharge = charge;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (submitting) return;
     setError(null);
     setSubmitting(true);
     try {
       const body = {
-        chargeId: charge.id,
+        chargeId: activeCharge.id,
         paidAt,
         amountReceived: Number(String(amount).replace(',', '.')),
         currencyReceived: 'ARS',
@@ -175,6 +178,7 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
   }
 
   return (
+    <PanelPortal>
     <div className="panel-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <button type="button" className="panel-sheet__backdrop" aria-label="Cerrar" onClick={onClose} />
       <div className="panel-sheet__panel">
@@ -183,9 +187,9 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
           <div className="min-w-0">
             <p className="panel-sheet__eyebrow">Registrar pago</p>
             <h2 id={titleId} className="panel-sheet__title">
-              {charge.clientName}
+              {activeCharge.clientName}
             </h2>
-            <p className="panel-sheet__meta">{charge.serviceName}</p>
+            <p className="panel-sheet__meta">{activeCharge.serviceName}</p>
           </div>
           <button type="button" className="panel-sheet__close" onClick={onClose} aria-label="Cerrar">
             <X size={18} strokeWidth={2.25} />
@@ -196,16 +200,16 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
           <div>
             <p className="panel-metric__label">Tarifa</p>
             <p className="panel-sheet__summary-value">
-              {formatCurrencyAmount(charge.referenceAmount, charge.referenceCurrency)}
+              {formatCurrencyAmount(activeCharge.referenceAmount, activeCharge.referenceCurrency)}
             </p>
           </div>
           <div>
             <p className="panel-metric__label">Vencimiento</p>
-            <p className="panel-sheet__summary-value">{formatDueLabel(charge.dueDate)}</p>
+            <p className="panel-sheet__summary-value">{formatDueLabel(activeCharge.dueDate)}</p>
           </div>
           <div>
             <p className="panel-metric__label">Período</p>
-            <p className="panel-sheet__summary-value">{formatPeriodLabel(charge.period)}</p>
+            <p className="panel-sheet__summary-value">{formatPeriodLabel(activeCharge.period)}</p>
           </div>
         </div>
 
@@ -223,17 +227,20 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
                     className="panel-input"
                     inputMode="decimal"
                     autoComplete="off"
-                    placeholder="Ej. 1512.48"
+                    placeholder={mepState.status === 'loading' ? 'Cargando MEP…' : 'Ej. 1512.48'}
                     value={mep}
                     onChange={(e) => {
                       setMepTouched(true);
                       setMep(toInputNumber(e.target.value));
                     }}
+                    disabled={mepState.status === 'loading' && !mepTouched}
                     required
                   />
                 </label>
                 {mepState.status === 'loading' ? (
-                  <p className="panel-sheet__calc">Obteniendo MEP…</p>
+                  <p className="panel-sheet__calc" aria-live="polite">
+                    Obteniendo MEP…
+                  </p>
                 ) : null}
                 {mepState.status === 'ok' ? (
                   <p className="panel-sheet__calc">
@@ -242,13 +249,13 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
                 ) : null}
                 {mepState.status === 'error' ? (
                   <p className="panel-sheet__calc panel-sheet__calc--warn">
-                    No se pudo obtener el MEP · ingresalo manualmente
+                    MEP no disponible · ingresalo manualmente
                   </p>
                 ) : null}
                 {expectedExact != null && mepNumber != null ? (
                   <p className="panel-sheet__calc">
-                    Equivalente: {formatCurrencyAmount(charge.referenceAmount, 'USD')} × {mepNumber}{' '}
-                    = <strong>{formatCurrencyAmount(expectedExact, 'ARS')}</strong>
+                    Equivalente: {formatCurrencyAmount(activeCharge.referenceAmount, 'USD')} ×{' '}
+                    {mepNumber} = <strong>{formatCurrencyAmount(expectedExact, 'ARS')}</strong>
                   </p>
                 ) : null}
               </>
@@ -316,13 +323,14 @@ export function RegisterPaymentSheet({ charge, open, onClose, onSuccess }: Props
               <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? 'Guardando…' : 'Registrar pago'}
+              <Button type="submit" loading={submitting}>
+                {submitting ? 'Registrando…' : 'Registrar pago'}
               </Button>
             </div>
           </form>
         )}
       </div>
     </div>
+    </PanelPortal>
   );
 }

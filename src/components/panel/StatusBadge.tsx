@@ -7,7 +7,7 @@ const META: Record<
   { label: string; className: string; Icon: typeof Clock3 }
 > = {
   upcoming: { label: 'Próximo', className: 'panel-badge--upcoming', Icon: CalendarClock },
-  due_today: { label: 'Hoy', className: 'panel-badge--due_today', Icon: Clock3 },
+  due_today: { label: 'Vence hoy', className: 'panel-badge--due_today', Icon: Clock3 },
   overdue: { label: 'Vencido', className: 'panel-badge--overdue', Icon: AlertCircle },
   paid: { label: 'Pagado', className: 'panel-badge--paid', Icon: CheckCircle2 },
 };

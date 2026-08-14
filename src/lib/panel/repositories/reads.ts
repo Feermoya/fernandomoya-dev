@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { calculateMrr } from '@/lib/panel/mrr';
 import { calculateChargeStatus } from '@/lib/panel/status';
+import { listNextExpectedCharges } from '@/lib/panel/charges/nextExpected';
+import { resolveClientBillingStatus } from '@/lib/panel/clients/listStatus';
 import {
   mapClient,
   mapPayment,
@@ -139,19 +141,101 @@ export async function listClientsWithActiveServices(
   const today = todayIsoDate();
   const rows = (data ?? []) as Array<Record<string, unknown> & { services?: Record<string, unknown>[] }>;
 
-  const mapped: ClientListItemData[] = rows.map((row) => {
+  const base = rows.map((row) => {
     const client = mapClient(row);
     const services = (row.services ?? []).map(mapService);
     const activeServices = services.filter((s) => s.active && (!s.ended_at || s.ended_at >= today));
     const mrr = calculateMrr(activeServices, today);
+    const primary =
+      activeServices.find((s) => s.billing_type === 'recurring') ?? activeServices[0] ?? null;
     return {
-      id: client.id,
-      name: client.name,
-      active: client.active,
-      startDate: client.start_date,
-      endedAt: client.ended_at,
-      activeServiceCount: activeServices.length,
-      services: activeServices.map((s) => ({
+      client,
+      services,
+      activeServices,
+      mrr,
+      primary,
+    };
+  });
+
+  const serviceIds = base.flatMap((b) => b.services.map((s) => s.id));
+  let unpaidByClient = new Map<string, ChargeListItemData[]>();
+
+  if (serviceIds.length > 0) {
+    const { data: chargeRows, error: chargesError } = await supabase
+      .from('charges')
+      .select(CHARGE_SELECT)
+      .in('service_id', serviceIds);
+
+    if (chargesError) {
+      logPanelError('listClients.charges', chargesError);
+      return { data: [], error: 'No se pudieron cargar los cobros de clientes.' };
+    }
+
+    const hydrated = ((chargeRows ?? []) as NestedCharge[])
+      .map((row) => hydrateChargeListItem(row, today))
+      .filter((c): c is ChargeListItemData => Boolean(c));
+
+    unpaidByClient = new Map();
+    for (const charge of hydrated) {
+      if (charge.status === 'paid') continue;
+      const list = unpaidByClient.get(charge.clientId) ?? [];
+      list.push(charge);
+      unpaidByClient.set(charge.clientId, list);
+    }
+  }
+
+  const projectionServices = base.flatMap((b) =>
+    b.activeServices
+      .filter((s) => s.billing_type === 'recurring')
+      .map((s) => ({
+        id: s.id,
+        client_id: b.client.id,
+        name: s.name,
+        client_name: b.client.name,
+        active: s.active,
+        billing_type: s.billing_type,
+        billing_mode: s.billing_mode,
+        due_day: s.due_day,
+        reference_amount: s.reference_amount,
+        reference_currency: s.reference_currency,
+        start_date: s.start_date,
+        ended_at: s.ended_at,
+      })),
+  );
+
+  const existingForProjection = [...unpaidByClient.values()].flat().map((c) => ({
+    id: c.id,
+    service_id: c.serviceId,
+    period: c.period,
+    due_date: c.dueDate,
+    hasPayment: false,
+  }));
+
+  const nextExpected = listNextExpectedCharges(projectionServices, existingForProjection, today);
+  const nextByClient = new Map<string, string>();
+  for (const n of nextExpected) {
+    const prev = nextByClient.get(n.clientId);
+    if (!prev || n.dueDate < prev) nextByClient.set(n.clientId, n.dueDate);
+  }
+
+  const mapped: ClientListItemData[] = base.map((b) => {
+    const unpaid = unpaidByClient.get(b.client.id) ?? [];
+    const billingStatus = resolveClientBillingStatus({
+      active: b.client.active,
+      unpaidStatuses: unpaid.map((c) => c.status),
+    });
+    const earliestUnpaid = [...unpaid].sort((a, c) => a.dueDate.localeCompare(c.dueDate))[0];
+    const nextDueDate = earliestUnpaid?.dueDate ?? nextByClient.get(b.client.id) ?? null;
+
+    return {
+      id: b.client.id,
+      name: b.client.name,
+      active: b.client.active,
+      startDate: b.client.start_date,
+      endedAt: b.client.ended_at,
+      notes: b.client.notes,
+      activeServiceCount: b.activeServices.length,
+      services: b.activeServices.map((s) => ({
         id: s.id,
         name: s.name,
         billingType: s.billing_type,
@@ -160,8 +244,15 @@ export async function listClientsWithActiveServices(
         billingMode: s.billing_mode,
         dueDay: s.due_day,
       })),
-      mrrUsd: mrr.usd,
-      mrrArs: mrr.ars,
+      mrrUsd: b.mrr.usd,
+      mrrArs: b.mrr.ars,
+      billingStatus,
+      nextDueDate,
+      primaryServiceName: b.primary?.name ?? null,
+      primaryAmount: b.primary?.reference_amount ?? null,
+      primaryCurrency: b.primary?.reference_currency ?? null,
+      primaryBillingType: b.primary?.billing_type ?? null,
+      unpaidCharges: unpaid,
     };
   });
 
@@ -332,6 +423,31 @@ export async function listArsPaymentsForCollectedSeries(
   return {
     data: (data ?? []).map((r) => ({
       paid_at: String((r as { paid_at: string }).paid_at),
+      amount_received: Number((r as { amount_received: number }).amount_received),
+      currency_received: String((r as { currency_received: string }).currency_received),
+    })),
+    error: null,
+  };
+}
+
+/** Todos los payments (solo montos/moneda) para totales históricos. */
+export async function listPaymentAmountsForTotals(
+  supabase: SupabaseClient,
+): Promise<{
+  data: Array<{ amount_received: number; currency_received: string }>;
+  error: string | null;
+}> {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('amount_received, currency_received');
+
+  if (error) {
+    logPanelError('listPaymentAmountsForTotals', error);
+    return { data: [], error: 'No se pudo cargar el total cobrado.' };
+  }
+
+  return {
+    data: (data ?? []).map((r) => ({
       amount_received: Number((r as { amount_received: number }).amount_received),
       currency_received: String((r as { currency_received: string }).currency_received),
     })),

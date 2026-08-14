@@ -2,18 +2,27 @@
 export const prerender = false;
 
 import PanelLayout from '@/layouts/PanelLayout.astro';
+import PanelHeader from '@/components/panel/PanelHeader.astro';
 import { formatCurrencyAmount } from '@/components/panel/CurrencyAmount';
 import { StatusBadge } from '@/components/panel/StatusBadge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/panel/ui/card';
+import { ClientBillingBadge } from '@/components/panel/ClientBillingBadge';
 import { ClientEditSheet } from '@/components/panel/ClientEditSheet';
 import { ServiceCreateLauncher } from '@/components/panel/ServiceCreateLauncher';
 import { ServiceTariffSheet } from '@/components/panel/ServiceTariffSheet';
 import { ServiceDeactivateButton } from '@/components/panel/ServiceDeactivateButton';
 import { ClientDetailActions } from '@/components/panel/ClientDetailActions';
+import { AddWorkLauncher } from '@/components/panel/AddWorkLauncher';
+import { RegisterCobroLauncher } from '@/components/panel/RegisterCobroLauncher';
 import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
 import { getClientDetail } from '@/lib/panel/repositories/clients';
-import { formatDueLabel, formatPeriodLabel, todayIsoDate } from '@/lib/panel/view-types';
-import { calculateMrr } from '@/lib/panel/mrr';
+import { resolvePanelBackLink } from '@/lib/panel/navigation';
+import {
+  formatDueLabel,
+  formatDueShortLabel,
+  formatPeriodLabel,
+  todayIsoDate,
+} from '@/lib/panel/view-types';
+import { resolveClientBillingStatus } from '@/lib/panel/clients/listStatus';
 
 const { id } = Astro.params;
 
@@ -42,31 +51,56 @@ const today = todayIsoDate();
 const activeServices = detail
   ? detail.services.filter((s) => s.active && (!s.ended_at || s.ended_at >= today))
   : [];
-const mrr = detail ? calculateMrr(activeServices, today) : { usd: 0, ars: 0 };
-const nextCharge = detail
-  ? detail.charges
-      .filter((c) => c.status === 'upcoming' || c.status === 'due_today' || c.status === 'overdue')
-      .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0]
-  : undefined;
-
-const autoOpenService = Astro.url.searchParams.get('nuevoServicio') === '1';
-const ok = Astro.url.searchParams.get('ok');
 const unpaidCharges = detail
   ? detail.charges.filter(
       (c) => c.status === 'upcoming' || c.status === 'due_today' || c.status === 'overdue',
     )
   : [];
+const nextCharge = unpaidCharges.slice().sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
+const billingStatus = detail
+  ? resolveClientBillingStatus({
+      active: detail.client.active,
+      unpaidStatuses: unpaidCharges.map((c) => c.status),
+    })
+  : 'inactive';
+
+const paidHistory = detail
+  ? detail.charges
+      .filter((c) => c.status === 'paid')
+      .sort((a, b) => (b.paidAt ?? b.dueDate).localeCompare(a.paidAt ?? a.dueDate))
+  : [];
+
+const autoOpenService = Astro.url.searchParams.get('nuevoServicio') === '1';
+const ok = Astro.url.searchParams.get('ok');
+const back = resolvePanelBackLink(`/panel/clientes/${id}`);
+
+const startParts = detail?.client.start_date?.split('-') ?? [];
+const startLabel =
+  startParts.length >= 2
+    ? `${['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][Number(startParts[1]) - 1] ?? startParts[1]} ${startParts[0]}`
+    : '—';
 ---
 
 <PanelLayout title={detail?.client.name ?? 'Cliente'} path={`/panel/clientes/${id}`}>
-  <p class="mb-3">
-    <a href="/panel/clientes" class="panel-section__link">← Clientes</a>
-  </p>
+  <PanelHeader
+    title={detail?.client.name ?? 'Cliente'}
+    subtitle={undefined}
+    backHref={back?.href}
+    backLabel={back?.label ?? 'Clientes'}
+  >
+    {
+      detail ? (
+        <div slot="action" class="panel-header__actions">
+          <ClientBillingBadge status={billingStatus} />
+        </div>
+      ) : null
+    }
+  </PanelHeader>
 
   {
-    ok === 'servicio' ? (
+    ok === 'servicio' || ok === 'trabajo' ? (
       <p class="panel-toast" role="status">
-        Servicio creado
+        {ok === 'trabajo' ? 'Trabajo creado' : 'Servicio creado'}
       </p>
     ) : null
   }
@@ -78,48 +112,53 @@ const unpaidCharges = detail
       </div>
     ) : (
       <>
-        <header class="panel-header">
-          <div class="min-w-0">
-            <p class="panel-header__eyebrow">Panel de cobros</p>
-            <h1 class="panel-header__title">{detail.client.name}</h1>
-            <p class="panel-header__subtitle">
-              Desde {formatDueLabel(detail.client.start_date)}
-              {detail.client.ended_at ? ` · Baja ${formatDueLabel(detail.client.ended_at)}` : ''}
+        <section class="panel-client-facts" aria-label="Resumen del cliente">
+          <div class="panel-client-facts__cell">
+            <p class="panel-client-facts__label">Estado</p>
+            <p class="panel-client-facts__value">
+              {
+                billingStatus === 'overdue'
+                  ? 'Vencido'
+                  : billingStatus === 'due_today'
+                    ? 'Vence hoy'
+                    : billingStatus === 'upcoming'
+                      ? 'Próximo'
+                      : billingStatus === 'inactive'
+                        ? 'Inactivo'
+                        : 'Al día'
+              }
             </p>
           </div>
-          <div class="panel-header__actions">
-            <span class={`panel-badge ${detail.client.active ? 'panel-badge--paid' : 'panel-badge--muted'}`}>
-              {detail.client.active ? 'Activo' : 'Inactivo'}
-            </span>
-            <ClientEditSheet client:load client={detail.client} />
+          <div class="panel-client-facts__cell">
+            <p class="panel-client-facts__label">Próximo vencimiento</p>
+            <p class="panel-client-facts__value">
+              {nextCharge ? formatDueShortLabel(nextCharge.dueDate) : '—'}
+            </p>
           </div>
-        </header>
-
-        <section class="panel-metrics" aria-label="Resumen del cliente">
-          <article class="panel-metric">
-            <p class="panel-metric__label">MRR</p>
-            {mrr.usd > 0 ? (
-              <p class="panel-metric__value">{formatCurrencyAmount(mrr.usd, 'USD')}</p>
-            ) : null}
-            {mrr.ars > 0 ? (
-              <p class="panel-metric__value">{formatCurrencyAmount(mrr.ars, 'ARS')}</p>
-            ) : null}
-            {mrr.usd === 0 && mrr.ars === 0 ? <p class="panel-metric__hint">—</p> : null}
-          </article>
-          <article class="panel-metric">
-            <p class="panel-metric__label">Próximo cobro</p>
-            {nextCharge ? (
-              <>
-                <p class="panel-metric__value">
-                  {formatCurrencyAmount(nextCharge.referenceAmount, nextCharge.referenceCurrency)}
-                </p>
-                <p class="panel-metric__hint">Vence {formatDueLabel(nextCharge.dueDate)}</p>
-              </>
-            ) : (
-              <p class="panel-metric__hint">Sin pendientes</p>
-            )}
-          </article>
+          <div class="panel-client-facts__cell">
+            <p class="panel-client-facts__label">Servicios</p>
+            <p class="panel-client-facts__value">{activeServices.length}</p>
+          </div>
+          <div class="panel-client-facts__cell">
+            <p class="panel-client-facts__label">Cliente desde</p>
+            <p class="panel-client-facts__value">{startLabel}</p>
+          </div>
         </section>
+
+        <div class="panel-client-actions">
+          {
+            unpaidCharges.length > 0 ? (
+              <RegisterCobroLauncher client:load unpaidCharges={unpaidCharges} />
+            ) : (
+              <span class="panel-action-btn panel-action-btn--disabled" aria-disabled="true">
+                Sin cobros pendientes
+              </span>
+            )
+          }
+          <ServiceCreateLauncher client:load clientId={detail.client.id} autoOpen={autoOpenService} />
+          <AddWorkLauncher client:load clientId={detail.client.id} />
+          <ClientEditSheet client:load client={detail.client} />
+        </div>
 
         {
           unpaidCharges.length > 0 ? (
@@ -135,43 +174,34 @@ const unpaidCharges = detail
         <section class="panel-section" aria-label="Servicios">
           <div class="panel-section__head">
             <h2 class="panel-section__title">Servicios</h2>
-            <ServiceCreateLauncher client:load clientId={detail.client.id} autoOpen={autoOpenService} />
           </div>
-          {detail.services.length === 0 ? (
-            <p class="panel-empty">Sin servicios.</p>
-          ) : (
-            <ul class="panel-list">
-              {detail.services.map((service) => (
-                <li>
-                  <Card>
-                    <CardHeader>
-                      <div class="panel-row__top">
-                        <CardTitle>{service.name}</CardTitle>
+          {
+            detail.services.length === 0 ? (
+              <p class="panel-empty">Sin servicios.</p>
+            ) : (
+              <ul class="panel-service-list">
+                {detail.services.map((service) => (
+                  <li class="panel-service-row">
+                    <div class="panel-service-row__main">
+                      <div class="panel-service-row__top">
+                        <p class="panel-service-row__name">{service.name}</p>
                         <span class="panel-badge panel-badge--muted">
-                          {service.billing_type === 'recurring' ? 'Mensual' : 'Puntual'}
+                          {service.active ? 'Activo' : 'Inactivo'}
                         </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p class="panel-row__amount">
+                      <p class="panel-service-row__tariff">
                         {formatCurrencyAmount(service.reference_amount, service.reference_currency)}
+                        {service.billing_type === 'recurring' ? ' / mes' : ''}
                       </p>
-                      {service.billing_type === 'recurring' ? (
-                        <p class="panel-row__meta">
-                          {service.billing_mode === 'previous_month' ? 'Mes vencido' : 'Mes actual'}
-                          {' · '}
-                          día {service.due_day}
-                          {!service.active ? ' · inactivo' : ''}
-                        </p>
-                      ) : (
-                        <p class="panel-row__meta">Cobro único{!service.active ? ' · inactivo' : ''}</p>
-                      )}
-                      <p class="panel-row__meta">
-                        Inicio {formatDueLabel(service.start_date)}
-                        {service.ended_at ? ` · Baja ${formatDueLabel(service.ended_at)}` : ''}
+                      <p class="panel-service-row__meta">
+                        {service.billing_type === 'recurring'
+                          ? `${service.billing_mode === 'previous_month' ? 'Mes vencido' : 'Mes actual'} · Día ${service.due_day}`
+                          : 'Trabajo puntual'}
                       </p>
-                      {service.active ? (
-                        <div class="panel-service-actions">
+                    </div>
+                    {
+                      service.active ? (
+                        <div class="panel-service-row__actions">
                           <ServiceTariffSheet
                             client:load
                             serviceId={service.id}
@@ -181,58 +211,52 @@ const unpaidCharges = detail
                           />
                           <ServiceDeactivateButton client:load service={service} />
                         </div>
-                      ) : null}
-                    </CardContent>
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          )}
+                      ) : null
+                    }
+                  </li>
+                ))}
+              </ul>
+            )
+          }
         </section>
 
-        <section class="panel-section" aria-label="Historial">
+        <section class="panel-section" aria-label="Historial de pagos">
           <div class="panel-section__head">
-            <h2 class="panel-section__title">Historial</h2>
+            <h2 class="panel-section__title">Historial de pagos</h2>
           </div>
-          {detail.charges.length === 0 ? (
-            <p class="panel-empty">Sin cobros registrados.</p>
-          ) : (
-            <ul class="panel-list">
-              {detail.charges.map((charge) => (
-                <li>
-                  <article class="panel-row">
-                    <div class="panel-row__top">
-                      <div class="min-w-0">
-                        <p class="panel-row__title">{charge.serviceName}</p>
-                        <p class="panel-row__meta">{formatPeriodLabel(charge.period)}</p>
-                        <p class="panel-row__amount">
-                          {formatCurrencyAmount(charge.referenceAmount, charge.referenceCurrency)}
+          {
+            paidHistory.length === 0 ? (
+              <p class="panel-empty">Todavía no hay pagos registrados.</p>
+            ) : (
+              <ul class="panel-pay-timeline">
+                {paidHistory.map((charge) => (
+                  <li class="panel-pay-timeline__item">
+                    <div class="panel-pay-timeline__dot" aria-hidden />
+                    <div class="panel-pay-timeline__body">
+                      <div class="panel-pay-timeline__top">
+                        <p class="panel-pay-timeline__period">
+                          {formatPeriodLabel(charge.period)}
                         </p>
-                        <p class="panel-row__date">
-                          {charge.status === 'paid' && charge.paidAt
-                            ? `Pagado ${formatDueLabel(charge.paidAt)}`
-                            : `Vence ${formatDueLabel(charge.dueDate)}`}
-                        </p>
-                        {charge.payment ? (
-                          <p class="panel-row__meta">
-                            Recibido{' '}
-                            {formatCurrencyAmount(
+                        <StatusBadge status={charge.status} />
+                      </div>
+                      <p class="panel-pay-timeline__amount">
+                        {charge.payment
+                          ? formatCurrencyAmount(
                               charge.payment.amount_received,
                               charge.payment.currency_received,
-                            )}
-                            {charge.payment.exchange_rate
-                              ? ` · MEP ${charge.payment.exchange_rate}`
-                              : ''}
-                          </p>
-                        ) : null}
-                      </div>
-                      <StatusBadge status={charge.status} />
+                            )
+                          : formatCurrencyAmount(charge.referenceAmount, charge.referenceCurrency)}
+                      </p>
+                      <p class="panel-pay-timeline__meta">
+                        {charge.serviceName}
+                        {charge.paidAt ? ` · ${formatDueLabel(charge.paidAt)}` : ''}
+                      </p>
                     </div>
-                  </article>
-                </li>
-              ))}
-            </ul>
-          )}
+                  </li>
+                ))}
+              </ul>
+            )
+          }
         </section>
       </>
     )

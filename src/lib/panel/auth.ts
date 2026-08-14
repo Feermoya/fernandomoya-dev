@@ -9,8 +9,22 @@ export const PANEL_PATHS = {
 
 export const PANEL_SESSION_COOKIE = 'fm_panel_session';
 
+/** Herramientas privadas que reutilizan la misma sesión/PIN del panel. */
+export const PRIVATE_TOOL_PATHS = ['/foco-financiero', '/admin'] as const;
+
 export function isPanelPath(pathname: string): boolean {
   return pathname === '/panel' || pathname.startsWith('/panel/');
+}
+
+export function isPrivateToolPath(pathname: string): boolean {
+  return PRIVATE_TOOL_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
+
+/** Rutas que exigen cookie de panel (panel + herramientas privadas). */
+export function isSessionProtectedPath(pathname: string): boolean {
+  return isPanelPath(pathname) || isPrivateToolPath(pathname);
 }
 
 /** Rutas accesibles sin sesión. */
@@ -20,6 +34,32 @@ export function isPanelPublicAuthPath(pathname: string): boolean {
     pathname === PANEL_PATHS.loginAction ||
     pathname === PANEL_PATHS.signout
   );
+}
+
+/**
+ * Destino post-login seguro (solo paths internos permitidos).
+ * Evita open redirects.
+ */
+export function safePostLoginPath(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const path = String(raw).trim();
+  if (!path.startsWith('/')) return null;
+  if (path.startsWith('//')) return null;
+  if (path.includes('\\') || path.includes('\0')) return null;
+  // No reenviar al propio login
+  if (path === PANEL_PATHS.login || path.startsWith(`${PANEL_PATHS.login}?`)) {
+    return null;
+  }
+  if (isSessionProtectedPath(path.split('?')[0] ?? path)) {
+    return path;
+  }
+  return null;
+}
+
+export function panelLoginUrl(next?: string | null): string {
+  const safe = safePostLoginPath(next);
+  if (!safe) return PANEL_PATHS.login;
+  return `${PANEL_PATHS.login}?next=${encodeURIComponent(safe)}`;
 }
 
 function readServerEnv(name: 'PANEL_ACCESS_SECRET' | 'PANEL_SESSION_SECRET'): string {
