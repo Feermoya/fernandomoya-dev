@@ -1,0 +1,49 @@
+---
+import { Home, Receipt, Users } from 'lucide-react';
+
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+const items = [
+  {
+    href: '/panel',
+    label: 'Inicio',
+    Icon: Home,
+    active: currentPath === '/panel' || currentPath === '/panel/',
+  },
+  {
+    href: '/panel/cobros',
+    label: 'Cobros',
+    Icon: Receipt,
+    active: currentPath.startsWith('/panel/cobros'),
+  },
+  {
+    href: '/panel/clientes',
+    label: 'Clientes',
+    Icon: Users,
+    active: currentPath.startsWith('/panel/clientes'),
+  },
+] as const;
+---
+
+<nav class="panel-bottom-nav" aria-label="Navegación principal del panel">
+  <ul class="panel-bottom-nav__list">
+    {
+      items.map(({ href, label, Icon, active }) => (
+        <li class="panel-bottom-nav__item">
+          <a
+            href={href}
+            class:list={['panel-bottom-nav__link', active && 'is-active']}
+            aria-current={active ? 'page' : undefined}
+          >
+            <Icon size={20} strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
+            <span>{label}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

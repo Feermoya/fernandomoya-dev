@@ -1,0 +1,147 @@
+---
+export const prerender = false;
+
+import PanelLayout from '@/layouts/PanelLayout.astro';
+import { SummaryCard } from '@/components/panel/SummaryCard';
+import { formatCurrencyAmount } from '@/components/panel/CurrencyAmount';
+import { ChargeListItem } from '@/components/panel/ChargeListItem';
+import { MrrTrendChart } from '@/components/panel/MrrTrendChart';
+import { RegisterCobroLauncher } from '@/components/panel/RegisterCobroLauncher';
+import { PANEL_PATHS } from '@/lib/panel/auth';
+import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
+import { loadDashboard } from '@/lib/panel/repositories/dashboard';
+
+const access = requirePanelDataAccess(Astro.cookies);
+if (!access.ok) {
+  if (access.reason === 'unauthenticated') {
+    return Astro.redirect(panelLoginRedirectUrl());
+  }
+}
+
+const result =
+  access.ok ? await loadDashboard(access.supabase) : { data: null, error: access.message };
+const dash = result.data;
+const loadError = result.error;
+
+const collectedArs = dash?.collectedThisMonthArs ?? 0;
+const overdueCount = dash?.overdueCount ?? 0;
+const upcomingCount = dash?.upcomingCount ?? 0;
+---
+
+<PanelLayout title="Inicio" path={PANEL_PATHS.root}>
+  <header class="panel-header">
+    <div class="min-w-0">
+      <p class="panel-header__eyebrow">Panel de cobros</p>
+      <h1 class="panel-header__title">Inicio</h1>
+    </div>
+    {
+      dash ? (
+        <RegisterCobroLauncher client:load unpaidCharges={dash.unpaidCharges} />
+      ) : null
+    }
+  </header>
+
+  {
+    loadError ? (
+      <div class="panel-alert" role="alert">
+        No se pudieron cargar los datos. Probá de nuevo más tarde.
+      </div>
+    ) : null
+  }
+
+  {
+    dash ? (
+      <>
+        <section class="panel-metrics" aria-label="Resumen">
+          <SummaryCard
+            label="Cobrado este mes"
+            value={formatCurrencyAmount(collectedArs, 'ARS')}
+            hint={collectedArs > 0 ? 'Según fecha de pago' : 'Sin cobros registrados este mes'}
+            tone={collectedArs > 0 ? 'success' : 'default'}
+            icon="money"
+          />
+          <SummaryCard
+            label="Vencidos"
+            value={`${overdueCount}`}
+            hint={overdueCount > 0 ? 'Requieren atención' : 'Todo al día'}
+            tone={overdueCount > 0 ? 'danger' : 'default'}
+            icon="alert"
+          />
+          <SummaryCard
+            label="Próximos"
+            value={`${upcomingCount}`}
+            hint={
+              upcomingCount > 0
+                ? dash.dueTodayCount > 0
+                  ? `${dash.dueTodayCount} vencen hoy`
+                  : 'Sin pago · fecha futura'
+                : 'No hay cobros próximos'
+            }
+            tone={upcomingCount > 0 ? 'warning' : 'default'}
+            icon="calendar"
+          />
+          <SummaryCard
+            label="Clientes activos"
+            value={`${dash.activeClients}`}
+            hint={
+              dash.activeServices === 1
+                ? '1 servicio activo'
+                : `${dash.activeServices} servicios activos`
+            }
+            icon="users"
+            tone="default"
+          />
+        </section>
+
+        <section class="panel-section" aria-label="Evolución">
+          <MrrTrendChart
+            client:load
+            series={dash.mrrSeries}
+            currentMrrUsd={dash.mrrUsd}
+          />
+        </section>
+
+        <section class="panel-section" aria-label="Próximos cobros">
+          <div class="panel-section__head">
+            <h2 class="panel-section__title">Próximos cobros</h2>
+            <a href="/panel/cobros" class="panel-section__link">Ver todos</a>
+          </div>
+          {
+            dash.upcomingCharges.length === 0 ? (
+              <p class="panel-empty">No hay cobros próximos.</p>
+            ) : (
+              <ul class="panel-list">
+                {dash.upcomingCharges.map((charge) => (
+                  <li>
+                    <ChargeListItem charge={charge} />
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </section>
+
+        {
+          dash.attentionCharges.length > 0 ? (
+            <section class="panel-section" aria-label="Requieren atención">
+              <div class="panel-section__head">
+                <h2 class="panel-section__title">Requieren atención</h2>
+              </div>
+              <ul class="panel-list">
+                {dash.attentionCharges.map((charge) => (
+                  <li>
+                    <ChargeListItem charge={charge} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null
+        }
+      </>
+    ) : null
+  }
+
+  <p class="text-center">
+    <a href={PANEL_PATHS.signout} class="panel-signout">Cerrar sesión</a>
+  </p>
+</PanelLayout>

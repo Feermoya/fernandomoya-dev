@@ -1,0 +1,58 @@
+---
+import '@/styles/panel.css';
+import { site } from '@/data/site';
+import { absoluteUrl } from '@/utils/seo';
+import BottomNavigation from '@/components/panel/BottomNavigation.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  path?: string;
+  /** Login / auth: sin bottom nav. */
+  showNav?: boolean;
+}
+
+const {
+  title,
+  description = 'Panel privado de gestión.',
+  path = '/panel',
+  showNav = true,
+} = Astro.props;
+
+const canonical = absoluteUrl(path);
+const pageTitle = `${title} | ${site.name}`;
+const currentPath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang={site.locale} class="panel-app-html">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta name="theme-color" content="#f3f4f8" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+  </head>
+  <body class="panel-app m-0">
+    <div class:list={['panel-shell', showNav && 'panel-shell--with-nav']}>
+      <div class="panel-main">
+        <slot />
+      </div>
+      {showNav ? <BottomNavigation currentPath={currentPath} /> : null}
+    </div>
+  </body>
+</html>

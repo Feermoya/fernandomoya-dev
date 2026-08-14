@@ -2,6 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
@@ -124,21 +125,51 @@ const siteUrl =
 
 export default defineConfig({
   site: siteUrl,
+  /**
+   * Static por defecto (portfolio prerenderizado).
+   * Las rutas `/panel/*` optan a SSR con `export const prerender = false`.
+   * El adapter de Vercel habilita on-demand rendering sin convertir todo el sitio.
+   */
+  adapter: vercel(),
   compressHTML: true,
   /** Landing de una sola vista: sin prefetch de otras rutas. */
   prefetch: false,
   vite: {
     plugins: [tailwindcss(), financeApiDevPlugin()],
     resolve: {
+      // Una sola copia de React en client/SSR (evita runtimes JSX cruzados).
+      dedupe: ['react', 'react-dom'],
       alias: {
         '@': path.resolve(__dirname, './src'),
+      },
+    },
+    optimizeDeps: {
+      // Prebundle explícito en modo development: si se optimiza con
+      // NODE_ENV=production, React 19 deja jsxDEV = void 0 → crash en islands.
+      include: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-dom/client',
+        'chart.js',
+      ],
+    },
+    server: {
+      watch: {
+        // Builds a .vercel/dist no deben disparar program reload ni
+        // re-optimizar deps (puede pisar el cache de jsx-dev-runtime).
+        ignored: ['**/.vercel/**', '**/dist/**'],
       },
     },
   },
   integrations: [
     react(),
     sitemap({
-      filter: (page) => !page.includes('/precios') && !page.includes('/foco-financiero'),
+      filter: (page) =>
+        !page.includes('/precios') &&
+        !page.includes('/foco-financiero') &&
+        !page.includes('/panel'),
     }),
   ],
 });

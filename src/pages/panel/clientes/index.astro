@@ -1,0 +1,48 @@
+---
+export const prerender = false;
+
+import PanelLayout from '@/layouts/PanelLayout.astro';
+import { PanelHeader } from '@/components/panel/PanelHeader';
+import { ClientListItem } from '@/components/panel/ClientListItem';
+import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
+import { listClientsWithActiveServices } from '@/lib/panel/repositories/clients';
+
+const access = requirePanelDataAccess(Astro.cookies);
+if (!access.ok) {
+  if (access.reason === 'unauthenticated') {
+    return Astro.redirect(panelLoginRedirectUrl());
+  }
+}
+
+const result = access.ok
+  ? await listClientsWithActiveServices(access.supabase)
+  : { data: [], error: access.message };
+
+const clients = result.data;
+const loadError = result.error;
+---
+
+<PanelLayout title="Clientes" path="/panel/clientes">
+  <PanelHeader
+    title="Clientes"
+    subtitle={loadError ? 'Error al cargar' : `${clients.length} en total`}
+  />
+
+  {
+    loadError ? (
+      <div class="panel-alert" role="alert">
+        No se pudieron cargar los clientes. Probá de nuevo más tarde.
+      </div>
+    ) : clients.length === 0 ? (
+      <p class="panel-empty">Aún no hay clientes.</p>
+    ) : (
+      <ul class="panel-list">
+        {clients.map((client) => (
+          <li>
+            <ClientListItem client={client} href={`/panel/clientes/${client.id}`} />
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</PanelLayout>

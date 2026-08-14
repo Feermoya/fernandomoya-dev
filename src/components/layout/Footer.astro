@@ -99,9 +99,12 @@ const seoLinks = [
 
     <div class="site-footer__bottom">
       <p class="site-footer__copyright">© {year} {site.name}</p>
-      <a href={topHref} class="site-footer__top-link">
-        Volver arriba <span aria-hidden="true">↑</span>
-      </a>
+      <div class="site-footer__bottom-links">
+        <a href="/panel" class="site-footer__private-link">Panel</a>
+        <a href={topHref} class="site-footer__top-link">
+          Volver arriba <span aria-hidden="true">↑</span>
+        </a>
+      </div>
     </div>
   </div>
 </footer>

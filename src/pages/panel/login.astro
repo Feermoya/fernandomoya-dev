@@ -1,0 +1,72 @@
+---
+export const prerender = false;
+
+import PanelLayout from '@/layouts/PanelLayout.astro';
+import { site } from '@/data/site';
+import { isPanelAuthConfigured, PANEL_PATHS } from '@/lib/panel/auth';
+
+const configured = isPanelAuthConfigured();
+const error = Astro.url.searchParams.get('error');
+
+const errorMessage =
+  error === 'config'
+    ? 'Falta PANEL_ACCESS_SECRET en el entorno.'
+    : error === 'pin'
+      ? 'Clave incorrecta. Probá de nuevo.'
+      : null;
+---
+
+<PanelLayout title="Ingresar" path={PANEL_PATHS.login} description="Acceso privado al panel." showNav={false}>
+  <p class="panel-brand">{site.name}</p>
+  <h1 class="panel-title">Panel privado</h1>
+  <p class="panel-copy">Ingresá la clave de acceso. Solo vos tenés que conocerla.</p>
+
+  <div class="panel-card">
+    {
+      !configured ? (
+        <div class="panel-alert" role="alert">
+          Falta configurar <code>PANEL_ACCESS_SECRET</code> en <code>.env.local</code>.
+        </div>
+      ) : null
+    }
+    {errorMessage ? <div class="panel-alert" role="alert">{errorMessage}</div> : null}
+
+    <form method="POST" action={PANEL_PATHS.loginAction} class="panel-stack">
+      <label class="panel-meta" for="pin" style="margin-top:0">
+        Clave
+      </label>
+      <input
+        id="pin"
+        name="pin"
+        type="password"
+        autocomplete="current-password"
+        required
+        class="panel-input"
+        placeholder="••••••••"
+        disabled={!configured}
+      />
+      <button type="submit" class="panel-btn panel-btn--primary" disabled={!configured}>
+        Entrar
+      </button>
+    </form>
+  </div>
+</PanelLayout>
+
+<style>
+  .panel-input {
+    width: 100%;
+    min-height: 2.875rem;
+    padding: 0.75rem 0.875rem;
+    border-radius: 0.65rem;
+    border: 1px solid var(--panel-border);
+    background: var(--panel-surface);
+    color: var(--panel-text);
+    font: inherit;
+    font-size: 1rem;
+  }
+
+  .panel-input:focus {
+    outline: 2px solid var(--panel-text);
+    outline-offset: 2px;
+  }
+</style>

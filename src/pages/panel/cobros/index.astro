@@ -1,0 +1,50 @@
+---
+export const prerender = false;
+
+import PanelLayout from '@/layouts/PanelLayout.astro';
+import { PanelHeader } from '@/components/panel/PanelHeader';
+import { ChargesFilterList } from '@/components/panel/ChargesFilterList';
+import { requirePanelDataAccess, panelLoginRedirectUrl } from '@/lib/panel/session';
+import { ensureRecurringChargesForMonth } from '@/lib/panel/charges/ensureRecurring';
+import { sortChargesForList } from '@/lib/panel/charges/sort';
+import { listChargesWithRelations } from '@/lib/panel/repositories/charges';
+import { todayIsoDate, type ChargeListItemData } from '@/lib/panel/view-types';
+
+const access = requirePanelDataAccess(Astro.cookies);
+if (!access.ok) {
+  if (access.reason === 'unauthenticated') {
+    return Astro.redirect(panelLoginRedirectUrl());
+  }
+}
+
+let charges: ChargeListItemData[] = [];
+let loadError: string | null = access.ok ? null : access.message;
+
+if (access.ok) {
+  const ensure = await ensureRecurringChargesForMonth(access.supabase, todayIsoDate());
+  if (ensure.error) {
+    loadError = ensure.error;
+  } else {
+    const result = await listChargesWithRelations(access.supabase);
+    charges = sortChargesForList(result.data);
+    loadError = result.error;
+  }
+}
+---
+
+<PanelLayout title="Cobros" path="/panel/cobros">
+  <PanelHeader
+    title="Cobros"
+    subtitle={loadError ? 'Error al cargar' : `${charges.length} obligaciones`}
+  />
+
+  {
+    loadError ? (
+      <div class="panel-alert" role="alert">
+        No se pudieron cargar los cobros. Probá de nuevo más tarde.
+      </div>
+    ) : (
+      <ChargesFilterList client:load charges={charges} />
+    )
+  }
+</PanelLayout>
