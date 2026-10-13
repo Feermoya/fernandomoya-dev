@@ -287,7 +287,7 @@
  */
 .fm-mobile-extras { display: none; }
 @media (max-width: 767px) {
-  body:has(#inicio) .seo-impact-section,
+  body:has(#inicio) .seo-impact,
   body:has(#inicio) .brand-work,
 
   body:has(#inicio) .fm-mobile-extras {
@@ -452,4 +452,24 @@
   body:has(#inicio) .about-section__link { min-height: 44px; }
   body:has(#inicio) .fm-project-gallery__list,
   body:has(#inicio) .fm-mobile-services__list { contain: layout style; }
+}
+
+/* Layout and presentation consistency, final mobile pass. */
+@media (max-width: 767px) {
+  body:has(#inicio) .hero-editorial__copy,
+  body:has(#inicio) .hero-editorial__eyebrow,
+  body:has(#inicio) .hero-editorial__title,
+  body:has(#inicio) .hero-editorial__lead,
+  body:has(#inicio) .hero-editorial__actions,
+  body:has(#inicio) .hero-editorial__meta {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  body:has(#inicio) .hero-editorial__title { white-space: normal; }
+  body:has(#inicio) .site-footer { background: var(--fm-bg); color: var(--fm-ink); }
+  body:has(#inicio) .fm-project-gallery__heading h2 { text-wrap: balance; }
+  body:has(#inicio) #proyectos,
+  body:has(#inicio) #servicios,
+  body:has(#inicio) #sobre-mi,
+  body:has(#inicio) #contacto { scroll-margin-top: calc(var(--fm-header-offset) + .75rem); }
 }

@@ -31,3 +31,16 @@ Checks locales: `npm run typecheck`, `npm run build`, accesibilidad, SEO y revis
 
 ## Entrega obligatoria
 Archivos cambiados, motivos, posibles regresiones, controles visuales y próximo paso. No hacer deploy, push ni pruebas online automatizadas.
+
+## Estado del trabajo (13/10/2026)
+
+Se publicaron las siguientes etapas en `main`:
+- Foundations y Hero mobile.
+- Galería mobile con datos desde Content Collections.
+- Detalles de proyectos mobile.
+- Servicios y presentación comercial.
+- Limpieza de secciones duplicadas, recuperación de anclas y corrección de visibilidad de resultados SEO y textos animados.
+
+**Pendiente de validación:** no se ejecutó `npm run typecheck` ni `npm run build` debido a falta de acceso al entorno npm desde esta sesión. No se hizo inspección visual automatizada. El estado publicado no debe interpretarse como QA completado.
+
+**Deuda técnica visible:** los componentes antiguos de Home/case studies permanecen en HTML para conservar la versión desktop, y parte de su JS continúa hidratándose en mobile. Una futura etapa debe reducir esa carga sin romper responsive, SEO ni funcionalidades.
