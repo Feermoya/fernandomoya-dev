@@ -1,0 +1,70 @@
+---
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
+import { getProjectCover } from '@/utils/images';
+import { byOrderThenDate } from '@/utils/sort';
+import { isCaseStudyId } from '@/data/case-studies';
+
+const entries = (await getCollection('projects')).sort(byOrderThenDate);
+const projects = await Promise.all(entries.map(async (entry) => {
+  const cover = getProjectCover(entry.data.cover);
+  if (!cover) throw new Error(`Portada de proyecto no encontrada: ${entry.id}`);
+  const image = await getImage({
+    src: cover,
+    widths: [360, 540, 720, 960],
+    sizes: '(max-width: 767px) calc(100vw - 40px), 720px',
+    format: 'webp',
+    quality: 78,
+  });
+  return {
+    id: entry.id,
+    name: entry.data.client ?? entry.data.title,
+    category: entry.data.projectType,
+    description: entry.data.description,
+    href: isCaseStudyId(entry.id) ? `/proyectos/${entry.id}` : entry.data.links.live,
+    external: !isCaseStudyId(entry.id),
+    image,
+  };
+}));
+---
+
+<div class="fm-project-gallery" aria-label="Galería de trabajos realizados">
+  <div class="fm-project-gallery__heading">
+    <p>PROYECTOS REALES</p>
+    <h3>Mis trabajos</h3>
+    <span>Una selección de sitios y plataformas que desarrollé.</span>
+  </div>
+  <div class="fm-project-gallery__list">
+    {projects.map((project) => (
+      <article class="fm-project-card">
+        <a
+          class="fm-project-card__link"
+          href={project.href}
+          aria-label={`Ver proyecto ${project.name}`}
+          {...(project.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
+          <div class="fm-project-card__media">
+            <img
+              src={project.image.src}
+              srcset={project.image.srcSet.attribute}
+              sizes="(max-width: 767px) calc(100vw - 40px), 720px"
+              width={project.image.attributes.width}
+              height={project.image.attributes.height}
+              alt={`Captura del sitio de ${project.name}`}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="fm-project-card__body">
+            <div class="fm-project-card__info">
+              <h4>{project.name}</h4>
+              <p class="fm-project-card__category">{project.category}</p>
+              <p class="fm-project-card__description">{project.description}</p>
+            </div>
+            <span class="fm-project-card__arrow" aria-hidden="true">↗</span>
+          </div>
+        </a>
+      </article>
+    ))}
+  </div>
+</div>
