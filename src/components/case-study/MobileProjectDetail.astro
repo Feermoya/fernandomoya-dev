@@ -1,0 +1,61 @@
+---
+type Decision = { title: string; body: string };
+interface Props {
+  client: string;
+  projectType: string;
+  description: string;
+  live: string;
+  domain: string;
+  coverSrc: string;
+  coverWidth: number;
+  coverHeight: number;
+  alt: string;
+  decisions: Decision[];
+  nextClient: string;
+  nextHref: string;
+}
+const { client, projectType, description, live, domain, coverSrc, coverWidth, coverHeight, alt, decisions, nextClient, nextHref } = Astro.props;
+const highlights = decisions.slice(0, 3);
+---
+
+<article class="fm-detail" aria-label={`Presentación del proyecto ${client}`}>
+  <div class="fm-detail__shell">
+    <a class="fm-detail__back" href="/#proyectos"><span aria-hidden="true">←</span> Volver a proyectos</a>
+    <p class="fm-detail__overline">PROYECTO REALIZADO</p>
+    <h1>{client}</h1>
+    <p class="fm-detail__type">{projectType}</p>
+    <p class="fm-detail__description">{description}</p>
+    <a class="fm-detail__primary" href={live} target="_blank" rel="noopener noreferrer">
+      Visitar sitio web <span aria-hidden="true">↗</span>
+    </a>
+    <figure class="fm-detail__preview">
+      <img src={coverSrc} width={coverWidth} height={coverHeight} alt={alt} decoding="async" fetchpriority="high" />
+      <figcaption>{domain}</figcaption>
+    </figure>
+
+    {highlights.length > 0 && (
+      <section class="fm-detail__highlights" aria-labelledby="fm-detail-highlights">
+        <p class="fm-detail__overline">QUÉ SE TRABAJÓ</p>
+        <h2 id="fm-detail-highlights">Aspectos del proyecto</h2>
+        <div class="fm-detail__highlight-list">
+          {highlights.map((item) => (
+            <div class="fm-detail__highlight">
+              <span class="fm-detail__check" aria-hidden="true">✓</span>
+              <div><h3>{item.title}</h3><p>{item.body}</p></div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <nav class="fm-detail__next" aria-label="Siguiente proyecto">
+      <span>SIGUIENTE PROYECTO</span>
+      <a href={nextHref}>{nextClient}<span aria-hidden="true">→</span></a>
+    </nav>
+    <section class="fm-detail__contact">
+      <h2>¿Querés una web para tu negocio?</h2>
+      <p>Contame qué necesitás y vemos cómo encararlo.</p>
+      <a href="/#contacto">Hablemos de tu web <span aria-hidden="true">→</span></a>
+    </section>
+  </div>
+</article>

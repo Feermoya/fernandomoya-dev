@@ -1,5 +1,7 @@
 ---
 import '@/styles/case-study.css';
+import '@/styles/case-study-mobile.css';
+import MobileProjectDetail from '@/components/case-study/MobileProjectDetail.astro';
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import CaseStudyCta from '@/components/case-study/CaseStudyCta.astro';
@@ -96,6 +98,21 @@ const schema = {
   <script type="application/ld+json" set:html={JSON.stringify(schema)} />
 
   <div class={`case-study-page case-study-page--${editorial.theme}`}>
+    <MobileProjectDetail
+      client={client}
+      projectType={projectType}
+      description={description}
+      live={live}
+      domain={domain}
+      coverSrc={optimized.src}
+      coverWidth={optimized.attributes.width ?? 1600}
+      coverHeight={optimized.attributes.height ?? 1000}
+      alt={alt}
+      decisions={editorial.decisions}
+      nextClient={nextClient}
+      nextHref={nextHref}
+    />
+    <div class="cs-desktop-content">
     <CaseStudyHero
       theme={editorial.theme}
       number={editorial.number}
@@ -149,5 +166,6 @@ const schema = {
     <CaseStudyCta />
 
     <CaseStudyMotion client:visible />
+    </div>
   </div>
 </Layout>
