@@ -49,6 +49,18 @@ const { featured, archive } = Astro.props;
 </div>
 
 <script>
-  import { initFeaturedProjectsMotion } from '@/scripts/featured-projects-motion';
-  initFeaturedProjectsMotion();
+  // El listado editorial solo se muestra a partir de 768px.
+  // Evitamos descargar GSAP/ScrollTrigger en teléfonos, donde no se usa.
+  const desktop = window.matchMedia('(min-width: 768px)');
+  let initialized = false;
+
+  async function initDesktopMotion() {
+    if (!desktop.matches || initialized) return;
+    initialized = true;
+    const { initFeaturedProjectsMotion } = await import('@/scripts/featured-projects-motion');
+    initFeaturedProjectsMotion();
+  }
+
+  void initDesktopMotion();
+  desktop.addEventListener('change', () => { void initDesktopMotion(); });
 </script>

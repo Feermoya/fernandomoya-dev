@@ -51,3 +51,8 @@ Se publicaron las siguientes etapas en `main`:
 - Animación React en casos de estudio condicionada a ancho de pantalla de 768px o superior.
 - Se conserva el ancla única `#inicio` en el contenedor del Hero.
 - **Pendiente:** ejecutar checks y verificar visualmente; estas optimizaciones no constituyen prueba de rendimiento medida.
+
+## Etapa de revisión: scripts por breakpoint
+- `FeaturedProjectsList`: carga dinámica de animación GSAP solo a partir de 768px. Este contenido editorial está oculto en mobile.
+- Vercel informó deployment exitoso del commit `51b6fb2a`; esto no sustituye pruebas locales de typecheck, tests, accesibilidad ni evaluación visual.
+- La galería desktop y mobile aún coexisten en HTML para conservar ambas presentaciones: revisar impacto de HTML e imágenes antes de una refactorización estructural.
