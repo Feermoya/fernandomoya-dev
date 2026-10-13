@@ -1,6 +1,4 @@
 ---
-import { site } from '@/data/site';
-
 const services = [
   {
     id: 'webs',
@@ -43,19 +41,5 @@ const services = [
         </article>
       ))}
     </div>
-  </section>
-  <section id="sobre-mi-mobile" class="fm-mobile-about" aria-labelledby="fm-about-heading">
-    <p class="fm-mobile-extras__eyebrow">SOBRE MÍ</p>
-    <h2 id="fm-about-heading">Hola, soy Fernando.</h2>
-    <p>Soy desarrollador frontend y diseñador web de Mendoza. Trabajo con empresas, profesionales y marcas que quieren mejorar su presencia online.</p>
-    <a href="#contacto">Hablemos de tu proyecto <span aria-hidden="true">→</span></a>
-  </section>
-  <section id="contacto-mobile" class="fm-mobile-contact" aria-labelledby="fm-contact-heading">
-    <p class="fm-mobile-extras__eyebrow">CONTACTO</p>
-    <h2 id="fm-contact-heading">¿Tenés una web en mente?</h2>
-    <p>Contame qué necesitás y vemos cómo encararlo.</p>
-    <a class="fm-mobile-contact__primary" href={site.social.whatsapp} target="_blank" rel="noopener noreferrer">Escribime por WhatsApp <span aria-hidden="true">↗</span></a>
-    <a class="fm-mobile-contact__email" href={`mailto:${site.email}`}>{site.email}</a>
-    <span class="fm-mobile-contact__location">{site.location}</span>
   </section>
 </div>

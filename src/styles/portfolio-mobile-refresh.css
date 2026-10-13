@@ -140,84 +140,6 @@
   }
   body:has(#inicio) .projects-editorial__title span { display: none; }
   body:has(#inicio) .projects-editorial__intro-copy { display: none; }
-  body:has(#inicio) .featured-project {
-    margin: 0 var(--fm-mobile-gutter) 1rem;
-    padding: 0;
-    overflow: hidden;
-    border: 1px solid var(--fm-border);
-    border-radius: var(--fm-radius-lg);
-    background: var(--fm-surface);
-    color: var(--fm-ink);
-    box-shadow: var(--fm-shadow-card);
-    content-visibility: visible;
-  }
-  body:has(#inicio) .featured-project__inner {
-    padding: 0;
-  }
-  body:has(#inicio) .featured-project__grid,
-  body:has(#inicio) .featured-project--media-left .featured-project__grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-  body:has(#inicio) .featured-project__media,
-  body:has(#inicio) .featured-project--media-left .featured-project__media {
-    order: 0;
-    width: 100%;
-  }
-  body:has(#inicio) .featured-project__media::before { display: none; }
-  body:has(#inicio) .featured-project__copy,
-  body:has(#inicio) .featured-project--media-left .featured-project__copy {
-    order: 1;
-    max-width: none;
-    width: 100%;
-    padding: 1.1rem;
-    gap: 0;
-    color: var(--fm-ink);
-  }
-  body:has(#inicio) .featured-project__client {
-    margin: 0.3rem 0 0;
-    font-size: 1.05rem;
-    font-weight: 800;
-  }
-  body:has(#inicio) .featured-project__headline {
-    margin-top: 0.5rem;
-    max-width: none;
-    font: 700 1rem/1.35 var(--fm-font-body);
-    letter-spacing: -0.025em;
-  }
-  body:has(#inicio) .featured-project__summary {
-    margin-top: 0.55rem;
-    font-size: 0.85rem;
-    line-height: 1.55;
-    color: var(--fm-muted);
-  }
-  body:has(#inicio) .featured-project__category,
-  body:has(#inicio) .projects-editorial__eyebrow {
-    color: var(--fm-accent);
-  }
-  body:has(#inicio) .featured-project__links {
-    margin-top: 0.9rem;
-  }
-  body:has(#inicio) .featured-project__cta {
-    border-radius: 0.8rem;
-    background: var(--fm-ink);
-    color: #fff;
-    border-color: var(--fm-ink);
-  }
-  body:has(#inicio) .featured-project__site-link {
-    border: 0;
-    color: var(--fm-text);
-  }
-  body:has(#inicio) .projects-archive {
-    background: var(--fm-bg);
-    padding-block: 2rem 3rem;
-  }
-  body:has(#inicio) .projects-archive__title {
-    font-family: var(--fm-font-body);
-    font-size: 1.4rem;
-    font-weight: 800;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   body:has(#inicio) .hero-editorial__cta { transition: none; }
@@ -367,8 +289,6 @@
 @media (max-width: 767px) {
   body:has(#inicio) .seo-impact-section,
   body:has(#inicio) .brand-work,
-  body:has(#inicio) .about-section,
-  body:has(#inicio) .contact-section { display: none !important; }
 
   body:has(#inicio) .fm-mobile-extras {
     display: block;
@@ -426,34 +346,11 @@
   body:has(#inicio) .fm-mobile-service__icon svg { width: 23px; height: 23px; }
   body:has(#inicio) .fm-mobile-service h3 { margin: 0; font-size: .98rem; font-weight: 800; line-height: 1.35; color: var(--fm-ink); }
   body:has(#inicio) .fm-mobile-service p { margin: .35rem 0 0; font-size: .83rem; line-height: 1.55; color: var(--fm-muted); }
-  body:has(#inicio) .fm-mobile-about {
-    padding: 1.6rem 1.3rem;
-    border: 1px solid var(--fm-border);
-    border-radius: 1.3rem;
-    background: var(--fm-surface);
-  }
-  body:has(#inicio) .fm-mobile-about > p:not(.fm-mobile-extras__eyebrow) { margin: .75rem 0 0; font-size: .88rem; line-height: 1.65; color: var(--fm-muted); }
-  body:has(#inicio) .fm-mobile-about a { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; margin-top: .8rem; font-size: .85rem; font-weight: 800; color: var(--fm-accent); text-decoration: none; }
-  body:has(#inicio) .fm-mobile-contact {
-    margin-top: 3rem;
-    padding: 1.5rem 1.3rem;
-    border-radius: 1.3rem;
-    background: var(--fm-accent-soft);
-  }
-  body:has(#inicio) .fm-mobile-contact > p:not(.fm-mobile-extras__eyebrow) { margin: .75rem 0 1rem; color: var(--fm-muted); font-size: .88rem; line-height: 1.55; }
-  body:has(#inicio) .fm-mobile-contact__primary { display: flex; justify-content: center; align-items: center; gap: 1rem; min-height: 48px; padding: .75rem; border-radius: 14px; background: var(--fm-ink); color: white; font-weight: 800; font-size: .85rem; text-decoration: none; }
-  body:has(#inicio) .fm-mobile-contact__email { display: block; width: fit-content; min-height: 44px; padding-top: 1rem; color: var(--fm-ink); font-size: .8rem; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
-  body:has(#inicio) .fm-mobile-contact__location { display: block; padding-top: .4rem; color: var(--fm-muted); font-size: .77rem; }
-  body:has(#inicio) .fm-mobile-extras a:focus-visible { outline: 3px solid var(--fm-accent); outline-offset: 3px; }
 }
 
 /* Preserve original anchor destinations for Header and Hero.
  * The existing About/Contact sections remain the single navigable source. */
 @media (max-width: 767px) {
-  body:has(#inicio) .about-section,
-  body:has(#inicio) .contact-section { display: block !important; }
-  body:has(#inicio) .fm-mobile-about,
-  body:has(#inicio) .fm-mobile-contact { display: none; }
   body:has(#inicio) .about-section {
     background: var(--fm-bg);
     padding: 1rem var(--fm-mobile-gutter) 2rem;
@@ -530,4 +427,29 @@
     color: var(--fm-muted);
     font-family: var(--fm-font-body);
   }
+}
+
+/* Ensure the mobile copy stays visible even when the legacy reveal observers
+ * haven't fired. Avoids invisible content at anchors and with JS disabled. */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  body:has(#inicio) .about-section .about-section__copy,
+  body:has(#inicio) .contact-section [data-contact-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+@media (max-width: 767px) {
+  body:has(#inicio) .contact-section::before { display: none; }
+  body:has(#inicio) .about-section,
+  body:has(#inicio) .contact-section { content-visibility: visible; }
+  body:has(#inicio) .contact-section__grid { gap: 1rem; }
+  body:has(#inicio) .contact-section__title span {
+    display: block;
+    margin-top: .1rem;
+  }
+  body:has(#inicio) .about-section__title span { display: none; }
+  body:has(#inicio) .about-section__link { min-height: 44px; }
+  body:has(#inicio) .fm-project-gallery__list,
+  body:has(#inicio) .fm-mobile-services__list { contain: layout style; }
 }
