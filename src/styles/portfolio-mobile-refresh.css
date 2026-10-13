@@ -246,7 +246,7 @@
     letter-spacing: 0.035em;
     font-weight: 800;
   }
-  body:has(#inicio) .fm-project-gallery__heading h3 {
+  body:has(#inicio) .fm-project-gallery__heading h2 {
     margin: 0;
     color: var(--fm-ink);
     font-size: 1.8rem;
