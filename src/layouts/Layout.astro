@@ -1,9 +1,11 @@
 ---
 import '@/styles/global.css';
+import '@/styles/portfolio-app-shell.css';
 import AmbientBackdrop from '@/components/layout/AmbientBackdrop.astro';
 import Header from '@/components/layout/Header.astro';
 import CaseStudyHeader from '@/components/layout/CaseStudyHeader.astro';
 import Footer from '@/components/layout/Footer.astro';
+import MobilePortfolioNav from '@/components/layout/MobilePortfolioNav.astro';
 import { site } from '@/data/site';
 import { absoluteUrl } from '@/utils/seo';
 
@@ -28,6 +30,8 @@ const {
   appShell = false,
   caseStudyHeader = false,
 } = Astro.props;
+const isPortfolioPage = !appShell && (path === '/' || path.startsWith('/proyectos/'));
+const isPortfolioHome = path === '/';
 const canonical = absoluteUrl(path);
 const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
 
@@ -100,6 +104,7 @@ const fontStylesheet = appShell
     class:list={[
       'relative min-h-dvh overflow-x-clip text-text',
       appShell ? 'bg-[#F6F8FB]' : 'bg-bg-base',
+      isPortfolioPage && 'fm-app-shell',
     ]}
   >
     {!appShell ? <AmbientBackdrop /> : null}
@@ -119,6 +124,7 @@ const fontStylesheet = appShell
         <slot />
       </main>
       {!appShell ? <Footer /> : null}
+      {isPortfolioPage ? <MobilePortfolioNav isHome={isPortfolioHome} /> : null}
     </div>
 
     {

@@ -1,0 +1,75 @@
+/* Portfolio only. Consistent mobile shell, not a PWA. */
+.fm-app-tabbar { display: none; }
+@media (max-width: 767px) {
+  body.fm-app-shell {
+    --fm-app-nav-height: 72px;
+    --fm-bg-base: #f8fafc;
+    --fm-text-primary: #111827;
+    --fm-text-secondary: #66758b;
+    --fm-accent: #365cf5;
+    background: #f8fafc;
+    color: #111827;
+    font-family: "Manrope", "Inter", system-ui, sans-serif;
+  }
+  body.fm-app-shell main.site-shell-main { padding-bottom: calc(var(--fm-app-nav-height) + env(safe-area-inset-bottom, 0px) + 16px); }
+  body.fm-app-shell .site-header-shell { z-index: 110; }
+  body.fm-app-shell .site-header-mobile-panel { z-index: 125; }
+  body.fm-app-shell .site-footer { padding-bottom: 1rem; }
+  body.fm-app-shell .fm-app-tabbar {
+    display: block;
+    position: fixed;
+    z-index: 105;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 7px 12px calc(7px + env(safe-area-inset-bottom, 0px));
+    background: rgb(255 255 255 / 96%);
+    border-top: 1px solid #e7ecf2;
+    box-shadow: 0 -9px 35px rgb(15 23 42 / 6%);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+  .fm-app-tabbar__inner {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    max-width: 500px;
+    margin-inline: auto;
+    align-items: center;
+  }
+  .fm-app-tabbar__link {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
+    min-height: 55px;
+    gap: 3px;
+    padding: 5px 2px;
+    color: #66758b;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+    border-radius: 12px;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 140ms ease, background-color 140ms ease;
+  }
+  .fm-app-tabbar__link[aria-current] { color: #365cf5; background: #eef2ff; }
+  .fm-app-tabbar__link:active { background: #eef2ff; }
+  .fm-app-tabbar__link:focus-visible { outline: 2px solid #365cf5; outline-offset: -2px; }
+  .fm-app-tabbar__icon, .fm-app-tabbar__icon svg { display: block; height: 21px; width: 21px; }
+  .fm-app-tabbar__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  body.fm-app-shell #inicio,
+  body.fm-app-shell #proyectos,
+  body.fm-app-shell #servicios,
+  body.fm-app-shell #contacto { scroll-margin-top: 94px; }
+  body.fm-app-shell .site-header-bar {
+    border-color: #e7ecf2;
+    border-radius: 15px;
+    background: rgb(255 255 255 / 96%);
+    box-shadow: 0 5px 22px rgb(15 23 42 / 5%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fm-app-tabbar__link { transition: none; }
+  }
+}
