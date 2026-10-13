@@ -128,23 +128,26 @@ export default function HeroShowcase({ projects, sizes }: Props) {
             DISEÑO Y DESARROLLO WEB · MENDOZA
           </p>
           <h1 ref={titleRef} id="hero-heading" className="hero-editorial__title">
+            <span className="fm-mobile-hero-title">Sitios web modernos para negocios reales.</span>
+            <span className="fm-legacy-title">
             <span className="hero-editorial__title-line">Diseño webs</span>
             <span className="hero-editorial__title-line">para negocios</span>
             <span className="hero-editorial__title-line">que quieren&nbsp;crecer.</span>
+            </span>
           </h1>
           <p ref={statementRef} className="hero-editorial__statement">
             Tu web se ve bien y igual no vende.
           </p>
           <p ref={leadRef} className="hero-editorial__lead">
-            Diseño y desarrollo sitios para negocios que necesitan explicar qué hacen, generar
-            confianza y convertir visitas en consultas.
+            <span className="fm-mobile-hero-lead">Soy Fernando Moya. Diseño y desarrollo sitios web para mostrar tus servicios, presentar tus productos y recibir consultas.</span>
+            <span className="fm-legacy-lead">Diseño y desarrollo sitios para negocios que necesitan explicar qué hacen, generar confianza y convertir visitas en consultas.</span>
           </p>
           <div ref={actionsRef} className="hero-editorial__actions">
             <a href="#proyectos" className="hero-editorial__cta hero-editorial__cta--primary">
               Ver proyectos
             </a>
             <a href="#contacto" className="hero-editorial__cta hero-editorial__cta--secondary">
-              Contame tu idea
+              Hablemos de tu web
             </a>
           </div>
           <div ref={metaRef} className="hero-editorial__meta">
