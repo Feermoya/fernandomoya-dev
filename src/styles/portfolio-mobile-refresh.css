@@ -489,3 +489,52 @@
   body:has(#inicio) #sobre-mi,
   body:has(#inicio) #contacto { scroll-margin-top: calc(var(--fm-header-offset) + .75rem); }
 }
+
+/* Consistent touch affordances and readable project summaries. */
+@media (max-width: 767px) {
+  body.fm-app-shell .fm-project-card {
+    border-radius: 20px;
+    box-shadow: 0 5px 23px rgb(15 23 42 / 5%);
+  }
+  body.fm-app-shell .fm-project-card__link {
+    transition: background-color 150ms ease;
+    touch-action: manipulation;
+  }
+  body.fm-app-shell .fm-project-card__link:active {
+    background-color: #f8fafc;
+  }
+  body.fm-app-shell .fm-project-card__body {
+    padding: 16px;
+    gap: 12px;
+  }
+  body.fm-app-shell .fm-project-card__description {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    max-width: 42ch;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  body.fm-app-shell .fm-project-card__arrow {
+    background: #f1f5f9;
+    color: #365cf5;
+  }
+  body.fm-app-shell .fm-mobile-service {
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgb(15 23 42 / 4%);
+  }
+  body.fm-app-shell .hero-editorial__cta,
+  body.fm-app-shell .contact-section__whatsapp {
+    touch-action: manipulation;
+  }
+}
+@media (max-width: 359px) {
+  body.fm-app-shell .fm-project-gallery {
+    padding-inline: 16px;
+  }
+  body.fm-app-shell .fm-project-card__body { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.fm-app-shell .fm-project-card__link { transition: none; }
+}

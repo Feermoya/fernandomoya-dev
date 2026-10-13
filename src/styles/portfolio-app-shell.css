@@ -73,3 +73,34 @@
     .fm-app-tabbar__link { transition: none; }
   }
 }
+
+/* Polished touch feedback and unified navigation appearance */
+@media (max-width: 767px) {
+  body.fm-app-shell .fm-app-tabbar {
+    padding-top: 5px;
+    padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px));
+  }
+  body.fm-app-shell .fm-app-tabbar__link {
+    min-height: 57px;
+    gap: 4px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    touch-action: manipulation;
+  }
+  body.fm-app-shell .fm-app-tabbar__icon,
+  body.fm-app-shell .fm-app-tabbar__icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  body.fm-app-shell .site-header-bar {
+    border-radius: 16px;
+  }
+  body.fm-app-shell .site-header-menu-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  body.fm-app-shell .site-footer {
+    border-top: 1px solid #e7ecf2;
+  }
+}

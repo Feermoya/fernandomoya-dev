@@ -17,7 +17,7 @@ const items = [
         class="fm-app-tabbar__link"
         data-mobile-nav={item.id}
         aria-label={item.label}
-        aria-current={item.current ? 'page' : undefined}
+        aria-current={item.current ? 'location' : undefined}
       >
         <span class="fm-app-tabbar__icon" aria-hidden="true">
           {item.id === 'inicio' ? (
@@ -36,26 +36,49 @@ const items = [
   </div>
 </nav>
 <script>
-  // Realce basado en la sección visible, sin afectar navegación nativa.
-  const bar = document.querySelector('.fm-app-tabbar');
-  if (bar && location.pathname === '/') {
-    const links = [...bar.querySelectorAll<HTMLAnchorElement>('[data-mobile-nav]')];
-    const sections = links.map((link) => ({
-      link,
-      section: document.getElementById(link.dataset.mobileNav ?? ''),
-    })).filter((item): item is { link: HTMLAnchorElement; section: HTMLElement } => item.section !== null);
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(() => {
-        let active = sections[0];
-        for (const item of sections) {
-          if (item.section.getBoundingClientRect().top <= window.innerHeight * 0.48) active = item;
-        }
-        links.forEach((link) => {
-          if (link === active.link) link.setAttribute('aria-current', 'location');
-          else link.removeAttribute('aria-current');
-        });
-      }, { threshold: [0, 0.1, 0.5] });
-      sections.forEach(({ section }) => observer.observe(section));
+  function initMobileNavigation() {
+    const bar = document.querySelector<HTMLElement>('.fm-app-tabbar');
+    if (!bar || bar.dataset.initialized === 'true') return;
+    bar.dataset.initialized = 'true';
+
+    const links = Array.from(bar.querySelectorAll<HTMLAnchorElement>('[data-mobile-nav]'));
+    const setActive = (id: string) => {
+      for (const link of links) {
+        if (link.dataset.mobileNav === id) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      }
+    };
+
+    if (window.location.pathname !== '/') {
+      setActive('proyectos');
+      return;
     }
+
+    const sections = links
+      .map((link) => ({ id: link.dataset.mobileNav ?? '', section: document.getElementById(link.dataset.mobileNav ?? '') }))
+      .filter((entry): entry is { id: string; section: HTMLElement } => entry.section !== null);
+
+    if (!sections.length) return;
+    let raf = 0;
+    const sync = () => {
+      raf = 0;
+      const anchor = Math.min(window.innerHeight * 0.44, 280);
+      let active = sections[0].id;
+      for (const { id, section } of sections) {
+        if (section.getBoundingClientRect().top <= anchor) active = id;
+      }
+      setActive(active);
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(sync);
+    };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    window.addEventListener('hashchange', schedule);
+    bar.addEventListener('click', schedule);
+    schedule();
   }
+
+  initMobileNavigation();
+  document.addEventListener('astro:page-load', initMobileNavigation);
 </script>
