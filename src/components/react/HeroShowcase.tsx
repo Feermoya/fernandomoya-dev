@@ -117,9 +117,9 @@ export default function HeroShowcase({ projects, sizes }: Props) {
   return (
     <section
       ref={sectionRef}
-      id="inicio"
+      id="hero-desktop"
       className="hero-editorial"
-      aria-labelledby="hero-heading"
+      aria-labelledby="hero-heading-desktop"
     >
       <div className="container-page hero-editorial__inner">
         <div ref={copyRef} className="hero-editorial__copy">
@@ -127,7 +127,7 @@ export default function HeroShowcase({ projects, sizes }: Props) {
             <span aria-hidden="true" />
             DISEÑO Y DESARROLLO WEB · MENDOZA
           </p>
-          <h1 ref={titleRef} id="hero-heading" className="hero-editorial__title">
+          <h1 ref={titleRef} id="hero-heading-desktop" className="hero-editorial__title">
             <span className="fm-mobile-hero-title">Sitios web modernos para negocios reales.</span>
             <span className="fm-legacy-title">
             <span className="hero-editorial__title-line">Diseño webs</span>

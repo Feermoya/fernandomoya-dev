@@ -144,11 +144,12 @@ const projects = await Promise.all(seeds.map(toCarouselProject));
 ---
 
 {/* Con timeout: si el navegador nunca reporta idle, las capturas igual montan. */}
+<div id="inicio" class="fm-hero-container">
 <div class="fm-desktop-hero">
   <HeroShowcase client:media="(min-width: 768px)" projects={projects} sizes={heroSizes} />
 </div>
 
-<section id="inicio" class="hero-editorial fm-static-mobile-hero" aria-labelledby="hero-heading">
+<section class="hero-editorial fm-static-mobile-hero" aria-labelledby="hero-heading">
   <div class="container-page hero-editorial__inner">
     <div class="hero-editorial__copy">
       <p class="hero-editorial__eyebrow">DISEÑO Y DESARROLLO WEB · MENDOZA</p>
@@ -162,3 +163,4 @@ const projects = await Promise.all(seeds.map(toCarouselProject));
     </div>
   </div>
 </section>
+</div>

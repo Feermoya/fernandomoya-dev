@@ -44,3 +44,10 @@ Se publicaron las siguientes etapas en `main`:
 **Pendiente de validación:** no se ejecutó `npm run typecheck` ni `npm run build` debido a falta de acceso al entorno npm desde esta sesión. No se hizo inspección visual automatizada. El estado publicado no debe interpretarse como QA completado.
 
 **Deuda técnica visible:** los componentes antiguos de Home/case studies permanecen en HTML para conservar la versión desktop, y parte de su JS continúa hidratándose en mobile. Una futura etapa debe reducir esa carga sin romper responsive, SEO ni funcionalidades.
+
+## Optimización adicional
+
+- Hero mobile renderizado mediante Astro sin hidratar el carrusel React/GSAP. El carrusel se hidrata únicamente a partir de 768px mediante `client:media`.
+- Animación React en casos de estudio condicionada a ancho de pantalla de 768px o superior.
+- Se conserva el ancla única `#inicio` en el contenedor del Hero.
+- **Pendiente:** ejecutar checks y verificar visualmente; estas optimizaciones no constituyen prueba de rendimiento medida.
