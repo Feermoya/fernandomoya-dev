@@ -358,3 +358,91 @@
     body:has(#inicio) .fm-project-card__arrow { transition: none; }
   }
 }
+
+/*
+ * Home mobile: concise services, introduction and contact.
+ * Existing desktop sections remain rendered for desktop.
+ */
+.fm-mobile-extras { display: none; }
+@media (max-width: 767px) {
+  body:has(#inicio) .seo-impact-section,
+  body:has(#inicio) .brand-work,
+  body:has(#inicio) .about-section,
+  body:has(#inicio) .contact-section { display: none !important; }
+
+  body:has(#inicio) .fm-mobile-extras {
+    display: block;
+    padding: 0 var(--fm-mobile-gutter) 3.5rem;
+    background: var(--fm-bg);
+    font-family: var(--fm-font-body);
+  }
+  body:has(#inicio) .fm-mobile-extras section { scroll-margin-top: 6rem; }
+  body:has(#inicio) .fm-mobile-extras__eyebrow {
+    margin: 0 0 .65rem;
+    color: var(--fm-accent);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .045em;
+  }
+  body:has(#inicio) .fm-mobile-extras h2 {
+    margin: 0;
+    color: var(--fm-ink);
+    font-size: clamp(1.5rem, 7vw, 1.9rem);
+    font-weight: 800;
+    letter-spacing: -.04em;
+    line-height: 1.2;
+  }
+  body:has(#inicio) .fm-mobile-extras__intro {
+    margin: .75rem 0 0;
+    max-width: 43ch;
+    color: var(--fm-muted);
+    font-size: .9rem;
+    line-height: 1.6;
+  }
+  body:has(#inicio) .fm-mobile-services { padding: 1rem 0 3rem; }
+  body:has(#inicio) .fm-mobile-services__list { display: grid; gap: .8rem; margin-top: 1.4rem; }
+  body:has(#inicio) .fm-mobile-service {
+    display: flex;
+    align-items: flex-start;
+    gap: .9rem;
+    padding: 1.15rem;
+    border: 1px solid var(--fm-border);
+    border-radius: 1.2rem;
+    background: var(--fm-surface);
+    box-shadow: var(--fm-shadow-card);
+  }
+  body:has(#inicio) .fm-mobile-service__icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border-radius: 14px;
+    color: var(--fm-accent);
+    background: var(--fm-accent-soft);
+  }
+  body:has(#inicio) .fm-mobile-service:nth-child(2) .fm-mobile-service__icon { background: var(--fm-violet-soft); color: #7252ba; }
+  body:has(#inicio) .fm-mobile-service:nth-child(3) .fm-mobile-service__icon { background: var(--fm-orange-soft); color: #af6736; }
+  body:has(#inicio) .fm-mobile-service__icon svg { width: 23px; height: 23px; }
+  body:has(#inicio) .fm-mobile-service h3 { margin: 0; font-size: .98rem; font-weight: 800; line-height: 1.35; color: var(--fm-ink); }
+  body:has(#inicio) .fm-mobile-service p { margin: .35rem 0 0; font-size: .83rem; line-height: 1.55; color: var(--fm-muted); }
+  body:has(#inicio) .fm-mobile-about {
+    padding: 1.6rem 1.3rem;
+    border: 1px solid var(--fm-border);
+    border-radius: 1.3rem;
+    background: var(--fm-surface);
+  }
+  body:has(#inicio) .fm-mobile-about > p:not(.fm-mobile-extras__eyebrow) { margin: .75rem 0 0; font-size: .88rem; line-height: 1.65; color: var(--fm-muted); }
+  body:has(#inicio) .fm-mobile-about a { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; margin-top: .8rem; font-size: .85rem; font-weight: 800; color: var(--fm-accent); text-decoration: none; }
+  body:has(#inicio) .fm-mobile-contact {
+    margin-top: 3rem;
+    padding: 1.5rem 1.3rem;
+    border-radius: 1.3rem;
+    background: var(--fm-accent-soft);
+  }
+  body:has(#inicio) .fm-mobile-contact > p:not(.fm-mobile-extras__eyebrow) { margin: .75rem 0 1rem; color: var(--fm-muted); font-size: .88rem; line-height: 1.55; }
+  body:has(#inicio) .fm-mobile-contact__primary { display: flex; justify-content: center; align-items: center; gap: 1rem; min-height: 48px; padding: .75rem; border-radius: 14px; background: var(--fm-ink); color: white; font-weight: 800; font-size: .85rem; text-decoration: none; }
+  body:has(#inicio) .fm-mobile-contact__email { display: block; width: fit-content; min-height: 44px; padding-top: 1rem; color: var(--fm-ink); font-size: .8rem; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+  body:has(#inicio) .fm-mobile-contact__location { display: block; padding-top: .4rem; color: var(--fm-muted); font-size: .77rem; }
+  body:has(#inicio) .fm-mobile-extras a:focus-visible { outline: 3px solid var(--fm-accent); outline-offset: 3px; }
+}

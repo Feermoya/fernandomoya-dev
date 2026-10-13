@@ -1,0 +1,61 @@
+---
+import { site } from '@/data/site';
+
+const services = [
+  {
+    id: 'webs',
+    title: 'Sitios web profesionales',
+    description: 'Presentá tu negocio, tus servicios y facilitá que nuevos clientes te contacten.',
+    icon: 'window',
+  },
+  {
+    id: 'catalogos',
+    title: 'Catálogos de productos',
+    description: 'Mostrá tus productos en una web organizada, fácil de explorar y consultar.',
+    icon: 'grid',
+  },
+  {
+    id: 'plataformas',
+    title: 'Plataformas personalizadas',
+    description: 'Herramientas digitales para resolver necesidades concretas de tu negocio.',
+    icon: 'layers',
+  },
+] as const;
+---
+<div class="fm-mobile-extras">
+  <section id="servicios" class="fm-mobile-services" aria-labelledby="fm-services-heading">
+    <p class="fm-mobile-extras__eyebrow">LO QUE HAGO</p>
+    <h2 id="fm-services-heading">Soluciones web para tu negocio.</h2>
+    <p class="fm-mobile-extras__intro">Desde una web para presentar tus servicios hasta un catálogo o una plataforma a medida.</p>
+    <div class="fm-mobile-services__list">
+      {services.map((service) => (
+        <article class="fm-mobile-service">
+          <div class="fm-mobile-service__icon" aria-hidden="true">
+            {service.icon === 'window' ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M7 6.5h.01M10 6.5h.01"/></svg>
+            ) : service.icon === 'grid' ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16M10 10v10"/></svg>
+            )}
+          </div>
+          <div class="fm-mobile-service__copy"><h3>{service.title}</h3><p>{service.description}</p></div>
+        </article>
+      ))}
+    </div>
+  </section>
+  <section id="sobre-mi-mobile" class="fm-mobile-about" aria-labelledby="fm-about-heading">
+    <p class="fm-mobile-extras__eyebrow">SOBRE MÍ</p>
+    <h2 id="fm-about-heading">Hola, soy Fernando.</h2>
+    <p>Soy desarrollador frontend y diseñador web de Mendoza. Trabajo con empresas, profesionales y marcas que quieren mejorar su presencia online.</p>
+    <a href="#contacto">Hablemos de tu proyecto <span aria-hidden="true">→</span></a>
+  </section>
+  <section id="contacto-mobile" class="fm-mobile-contact" aria-labelledby="fm-contact-heading">
+    <p class="fm-mobile-extras__eyebrow">CONTACTO</p>
+    <h2 id="fm-contact-heading">¿Tenés una web en mente?</h2>
+    <p>Contame qué necesitás y vemos cómo encararlo.</p>
+    <a class="fm-mobile-contact__primary" href={site.social.whatsapp} target="_blank" rel="noopener noreferrer">Escribime por WhatsApp <span aria-hidden="true">↗</span></a>
+    <a class="fm-mobile-contact__email" href={`mailto:${site.email}`}>{site.email}</a>
+    <span class="fm-mobile-contact__location">{site.location}</span>
+  </section>
+</div>
