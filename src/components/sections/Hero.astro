@@ -144,4 +144,21 @@ const projects = await Promise.all(seeds.map(toCarouselProject));
 ---
 
 {/* Con timeout: si el navegador nunca reporta idle, las capturas igual montan. */}
-<HeroShowcase client:idle={{ timeout: 600 }} projects={projects} sizes={heroSizes} />
+<div class="fm-desktop-hero">
+  <HeroShowcase client:media="(min-width: 768px)" projects={projects} sizes={heroSizes} />
+</div>
+
+<section id="inicio" class="hero-editorial fm-static-mobile-hero" aria-labelledby="hero-heading">
+  <div class="container-page hero-editorial__inner">
+    <div class="hero-editorial__copy">
+      <p class="hero-editorial__eyebrow">DISEÑO Y DESARROLLO WEB · MENDOZA</p>
+      <h1 id="hero-heading" class="hero-editorial__title">Sitios web modernos para negocios reales.</h1>
+      <p class="hero-editorial__lead">Soy Fernando Moya. Diseño y desarrollo sitios web para mostrar tus servicios, presentar tus productos y recibir consultas.</p>
+      <div class="hero-editorial__actions">
+        <a href="#proyectos" class="hero-editorial__cta hero-editorial__cta--primary">Ver proyectos</a>
+        <a href="#contacto" class="hero-editorial__cta hero-editorial__cta--secondary">Hablemos de tu web</a>
+      </div>
+      <div class="hero-editorial__meta"><span>Mendoza, Argentina</span></div>
+    </div>
+  </div>
+</section>

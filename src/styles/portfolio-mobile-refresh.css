@@ -1,3 +1,19 @@
+
+/* Mobile-first static Astro hero: JS carousel only hydrates at >=768px. */
+.fm-static-mobile-hero { display: none; }
+@media (max-width: 767px) {
+  .fm-desktop-hero { display: none; }
+  .fm-static-mobile-hero { display: block; }
+  body:has(.fm-static-mobile-hero) .fm-static-mobile-hero .hero-editorial__copy,
+  body:has(.fm-static-mobile-hero) .fm-static-mobile-hero .hero-editorial__eyebrow,
+  body:has(.fm-static-mobile-hero) .fm-static-mobile-hero .hero-editorial__title,
+  body:has(.fm-static-mobile-hero) .fm-static-mobile-hero .hero-editorial__lead,
+  body:has(.fm-static-mobile-hero) .fm-static-mobile-hero .hero-editorial__actions,
+  body:has(.fm-static-mobile-hero) .fm-static-mobile-hero .hero-editorial__meta {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
 /*
  * Fernando Moya · Mobile portfolio visual foundation v1.
  * Scoped to the public Home via :has(#inicio). No impact on panel, finance or SEO landings.
