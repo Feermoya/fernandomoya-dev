@@ -56,3 +56,8 @@ Se publicaron las siguientes etapas en `main`:
 - `FeaturedProjectsList`: carga dinámica de animación GSAP solo a partir de 768px. Este contenido editorial está oculto en mobile.
 - Vercel informó deployment exitoso del commit `51b6fb2a`; esto no sustituye pruebas locales de typecheck, tests, accesibilidad ni evaluación visual.
 - La galería desktop y mobile aún coexisten en HTML para conservar ambas presentaciones: revisar impacto de HTML e imágenes antes de una refactorización estructural.
+
+## Etapa de consolidación visual mobile (octubre 2026)
+- Tokens comunes del shell de app centralizados en `portfolio-app-shell.css` para Home y detalles; se retiraron declaraciones repetidas del CSS del caso de estudio.
+- Se consolidaron ajustes de barra inferior y header, y se retiraron sobrescrituras obsoletas del listado editorial que ya está oculto en mobile.
+- **Pendiente de QA real:** `npm run typecheck`, `npm run build`, inspección visual 320/375/390/430 px, validación del encabezado, anclas, bottom nav y scroll con safe areas.

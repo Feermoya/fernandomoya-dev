@@ -2,6 +2,19 @@
 .fm-app-tabbar { display: none; }
 @media (max-width: 767px) {
   body.fm-app-shell {
+    --fm-bg: #f8fafc;
+    --fm-surface: #ffffff;
+    --fm-surface-soft: #f1f5f9;
+    --fm-ink: #111827;
+    --fm-text: #273244;
+    --fm-muted: #66758b;
+    --fm-border: #e7ecf2;
+    --fm-accent-soft: #e9eeff;
+    --fm-violet-soft: #f0eafe;
+    --fm-orange-soft: #fff0e5;
+    --fm-shadow-card: 0 8px 28px rgb(15 23 42 / 5%);
+    --fm-font-body: "Manrope", "Inter", system-ui, sans-serif;
+    --fm-font-display: var(--fm-font-body);
     --fm-app-nav-height: 72px;
     --fm-bg-base: #f8fafc;
     --fm-text-primary: #111827;
@@ -14,7 +27,9 @@
   body.fm-app-shell main.site-shell-main { padding-bottom: calc(var(--fm-app-nav-height) + env(safe-area-inset-bottom, 0px) + 16px); }
   body.fm-app-shell .site-header-shell { z-index: 110; }
   body.fm-app-shell .site-header-mobile-panel { z-index: 125; }
-  body.fm-app-shell .site-footer { padding-bottom: 1rem; }
+  body.fm-app-shell .site-footer { padding-bottom: 1rem; border-top: 1px solid var(--fm-border); }
+  body.fm-app-shell .site-header-menu-btn { min-height: 44px; min-width: 44px; }
+  body.fm-app-shell .fm-app-tabbar__link { touch-action: manipulation; }
   body.fm-app-shell .fm-app-tabbar {
     display: block;
     position: fixed;
@@ -22,7 +37,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 7px 12px calc(7px + env(safe-area-inset-bottom, 0px));
+    padding: 5px 12px calc(5px + env(safe-area-inset-bottom, 0px));
     background: rgb(255 255 255 / 96%);
     border-top: 1px solid #e7ecf2;
     box-shadow: 0 -9px 35px rgb(15 23 42 / 6%);
@@ -42,14 +57,14 @@
     justify-content: center;
     align-items: center;
     min-width: 0;
-    min-height: 55px;
-    gap: 3px;
+    min-height: 57px;
+    gap: 4px;
     padding: 5px 2px;
     color: #66758b;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     line-height: 1.3;
-    border-radius: 12px;
+    border-radius: 14px;
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
     transition: color 140ms ease, background-color 140ms ease;
@@ -57,7 +72,7 @@
   .fm-app-tabbar__link[aria-current] { color: #365cf5; background: #eef2ff; }
   .fm-app-tabbar__link:active { background: #eef2ff; }
   .fm-app-tabbar__link:focus-visible { outline: 2px solid #365cf5; outline-offset: -2px; }
-  .fm-app-tabbar__icon, .fm-app-tabbar__icon svg { display: block; height: 21px; width: 21px; }
+  .fm-app-tabbar__icon, .fm-app-tabbar__icon svg { display: block; height: 22px; width: 22px; }
   .fm-app-tabbar__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   body.fm-app-shell #inicio,
   body.fm-app-shell #proyectos,
@@ -65,42 +80,11 @@
   body.fm-app-shell #contacto { scroll-margin-top: 94px; }
   body.fm-app-shell .site-header-bar {
     border-color: #e7ecf2;
-    border-radius: 15px;
+    border-radius: 16px;
     background: rgb(255 255 255 / 96%);
     box-shadow: 0 5px 22px rgb(15 23 42 / 5%);
   }
   @media (prefers-reduced-motion: reduce) {
     .fm-app-tabbar__link { transition: none; }
-  }
-}
-
-/* Polished touch feedback and unified navigation appearance */
-@media (max-width: 767px) {
-  body.fm-app-shell .fm-app-tabbar {
-    padding-top: 5px;
-    padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px));
-  }
-  body.fm-app-shell .fm-app-tabbar__link {
-    min-height: 57px;
-    gap: 4px;
-    border-radius: 14px;
-    font-size: 11px;
-    font-weight: 700;
-    touch-action: manipulation;
-  }
-  body.fm-app-shell .fm-app-tabbar__icon,
-  body.fm-app-shell .fm-app-tabbar__icon svg {
-    width: 22px;
-    height: 22px;
-  }
-  body.fm-app-shell .site-header-bar {
-    border-radius: 16px;
-  }
-  body.fm-app-shell .site-header-menu-btn {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  body.fm-app-shell .site-footer {
-    border-top: 1px solid #e7ecf2;
   }
 }

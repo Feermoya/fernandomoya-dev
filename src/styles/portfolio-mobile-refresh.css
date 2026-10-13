@@ -24,21 +24,6 @@
 
 @media (max-width: 767px) {
   body:has(#inicio) {
-    --fm-bg: #f8fafc;
-    --fm-surface: #ffffff;
-    --fm-surface-soft: #f1f5f9;
-    --fm-ink: #111827;
-    --fm-text: #273244;
-    --fm-muted: #66758b;
-    --fm-border: #e7ecf2;
-    --fm-accent: #365cf5;
-    --fm-accent-soft: #e9eeff;
-    --fm-violet-soft: #f0eafe;
-    --fm-orange-soft: #fff0e5;
-    --fm-radius-sm: 10px;
-    --fm-radius-md: 16px;
-    --fm-radius-lg: 22px;
-    --fm-shadow-card: 0 8px 28px rgb(15 23 42 / 5%);
 
     --fm-bg-base: var(--fm-bg);
     --fm-bg-surface: var(--fm-surface);
@@ -49,8 +34,6 @@
     --fm-text-tertiary: var(--fm-muted);
     --fm-border-light: var(--fm-border);
     --fm-accent-hover: #2347d4;
-    --fm-font-body: "Manrope", "Inter", system-ui, sans-serif;
-    --fm-font-display: "Manrope", "Inter", system-ui, sans-serif;
     background: var(--fm-bg);
     color: var(--fm-ink);
     font-family: var(--fm-font-body);
@@ -142,20 +125,6 @@
     background: var(--fm-bg);
     color: var(--fm-ink);
   }
-  body:has(#inicio) .projects-editorial__intro {
-    padding-block: 2.1rem 1.25rem;
-  }
-  body:has(#inicio) .projects-editorial__title,
-  body:has(#inicio) .projects-editorial__title span {
-    font-family: var(--fm-font-body);
-    font-weight: 800;
-    color: var(--fm-ink);
-    font-size: 1.65rem;
-    line-height: 1.2;
-    letter-spacing: -0.04em;
-  }
-  body:has(#inicio) .projects-editorial__title span { display: none; }
-  body:has(#inicio) .projects-editorial__intro-copy { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   body:has(#inicio) .hero-editorial__cta { transition: none; }
@@ -470,7 +439,7 @@
   body:has(#inicio) .fm-mobile-services__list { contain: layout style; }
 }
 
-/* Layout and presentation consistency, final mobile pass. */
+/* Mobile interaction visibility guard. */
 @media (max-width: 767px) {
   body:has(#inicio) .hero-editorial__copy,
   body:has(#inicio) .hero-editorial__eyebrow,
@@ -492,34 +461,6 @@
 
 /* Consistent touch affordances and readable project summaries. */
 @media (max-width: 767px) {
-  body.fm-app-shell .fm-project-card {
-    border-radius: 20px;
-    box-shadow: 0 5px 23px rgb(15 23 42 / 5%);
-  }
-  body.fm-app-shell .fm-project-card__link {
-    transition: background-color 150ms ease;
-    touch-action: manipulation;
-  }
-  body.fm-app-shell .fm-project-card__link:active {
-    background-color: #f8fafc;
-  }
-  body.fm-app-shell .fm-project-card__body {
-    padding: 16px;
-    gap: 12px;
-  }
-  body.fm-app-shell .fm-project-card__description {
-    display: block;
-    overflow: visible;
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-    max-width: 42ch;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-  body.fm-app-shell .fm-project-card__arrow {
-    background: #f1f5f9;
-    color: #365cf5;
-  }
   body.fm-app-shell .fm-mobile-service {
     border-radius: 18px;
     box-shadow: 0 4px 20px rgb(15 23 42 / 4%);
@@ -536,5 +477,24 @@
   body.fm-app-shell .fm-project-card__body { padding: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  body.fm-app-shell .fm-project-card__link { transition: none; }
+}
+
+/* Cards: one authoritative set of rules, no appended visual overrides. */
+@media (max-width: 767px) {
+  body.fm-app-shell .fm-project-card {
+    border-radius: 20px;
+    box-shadow: var(--fm-shadow-card);
+  }
+  body.fm-app-shell .fm-project-card__body { padding: 16px; gap: 12px; }
+  body.fm-app-shell .fm-project-card__arrow { color: var(--fm-accent); }
+  body.fm-app-shell .fm-project-card__description {
+    display: block;
+    max-width: 44ch;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  body.fm-app-shell .fm-project-card__link:active { background: var(--fm-bg); }
 }
