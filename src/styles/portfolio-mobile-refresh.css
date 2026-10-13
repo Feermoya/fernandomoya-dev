@@ -446,3 +446,88 @@
   body:has(#inicio) .fm-mobile-contact__location { display: block; padding-top: .4rem; color: var(--fm-muted); font-size: .77rem; }
   body:has(#inicio) .fm-mobile-extras a:focus-visible { outline: 3px solid var(--fm-accent); outline-offset: 3px; }
 }
+
+/* Preserve original anchor destinations for Header and Hero.
+ * The existing About/Contact sections remain the single navigable source. */
+@media (max-width: 767px) {
+  body:has(#inicio) .about-section,
+  body:has(#inicio) .contact-section { display: block !important; }
+  body:has(#inicio) .fm-mobile-about,
+  body:has(#inicio) .fm-mobile-contact { display: none; }
+  body:has(#inicio) .about-section {
+    background: var(--fm-bg);
+    padding: 1rem var(--fm-mobile-gutter) 2rem;
+    font-family: var(--fm-font-body);
+  }
+  body:has(#inicio) .about-section__inner {
+    display: flex;
+    flex-direction: column;
+    padding: 1.4rem 1.25rem;
+    border: 1px solid var(--fm-border);
+    border-radius: 1.3rem;
+    background: var(--fm-surface);
+  }
+  body:has(#inicio) .about-section__title,
+  body:has(#inicio) .about-section__title span {
+    color: var(--fm-ink);
+    font-family: var(--fm-font-body);
+    font-size: 1.55rem;
+    line-height: 1.25;
+    font-weight: 800;
+    letter-spacing: -.04em;
+  }
+  body:has(#inicio) .about-section__title span { display: none; }
+  body:has(#inicio) .about-section__eyebrow {
+    color: var(--fm-accent);
+    font: 800 .7rem/1.4 var(--fm-font-body);
+    letter-spacing: .045em;
+  }
+  body:has(#inicio) .about-section__text { color: var(--fm-muted); font: 450 .88rem/1.6 var(--fm-font-body); }
+  body:has(#inicio) .about-section__photo { display: none; }
+  body:has(#inicio) .about-section__actions { margin-top: .85rem; }
+  body:has(#inicio) .about-section__cta {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding-inline: 1rem;
+    border-radius: 12px;
+    background: var(--fm-ink);
+    color: white;
+    font: 800 .83rem/1.2 var(--fm-font-body);
+  }
+  body:has(#inicio) .contact-section {
+    background: var(--fm-bg);
+    padding: 1rem var(--fm-mobile-gutter) 3rem;
+    font-family: var(--fm-font-body);
+  }
+  body:has(#inicio) .contact-section__inner {
+    padding: 1.5rem 1.3rem;
+    border-radius: 1.3rem;
+    background: var(--fm-accent-soft);
+  }
+  body:has(#inicio) .contact-section__eyebrow {
+    color: var(--fm-accent);
+    font: 800 .7rem/1.4 var(--fm-font-body);
+  }
+  body:has(#inicio) .contact-section__title,
+  body:has(#inicio) .contact-section__title span {
+    color: var(--fm-ink);
+    font: 800 1.6rem/1.2 var(--fm-font-body);
+    letter-spacing: -.04em;
+  }
+  body:has(#inicio) .contact-section__whatsapp {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 48px;
+    border-radius: 14px;
+    background: var(--fm-ink);
+    color: white;
+    font: 800 .85rem/1.2 var(--fm-font-body);
+  }
+  body:has(#inicio) .contact-section__email,
+  body:has(#inicio) .contact-section__location {
+    color: var(--fm-muted);
+    font-family: var(--fm-font-body);
+  }
+}
