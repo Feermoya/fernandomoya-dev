@@ -6,6 +6,7 @@ import {
   TOURNAMENT_LIMITS,
 } from '@/lib/tournaments/validate';
 import {
+  forgetRecentGroup,
   groupPath,
   readRecentGroups,
   rememberRecentGroup,
@@ -297,6 +298,17 @@ export default function TournamentsApp({
           }}
           onRevoke={() => void revokeAdmin(screen.group.publicId)}
           onClaim={(secret) => void claimAdmin(screen.group.publicId, secret)}
+          onRenamed={(name) => {
+            rememberRecentGroup({ publicId: screen.group.publicId, name });
+            setRecent(readRecentGroups());
+            setScreen((current) =>
+              current.id === 'group' ? { ...current, group: { ...current.group, name } } : current,
+            );
+          }}
+          onDeleted={() => {
+            forgetRecentGroup(screen.group.publicId);
+            window.location.assign('/torneos');
+          }}
           adminBusy={busy}
           adminError={error}
         />
@@ -590,6 +602,9 @@ function WelcomeView({
         <button type="button" className="tg-btn tg-btn-secondary" onClick={onEnter} disabled={busy}>
           Entrar a mi grupo
         </button>
+        <a className="tg-btn tg-btn-secondary" href="/torneos/probar">
+          Probar sin crear grupo
+        </a>
       </div>
 
       {latest && (

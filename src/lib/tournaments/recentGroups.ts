@@ -48,6 +48,16 @@ export function rememberRecentGroup(group: { publicId: string; name: string }): 
   }
 }
 
+export function forgetRecentGroup(publicId: string): void {
+  if (!canUseStorage()) return;
+  const next = readRecentGroups().filter((group) => group.publicId !== publicId);
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    /* ignore quota */
+  }
+}
+
 export function groupPath(publicId: string): string {
   return `/torneos/g/${publicId}`;
 }

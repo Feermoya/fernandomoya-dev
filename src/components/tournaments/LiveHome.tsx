@@ -1,6 +1,9 @@
 import { ChevronRight, Plus, Trophy, Users, Zap } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import LeaderboardHero from '@/components/tournaments/LeaderboardHero';
 import MatchRow from '@/components/tournaments/MatchRow';
+import QuietNumber from '@/components/tournaments/motion/QuietNumber';
+import { lfEaseOut } from '@/components/tournaments/motion/motionConfig';
 import type {
   StandingRow,
   TournamentMatch,
@@ -9,10 +12,18 @@ import type {
 } from '@/lib/tournaments/types';
 
 function Pitch() {
+  const reduced = useReducedMotion() ?? false;
   return (
     <svg className="pitch" viewBox="0 0 410 450" fill="none" stroke="#e5f9c4" strokeWidth="2" aria-hidden>
       <rect x="25" y="25" width="360" height="400" rx="2" />
-      <path d="M25 225h360" />
+      <motion.path
+        d="M25 225h360"
+        stroke="#C5F64C"
+        strokeWidth="1.5"
+        initial={reduced ? false : { pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 0.85 }}
+        transition={{ duration: reduced ? 0 : 0.7, ease: lfEaseOut }}
+      />
       <circle cx="205" cy="225" r="65" />
       <circle cx="205" cy="225" r="3" fill="currentColor" />
       <rect x="111" y="25" width="188" height="68" />
@@ -39,6 +50,8 @@ export default function LiveHome({
   onExport,
   onReopen,
   onAwards,
+  freshIds = [],
+  onFreshDone,
 }: {
   matchday: TournamentMatchday | null;
   finished: boolean;
@@ -56,6 +69,8 @@ export default function LiveHome({
   onExport: () => void;
   onReopen?: () => void;
   onAwards?: () => void;
+  freshIds?: string[];
+  onFreshDone?: (id: string) => void;
 }) {
   const seq = matchday ? String(matchday.sequenceNumber).padStart(2, '0') : '—';
   const status = !matchday ? 'SIN FECHA' : finished ? 'CERRADA' : 'EN JUEGO';
@@ -153,7 +168,9 @@ export default function LiveHome({
                 <p className="hero-sub">Cuando el organizador inicie la fecha, el marcador aparece acá.</p>
               )}
               <span className="hero-counter">
-                <strong>{String(matches.length).padStart(2, '0')}</strong>
+                <strong>
+                  <QuietNumber value={matches.length} pad={2} />
+                </strong>
                 <small>
                   PARTIDOS
                   <br />
@@ -161,7 +178,9 @@ export default function LiveHome({
                 </small>
               </span>
               <span className="hero-counter">
-                <strong>{String(activeCount).padStart(2, '0')}</strong>
+                <strong>
+                  <QuietNumber value={activeCount} pad={2} />
+                </strong>
                 <small>
                   JUGADORES
                   <br />
@@ -179,7 +198,9 @@ export default function LiveHome({
             <Zap size={16} />
           </span>
           <span>
-            <span className="number">{matches.length}</span>
+            <span className="number">
+              <QuietNumber value={matches.length} />
+            </span>
             <small>Partidos</small>
           </span>
         </div>
@@ -188,7 +209,9 @@ export default function LiveHome({
             <Users size={16} />
           </span>
           <span>
-            <span className="number">{activeCount}</span>
+            <span className="number">
+              <QuietNumber value={activeCount} />
+            </span>
             <small>Jugadores</small>
           </span>
         </div>
@@ -197,7 +220,9 @@ export default function LiveHome({
             <Trophy size={16} />
           </span>
           <span>
-            <span className="number">{leaderWins}</span>
+            <span className="number">
+              <QuietNumber value={leaderWins} />
+            </span>
             <small>Victorias del líder</small>
           </span>
         </div>
@@ -225,7 +250,14 @@ export default function LiveHome({
       ) : (
         <div className="matches">
           {recent.map((match) => (
-            <MatchRow key={match.id} match={match} index={match.sortOrder} nameOf={nameOf} />
+            <MatchRow
+              key={match.id}
+              match={match}
+              index={match.sortOrder}
+              nameOf={nameOf}
+              fresh={freshIds.includes(match.id)}
+              onFreshDone={onFreshDone}
+            />
           ))}
         </div>
       )}

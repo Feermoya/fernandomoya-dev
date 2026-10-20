@@ -1,0 +1,19 @@
+---
+export const prerender = false;
+
+import Layout from '@/layouts/Layout.astro';
+import DemoBench from '@/components/tournaments/DemoBench';
+import { pageTitle } from '@/utils/seo';
+import '@/styles/tournaments.css';
+---
+
+<Layout
+  title={pageTitle('Probar La Fecha')}
+  description="Pantalla temporal para probar La Fecha sin crear un grupo."
+  path="/torneos/probar"
+  noindex={true}
+  appShell={true}
+  shellApp="tournaments"
+>
+  <DemoBench client:only="react" />
+</Layout>

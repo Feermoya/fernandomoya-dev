@@ -1,4 +1,6 @@
 import { Trophy } from 'lucide-react';
+import AnimatedRankingRow, { useLeaderFlash } from '@/components/tournaments/motion/AnimatedRankingRow';
+import QuietNumber from '@/components/tournaments/motion/QuietNumber';
 import type { StandingRow } from '@/lib/tournaments/types';
 
 export function StandingList({
@@ -11,6 +13,7 @@ export function StandingList({
   onSeeAll?: () => void;
 }) {
   const visible = typeof limit === 'number' ? rows.slice(0, limit) : rows;
+  const flashKey = useLeaderFlash(visible[0]?.key ?? null);
   return (
     <div className="aside-card">
       <div className="heading">
@@ -26,7 +29,11 @@ export function StandingList({
         <div style={{ padding: 20, color: '#8ea29a', fontSize: 12 }}>Todavía no hay partidos.</div>
       ) : (
         visible.map((row, i) => (
-          <div key={row.key} className={`standing ${i === 0 ? 'first' : ''}`}>
+          <AnimatedRankingRow
+            key={row.key}
+            className={`standing ${i === 0 ? 'first' : ''}`}
+            leadFlash={flashKey === row.key && i === 0}
+          >
             <div className="pos">{String(i + 1).padStart(2, '0')}</div>
             <div>
               <span className="who">{row.label}</span>
@@ -35,10 +42,10 @@ export function StandingList({
               </span>
             </div>
             <div className="pts">
-              {row.points}
+              <QuietNumber value={row.points} />
               <small>PTS</small>
             </div>
-          </div>
+          </AnimatedRankingRow>
         ))
       )}
       {onSeeAll && (
@@ -57,6 +64,7 @@ export function FullBoard({
   rows: StandingRow[];
   kind: 'pairs' | 'pairsPlayer' | 'solo';
 }) {
+  const flashKey = useLeaderFlash(rows[0]?.key ?? null);
   if (!rows.length) {
     return (
       <div className="empty">
@@ -75,7 +83,11 @@ export function FullBoard({
         <span style={{ textAlign: 'center' }}>PTS</span>
       </div>
       {rows.map((row, i) => (
-        <div key={row.key} className={`board-row ${i === 0 ? 'first' : ''}`}>
+        <AnimatedRankingRow
+          key={row.key}
+          className={`board-row ${i === 0 ? 'first' : ''}`}
+          leadFlash={flashKey === row.key && i === 0}
+        >
           <span className="position">{String(i + 1).padStart(2, '0')}</span>
           <span className="names">
             {row.label}
@@ -88,8 +100,10 @@ export function FullBoard({
           </span>
           <span className="number">{row.played}</span>
           <span className="number">{row.wins}</span>
-          <span className="points">{row.points}</span>
-        </div>
+          <span className="points">
+            <QuietNumber value={row.points} />
+          </span>
+        </AnimatedRankingRow>
       ))}
     </div>
   );

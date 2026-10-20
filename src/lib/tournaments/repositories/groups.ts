@@ -279,6 +279,54 @@ export async function rotateAdminSecret(
   };
 }
 
+export async function renameGroup(
+  supabase: SupabaseClient,
+  groupId: string,
+  name: string,
+): Promise<RepoResult<{ name: string }>> {
+  const { error } = await supabase.from('tournament_groups').update({ name }).eq('id', groupId);
+  if (error) {
+    console.error('[tournaments] rename group failed', error.message);
+    return { ok: false, error: 'No se pudo renombrar el grupo.', code: 'server' };
+  }
+  return { ok: true, data: { name } };
+}
+
+export async function deleteGroup(
+  supabase: SupabaseClient,
+  groupId: string,
+): Promise<RepoResult<{ deleted: true }>> {
+  const { data: days, error: daysError } = await supabase
+    .from('tournament_matchdays')
+    .select('id')
+    .eq('group_id', groupId);
+
+  if (daysError) {
+    console.error('[tournaments] list matchdays for delete failed', daysError.message);
+    return { ok: false, error: 'No se pudo eliminar el grupo.', code: 'server' };
+  }
+
+  const dayIds = (days ?? []).map((day) => day.id as string);
+  if (dayIds.length > 0) {
+    const { error: matchesError } = await supabase
+      .from('tournament_matches')
+      .delete()
+      .in('matchday_id', dayIds);
+    if (matchesError) {
+      console.error('[tournaments] delete matches failed', matchesError.message);
+      return { ok: false, error: 'No se pudo eliminar el grupo.', code: 'server' };
+    }
+  }
+
+  const { error } = await supabase.from('tournament_groups').delete().eq('id', groupId);
+  if (error) {
+    console.error('[tournaments] delete group failed', error.message);
+    return { ok: false, error: 'No se pudo eliminar el grupo.', code: 'server' };
+  }
+
+  return { ok: true, data: { deleted: true } };
+}
+
 export async function updatePlayers(
   supabase: SupabaseClient,
   groupId: string,
@@ -289,7 +337,38 @@ export async function updatePlayers(
     sortOrder?: number;
   }>,
   additions: string[],
+  removals: string[] = [],
 ): Promise<RepoResult<TournamentPlayer[]>> {
+  for (const id of removals) {
+    const { count, error: countError } = await supabase
+      .from('tournament_match_participants')
+      .select('id', { count: 'exact', head: true })
+      .eq('player_id', id);
+
+    if (countError) {
+      console.error('[tournaments] player match count failed', countError.message);
+      return { ok: false, error: 'No se pudo quitar un jugador.', code: 'server' };
+    }
+    if ((count ?? 0) > 0) {
+      return {
+        ok: false,
+        error: 'Ese jugador ya tiene partidos. Podés sacarlo del plantel, no borrarlo.',
+        code: 'conflict',
+      };
+    }
+
+    const { error } = await supabase
+      .from('tournament_players')
+      .delete()
+      .eq('id', id)
+      .eq('group_id', groupId);
+
+    if (error) {
+      console.error('[tournaments] delete player failed', error.message);
+      return { ok: false, error: 'No se pudo quitar un jugador.', code: 'server' };
+    }
+  }
+
   for (const u of updates) {
     if (!u.id) continue;
     const patch: Record<string, unknown> = {};

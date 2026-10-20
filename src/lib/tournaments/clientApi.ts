@@ -52,5 +52,26 @@ export function groupApi(publicId: string) {
         method: 'PUT',
         body: JSON.stringify({ matchdayId, awards }),
       }),
+    renameGroup: (name: string) =>
+      tgFetch<{ ok: true; name: string }>(base, {
+        method: 'PATCH',
+        body: JSON.stringify({ name }),
+      }),
+    updatePlayers: (payload: {
+      updates: Array<{ id: string; displayName: string; active: boolean }>;
+      additions: string[];
+      removals: string[];
+    }) =>
+      tgFetch(`${base}/players`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }),
+    deleteGroup: (confirmName: string) =>
+      tgFetch<{ ok: true }>(base, {
+        method: 'DELETE',
+        body: JSON.stringify({ confirmName }),
+      }),
   };
 }
+
+export type TournamentClientApi = ReturnType<typeof groupApi>;

@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Trophy, Users, X } from 'lucide-react';
 import AwardsSheet from '@/components/tournaments/AwardsSheet';
+import ChampionReveal from '@/components/tournaments/motion/ChampionReveal';
 import { faceColor, initials } from '@/components/tournaments/face';
 import HistoryView from '@/components/tournaments/HistoryView';
+import GroupSettings from '@/components/tournaments/GroupSettings';
 import LiveHome from '@/components/tournaments/LiveHome';
 import MatchComposer from '@/components/tournaments/MatchComposer';
 import MatchRow from '@/components/tournaments/MatchRow';
 import { FullBoard, StandingList } from '@/components/tournaments/Standings';
 import TournamentShell, { type FechaPage } from '@/components/tournaments/TournamentShell';
-import { groupApi } from '@/lib/tournaments/clientApi';
+import { groupApi, type TournamentClientApi } from '@/lib/tournaments/clientApi';
 import { canvasToPngBlob, renderNightCard, shareOrDownloadPng } from '@/lib/tournaments/export/cards';
 import type {
   GroupState,
@@ -25,6 +27,9 @@ type Props = {
   onRecover: () => void;
   onRevoke: () => void;
   onClaim: (secret: string) => void;
+  onRenamed: (name: string) => void;
+  onDeleted: () => void;
+  api?: TournamentClientApi;
   adminBusy?: boolean;
   adminError?: string | null;
 };
@@ -35,10 +40,13 @@ export default function GroupApp({
   onRecover,
   onRevoke,
   onClaim,
+  onRenamed,
+  onDeleted,
+  api: apiOverride,
   adminBusy = false,
   adminError = null,
 }: Props) {
-  const api = useMemo(() => groupApi(publicId), [publicId]);
+  const api = useMemo(() => apiOverride ?? groupApi(publicId), [apiOverride, publicId]);
   const [state, setState] = useState<GroupState | null>(null);
   const [page, setPage] = useState<FechaPage>('inicio');
   const [loading, setLoading] = useState(true);
@@ -49,6 +57,7 @@ export default function GroupApp({
   );
   const [awardsOpen, setAwardsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pairs' | 'solo'>('all');
   const [rankKind, setRankKind] = useState<'pairs' | 'pairsPlayer' | 'solo'>('pairs');
@@ -58,6 +67,14 @@ export default function GroupApp({
   const [mvpId, setMvpId] = useState('');
   const [bestGoalId, setBestGoalId] = useState('');
   const [bestGoalNote, setBestGoalNote] = useState('');
+  const seenMatchIds = useRef<Set<string> | null>(null);
+  const [freshMatchIds, setFreshMatchIds] = useState<string[]>([]);
+  const [ceremony, setCeremony] = useState<{
+    matchdayName: string;
+    winner: string;
+    wins: number;
+    points: number;
+  } | null>(null);
 
   const refresh = useCallback(async () => {
     const data = await api.state();
@@ -81,6 +98,20 @@ export default function GroupApp({
       cancelled = true;
     };
   }, [api]);
+
+  useEffect(() => {
+    if (!state) return;
+    const ids = state.matches.map((match) => match.id);
+    if (seenMatchIds.current === null) {
+      seenMatchIds.current = new Set(ids);
+      return;
+    }
+    const fresh = ids.filter((id) => !seenMatchIds.current!.has(id));
+    for (const id of ids) seenMatchIds.current!.add(id);
+    if (fresh.length) {
+      setFreshMatchIds((current) => [...new Set([...current, ...fresh])]);
+    }
+  }, [state]);
 
   useEffect(() => {
     if (!state?.activeMatchday) return;
@@ -124,11 +155,18 @@ export default function GroupApp({
   }) {
     if (!state?.activeMatchday) throw new Error('No hay fecha activa');
     await api.createMatch({ matchdayId: state.activeMatchday.id, ...payload });
+    await refresh();
+  }
+
+  function finishSave() {
     setComposer(false);
     setRematch(null);
-    await refresh();
     setPage('inicio');
     ping('Resultado guardado. Ranking actualizado.');
+  }
+
+  function ackFresh(id: string) {
+    setFreshMatchIds((prev) => prev.filter((item) => item !== id));
   }
 
   async function undo() {
@@ -160,10 +198,21 @@ export default function GroupApp({
       }
       await api.saveAwards(state.activeMatchday.id, awards);
       if (finish) await api.patchMatchday(state.activeMatchday.id, 'finished');
+      const next = await refresh();
       setAwardsOpen(false);
-      await refresh();
       setPage('inicio');
-      ping(finish ? 'Fecha cerrada' : 'Premios guardados');
+      if (finish) {
+        const night = next.rankings.matchday;
+        const winner = night.pairs[0] ?? night.solo[0] ?? night.pairsPlayer[0] ?? null;
+        setCeremony({
+          matchdayName: next.activeMatchday?.name ?? 'Fecha',
+          winner: winner?.label ?? 'Sin ganador',
+          wins: winner?.wins ?? 0,
+          points: winner?.points ?? 0,
+        });
+      } else {
+        ping('Premios guardados');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudieron guardar los premios');
     } finally {
@@ -296,6 +345,8 @@ export default function GroupApp({
                   onExport={() => void shareCard()}
                   onReopen={state.isAdmin && finished ? () => void reopen() : undefined}
                   onAwards={state.isAdmin ? () => setAwardsOpen(true) : undefined}
+                  freshIds={freshMatchIds}
+                  onFreshDone={ackFresh}
                 />
                 <div className="mobile-aside">
                   <HomeExtras
@@ -320,6 +371,8 @@ export default function GroupApp({
                   setComposer(true);
                 }}
                 onUndo={() => void undo()}
+                freshIds={freshMatchIds}
+                onFreshDone={ackFresh}
                 onRematch={(mode, participants) => {
                   setRematch({ mode, participants });
                   setComposer(true);
@@ -342,12 +395,24 @@ export default function GroupApp({
         }
       />
 
+      {ceremony && (
+        <ChampionReveal
+          matchdayName={ceremony.matchdayName}
+          winner={ceremony.winner}
+          wins={ceremony.wins}
+          points={ceremony.points}
+          onExport={() => void shareCard()}
+          onClose={() => setCeremony(null)}
+        />
+      )}
+
       {composer && canEdit && (
         <MatchComposer
           players={state.group.players}
           rematch={rematch}
           onClose={() => setComposer(false)}
           onSave={saveMatch}
+          onSaved={finishSave}
         />
       )}
 
@@ -375,7 +440,34 @@ export default function GroupApp({
           onRecover={onRecover}
           onRevoke={onRevoke}
           onClaim={onClaim}
+          onEdit={
+            state.isAdmin
+              ? () => {
+                  setMenuOpen(false);
+                  setSettingsOpen(true);
+                }
+              : undefined
+          }
           onStart={state.isAdmin && finished ? () => void startMatchday() : undefined}
+        />
+      )}
+
+      {settingsOpen && state.isAdmin && (
+        <GroupSettings
+          publicId={publicId}
+          api={api}
+          groupName={state.group.name}
+          players={state.group.players}
+          matches={state.matches}
+          onClose={() => setSettingsOpen(false)}
+          onSaved={(name) => {
+            setSettingsOpen(false);
+            void refresh().then(() => {
+              onRenamed(name);
+              ping('Grupo actualizado');
+            });
+          }}
+          onDeleted={onDeleted}
         />
       )}
 
@@ -447,6 +539,8 @@ function MatchesPage({
   onNew,
   onUndo,
   onRematch,
+  freshIds,
+  onFreshDone,
 }: {
   matches: GroupState['matches'];
   total: number;
@@ -457,6 +551,8 @@ function MatchesPage({
   onNew: () => void;
   onUndo: () => void;
   onRematch: (mode: MatchMode, participants: MatchParticipant[]) => void;
+  freshIds: string[];
+  onFreshDone: (id: string) => void;
 }) {
   return (
     <>
@@ -518,6 +614,8 @@ function MatchesPage({
               match={match}
               index={match.sortOrder}
               nameOf={nameOf}
+              fresh={freshIds.includes(match.id)}
+              onFreshDone={onFreshDone}
               actions={
                 canEdit ? (
                   <button
@@ -604,7 +702,7 @@ function RankingPage({
           </button>
         ))}
       </div>
-      <FullBoard rows={rows} kind={kind} />
+      <FullBoard key={`${kind}-${scope}`} rows={rows} kind={kind} />
       <p className="hint">
         Cada ranking vive aparte. Las parejas se agrupan aunque cambien de orden. La diferencia de
         goles solo existe cuando hay marcador.
@@ -623,6 +721,7 @@ function AdminMenu({
   onRecover,
   onRevoke,
   onClaim,
+  onEdit,
   onStart,
 }: {
   isAdmin: boolean;
@@ -634,6 +733,7 @@ function AdminMenu({
   onRecover: () => void;
   onRevoke: () => void;
   onClaim: (secret: string) => void;
+  onEdit?: () => void;
   onStart?: () => void;
 }) {
   return (
@@ -658,8 +758,13 @@ function AdminMenu({
           {isAdmin ? (
             <>
               <p className="hint" style={{ marginTop: 0 }}>
-                Quien mira el enlace ve la tabla. Solo vos cargás resultados.
+                Quien mira el enlace ve la tabla. Solo vos editás el grupo y cargás resultados.
               </p>
+              {onEdit && (
+                <button type="button" className="primary-btn form-submit" onClick={onEdit}>
+                  EDITAR GRUPO
+                </button>
+              )}
               {onStart && (
                 <button type="button" className="primary-btn form-submit" onClick={onStart}>
                   INICIAR NUEVA FECHA

@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+import { lfDuration, lfEaseOut } from '@/components/tournaments/motion/motionConfig';
 import type { TournamentMatch } from '@/lib/tournaments/types';
 
 export function matchSides(match: TournamentMatch, nameOf: (id: string) => string) {
@@ -40,17 +42,40 @@ export default function MatchRow({
   index,
   nameOf,
   actions,
+  fresh = false,
+  onFreshDone,
 }: {
   match: TournamentMatch;
   index: number;
   nameOf: (id: string) => string;
   actions?: ReactNode;
+  fresh?: boolean;
+  onFreshDone?: (id: string) => void;
 }) {
+  const reduced = useReducedMotion() ?? false;
+  const enter = fresh && !reduced;
   const { home, away } = matchSides(match, nameOf);
   const score = matchScoreView(match);
   return (
-    <div>
+    <motion.div
+      className="match-slot"
+      initial={enter ? { opacity: 0, y: 14 } : false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: lfDuration.row, ease: lfEaseOut }}
+      onAnimationComplete={() => {
+        if (fresh) onFreshDone?.(match.id);
+      }}
+    >
       <article className="match">
+        {enter && (
+          <motion.span
+            className="match-fresh-line"
+            aria-hidden
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1, opacity: [1, 1, 0] }}
+            transition={{ duration: lfDuration.row, ease: lfEaseOut, times: [0, 0.45, 1] }}
+          />
+        )}
         <div className="match-index">#{String(index).padStart(2, '0')}</div>
         <div className="match-team">
           {home.join(' + ')}
@@ -67,6 +92,6 @@ export default function MatchRow({
         </div>
       </article>
       {actions ? <div className="row-actions">{actions}</div> : null}
-    </div>
+    </motion.div>
   );
 }

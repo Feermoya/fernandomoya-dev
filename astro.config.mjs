@@ -190,7 +190,8 @@ export default defineConfig({
         !page.includes('/foco-financiero') &&
         !page.includes('/panel') &&
         !page.includes('/admin') &&
-        !page.includes('/torneos/g/'),
+        !page.includes('/torneos/g/') &&
+        !page.includes('/torneos/probar'),
     }),
   ],
 });
