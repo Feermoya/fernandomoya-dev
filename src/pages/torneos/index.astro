@@ -1,0 +1,20 @@
+---
+export const prerender = false;
+
+import Layout from '@/layouts/Layout.astro';
+import TournamentsApp from '@/components/tournaments/TournamentsApp';
+import { pageTitle } from '@/utils/seo';
+import { isTournamentsSupabaseConfigured } from '@/lib/tournaments/supabase/admin';
+
+const configured = isTournamentsSupabaseConfigured();
+---
+
+<Layout
+  title={pageTitle('Noche FC — Torneos')}
+  description="Organizá torneos informales de FIFA entre amigos: resultados, rankings y premios. Sin cuentas."
+  path="/torneos"
+  appShell={true}
+  shellApp="tournaments"
+>
+  <TournamentsApp client:only="react" configured={configured} />
+</Layout>

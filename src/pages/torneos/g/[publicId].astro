@@ -1,0 +1,73 @@
+---
+export const prerender = false;
+
+import Layout from '@/layouts/Layout.astro';
+import TournamentsApp from '@/components/tournaments/TournamentsApp';
+import { pageTitle } from '@/utils/seo';
+import { requireTournamentsDataAccess } from '@/lib/tournaments/api';
+import { getGroupByPublicId } from '@/lib/tournaments/repositories/groups';
+import { isTournamentAdminForGroup } from '@/lib/tournaments/session';
+import { isTournamentsSupabaseConfigured } from '@/lib/tournaments/supabase/admin';
+import '@/styles/tournaments.css';
+
+import type { TournamentGroup } from '@/lib/tournaments/types';
+
+const publicId = Astro.params.publicId ?? '';
+const configured = isTournamentsSupabaseConfigured();
+
+let initialGroup: TournamentGroup | null = null;
+let initialIsAdmin = false;
+let notFound = false;
+
+if (configured && publicId) {
+  const access = requireTournamentsDataAccess();
+  if (access.ok) {
+    const result = await getGroupByPublicId(access.supabase, publicId);
+    if (result.ok) {
+      initialGroup = result.data.group;
+      initialIsAdmin = isTournamentAdminForGroup(
+        Astro.cookies,
+        result.data.group.id,
+        result.data.credentialVersion,
+      );
+    } else if (result.code === 'not_found') {
+      notFound = true;
+    }
+  }
+}
+
+if (notFound) {
+  Astro.response.status = 404;
+}
+---
+
+<Layout
+  title={pageTitle(initialGroup ? initialGroup.name : 'Grupo')}
+  description="Vista privada del grupo de torneos. Sin directorio público."
+  path={`/torneos/g/${publicId}`}
+  noindex={true}
+  appShell={true}
+  shellApp="tournaments"
+>
+  {
+    notFound ? (
+      <div class="tournaments-app-shell">
+        <div class="tg-frame py-16">
+          <h1 class="tg-brand">Grupo no encontrado</h1>
+          <p class="tg-lead mt-3">El enlace puede ser incorrecto o el grupo ya no existe.</p>
+          <p class="mt-6">
+            <a class="tg-btn tg-btn-primary inline-flex w-auto" href="/torneos">Volver a Noche FC</a>
+          </p>
+        </div>
+      </div>
+    ) : (
+      <TournamentsApp
+        client:only="react"
+        configured={configured}
+        initialPublicId={publicId}
+        initialGroup={initialGroup}
+        initialIsAdmin={initialIsAdmin}
+      />
+    )
+  }
+</Layout>

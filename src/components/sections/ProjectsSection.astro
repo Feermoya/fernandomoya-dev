@@ -3,6 +3,7 @@ import '@/styles/projects.css';
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import FeaturedProjectsList from '@/components/sections/FeaturedProjectsList.astro';
+import MobileProjectGallery from '@/components/sections/MobileProjectGallery.astro';
 import type { ArchiveProjectData, FeaturedProjectData } from '@/types/featured-project';
 import { getProjectCover } from '@/utils/images';
 import { projectListLabel } from '@/utils/project-label';
@@ -136,7 +137,8 @@ const archive: ArchiveProjectData[] = archiveSource.map((entry, index) => ({
 }));
 ---
 
-<section id="proyectos" class="projects-editorial" aria-labelledby="projects-heading">
+<section id="proyectos" class="projects-editorial">
+  <MobileProjectGallery />
   <div class="projects-editorial__intro container-page">
     <div class="projects-editorial__intro-grid">
       <div>

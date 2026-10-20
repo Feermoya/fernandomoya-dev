@@ -2,10 +2,11 @@
 import Layout from '@/layouts/Layout.astro';
 import Hero from '@/components/sections/Hero.astro';
 import HomeAbout from '@/components/sections/HomeAbout.astro';
+import HomeContactSection from '@/components/sections/HomeContactSection.astro';
 import BrandWorkSection from '@/components/sections/BrandWorkSection.astro';
 import ProjectsSection from '@/components/sections/ProjectsSection.astro';
 import SeoImpactSection from '@/components/sections/SeoImpactSection.astro';
-import HomeContactSection from '@/components/sections/HomeContactSection.astro';
+import HomeServices from '@/components/sections/HomeServices.astro';
 import { getImage } from 'astro:assets';
 import hemaCover from '@/assets/case-studies/hema.webp';
 import { site } from '@/data/site';
@@ -62,6 +63,7 @@ const professionalServiceSchema = {
 
   <Hero />
   <ProjectsSection />
+  <HomeServices />
   <SeoImpactSection />
   <BrandWorkSection />
   <HomeAbout />

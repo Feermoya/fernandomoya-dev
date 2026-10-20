@@ -14,8 +14,16 @@ const links = [
 ] as const;
 ---
 
+<header class="pf-header">
+  <a class="pf-header__name" href={isHome ? '#inicio' : '/'}>{site.name}</a>
+  <nav class="pf-header__nav" aria-label="Secciones">
+    <a class="pf-header__link" href={sectionHref('proyectos')}>Trabajos</a>
+    <a class="pf-header__link" href={sectionHref('contacto')}>Contacto</a>
+  </nav>
+</header>
+
 <SiteHeader
-  client:idle
+  client:media="(min-width: 768px)"
   siteName={site.name}
   links={links}
   logoHref={isHome ? '#inicio' : '/'}

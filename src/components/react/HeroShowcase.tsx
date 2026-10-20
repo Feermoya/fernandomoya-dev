@@ -117,7 +117,6 @@ export default function HeroShowcase({ projects, sizes }: Props) {
   return (
     <section
       ref={sectionRef}
-      id="inicio"
       className="hero-editorial"
       aria-labelledby="hero-heading"
     >

@@ -1,4 +1,5 @@
 @import "./design-tokens.css";
+@import "./portfolio-mobile.css";
 @import "tailwindcss";
 
 /**
@@ -2254,5 +2255,49 @@
   *::before,
   *::after {
     scroll-behavior: auto;
+  }
+}
+
+/* Portfolio mobile: la composición nueva reemplaza a la editorial solo bajo 768px. */
+@media (max-width: 767.98px) {
+  .site-header-shell,
+  .pf-hero-desktop,
+  .projects-editorial__intro,
+  .featured-projects,
+  .projects-archive,
+  .about-section__inner,
+  .contact-section__inner,
+  .contact-section::before,
+  #resultados-seo,
+  #piezas-marca {
+    display: none;
+  }
+
+  .site-shell-main {
+    padding-top: 0;
+  }
+
+  .about-section,
+  .contact-section {
+    padding-block: 0;
+    background: var(--fm-bg-base);
+    color: var(--fm-text-primary);
+  }
+
+  .case-study-page[class] {
+    background: var(--fm-bg-base);
+    color: var(--fm-text-primary);
+  }
+
+  .case-study-page > :not(.pf-case) {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .site-header-cta__short,
+  .site-header-back__short,
+  .site-header-mobile-inline {
+    display: none;
   }
 }

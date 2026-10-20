@@ -169,6 +169,8 @@ export default defineConfig({
         'gsap/ScrollTrigger',
         'lenis',
         'lucide-react',
+        'motion',
+        'motion/react',
         'sileo',
       ],
     },
@@ -187,7 +189,8 @@ export default defineConfig({
         !page.includes('/precios') &&
         !page.includes('/foco-financiero') &&
         !page.includes('/panel') &&
-        !page.includes('/admin'),
+        !page.includes('/admin') &&
+        !page.includes('/torneos/g/'),
     }),
   ],
 });

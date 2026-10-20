@@ -3,6 +3,7 @@ import '@/styles/hero.css';
 import { getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import HeroShowcase from '@/components/react/HeroShowcase';
+import { site } from '@/data/site';
 import type { HeroCarouselProject } from '@/types/hero-carousel';
 import { isCaseStudyId } from '@/data/case-studies';
 
@@ -143,5 +144,46 @@ async function toCarouselProject(seed: ProjectSeed): Promise<HeroCarouselProject
 const projects = await Promise.all(seeds.map(toCarouselProject));
 ---
 
-{/* Con timeout: si el navegador nunca reporta idle, las capturas igual montan. */}
-<HeroShowcase client:idle={{ timeout: 600 }} projects={projects} sizes={heroSizes} />
+<div id="inicio">
+  <section class="pf-hero" aria-labelledby="pf-hero-title">
+    <p class="pf-identity">Fernando Moya · Desarrollador web en Mendoza</p>
+    <h1 id="pf-hero-title" class="pf-display">Webs para que tu negocio se entienda.</h1>
+    <p class="pf-lead">
+      Creo sitios modernos y rápidos para mostrar lo que hacés y recibir consultas.
+    </p>
+    <div class="pf-actions">
+      <a class="pf-btn pf-btn--primary" href="#proyectos">Ver proyectos</a>
+      <a class="pf-btn pf-btn--quiet" href={site.social.whatsapp} target="_blank" rel="noopener noreferrer">
+        Hablemos de tu web
+      </a>
+    </div>
+    <ul class="pf-strip">
+      {
+        projects.slice(0, 3).map((project) => (
+          <li>
+            <a
+              class="pf-strip__shot"
+              href={project.href}
+              {...(project.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            >
+              <img
+                src={project.imageSrc}
+                srcset={project.imageSrcSet}
+                width={project.imageWidth}
+                height={project.imageHeight}
+                alt={project.alt}
+                sizes="33vw"
+                loading="eager"
+                decoding="async"
+              />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <div class="pf-hero-desktop">
+    <HeroShowcase client:media="(min-width: 768px)" projects={projects} sizes={heroSizes} />
+  </div>
+</div>

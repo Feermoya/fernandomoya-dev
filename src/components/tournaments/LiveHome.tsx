@@ -1,0 +1,234 @@
+import { ChevronRight, Plus, Trophy, Users, Zap } from 'lucide-react';
+import LeaderboardHero from '@/components/tournaments/LeaderboardHero';
+import MatchRow from '@/components/tournaments/MatchRow';
+import type {
+  StandingRow,
+  TournamentMatch,
+  TournamentMatchday,
+  TournamentPlayer,
+} from '@/lib/tournaments/types';
+
+function Pitch() {
+  return (
+    <svg className="pitch" viewBox="0 0 410 450" fill="none" stroke="#e5f9c4" strokeWidth="2" aria-hidden>
+      <rect x="25" y="25" width="360" height="400" rx="2" />
+      <path d="M25 225h360" />
+      <circle cx="205" cy="225" r="65" />
+      <circle cx="205" cy="225" r="3" fill="currentColor" />
+      <rect x="111" y="25" width="188" height="68" />
+      <rect x="111" y="357" width="188" height="68" />
+      <path d="M155 93a55 55 0 0 0 100 0M155 357a55 55 0 0 1 100 0" />
+    </svg>
+  );
+}
+
+export default function LiveHome({
+  matchday,
+  finished,
+  matches,
+  players,
+  leader,
+  leaderWins,
+  isAdmin,
+  mvpName,
+  nameOf,
+  onLoadMatch,
+  onStart,
+  onSeeRanking,
+  onSeeMatches,
+  onExport,
+  onReopen,
+  onAwards,
+}: {
+  matchday: TournamentMatchday | null;
+  finished: boolean;
+  matches: TournamentMatch[];
+  players: TournamentPlayer[];
+  leader: StandingRow | null;
+  leaderWins: number;
+  isAdmin: boolean;
+  mvpName?: string;
+  nameOf: (id: string) => string;
+  onLoadMatch: () => void;
+  onStart: () => void;
+  onSeeRanking: () => void;
+  onSeeMatches: () => void;
+  onExport: () => void;
+  onReopen?: () => void;
+  onAwards?: () => void;
+}) {
+  const seq = matchday ? String(matchday.sequenceNumber).padStart(2, '0') : '—';
+  const status = !matchday ? 'SIN FECHA' : finished ? 'CERRADA' : 'EN JUEGO';
+  const activeCount = players.filter((p) => p.active).length;
+  const recent = matches.slice().sort((a, b) => b.sortOrder - a.sortOrder).slice(0, 3);
+
+  return (
+    <>
+      <div className="page-intro">
+        <div>
+          <div className="eyebrow">
+            {matchday?.name ?? 'La fecha'} <span className="slash">/</span> {status}
+          </div>
+          <h1 className="page-title">El vestuario</h1>
+          <p className="page-desc">Donde cada juntada tiene su historia.</p>
+        </div>
+      </div>
+
+      {finished && matchday ? (
+        <div className="finished">
+          <div className="cup">
+            <Trophy size={56} />
+          </div>
+          <span className="small-lime">{matchday.name} terminó</span>
+          <h2>
+            Tenemos
+            <br />
+            campeones.
+          </h2>
+          <div className="winning">{leader?.label ?? 'Sin ganador'}</div>
+          <p>
+            {leader
+              ? `${leader.wins} victorias · ${leader.points} puntos`
+              : 'La fecha terminó sin partidos.'}
+          </p>
+          {mvpName ? (
+            <p>
+              MVP de la noche: <b>{mvpName}</b>
+            </p>
+          ) : null}
+          <div className="actions">
+            <button type="button" className="primary-btn" onClick={onExport}>
+              GUARDAR TARJETA
+            </button>
+            {isAdmin && onReopen && (
+              <button type="button" className="outline-mini" onClick={onReopen}>
+                REABRIR FECHA
+              </button>
+            )}
+            {isAdmin && onAwards && (
+              <button type="button" className="outline-mini" onClick={onAwards}>
+                PREMIOS
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <section className="hero">
+          <Pitch />
+          <div className="hero-noise" />
+          <div className="hero-shine" />
+          <div className="hero-watermark">{seq === '—' ? '00' : seq}</div>
+          <div className="hero-inner">
+            <div className="hero-kicker">
+              {matchday ? `${matchday.name} · en juego` : 'Listos para la noche'}
+            </div>
+            <h2 className="hero-title">
+              {matchday ? (
+                <>
+                  Hoy se
+                  <br />
+                  <span>juega.</span>
+                </>
+              ) : (
+                <>
+                  Arrancá
+                  <br />
+                  <span>la fecha.</span>
+                </>
+              )}
+            </h2>
+            <p className="hero-sub">Hay rivalidades que no se arreglan hablando.</p>
+            <div className="hero-bottom">
+              {isAdmin && matchday && (
+                <button type="button" className="primary-btn" onClick={onLoadMatch}>
+                  <Plus size={16} /> CARGAR RESULTADO <ChevronRight size={16} />
+                </button>
+              )}
+              {isAdmin && !matchday && (
+                <button type="button" className="primary-btn" onClick={onStart}>
+                  <Plus size={16} /> INICIAR FECHA
+                </button>
+              )}
+              {!isAdmin && !matchday && (
+                <p className="hero-sub">Cuando el organizador inicie la fecha, el marcador aparece acá.</p>
+              )}
+              <span className="hero-counter">
+                <strong>{String(matches.length).padStart(2, '0')}</strong>
+                <small>
+                  PARTIDOS
+                  <br />
+                  JUGADOS
+                </small>
+              </span>
+              <span className="hero-counter">
+                <strong>{String(activeCount).padStart(2, '0')}</strong>
+                <small>
+                  JUGADORES
+                  <br />
+                  EN CANCHA
+                </small>
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="stat-strip">
+        <div className="stat">
+          <span className="stat-icon">
+            <Zap size={16} />
+          </span>
+          <span>
+            <span className="number">{matches.length}</span>
+            <small>Partidos</small>
+          </span>
+        </div>
+        <div className="stat">
+          <span className="stat-icon">
+            <Users size={16} />
+          </span>
+          <span>
+            <span className="number">{activeCount}</span>
+            <small>Jugadores</small>
+          </span>
+        </div>
+        <div className="stat">
+          <span className="stat-icon">
+            <Trophy size={16} />
+          </span>
+          <span>
+            <span className="number">{leaderWins}</span>
+            <small>Victorias del líder</small>
+          </span>
+        </div>
+      </section>
+
+      <div className="section-header">
+        <h2 className="section-title">Los que mandan</h2>
+        <button type="button" className="section-link" onClick={onSeeRanking}>
+          VER RANKING <ChevronRight size={14} />
+        </button>
+      </div>
+      <LeaderboardHero row={leader} />
+
+      <div className="section-header" style={{ marginTop: 28 }}>
+        <h2 className="section-title">Últimos cruces</h2>
+        <button type="button" className="section-link" onClick={onSeeMatches}>
+          TODOS <ChevronRight size={14} />
+        </button>
+      </div>
+      {recent.length === 0 ? (
+        <div className="empty">
+          <h3>Todavía no hay partidos</h3>
+          <p>La primera victoria está a un resultado de distancia.</p>
+        </div>
+      ) : (
+        <div className="matches">
+          {recent.map((match) => (
+            <MatchRow key={match.id} match={match} index={match.sortOrder} nameOf={nameOf} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}

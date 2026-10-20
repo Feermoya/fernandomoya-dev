@@ -5,7 +5,18 @@ import { site } from '@/data/site';
 const mailto = `mailto:${site.email}`;
 ---
 
-<section id="contacto" class="contact-section" aria-labelledby="contact-heading">
+<section id="contacto" class="contact-section">
+  <div class="pf-contact pf-section pf-wrap">
+    <h2 class="pf-title">¿Arrancamos tu web?</h2>
+    <p class="pf-lead">Contame qué necesitás. Te respondo por WhatsApp.</p>
+    <div class="pf-actions">
+      <a class="pf-btn pf-btn--primary" href={site.social.whatsapp} target="_blank" rel="noopener noreferrer">
+        Escribir por WhatsApp
+      </a>
+      <a class="pf-btn pf-btn--quiet" href={mailto}>{site.email}</a>
+    </div>
+    <p class="pf-meta">{site.location}</p>
+  </div>
   <div class="container-page contact-section__inner">
     <div class="contact-section__grid">
       <div class="contact-section__copy">

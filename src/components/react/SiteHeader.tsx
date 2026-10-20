@@ -89,7 +89,8 @@ export default function SiteHeader({
           {backHref ? (
             <nav className="site-header-nav site-header-nav--case" aria-label="Caso de estudio">
               <a href={backHref} className="site-header-nav-link">
-                {backLabel}
+                <span className="site-header-back__full">{backLabel}</span>
+                <span className="site-header-back__short">Volver</span>
               </a>
             </nav>
           ) : (
@@ -112,8 +113,14 @@ export default function SiteHeader({
                 {adminLabel}
               </a>
             ) : null}
+            {!backHref && links[0] ? (
+              <a href={links[0].href} className="site-header-mobile-inline">
+                {links[0].label}
+              </a>
+            ) : null}
             <a href={ctaHref} className="site-header-cta site-header-cta--bar">
-              {ctaLabel}
+              <span className="site-header-cta__full">{ctaLabel}</span>
+              <span className="site-header-cta__short">Contacto</span>
             </a>
 
             <div className="site-header-menu-btn-wrap">

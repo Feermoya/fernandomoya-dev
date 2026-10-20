@@ -1,0 +1,455 @@
+/**
+ * Sistema mobile del portfolio público (< 768px).
+ * No pisa --fm-* ni el escritorio.
+ * Las clases .pf-* todavía no están en el HTML: la home sigue con la capa anterior.
+ *
+ * Composición acordada:
+ * header fijo bajo, hero editorial, tira de 3 portadas, galería con una tarjeta
+ * principal y pares, servicios en filas, about corto, contacto.
+ * Sin barra inferior y sin captura a altura de viewport.
+ *
+ * Presupuesto de texto en 320px:
+ * título del hero, máximo 40 caracteres (2 líneas).
+ * bajada, máximo 110 caracteres.
+ */
+
+@media (max-width: 767.98px) {
+  :root {
+    --pf-bg: var(--fm-bg-base);
+    --pf-surface: var(--fm-bg-surface);
+    --pf-ink: var(--fm-text-primary);
+    --pf-muted: var(--fm-text-secondary);
+    --pf-line: var(--fm-border-light);
+    --pf-line-strong: var(--fm-border-light-strong);
+    --pf-accent: var(--fm-accent);
+    --pf-on-ink: var(--fm-text-on-dark);
+
+    --pf-font-display: var(--fm-font-display);
+    --pf-font-body: var(--fm-font-body);
+
+    --pf-identity: 0.8125rem;
+    --pf-display: clamp(1.875rem, 7.4vw, 2.375rem);
+    --pf-display-leading: 1.02;
+    --pf-title: 1.375rem;
+    --pf-card-title: 1.0625rem;
+    --pf-body: 1rem;
+    --pf-body-leading: 1.45;
+    --pf-meta: 0.8125rem;
+
+    --pf-gutter: var(--fm-mobile-gutter);
+    --pf-header: calc(env(safe-area-inset-top, 0px) + 3rem);
+    --pf-section: 2.75rem;
+    --pf-stack: 1.5rem;
+    --pf-tight: 0.375rem;
+
+    --pf-radius: 0.75rem;
+    --pf-radius-control: 0.5rem;
+    --pf-hit: 2.75rem;
+    --pf-strip: 7.5rem;
+  }
+
+  .pf-wrap {
+    padding-inline: var(--pf-gutter);
+  }
+
+  .pf-identity {
+    margin: 0;
+    font-family: var(--pf-font-body);
+    font-size: var(--pf-identity);
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--pf-muted);
+  }
+
+  .pf-display {
+    margin: 0.55rem 0 0;
+    max-width: 12em;
+    font-family: var(--pf-font-display);
+    font-size: var(--pf-display);
+    font-weight: 400;
+    line-height: var(--pf-display-leading);
+    letter-spacing: -0.03em;
+    color: var(--pf-ink);
+  }
+
+  .pf-title {
+    margin: 0;
+    font-family: var(--pf-font-body);
+    font-size: var(--pf-title);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: var(--pf-ink);
+  }
+
+  .pf-lead {
+    margin: 0.75rem 0 0;
+    max-width: 34ch;
+    font-family: var(--pf-font-body);
+    font-size: var(--pf-body);
+    font-weight: 400;
+    line-height: var(--pf-body-leading);
+    color: var(--pf-muted);
+  }
+
+  .pf-meta {
+    margin: 0;
+    font-family: var(--pf-font-body);
+    font-size: var(--pf-meta);
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--pf-muted);
+  }
+
+  .pf-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: var(--pf-header);
+    padding: env(safe-area-inset-top, 0px) var(--pf-gutter) 0;
+    border-bottom: 1px solid var(--pf-line);
+    background: var(--pf-bg);
+  }
+
+  .pf-header__name {
+    color: var(--pf-ink);
+    font-family: var(--pf-font-body);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+  }
+
+  .pf-header__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .pf-header__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--pf-hit);
+    padding-inline: 0.55rem;
+    color: var(--pf-ink);
+    font-family: var(--pf-font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .pf-hero {
+    padding: 1.15rem var(--pf-gutter) 0.25rem;
+  }
+
+  .pf-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1.15rem;
+  }
+
+  .pf-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--pf-hit);
+    padding: 0.65rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--pf-radius-control);
+    font-family: var(--pf-font-body);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .pf-btn--primary {
+    background: var(--pf-ink);
+    color: var(--pf-on-ink);
+  }
+
+  .pf-btn--quiet {
+    background: transparent;
+    border-color: var(--pf-line-strong);
+    color: var(--pf-ink);
+  }
+
+  .pf-btn:active {
+    transform: translateY(1px);
+  }
+
+  .pf-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pf-strip__shot {
+    display: block;
+    height: var(--pf-strip);
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: var(--fm-bg-soft);
+  }
+
+  .pf-strip__shot img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  .pf-section {
+    padding-top: var(--pf-section);
+  }
+
+  .pf-work__list,
+  .pf-services__list {
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pf-work__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pf-stack);
+  }
+
+  .pf-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .pf-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--pf-radius);
+    background: var(--pf-surface);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .pf-card__media,
+  .pf-case__media {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: var(--fm-bg-soft);
+  }
+
+  .pf-card--lead .pf-card__media {
+    aspect-ratio: 16 / 10;
+  }
+
+  .pf-card--pair .pf-card__media {
+    aspect-ratio: 4 / 3;
+  }
+
+  .pf-card__media img,
+  .pf-case__media img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  .pf-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.75rem 0.85rem 0.9rem;
+  }
+
+  .pf-card__title {
+    margin: 0;
+    font-family: var(--pf-font-body);
+    font-size: var(--pf-card-title);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: var(--pf-ink);
+  }
+
+  .pf-card--pair .pf-card__title {
+    font-size: 0.9375rem;
+  }
+
+  .pf-card__text {
+    margin: 0.15rem 0 0;
+    min-width: 0;
+    font-family: var(--pf-font-body);
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    color: var(--pf-muted);
+  }
+
+  .pf-card--pair .pf-card__text,
+  .pf-card--lead .pf-card__text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .pf-card--lead .pf-card__text {
+    -webkit-line-clamp: 3;
+  }
+
+  .pf-card__action {
+    margin-top: 0.45rem;
+    font-family: var(--pf-font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--pf-ink);
+  }
+
+  .pf-card__media img {
+    transition: transform 280ms ease;
+  }
+
+  .pf-card:active .pf-card__media img {
+    transform: scale(1.02);
+  }
+
+  .pf-service {
+    padding: 0.9rem 0;
+    border-top: 1px solid var(--pf-line);
+  }
+
+  .pf-service__title {
+    margin: 0;
+    font-family: var(--pf-font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--pf-ink);
+  }
+
+  .pf-service__text {
+    margin: 0.3rem 0 0;
+    font-family: var(--pf-font-body);
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    color: var(--pf-muted);
+  }
+
+  .pf-contact .pf-actions {
+    margin-top: 1.15rem;
+  }
+
+  .pf-contact .pf-meta {
+    margin-top: 0.85rem;
+  }
+
+  .pf-case__media {
+    border-radius: var(--pf-radius);
+    aspect-ratio: 16 / 10;
+  }
+
+  .pf-case__media img {
+    position: absolute;
+    inset: 0;
+  }
+
+  .pf-case__points {
+    margin: 0.85rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pf-case__points li {
+    padding: 0.55rem 0;
+    border-top: 1px solid var(--pf-line);
+    font-family: var(--pf-font-body);
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    color: var(--pf-ink);
+  }
+
+  .pf-case__heading {
+    margin: 1.35rem 0 0;
+    font-family: var(--pf-font-body);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--pf-ink);
+  }
+
+  .pf-case .pf-lead {
+    margin-top: 0.9rem;
+  }
+
+  .pf-header__link:focus-visible,
+  .pf-header__name:focus-visible,
+  .pf-btn:focus-visible,
+  .pf-card:focus-visible,
+  .pf-strip__shot:focus-visible {
+    outline: 2px solid var(--pf-ink);
+    outline-offset: 2px;
+  }
+}
+
+@media (min-width: 380px) and (max-width: 767.98px) {
+  .pf-actions {
+    flex-direction: row;
+  }
+
+  .pf-actions .pf-btn {
+    flex: 1 1 0;
+  }
+
+  .pf-contact .pf-actions {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 768px) {
+  .pf-header,
+  .pf-hero,
+  .pf-work,
+  .pf-services,
+  .pf-about,
+  .pf-contact,
+  .pf-case {
+    display: none;
+  }
+}
+
+@media (max-width: 767.98px) and (prefers-reduced-motion: reduce) {
+  .pf-btn {
+    transition: none;
+  }
+
+  .pf-btn:active {
+    transform: none;
+  }
+
+  .pf-card__media img {
+    transition: none;
+  }
+
+  .pf-card:active .pf-card__media img {
+    transform: none;
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Noche FC",
+  "short_name": "Noche FC",
+  "description": "Torneos informales de fútbol entre amigos.",
+  "id": "/torneos?pwa=1",
+  "start_url": "/torneos?pwa=1",
+  "scope": "/torneos",
+  "display": "standalone",
+  "background_color": "#0A0F12",
+  "theme_color": "#0A0F12",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

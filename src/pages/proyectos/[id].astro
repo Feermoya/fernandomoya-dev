@@ -62,6 +62,7 @@ const domain = domainFromLive(live);
 const projectType = entry.data.projectType;
 const description = entry.data.description;
 const alt = `Captura del sitio web de ${client}`;
+const points = editorial.decisions.slice(0, 4).map((item) => item.title);
 
 const pageTitle = `${client} · Caso de estudio | Fernando Moya`;
 const pagePath = `/proyectos/${id}`;
@@ -96,6 +97,39 @@ const schema = {
   <script type="application/ld+json" set:html={JSON.stringify(schema)} />
 
   <div class={`case-study-page case-study-page--${editorial.theme}`}>
+    <article class="pf-case pf-wrap pf-section">
+      <p class="pf-meta">{projectType}</p>
+      <h1 class="pf-title">{client}</h1>
+      <div class="pf-case__media">
+        <img
+          src={optimized.src}
+          width={optimized.attributes.width ?? 1600}
+          height={optimized.attributes.height ?? 1000}
+          alt={alt}
+          decoding="async"
+        />
+      </div>
+      <p class="pf-lead">{description}</p>
+      {
+        points.length > 0 ? (
+          <>
+            <h2 class="pf-case__heading">Qué incluye</h2>
+            <ul class="pf-case__points">
+              {points.map((point) => (
+                <li>{point}</li>
+              ))}
+            </ul>
+          </>
+        ) : null
+      }
+      <div class="pf-actions">
+        <a class="pf-btn pf-btn--primary" href={live} target="_blank" rel="noopener noreferrer">
+          Visitar sitio
+        </a>
+        <a class="pf-btn pf-btn--quiet" href={nextHref}>Siguiente · {nextClient}</a>
+      </div>
+    </article>
+
     <CaseStudyHero
       theme={editorial.theme}
       number={editorial.number}

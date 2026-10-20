@@ -3,8 +3,16 @@ import SiteHeader from '@/components/react/SiteHeader';
 import { site } from '@/data/site';
 ---
 
+<header class="pf-header">
+  <a class="pf-header__name" href="/">{site.name}</a>
+  <nav class="pf-header__nav" aria-label="Caso">
+    <a class="pf-header__link" href="/#proyectos">Volver</a>
+    <a class="pf-header__link" href="/#contacto">Contacto</a>
+  </nav>
+</header>
+
 <SiteHeader
-  client:idle
+  client:media="(min-width: 768px)"
   siteName={site.name}
   links={[]}
   backHref="/#proyectos"

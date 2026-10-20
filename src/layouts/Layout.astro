@@ -7,14 +7,24 @@ import Footer from '@/components/layout/Footer.astro';
 import { site } from '@/data/site';
 import { absoluteUrl } from '@/utils/seo';
 
+type ShellApp = 'finance' | 'tournaments';
+
 interface Props {
   title: string;
   description: string;
   path?: string;
   ogImagePath?: string;
   noindex?: boolean;
-  /** Shell de app: sin nav del sitio, manifest PWA dedicado, fondo foco financiero. */
+  /**
+   * Shell de app: sin nav/footer del sitio.
+   * Compat: `true` = Foco financiero (comportamiento histórico).
+   */
   appShell?: boolean;
+  /**
+   * Identidad del shell cuando `appShell` es true.
+   * Default `finance` para no alterar Foco financiero.
+   */
+  shellApp?: ShellApp;
   /** Caso de estudio: header con volver al trabajo. */
   caseStudyHeader?: boolean;
 }
@@ -26,20 +36,43 @@ const {
   ogImagePath,
   noindex = false,
   appShell = false,
+  shellApp = 'finance',
   caseStudyHeader = false,
 } = Astro.props;
 const canonical = absoluteUrl(path);
 const ogImage = ogImagePath ? absoluteUrl(ogImagePath) : undefined;
 
-const fontStylesheet = appShell
-  ? 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'
-  : 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap';
+const activeShell: ShellApp | null = appShell ? shellApp : null;
+const isFinanceShell = activeShell === 'finance';
+const isTournamentsShell = activeShell === 'tournaments';
+
+const fontStylesheet = isTournamentsShell
+  ? 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap'
+  : isFinanceShell
+    ? 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'
+    : 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap';
+
+const themeColor = isTournamentsShell
+  ? '#0A0F12'
+  : isFinanceShell
+    ? '#F6F8FB'
+    : '#F4F1EB';
+
+const bodyBgClass = isTournamentsShell
+  ? 'bg-[#0A0F12] text-[#F6F8EE]'
+  : isFinanceShell
+    ? 'bg-[#F6F8FB]'
+    : 'bg-bg-base';
 ---
 
 <!doctype html>
 <html
   lang={site.locale}
-  class:list={['bg-bg-base text-text', appShell && 'finance-app-html']}
+  class:list={[
+    'bg-bg-base text-text',
+    isFinanceShell && 'finance-app-html',
+    isTournamentsShell && 'tournaments-app-html',
+  ]}
 >
   <head>
     <meta charset="utf-8" />
@@ -60,9 +93,9 @@ const fontStylesheet = appShell
       <link rel="stylesheet" href={fontStylesheet} />
     </noscript>
 
-    <meta name="theme-color" content={appShell ? '#F6F8FB' : '#F4F1EB'} />
+    <meta name="theme-color" content={themeColor} />
     {
-      appShell ? (
+      isFinanceShell ? (
         <>
           <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
           <meta http-equiv="Pragma" content="no-cache" />
@@ -70,6 +103,18 @@ const fontStylesheet = appShell
           <meta name="apple-mobile-web-app-title" content="Foco financiero" />
           <meta name="apple-mobile-web-app-status-bar-style" content="default" />
           <link rel="manifest" href="/foco-financiero.webmanifest?v=3" />
+        </>
+      ) : null
+    }
+    {
+      isTournamentsShell ? (
+        <>
+          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+          <meta http-equiv="Pragma" content="no-cache" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-title" content="Noche FC" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <link rel="manifest" href="/torneos.webmanifest?v=1" />
         </>
       ) : null
     }
@@ -93,36 +138,39 @@ const fontStylesheet = appShell
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    {!appShell ? <link rel="manifest" href="/site.webmanifest" /> : null}
+    {!activeShell ? <link rel="manifest" href="/site.webmanifest" /> : null}
     <link rel="sitemap" href="/sitemap-index.xml" />
   </head>
   <body
     class:list={[
       'relative min-h-dvh overflow-x-clip text-text',
-      appShell ? 'bg-[#F6F8FB]' : 'bg-bg-base',
+      bodyBgClass,
     ]}
   >
-    {!appShell ? <AmbientBackdrop /> : null}
+    {!activeShell ? <AmbientBackdrop /> : null}
     {
-      !appShell ? (
+      !activeShell ? (
         <a href="#main" class="skip-link">
           Saltar al contenido
         </a>
       ) : null
     }
     <div class="relative z-[1] flex min-h-dvh flex-col">
-      {!appShell ? (caseStudyHeader ? <CaseStudyHeader /> : <Header />) : null}
+      {!activeShell ? (caseStudyHeader ? <CaseStudyHeader /> : <Header />) : null}
       <main
         id="main"
-        class:list={['flex min-h-0 flex-1 flex-col justify-start', !appShell && 'site-shell-main']}
+        class:list={[
+          'flex min-h-0 flex-1 flex-col justify-start',
+          !activeShell && 'site-shell-main',
+        ]}
       >
         <slot />
       </main>
-      {!appShell ? <Footer /> : null}
+      {!activeShell ? <Footer /> : null}
     </div>
 
     {
-      appShell ? null : (
+      activeShell ? null : (
         <script>
           import '@/scripts/fm-anchor-navigation.ts';
           import '@/scripts/smooth-scroll.ts';
