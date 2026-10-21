@@ -1,9 +1,7 @@
 import { ChevronRight, Plus, Trophy, Users, Zap } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
 import LeaderboardHero from '@/components/tournaments/LeaderboardHero';
 import MatchRow from '@/components/tournaments/MatchRow';
 import QuietNumber from '@/components/tournaments/motion/QuietNumber';
-import { lfEaseOut } from '@/components/tournaments/motion/motionConfig';
 import type {
   StandingRow,
   TournamentMatch,
@@ -12,18 +10,10 @@ import type {
 } from '@/lib/tournaments/types';
 
 function Pitch() {
-  const reduced = useReducedMotion() ?? false;
   return (
     <svg className="pitch" viewBox="0 0 410 450" fill="none" stroke="#e5f9c4" strokeWidth="2" aria-hidden>
       <rect x="25" y="25" width="360" height="400" rx="2" />
-      <motion.path
-        d="M25 225h360"
-        stroke="#C5F64C"
-        strokeWidth="1.5"
-        initial={reduced ? false : { pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 0.85 }}
-        transition={{ duration: reduced ? 0 : 0.7, ease: lfEaseOut }}
-      />
+      <path className="pitch-line" d="M25 225h360" stroke="#C5F64C" strokeWidth="1.5" />
       <circle cx="205" cy="225" r="65" />
       <circle cx="205" cy="225" r="3" fill="currentColor" />
       <rect x="111" y="25" width="188" height="68" />

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MotionConfig } from 'motion/react';
 import { Trophy, Users, X } from 'lucide-react';
 import AwardsSheet from '@/components/tournaments/AwardsSheet';
 import ChampionReveal from '@/components/tournaments/motion/ChampionReveal';
@@ -307,6 +308,7 @@ export default function GroupApp({
   );
 
   return (
+    <MotionConfig reducedMotion="never">
     <div>
       <TournamentShell
         groupName={state.group.name}
@@ -409,6 +411,9 @@ export default function GroupApp({
       {composer && canEdit && (
         <MatchComposer
           players={state.group.players}
+          publicId={publicId}
+          matchdayId={state.activeMatchday?.id ?? ''}
+          playedMatches={activeMatches}
           rematch={rematch}
           onClose={() => setComposer(false)}
           onSave={saveMatch}
@@ -477,6 +482,7 @@ export default function GroupApp({
         </div>
       )}
     </div>
+    </MotionConfig>
   );
 }
 

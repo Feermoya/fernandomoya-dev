@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { motion, useAnimation, useReducedMotion } from 'motion/react';
+import { motion, useAnimation } from 'motion/react';
 import { lfDuration, lfEaseOut } from '@/components/tournaments/motion/motionConfig';
 
 type Props = {
@@ -9,7 +9,6 @@ type Props = {
 };
 
 export default function ScoreActionButton({ label, onPress, children }: Props) {
-  const reduced = useReducedMotion() ?? false;
   const controls = useAnimation();
 
   return (
@@ -19,7 +18,7 @@ export default function ScoreActionButton({ label, onPress, children }: Props) {
       animate={controls}
       onClick={() => {
         const changed = onPress();
-        if (!changed || reduced) return;
+        if (!changed) return;
         void controls.start({
           scale: 0.9,
           transition: { duration: lfDuration.press * 0.45, ease: lfEaseOut },

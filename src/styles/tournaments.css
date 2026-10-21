@@ -430,6 +430,12 @@
   pointer-events: none;
 }
 
+.lf .pitch-line {
+  stroke-dasharray: 360;
+  stroke-dashoffset: 360;
+  animation: lf-draw-line 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .lf .hero-noise {
   position: absolute;
   inset: 0;
@@ -1144,13 +1150,27 @@
 .lf .overlay {
   position: fixed;
   inset: 0;
-  background: #050b0dca;
-  backdrop-filter: blur(8px);
+  background: transparent;
   z-index: 100;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 18px;
+}
+
+.lf .overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #050b0dca;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  z-index: 0;
+}
+
+.lf .overlay > * {
+  position: relative;
+  z-index: 1;
 }
 
 .lf .dialog {
@@ -1160,6 +1180,7 @@
   width: min(560px, 100%);
   max-height: min(90dvh, 820px);
   overflow: auto;
+  animation: lf-dialog-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .lf .dialog-top {
@@ -1173,9 +1194,14 @@
 
 .lf .dialog-top h2 {
   font-weight: 900;
-  font-size: 33px;
+  font-size: clamp(26px, 7vw, 33px);
   line-height: 0.95;
   margin: 7px 0 0;
+  min-width: 0;
+}
+
+.lf .close {
+  flex: none;
 }
 
 .lf .dialog-body {
@@ -1225,6 +1251,8 @@
 }
 
 .lf .choice {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -1295,12 +1323,31 @@
   text-align: center;
 }
 
+.lf .goal-call {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -30px;
+  margin: 0;
+  height: 28px;
+  pointer-events: none;
+  text-align: center;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 30px;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  color: var(--lime);
+  animation: lf-gool 0.62s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .lf .score-edit {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 35px 1fr;
   gap: 10px;
   align-items: center;
-  margin: 18px 0 22px;
+  margin: 40px 0 22px;
 }
 
 .lf .score-control {
@@ -1417,6 +1464,139 @@
   color: var(--lime);
 }
 
+.lf .draw-sweep.is-on {
+  animation: lf-sweep 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lf .goal-burst.is-on .goal-ring {
+  animation: lf-ring 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lf .goal-burst.is-on .goal-word {
+  animation: lf-gol 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lf .lineup-line.is-on {
+  animation: lf-line 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lf .versus.is-on {
+  animation: lf-vs 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lf .score-figure b.tick-in-up {
+  animation: lf-tick-in-up 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lf .score-figure b.tick-in-down {
+  animation: lf-tick-in-down 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lf .score-figure b.tick-out-up {
+  animation: lf-tick-out-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lf .score-figure b.tick-out-down {
+  animation: lf-tick-out-down 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lf .result-reveal.is-on > * {
+  animation: lf-rise 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lf .result-reveal.is-on > *:nth-child(2) { animation-delay: 0.08s; }
+.lf .result-reveal.is-on > *:nth-child(3) { animation-delay: 0.16s; }
+.lf .result-reveal.is-on > *:nth-child(4) { animation-delay: 0.24s; }
+.lf .result-reveal.is-on > *:nth-child(5) { animation-delay: 0.32s; }
+
+.lf .result-reveal.is-on .result-line line,
+.lf .champion-mid {
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
+  animation: lf-draw-line 0.78s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lf .champion-card.is-on > * {
+  animation: lf-rise 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.lf .champion-card.is-on > *:nth-child(2) { animation-delay: 0.08s; }
+.lf .champion-card.is-on > *:nth-child(3) { animation-delay: 0.16s; }
+.lf .champion-card.is-on > *:nth-child(4) { animation-delay: 0.24s; }
+.lf .champion-card.is-on > *:nth-child(5) { animation-delay: 0.32s; }
+.lf .champion-card.is-on > *:nth-child(6) { animation-delay: 0.4s; }
+.lf .champion-card.is-on > *:nth-child(7) { animation-delay: 0.48s; }
+
+.lf .score-control button:active {
+  transform: scale(0.9);
+}
+
+@keyframes lf-dialog-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes lf-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@keyframes lf-sweep {
+  from { transform: scaleX(0); opacity: 0.9; }
+  to { transform: scaleX(1); opacity: 0; }
+}
+
+@keyframes lf-ring {
+  from { opacity: 0.9; transform: translate(-50%, -50%) scale(0.35); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+}
+
+@keyframes lf-gool {
+  0% { opacity: 0; transform: translateY(6px) scale(0.94); }
+  16% { opacity: 1; transform: translateY(0) scale(1); }
+  62% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(1.03); }
+}
+
+@keyframes lf-line {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes lf-vs {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes lf-tick-in-up {
+  from { opacity: 0; transform: translateY(70%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lf-tick-in-down {
+  from { opacity: 0; transform: translateY(-70%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lf-tick-out-up {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-70%); }
+}
+
+@keyframes lf-tick-out-down {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(70%); }
+}
+
+@keyframes lf-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes lf-draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
 .lf .score-control.lead-pulse {
   animation: lf-lead 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1443,14 +1623,14 @@
 
 .lf .draw-sweep {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
+  left: 8px;
+  right: 8px;
+  top: 0;
   height: 2px;
   background: var(--lime);
   transform-origin: left center;
   pointer-events: none;
-  z-index: 2;
+  z-index: 0;
 }
 
 .lf .teams-visual {
@@ -1461,11 +1641,18 @@
   position: absolute;
   left: 14px;
   right: 14px;
-  top: 50%;
+  top: 0;
   height: 1px;
   background: #c5f64c66;
   transform-origin: left center;
   pointer-events: none;
+  z-index: 0;
+}
+
+.lf .team-preview,
+.lf .versus {
+  position: relative;
+  z-index: 1;
 }
 
 .lf .match {
@@ -1636,6 +1823,92 @@
   gap: 10px;
 }
 
+.lf .intent-list {
+  display: grid;
+  gap: 10px;
+}
+
+.lf .intent-card {
+  text-align: left;
+  background: #202e2d;
+  border: 1px solid #344743;
+  border-radius: 12px;
+  padding: 16px 14px;
+  min-height: 76px;
+  color: var(--text);
+}
+
+.lf .intent-card strong {
+  display: block;
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 0.95;
+}
+
+.lf .intent-card span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.lf .pair-built {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #354741;
+  border-radius: 11px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: #0f1919;
+}
+
+.lf .fixture-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.lf .fixture-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  border: 1px solid #344743;
+  background: #202e2d;
+  color: #e6eee5;
+  font-weight: 800;
+  font-size: 13px;
+  text-align: left;
+}
+
+.lf .fixture-btn.active {
+  border-color: var(--lime);
+  background: #2a402b;
+}
+
+.lf .fixture-btn small {
+  color: var(--muted);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  flex: none;
+}
+
+.lf .back-link {
+  display: inline-flex;
+  margin-top: 12px;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lf .score-control.lead-pulse,
   .lf .score-edit.level-pulse .score-control,
@@ -1650,6 +1923,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 9px;
+  margin-bottom: 12px;
+}
+
+.lf .form-line .step-label {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.lf .small-btn {
+  flex: none;
 }
 
 .lf .form-submit {
@@ -1875,8 +2159,9 @@
   }
 
   .lf .pitch {
-    width: 84%;
-    right: -170px;
+    width: 92%;
+    right: -70px;
+    opacity: 0.34;
   }
 
   .lf .hero-watermark {
@@ -2007,6 +2292,7 @@
     border-radius: 23px 23px 0 0;
     border-bottom: 0;
     padding-bottom: env(safe-area-inset-bottom);
+    animation: lf-sheet-up 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .lf .dialog::before {
@@ -2016,7 +2302,7 @@
     border-radius: 5px;
     background: #667d6f;
     display: block;
-    margin: 10px auto -8px;
+    margin: 8px auto 0;
   }
 
   .lf .choices {
@@ -2045,15 +2331,6 @@
 
   .lf .match {
     grid-template-columns: 1fr auto 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lf *,
-  .lf *::before,
-  .lf *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
   }
 }
 
