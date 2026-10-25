@@ -8,6 +8,7 @@ import HistoryView from '@/components/tournaments/HistoryView';
 import GroupSettings from '@/components/tournaments/GroupSettings';
 import LiveHome from '@/components/tournaments/LiveHome';
 import MatchComposer from '@/components/tournaments/MatchComposer';
+import TournamentPlanner from '@/components/tournaments/TournamentPlanner';
 import MatchRow from '@/components/tournaments/MatchRow';
 import { FullBoard, StandingList } from '@/components/tournaments/Standings';
 import TournamentShell, { type FechaPage } from '@/components/tournaments/TournamentShell';
@@ -53,6 +54,7 @@ export default function GroupApp({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [composer, setComposer] = useState(false);
+  const [planner, setPlanner] = useState(false);
   const [rematch, setRematch] = useState<{ mode: MatchMode; participants: MatchParticipant[] } | null>(
     null,
   );
@@ -368,6 +370,7 @@ export default function GroupApp({
                   setRematch(null);
                   setComposer(true);
                 }}
+                onPlan={() => setPlanner(true)}
                 onUndo={() => void undo()}
                 freshIds={freshMatchIds}
                 onFreshDone={ackFresh}
@@ -400,6 +403,10 @@ export default function GroupApp({
           onExport={() => void shareCard()}
           onClose={() => setCeremony(null)}
         />
+      )}
+
+      {planner && canEdit && state.activeMatchday && (
+        <TournamentPlanner players={state.group.players} matches={activeMatches} groupId={publicId} matchdayId={state.activeMatchday.id} onClose={() => setPlanner(false)} onPlay={(mode, participants) => { setPlanner(false); setRematch({ mode, participants }); setComposer(true); }} />
       )}
 
       {composer && canEdit && (
@@ -536,6 +543,7 @@ function MatchesPage({
   nameOf,
   canEdit,
   onNew,
+  onPlan,
   onUndo,
   onRematch,
   freshIds,
@@ -548,6 +556,7 @@ function MatchesPage({
   nameOf: (id: string) => string;
   canEdit: boolean;
   onNew: () => void;
+  onPlan: () => void;
   onUndo: () => void;
   onRematch: (mode: MatchMode, participants: MatchParticipant[]) => void;
   freshIds: string[];
@@ -569,9 +578,7 @@ function MatchesPage({
           <p>Cargá quién jugó y cómo terminó. La tabla se actualiza sola.</p>
         </div>
         {canEdit && (
-          <button type="button" className="primary-btn" onClick={onNew}>
-            CARGAR RESULTADO
-          </button>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}><button type="button" className="primary-btn" onClick={onNew}>PARTIDO RÁPIDO</button><button type="button" className="outline-mini" onClick={onPlan}>ORGANIZAR TORNEO</button></div>
         )}
       </div>
       <div className="section-header">
