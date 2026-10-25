@@ -2555,3 +2555,16 @@
 @media (prefers-reduced-motion: reduce) {
   .lf .hero .pitch, .lf .hero .pitch-line, .lf .hero .hero-shine { animation: none !important; will-change: auto; }
 }
+
+/* Racha invicta: movimiento de llama solo con CSS y sin recursos externos. */
+.lf .streak-card{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:14px;margin:0 0 27px;padding:18px 20px;border:1px solid #77522c;border-radius:16px;background:radial-gradient(ellipse at 4% 50%,rgba(245,115,30,.16),transparent 56%),#191f1c;overflow:hidden}
+.lf .streak-fire{width:46px;height:50px;display:grid;place-items:center;color:#ff922b;filter:drop-shadow(0 0 9px rgba(255,102,25,.58));transform-origin:50% 90%;animation:lf-flame-flicker 1.15s ease-in-out infinite alternate}
+.lf .streak-info{display:flex;flex-direction:column;gap:5px;min-width:0}
+.lf .streak-kicker{font-size:10px;letter-spacing:1.25px;font-weight:900;color:#ffad55}
+.lf .streak-name{font-size:clamp(18px,3vw,27px);font-weight:900;line-height:1.05;overflow-wrap:anywhere}
+.lf .streak-detail{font-size:12px;color:#b6bdb4}
+.lf .streak-number{font-family:inherit;font-size:38px;line-height:1;font-weight:950;color:#ffad55;text-align:center;font-variant-numeric:tabular-nums}
+.lf .streak-number small{display:block;margin-top:5px;font-size:9px;font-weight:900;letter-spacing:1px}
+@keyframes lf-flame-flicker{0%{transform:rotate(-7deg) scale(.94,1.05);opacity:.85;filter:drop-shadow(0 0 4px rgba(255,102,25,.45))}50%{transform:rotate(4deg) scale(1.08,.94);opacity:1}100%{transform:rotate(-2deg) scale(.98,1.13);filter:drop-shadow(0 0 13px rgba(255,102,25,.8))}}
+@media(max-width:760px){.lf .streak-card{grid-template-columns:36px minmax(0,1fr) auto;gap:10px;padding:15px 13px}.lf .streak-fire{width:36px}.lf .streak-name{font-size:20px}.lf .streak-number{font-size:31px}.lf .streak-kicker{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.lf .streak-fire{animation:none}}
