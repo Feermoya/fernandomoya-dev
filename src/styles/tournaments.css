@@ -2607,3 +2607,12 @@
   .lf .streak-flame-frame{animation:none;opacity:0}
   .lf .streak-flame-frame-1{opacity:1}
 }
+
+/* PixelFire renders a different flame geometry every 105ms, not a static SVG with glow. */
+.lf .streak-fire-scene{filter:drop-shadow(0 0 8px rgba(255,91,18,.4))}
+.lf .streak-flame-sprite{display:block;image-rendering:pixelated}
+.lf .streak-info{gap:8px}
+.lf .streak-detail{color:#cfc9bd;font-weight:500}
+.lf .streak-detail b{color:#f6e9d8;font-weight:800}
+.lf .streak-challenge{display:block;margin-top:5px;font-family:inherit;font-weight:950;font-size:clamp(16px,2.2vw,22px);letter-spacing:.35px;color:#ffb05a;line-height:1.1}
+@media(max-width:760px){.lf .streak-info{gap:7px}.lf .streak-challenge{font-size:16px}.lf .streak-detail{font-size:12px}.lf .streak-card{grid-template-columns:53px minmax(0,1fr) 45px}.lf .streak-number small{font-size:7px;white-space:normal}}
