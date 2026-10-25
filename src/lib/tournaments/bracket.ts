@@ -38,7 +38,7 @@ export function createKnockout(entrants: BracketEntrant[]): BracketState {
   const first: BracketGame[] = [];
   for (let i = 0; i < size / 2; i++) {
     const home = seeded[i] ?? null;
-    const away = i < byes ? null : seeded[size - 1 - (i - byes)] ?? null;
+    const away = i < byes ? null : seeded[entrants.length - 1 - (i - byes)] ?? null;
     first.push({
       id: `r0-g${i}`, round: 0, slot: i, home, away,
       homeScore: null, awayScore: null, winnerId: away ? null : home?.id ?? null,
