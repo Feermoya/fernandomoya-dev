@@ -342,7 +342,7 @@ export default function TournamentsApp({
             <header className="flex flex-col gap-2">
               <p className="text-sm font-semibold text-[var(--tg-accent)]">Paso 1 de 2</p>
               <h1 className="tg-brand">Nombre del grupo</h1>
-              <p className="tg-lead">Ejemplo: Los Pibes del FIFA.</p>
+              
             </header>
             <label className="tg-field">
               <span className="tg-label">Nombre</span>
@@ -376,9 +376,7 @@ export default function TournamentsApp({
             <header className="flex flex-col gap-2">
               <p className="text-sm font-semibold text-[var(--tg-accent)]">Paso 2 de 2</p>
               <h1 className="tg-brand">Jugadores</h1>
-              <p className="tg-lead">
-                Agregá nombres uno a uno o pegá una lista separada por comas o saltos de línea.
-              </p>
+              <p className="tg-lead">Separá los nombres con comas o saltos de línea.</p>
             </header>
 
             <label className="tg-field">
@@ -447,7 +445,7 @@ export default function TournamentsApp({
             <BackButton onClick={goWelcome} />
             <header className="flex flex-col gap-2">
               <h1 className="tg-brand">Entrar a mi grupo</h1>
-              <p className="tg-lead">Pegá el enlace o el código del grupo.</p>
+              
             </header>
             <label className="tg-field">
               <span className="tg-label">Enlace o código</span>
@@ -570,11 +568,10 @@ function WelcomeView({
           La Fecha
         </p>
         <h1 className="tg-brand">
-          Hoy se <span>juega.</span>
+          LA <span>FECHA</span>
         </h1>
         <p className="tg-lead">
-          Armá el grupo, cargá partidos 1 vs. 1 y 2 vs. 2, y compartí rankings y premios. Sin
-          cuentas ni emails.
+          Partidos 1 vs 1 y 2 vs 2 · torneos y rankings.
         </p>
       </div>
 
