@@ -43,7 +43,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
   const active = players.filter((p) => p.active);
   const [mode, setMode] = useState<MatchMode>('solo');
   const [format, setFormat] = useState<Format>('round-robin');
-  const [selected, setSelected] = useState<string[]>(active.map((p) => p.id));
+  const [selected, setSelected] = useState<string[]>(() => players.filter((p) => p.active).map((p) => p.id));
   const [plan, setPlan] = useState<Plan | null>(null);
   const [message, setMessage] = useState('');
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
       const rounds = [...new Set(games.map((g) => g.round))].map((round) =>
         games.filter((g) => g.round === round).map((g, i) => {
           const result = findResult(matches, g.home, g.away, used);
-          return { id: `r${round}-${i}`, home: g.home, away: g.away, score: result ? `${result.a} – ${result.b}` : 'Pendiente', done: Boolean(result?.complete) };
+          return { id: `r${round}-${i}`, home: g.home, away: g.away, score: result ? `${result.a} – ${result.b}` : 'Pendiente', done: Boolean(result) };
         }));
       return { rounds, champion: '' };
     }
