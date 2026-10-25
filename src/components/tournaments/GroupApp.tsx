@@ -339,6 +339,7 @@ export default function GroupApp({
                     setRematch(null);
                     setComposer(true);
                   }}
+                  onPlan={() => setPlanner(true)}
                   onStart={() => void startMatchday()}
                   onSeeRanking={() => setPage('ranking')}
                   onSeeMatches={() => setPage('partidos')}
