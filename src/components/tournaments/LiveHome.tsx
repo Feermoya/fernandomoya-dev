@@ -1,4 +1,4 @@
-import { ChevronRight, Plus, Trophy, Users, Zap } from 'lucide-react';
+import { ChevronRight, Flame, Plus, Trophy, Users, Zap } from 'lucide-react';
 import LeaderboardHero from '@/components/tournaments/LeaderboardHero';
 import MatchRow from '@/components/tournaments/MatchRow';
 import QuietNumber from '@/components/tournaments/motion/QuietNumber';
@@ -30,6 +30,7 @@ export default function LiveHome({
   players,
   leader,
   leaderWins,
+  streakLeader,
   isAdmin,
   mvpName,
   nameOf,
@@ -50,6 +51,7 @@ export default function LiveHome({
   players: TournamentPlayer[];
   leader: StandingRow | null;
   leaderWins: number;
+  streakLeader: { row: StandingRow; mode: 'solo' | 'pairsPlayer' | 'pairs' } | null;
   isAdmin: boolean;
   mvpName?: string;
   nameOf: (id: string) => string;
@@ -176,6 +178,17 @@ export default function LiveHome({
         </div>
       </section>
 
+      {streakLeader && streakLeader.row.undefeatedRun >= 2 && (
+        <div className="streak-card" aria-label={`Racha invicta de ${streakLeader.row.label}: ${streakLeader.row.undefeatedRun} partidos`}>
+          <span className="streak-fire" aria-hidden="true"><Flame size={32} strokeWidth={2.2} /></span>
+          <div className="streak-info">
+            <span className="streak-kicker">RACHA INVICTA · {streakLeader.mode === 'solo' ? '1 VS 1' : streakLeader.mode === 'pairs' ? 'PAREJA 2 VS 2' : 'JUGADOR 2 VS 2'}</span>
+            <strong className="streak-name">{streakLeader.row.label}</strong>
+            <span className="streak-detail">{streakLeader.row.undefeatedRun} partidos sin perder</span>
+          </div>
+          <div className="streak-number" aria-hidden="true">{streakLeader.row.undefeatedRun}<small>INVICTO</small></div>
+        </div>
+      )}
       <div className="section-header">
         <h2 className="section-title">Líder actual</h2>
         <button type="button" className="section-link" onClick={onSeeRanking}>
