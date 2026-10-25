@@ -280,7 +280,7 @@ export default function GroupApp({
 
   const finished = state.activeMatchday?.status === 'finished';
   const canEdit = Boolean(state.isAdmin && state.activeMatchday && !finished);
-  const rankings = state.rankings[scope];
+  const rankings = scope === 'annual' ? annualRankings ?? state.rankings.annual : state.rankings[scope];
   const leader = rankings.pairs[0] ?? rankings.solo[0] ?? null;
   const mvp = state.awards.find(
     (a) => a.matchdayId === state.activeMatchday?.id && a.awardType === 'mvp',
@@ -395,6 +395,9 @@ export default function GroupApp({
                 scope={scope}
                 setScope={setScope}
                 rankings={rankings}
+                year={year}
+                years={years}
+                setYear={setYear}
               />
             )}
             {page === 'historial' && (
