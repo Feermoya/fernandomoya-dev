@@ -2616,3 +2616,23 @@
 .lf .streak-detail b{color:#f6e9d8;font-weight:800}
 .lf .streak-challenge{display:block;margin-top:5px;font-family:inherit;font-weight:950;font-size:clamp(16px,2.2vw,22px);letter-spacing:.35px;color:#ffb05a;line-height:1.1}
 @media(max-width:760px){.lf .streak-info{gap:7px}.lf .streak-challenge{font-size:16px}.lf .streak-detail{font-size:12px}.lf .streak-card{grid-template-columns:53px minmax(0,1fr) 45px}.lf .streak-number small{font-size:7px;white-space:normal}}
+
+/* The flame itself moves on mobile: sprite frames + visible pixelated flicker.
+   This explicit game animation is kept active even when system UI motion is reduced. */
+.lf .streak-flame-sprite{
+  transform-origin:50% 100%;
+  animation:lf-game-fire-flicker .66s steps(1,end) infinite !important;
+  will-change:transform;
+}
+.lf .streak-fire-scene{overflow:visible}
+@keyframes lf-game-fire-flicker{
+  0%,100%{transform:translate3d(0,0,0) scale(1,1)}
+  16%{transform:translate3d(-3px,-5px,0) scale(.92,1.09)}
+  33%{transform:translate3d(3px,-2px,0) scale(1.07,1.03)}
+  50%{transform:translate3d(-2px,-7px,0) scale(.87,1.13)}
+  66%{transform:translate3d(2px,1px,0) scale(1.1,.96)}
+  83%{transform:translate3d(-1px,-3px,0) scale(.96,1.06)}
+}
+@media(prefers-reduced-motion:reduce){
+  .lf .streak-flame-sprite{animation:lf-game-fire-flicker .66s steps(1,end) infinite !important}
+}
