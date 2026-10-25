@@ -115,6 +115,7 @@ export type GroupState = {
   rankings: {
     matchday: RankingsBundle;
     allTime: RankingsBundle;
+    annual: RankingsBundle;
   };
   achievements: Achievement[];
 };
