@@ -151,8 +151,8 @@ export default function LiveHome({
                   <Plus size={16} /> CARGAR RESULTADO <ChevronRight size={16} />
                 </button>
               )}
-              {isAdmin && matchday && !finished && (
-                <button type="button" className="outline-mini" onClick={onPlan}>ORGANIZAR TORNEO</button>
+              {matchday && !finished && (
+                <button type="button" className="outline-mini" onClick={onPlan}>{isAdmin ? 'ORGANIZAR TORNEO' : 'VER CRUCES'}</button>
               )}
               {isAdmin && !matchday && (
                 <button type="button" className="primary-btn" onClick={onStart}>
