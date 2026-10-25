@@ -61,11 +61,9 @@ export default function GroupApp({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pairs' | 'solo'>('all');
-  const [rankKind, setRankKind] = useState<'pairs' | 'pairsPlayer' | 'solo'>('pairs');
   const [scope, setScope] = useState<'matchday' | 'allTime'>('matchday');
   const [secret, setSecret] = useState('');
   const [closing, setClosing] = useState(false);
-  const [mvpId, setMvpId] = useState('');
   const [bestGoalId, setBestGoalId] = useState('');
   const [bestGoalNote, setBestGoalNote] = useState('');
   const seenMatchIds = useRef<Set<string> | null>(null);
@@ -117,7 +115,6 @@ export default function GroupApp({
   useEffect(() => {
     if (!state?.activeMatchday) return;
     const awards = state.awards.filter((a) => a.matchdayId === state.activeMatchday!.id);
-    setMvpId(awards.find((a) => a.awardType === 'mvp')?.playerId ?? '');
     setBestGoalId(awards.find((a) => a.awardType === 'best_goal')?.playerId ?? '');
     setBestGoalNote(awards.find((a) => a.awardType === 'best_goal')?.note ?? '');
   }, [state?.activeMatchday?.id, state?.awards]);
@@ -182,14 +179,13 @@ export default function GroupApp({
   }
 
   async function persistAwards(
-    payload: { mvpId: string; bestGoalId: string; bestGoalNote: string },
+    payload: { bestGoalId: string; bestGoalNote: string },
     finish: boolean,
   ) {
     if (!state?.activeMatchday) return;
     setClosing(true);
     try {
       const awards = [];
-      if (payload.mvpId) awards.push({ awardType: 'mvp', playerId: payload.mvpId });
       if (payload.bestGoalId) {
         awards.push({
           awardType: 'best_goal',
@@ -385,9 +381,7 @@ export default function GroupApp({
               <RankingPage
                 scope={scope}
                 setScope={setScope}
-                kind={rankKind}
-                setKind={setRankKind}
-                rows={rankings[rankKind]}
+                rankings={rankings}
               />
             )}
             {page === 'historial' && (
@@ -424,7 +418,6 @@ export default function GroupApp({
       {awardsOpen && state.isAdmin && state.activeMatchday && (
         <AwardsSheet
           players={state.group.players}
-          mvpId={mvpId}
           bestGoalId={bestGoalId}
           bestGoalNote={bestGoalNote}
           busy={closing}
@@ -644,75 +637,34 @@ function MatchesPage({
 function RankingPage({
   scope,
   setScope,
-  kind,
-  setKind,
-  rows,
+  rankings,
 }: {
   scope: 'matchday' | 'allTime';
   setScope: (v: 'matchday' | 'allTime') => void;
-  kind: 'pairs' | 'pairsPlayer' | 'solo';
-  setKind: (v: 'pairs' | 'pairsPlayer' | 'solo') => void;
-  rows: StandingRow[];
+  rankings: GroupState['rankings']['matchday'];
 }) {
   return (
     <>
       <div className="page-intro">
         <div>
           <div className="eyebrow">La competencia</div>
-          <h1 className="page-title">La tabla</h1>
-          <p className="page-desc">Los números no mienten. Las excusas tampoco.</p>
+          <h1 className="page-title">Ranking</h1>
+          <p className="page-desc">Los que mandan en la cancha.</p>
         </div>
       </div>
-      <div className="inner-hero">
-        <div>
-          <span className="small-lime">La competencia</span>
-          <h2>
-            Que hable
-            <br />
-            la tabla.
-          </h2>
-          <p>Victorias, derrotas y los que todavía no perdieron.</p>
-        </div>
+      <div className="tab-row" role="group" aria-label="Período del ranking">
+        <button type="button" className={`tab ${scope === 'matchday' ? 'active' : ''}`} aria-pressed={scope === 'matchday'} onClick={() => setScope('matchday')}>Esta fecha</button>
+        <button type="button" className={`tab ${scope === 'allTime' ? 'active' : ''}`} aria-pressed={scope === 'allTime'} onClick={() => setScope('allTime')}>Histórico</button>
       </div>
-      <div className="tab-row">
-        <button
-          type="button"
-          className={`tab ${scope === 'matchday' ? 'active' : ''}`}
-          onClick={() => setScope('matchday')}
-        >
-          Esta fecha
-        </button>
-        <button
-          type="button"
-          className={`tab ${scope === 'allTime' ? 'active' : ''}`}
-          onClick={() => setScope('allTime')}
-        >
-          Historial
-        </button>
-      </div>
-      <div className="tab-row">
-        {(
-          [
-            ['pairs', 'Parejas'],
-            ['pairsPlayer', 'Jugadores 2vs2'],
-            ['solo', '1 vs 1'],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            className={`tab ${kind === id ? 'active' : ''}`}
-            onClick={() => setKind(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      <FullBoard key={`${kind}-${scope}`} rows={rows} kind={kind} />
-      <p className="hint">
-        Cada ranking vive aparte. Las parejas se agrupan aunque cambien de orden. La diferencia de
-        goles solo existe cuando hay marcador.
-      </p>
+      <section aria-label="Ranking individual">
+        <div className="section-header"><h2 className="section-title">Mejor jugador · 1 vs 1</h2></div>
+        <FullBoard rows={rankings.solo} kind="solo" />
+      </section>
+      <section aria-label="Ranking de parejas" style={{ marginTop: 30 }}>
+        <div className="section-header"><h2 className="section-title">Mejor pareja · 2 vs 2</h2></div>
+        <FullBoard rows={rankings.pairs} kind="pairs" />
+      </section>
+      <p className="hint">Cada modalidad tiene su propia clasificación. El histórico incluye todas las fechas; la clasificación anual se incorporará por temporada.</p>
     </>
   );
 }
