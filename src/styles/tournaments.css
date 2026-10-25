@@ -2568,3 +2568,15 @@
 @keyframes lf-flame-flicker{0%{transform:rotate(-7deg) scale(.94,1.05);opacity:.85;filter:drop-shadow(0 0 4px rgba(255,102,25,.45))}50%{transform:rotate(4deg) scale(1.08,.94);opacity:1}100%{transform:rotate(-2deg) scale(.98,1.13);filter:drop-shadow(0 0 13px rgba(255,102,25,.8))}}
 @media(max-width:760px){.lf .streak-card{grid-template-columns:36px minmax(0,1fr) auto;gap:10px;padding:15px 13px}.lf .streak-fire{width:36px}.lf .streak-name{font-size:20px}.lf .streak-number{font-size:31px}.lf .streak-kicker{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.lf .streak-fire{animation:none}}
+
+/* Pixel-art fire sprite: pixelated SVG data shapes, animated in stepped game frames. */
+.lf .streak-pixel-fire{position:relative;display:block;width:48px;height:56px;flex:none;overflow:visible;image-rendering:pixelated}
+.lf .streak-pixel-fire::before,.lf .streak-pixel-fire::after,.lf .streak-pixel-fire-core{content:"";position:absolute;display:block;image-rendering:pixelated;transform-origin:center bottom}
+.lf .streak-pixel-fire::before{inset:0;background:#ff4b1b;clip-path:polygon(42% 0,58% 0,58% 18%,75% 18%,75% 33%,92% 33%,92% 61%,100% 61%,100% 83%,83% 83%,83% 96%,17% 96%,17% 83%,0 83%,0 55%,17% 55%,17% 35%,33% 35%,33% 17%,42% 17%);animation:lf-pixel-outer .72s steps(1,end) infinite;filter:drop-shadow(0 0 7px #f85c1b)}
+.lf .streak-pixel-fire::after{left:9px;top:14px;width:31px;height:38px;background:#ffac28;clip-path:polygon(42% 0,65% 0,65% 23%,82% 23%,82% 47%,100% 47%,100% 79%,81% 79%,81% 100%,19% 100%,19% 84%,0 84%,0 47%,20% 47%,20% 25%,42% 25%);animation:lf-pixel-middle .6s steps(1,end) infinite}
+.lf .streak-pixel-fire-core{z-index:1;left:17px;bottom:4px;width:17px;height:27px;background:#ffe16b;clip-path:polygon(35% 0,70% 0,70% 35%,100% 35%,100% 100%,0 100%,0 46%,35% 46%);animation:lf-pixel-core .48s steps(1,end) infinite}
+@keyframes lf-pixel-outer{0%,100%{transform:translate(0,0) scaleX(1)}25%{transform:translate(2px,3px) scaleX(.85)}50%{transform:translate(-2px,-3px) scaleX(1.08)}75%{transform:translate(1px,1px) scaleX(.93)}}
+@keyframes lf-pixel-middle{0%,100%{transform:translateY(0) scaleX(1)}33%{transform:translate(2px,-4px) scaleX(.83)}66%{transform:translate(-2px,2px) scaleX(1.06)}}
+@keyframes lf-pixel-core{0%,100%{transform:translateY(0) scaleX(1)}50%{transform:translateY(-4px) scaleX(.76)}}
+@media(max-width:760px){.lf .streak-pixel-fire{width:36px;height:48px;transform:scale(.82);transform-origin:left center}}
+@media(prefers-reduced-motion:reduce){.lf .streak-pixel-fire::before,.lf .streak-pixel-fire::after,.lf .streak-pixel-fire-core{animation:none}}
