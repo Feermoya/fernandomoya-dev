@@ -99,7 +99,7 @@ function snapshot(): GroupState {
     activeMatchday,
     matches: store.matches.slice(),
     awards: store.awards.slice(),
-    rankings: { matchday, allTime },
+    rankings: { matchday, allTime, annual: computeRankingsBundle(store.matches.filter((m) => { const day = store.matchdays.find((d) => d.id === m.matchdayId); return day && new Date(day.startedAt ?? day.createdAt).getFullYear() === new Date().getFullYear(); }), store.players) },
     achievements: computeAchievements({ matchday, allTime, players: store.players }),
   };
 }
