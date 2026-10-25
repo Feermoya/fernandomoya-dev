@@ -2494,3 +2494,64 @@
     gap: 10px;
   }
 }
+
+/* Home compacta: información útil, cancha animada sin imágenes ni JavaScript. */
+.lf .hero .pitch {
+  transform: translate3d(0, 0, 0) rotate(-18deg);
+  will-change: transform;
+  animation: lf-pitch-drift 16s ease-in-out infinite alternate;
+}
+.lf .hero .pitch-line {
+  stroke-dasharray: 16 9;
+  stroke-dashoffset: 0;
+  animation: lf-pitch-trace 14s linear infinite;
+}
+.lf .hero .hero-shine {
+  animation: lf-pitch-glow 12s ease-in-out infinite alternate;
+}
+.lf .hero .hero-title {
+  line-height: .94;
+  margin: 0;
+  font-size: clamp(58px, 7vw, 98px);
+}
+.lf .hero .hero-inner {
+  justify-content: flex-end;
+  gap: 20px;
+}
+.lf .hero .hero-kicker { margin-bottom: auto; }
+.lf .hero .hero-bottom { margin-top: 0; gap: 10px; }
+.lf .hero .hero-bottom .primary-btn { flex: 0 1 auto; }
+@keyframes lf-pitch-drift {
+  from { transform: translate3d(-8px, -6px, 0) rotate(-19deg) scale(1.02); }
+  to { transform: translate3d(10px, 10px, 0) rotate(-15deg) scale(1.07); }
+}
+@keyframes lf-pitch-trace { to { stroke-dashoffset: -200; } }
+@keyframes lf-pitch-glow { to { opacity: .45; transform: translate3d(-20px, 20px, 0); } }
+@media (max-width: 760px) {
+  /* iOS Safari: la barra sticky no debe ocultar el primer título. */
+  .lf .mobile-head {
+    box-sizing: content-box;
+    height: 64px;
+    padding-top: env(safe-area-inset-top, 0px);
+    top: 0;
+    scroll-margin-top: 0;
+  }
+  .lf .layout {
+    padding-top: 14px;
+    scroll-margin-top: calc(78px + env(safe-area-inset-top, 0px));
+  }
+  .lf .hero { min-height: 310px; }
+  .lf .hero .hero-inner { min-height: 310px; padding: 22px 20px; gap: 22px; }
+  .lf .hero .hero-title { font-size: clamp(48px, 13.5vw, 72px); }
+  .lf .hero .pitch { width: 105%; right: -50px; top: -100px; opacity: .29; }
+  .lf .hero .hero-bottom { display: grid; grid-template-columns: 1fr; width: 100%; }
+  .lf .hero .hero-bottom .primary-btn,
+  .lf .hero .hero-bottom .outline-mini { width: 100%; justify-content: center; }
+  .lf .stat-strip { margin-top: 12px; margin-bottom: 24px; }
+  .lf .stat-icon { width: 30px; height: 30px; }
+  .lf .stat { gap: 6px; }
+  .lf .stat .number { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lf .hero .pitch, .lf .hero .pitch-line, .lf .hero .hero-shine { animation: none !important; will-change: auto; }
+}
