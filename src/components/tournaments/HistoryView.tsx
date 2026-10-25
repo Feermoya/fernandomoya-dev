@@ -1,4 +1,4 @@
-import { Calendar, Trophy } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import type { TournamentMatch, TournamentMatchday } from '@/lib/tournaments/types';
 
 export default function HistoryView({
@@ -14,27 +14,23 @@ export default function HistoryView({
     <>
       <div className="page-intro">
         <div>
-          <div className="eyebrow">Estadísticas y recuerdos</div>
-          <h1 className="page-title">Las noches quedan</h1>
-          <p className="page-desc">Resultados, campeones y premios de cada fecha.</p>
+
+          <h1 className="page-title">Historial</h1>
+
         </div>
       </div>
       <div className="inner-hero">
         <div>
-          <span className="small-lime">Historial del grupo</span>
-          <h2>
-            Cada fecha
-            <br />
-            deja marca.
-          </h2>
-          <p>Las noches pasan. Los resultados quedan.</p>
+
+          <h2>Fechas registradas: {matchdays.length}</h2>
+
         </div>
-        <Trophy size={48} color="#ffcc75" />
+
       </div>
       {matchdays.length === 0 ? (
         <div className="empty">
-          <h3>Recién empieza</h3>
-          <p>Cuando termines una fecha, vas a tener el primer registro acá.</p>
+          <h3>Sin fechas registradas</h3>
+          
         </div>
       ) : (
         matchdays.map((day) => {
@@ -51,9 +47,9 @@ export default function HistoryView({
                 <div className="date">
                   {day.name} · {closed ? 'FINALIZADA' : 'EN JUEGO'}
                 </div>
-                <h3>{closed ? 'Noche cerrada' : 'La noche sigue'}</h3>
+                <h3>{count} partidos</h3>
                 <div className="detail">
-                  {count} partidos · {closed ? 'Fecha cerrada' : 'En vivo'}
+                  {closed ? 'Finalizada' : 'En juego'}
                 </div>
               </div>
               <Calendar size={28} color="#c5f64c" />
