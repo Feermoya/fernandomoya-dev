@@ -47,6 +47,9 @@ export async function loadGroupState(
 
   const allTime = computeRankingsBundle(matchesResult.data, group.players);
   const matchdayRankings = computeRankingsBundle(activeMatches, group.players);
+  const currentYear = new Date().getFullYear();
+  const yearDayIds = new Set(matchdays.filter((day) => new Date(day.startedAt ?? day.createdAt).getFullYear() === currentYear).map((day) => day.id));
+  const annual = computeRankingsBundle(matchesResult.data.filter((match) => yearDayIds.has(match.matchdayId)), group.players);
   const achievements = computeAchievements({
     matchday: matchdayRankings,
     allTime,
@@ -65,6 +68,7 @@ export async function loadGroupState(
       rankings: {
         matchday: matchdayRankings,
         allTime,
+        annual,
       },
       achievements,
     },
