@@ -35,7 +35,7 @@ export default function AwardsSheet({
       >
         <div className="dialog-top">
           <div>
-            <div className="dialog-kicker">El tercer tiempo</div>
+            <div className="dialog-kicker">Premios</div>
             <h2>Cerrar la fecha</h2>
           </div>
           <button type="button" className="close" onClick={onClose} aria-label="Cerrar">
