@@ -285,7 +285,7 @@ export default function MatchComposer({
       >
         <div className="dialog-top">
           <div>
-            <div className="dialog-kicker">{phase === 'success' ? 'Final' : 'Nuevo encuentro'}</div>
+            <div className="dialog-kicker">{phase === 'success' ? 'Resultado guardado' : 'Partido'}</div>
             <h2>{title}</h2>
           </div>
           <button
@@ -334,7 +334,7 @@ export default function MatchComposer({
                   <Shuffle size={14} /> AL AZAR
                 </button>
               </div>
-              <p className="choose-status">Tocá dos nombres para juntarlos, o sorteá la noche.</p>
+              <p className="choose-status">Seleccioná dos jugadores por pareja o usá el sorteo.</p>
               <div className={`choices${ceremony > 0 ? ' is-drawing' : ''}`}>
                 {ceremony > 0 && <span key={ceremony} className="draw-sweep is-on" aria-hidden />}
                 {unpaired.map((player) => (
