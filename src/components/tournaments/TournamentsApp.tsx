@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, Trophy } from 'lucide-react';
+import { ChevronLeft, Copy, Share2, ShieldCheck, Trophy } from 'lucide-react';
 import {
   extractPublicIdFromInput,
   parsePlayerNamesInput,
@@ -460,12 +460,12 @@ export default function TournamentsApp({
               />
             </label>
             <label className="tg-field">
-              <span className="tg-label">Secreto de organizador (opcional)</span>
+              <span className="tg-label">Código de organizador (opcional)</span>
               <input
                 className="tg-input"
                 value={adminSecretInput}
                 onChange={(e) => setAdminSecretInput(e.target.value)}
-                placeholder="Solo si querés editar"
+                placeholder="6 dígitos para administrar (o tu código anterior)"
                 autoComplete="off"
               />
             </label>
@@ -656,44 +656,58 @@ function CredentialsView({
   viewUrl: string;
   onContinue: () => void;
 }) {
+  const [copied, setCopied] = useState('');
+  const [saved, setSaved] = useState(false);
+  const privateInfo = `LA FECHA · ${group.name}\\nAcceso organizador: ${adminSecret}\\n${recoveryKey ? `Recuperación: ${recoveryKey}\\n` : 'Conservá tu clave de recuperación anterior.\\n'}Enlace: ${viewUrl}`;
+  async function copy(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(label);
+    } catch {
+      setCopied('No se pudo copiar. Seleccioná el texto manualmente.');
+    }
+  }
   return (
     <section className="mx-auto flex max-w-lg flex-col gap-6 py-6">
       <header className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-[var(--tg-accent)]">Grupo listo</p>
         <h1 className="tg-brand">{group.name}</h1>
         <p className="tg-lead">
-          Guardá estos datos ahora. El secreto de organizador y la clave de recuperación no se
-          vuelven a mostrar.
+          Compartí el enlace con tus amigos y guardá tus claves privadas antes de continuar.
         </p>
       </header>
 
-      <div className="tg-panel flex flex-col gap-2">
-        <p className="tg-label">Enlace para compartir (solo lectura)</p>
-        <p className="tg-secret-box">{viewUrl}</p>
+      <div className="tg-panel flex flex-col gap-3">
+        <p className="tg-label">1. Compartí con tus amigos</p>
+        <p className="tg-nav-hint">Con este enlace pueden entrar y ver los resultados. No necesitan contraseña.</p>
+        <p className="tg-secret-box" style={{ overflowWrap: 'anywhere' }}>{viewUrl}</p>
+        <button type="button" className="tg-btn tg-btn-secondary" onClick={() => void copy(viewUrl, 'Enlace copiado')}><Copy size={16} /> Copiar enlace</button>
+        <a className="tg-btn tg-btn-secondary" href={`https://wa.me/?text=${encodeURIComponent(`Entrá a nuestro grupo de LA FECHA: ${viewUrl}`)}`} target="_blank" rel="noopener noreferrer"><Share2 size={16} /> Compartir por WhatsApp</a>
       </div>
-
-      <div className="tg-panel flex flex-col gap-2">
-        <p className="tg-label">Secreto de organizador</p>
-        <p className="tg-secret-box">{adminSecret}</p>
-      </div>
-
-      {recoveryKey ? (
-        <div className="tg-panel flex flex-col gap-2">
-          <p className="tg-label">Clave de recuperación</p>
-          <p className="tg-secret-box">{recoveryKey}</p>
-          <p className="tg-nav-hint">
-            Si perdés el secreto de organizador, esta clave es la única forma de recuperar la
-            edición.
-          </p>
+      <div className="tg-panel flex flex-col gap-3">
+        <p className="tg-label">2. Guardá tus claves privadas</p>
+        <p className="tg-nav-hint">No compartas estos datos en el grupo. Solo los necesita quien organiza los partidos.</p>
+        <div>
+          <p className="tg-label">Código de organizador</p>
+          <p className="tg-nav-hint">Permite cargar partidos, editar y cerrar fechas.</p>
+          <p className="tg-secret-box">{adminSecret}</p>
         </div>
-      ) : (
-        <p className="tg-nav-hint">
-          La clave de recuperación no cambió. Seguí usando la que guardaste al crear el grupo.
-        </p>
-      )}
-
-      <button type="button" className="tg-btn tg-btn-primary" onClick={onContinue}>
-        Ir al grupo
+        {recoveryKey ? (
+          <div>
+            <p className="tg-label">Clave de recuperación</p>
+            <p className="tg-nav-hint">Sirve para recuperar el control si perdés el código de organizador.</p>
+            <p className="tg-secret-box" style={{ overflowWrap: 'anywhere' }}>{recoveryKey}</p>
+          </div>
+        ) : <p className="tg-nav-hint">Tu clave de recuperación anterior sigue vigente.</p>}
+        <button type="button" className="tg-btn tg-btn-secondary" onClick={() => void copy(privateInfo, 'Datos privados copiados')}><Copy size={16} /> Copiar todos mis datos privados</button>
+      </div>
+      {copied && <p className="tg-nav-hint" role="status">{copied}</p>}
+      <label className="flex items-start gap-3 text-sm">
+        <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
+        <span>Guardé mi código de organizador y mi clave de recuperación en un lugar privado.</span>
+      </label>
+      <button type="button" className="tg-btn tg-btn-primary" disabled={!saved} onClick={onContinue}>
+        <ShieldCheck size={17} /> Ir al grupo
       </button>
     </section>
   );
