@@ -34,6 +34,7 @@ export default function LiveHome({
   mvpName,
   nameOf,
   onLoadMatch,
+  onPlan,
   onStart,
   onSeeRanking,
   onSeeMatches,
@@ -53,6 +54,7 @@ export default function LiveHome({
   mvpName?: string;
   nameOf: (id: string) => string;
   onLoadMatch: () => void;
+  onPlan: () => void;
   onStart: () => void;
   onSeeRanking: () => void;
   onSeeMatches: () => void;
@@ -148,6 +150,9 @@ export default function LiveHome({
                 <button type="button" className="primary-btn" onClick={onLoadMatch}>
                   <Plus size={16} /> CARGAR RESULTADO <ChevronRight size={16} />
                 </button>
+              )}
+              {isAdmin && matchday && !finished && (
+                <button type="button" className="outline-mini" onClick={onPlan}>ORGANIZAR TORNEO</button>
               )}
               {isAdmin && !matchday && (
                 <button type="button" className="primary-btn" onClick={onStart}>
