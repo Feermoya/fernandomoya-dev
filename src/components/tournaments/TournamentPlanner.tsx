@@ -4,7 +4,7 @@ import { createKnockout, createRoundRobin, recordKnockoutResult, type BracketEnt
 import type { TournamentClientApi } from '@/lib/tournaments/clientApi';
 import type { MatchMode, MatchParticipant, TournamentMatch, TournamentPlayer } from '@/lib/tournaments/types';
 
-type Format = BracketFormat | 'semifinal';
+type Format = BracketFormat | 'semifinal' | 'groups';
 type Plan = { mode: MatchMode; format: Format; entrants: BracketEntrant[] };
 type Props = {
   players: TournamentPlayer[];
@@ -72,6 +72,39 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
   const fixtures = useMemo(() => {
     if (!plan) return { rounds: [] as Array<Array<{ id: string; home: BracketEntrant | null; away: BracketEntrant | null; score: string; done: boolean }>>, champion: '' };
     const used = new Set<string>();
+    if (plan.format === 'groups') {
+      const groups = [plan.entrants.filter((_, i) => i % 2 === 0), plan.entrants.filter((_, i) => i % 2 === 1)];
+      const scores = new Map<string, { points: number; diff: number; goals: number }>();
+      for (const entry of plan.entrants) scores.set(entry.id, { points: 0, diff: 0, goals: 0 });
+      let complete = true;
+      const rounds = groups.map((entrants, groupIndex) => {
+        const games = createRoundRobin(entrants);
+        return games.map((g, i) => {
+          const result = findResult(matches, g.home, g.away, used);
+          if (!result) complete = false;
+          if (result) {
+            const a = scores.get(g.home.id)!;
+            const b = scores.get(g.away.id)!;
+            a.points += result.a > result.b ? 3 : result.a === result.b ? 1 : 0;
+            b.points += result.b > result.a ? 3 : result.a === result.b ? 1 : 0;
+            a.diff += result.a - result.b; b.diff += result.b - result.a;
+            a.goals += result.a; b.goals += result.b;
+          }
+          return { id: `group-${groupIndex}-${i}`, home: g.home, away: g.away, score: result ? `${result.a} – ${result.b}` : 'Pendiente', done: Boolean(result) };
+        });
+      });
+      if (complete) {
+        const sorted = groups.map((entrants) => [...entrants].sort((a, b) => {
+          const x = scores.get(a.id)!; const y = scores.get(b.id)!;
+          return y.points - x.points || y.diff - x.diff || y.goals - x.goals || a.id.localeCompare(b.id);
+        }));
+        const finalists = [sorted[0]![0]!, sorted[1]![0]!];
+        const result = findResult(matches, finalists[0], finalists[1], used);
+        rounds.push([{ id: 'group-final', home: finalists[0], away: finalists[1], score: result ? `${result.a} – ${result.b}` : 'Pendiente', done: Boolean(result?.complete) }]);
+        return { rounds, champion: result?.complete ? (result.a > result.b ? finalists[0].label : finalists[1].label) : '' };
+      }
+      return { rounds, champion: '' };
+    }
     if (plan.format === 'round-robin') {
       const games = createRoundRobin(plan.entrants);
       const rounds = [...new Set(games.map((g) => g.round))].map((round) =>
@@ -96,6 +129,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
   async function start() {
     if (mode === 'pairs' && selected.length % 2) { setMessage('Para parejas, seleccioná una cantidad par de jugadores.'); return; }
     if (entries.length < 2) { setMessage('Seleccioná al menos dos participantes o parejas.'); return; }
+    if (format === 'groups' && entries.length < 4) { setMessage('Se necesitan al menos cuatro participantes para fase de grupos.'); return; }
     if (format === 'semifinal' && entries.length !== 4) { setMessage('Las semifinales necesitan exactamente cuatro jugadores o parejas.'); return; }
     const next: Plan = { mode, format, entrants: entries };
     try { await api.savePlan(matchdayId, next); setPlan(next); } catch { setMessage('No se pudo guardar el cuadro compartido.'); }
@@ -114,7 +148,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
             <div className="step-label">01 / Modalidad</div>
             <div className="mode-choice">{(['solo','pairs'] as const).map((value) => <button key={value} type="button" className={mode === value ? 'active' : ''} onClick={() => setMode(value)}>{value === 'solo' ? '1 VS 1' : '2 VS 2'}</button>)}</div>
             <div className="step-label">02 / Formato</div>
-            <div className="mode-choice" style={{ flexWrap: 'wrap' }}>{([['round-robin','Todos contra todos'],['knockout','Eliminación directa'],['semifinal','Semifinales y final']] as const).map(([value,label]) => <button key={value} type="button" className={format === value ? 'active' : ''} onClick={() => setFormat(value)}>{label}</button>)}</div>
+            <div className="mode-choice" style={{ flexWrap: 'wrap' }}>{([['round-robin','Todos contra todos'],['knockout','Eliminación directa'],['semifinal','Semifinales y final'],['groups','Grupos + final']] as const).map(([value,label]) => <button key={value} type="button" className={format === value ? 'active' : ''} onClick={() => setFormat(value)}>{label}</button>)}</div>
             <div className="form-line"><div className="step-label">03 / Participantes ({selected.length})</div><button type="button" className="small-btn" onClick={() => setSelected((ids) => [...ids].sort(() => Math.random() - 0.5))}><Shuffle size={14}/> MEZCLAR</button></div>
             <p className="hint">Tocá para incluir o excluir. En 2 vs 2, cada dos nombres consecutivos forman una pareja.</p>
             <div className="choices">{active.map((p) => <button type="button" key={p.id} className={`tg-chip ${selected.includes(p.id) ? 'active' : ''}`} aria-pressed={selected.includes(p.id)} onClick={() => setSelected((old) => old.includes(p.id) ? old.filter((id) => id !== p.id) : [...old,p.id])}>{p.displayName}</button>)}</div>
@@ -122,7 +156,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
             <button type="button" className="primary-btn form-submit" onClick={() => void start()}>GENERAR CRUCES</button>
           </> : <>
             <p className="hint">Cruces de esta fecha. Tocá «Jugar» para cargar el resultado. Los ganadores avanzan automáticamente en eliminatorias.</p>
-            {fixtures.rounds.map((round, index) => <section key={index} style={{ marginBottom: 22 }}><div className="section-header"><h3 className="section-title">{plan.format === 'round-robin' ? `Ronda ${index + 1}` : index === fixtures.rounds.length - 1 ? 'Final' : index === fixtures.rounds.length - 2 ? 'Semifinales' : `Ronda ${index + 1}`}</h3></div>{round.map((game) => <div key={game.id} className="pair-built" style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}><span>{game.home?.label ?? 'Por definir'} <strong>vs</strong> {game.away?.label ?? 'Por definir'} <small style={{ display: 'block' }}>{game.score}</small></span>{game.home && game.away && !game.done && <button type="button" className="small-btn" onClick={() => play(game.home,game.away)}>JUGAR</button>}</div>)}</section>)}
+            {fixtures.rounds.map((round, index) => <section key={index} style={{ marginBottom: 22 }}><div className="section-header"><h3 className="section-title">{plan.format === 'groups' ? (index === fixtures.rounds.length - 1 && fixtures.rounds.length === 3 ? 'Final' : `Grupo ${index + 1}`) : plan.format === 'round-robin' ? `Ronda ${index + 1}` : index === fixtures.rounds.length - 1 ? 'Final' : index === fixtures.rounds.length - 2 ? 'Semifinales' : `Ronda ${index + 1}`}</h3></div>{round.map((game) => <div key={game.id} className="pair-built" style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}><span>{game.home?.label ?? 'Por definir'} <strong>vs</strong> {game.away?.label ?? 'Por definir'} <small style={{ display: 'block' }}>{game.score}</small></span>{game.home && game.away && !game.done && <button type="button" className="small-btn" onClick={() => play(game.home,game.away)}>JUGAR</button>}</div>)}</section>)}
             {fixtures.champion && <div className="group-panel"><h3>Campeón del torneo</h3><p>{fixtures.champion}</p></div>}
             <button type="button" className="outline-mini" onClick={() => { if (!window.confirm('¿Crear otro cuadro? Se reemplaza el cuadro compartido, no los partidos.')) return; void api.savePlan(matchdayId, null).then(() => setPlan(null)).catch(() => setMessage('No se pudo borrar el cuadro.')); }}>NUEVO CUADRO</button>
           </>}
