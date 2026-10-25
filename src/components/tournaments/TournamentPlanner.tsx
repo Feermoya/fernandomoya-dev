@@ -145,7 +145,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
         <div className="dialog-top"><div><div className="dialog-kicker">LA FECHA</div><h2>Organizar torneo</h2></div><button type="button" className="close" aria-label="Cerrar" onClick={onClose}><X size={16}/></button></div>
         <div className="dialog-body">
           {!plan && readOnly ? <p className="hint">Todavía no hay un cuadro organizado para esta fecha.</p> : !plan ? <>
-            <p className="hint">Elegí cómo jugar. Los resultados se cargan como partidos normales y actualizan el ranking.</p>
+            <p className="hint">Elegí modalidad, formato y participantes.</p>
             <div className="step-label">01 / Modalidad</div>
             <div className="mode-choice">{(['solo','pairs'] as const).map((value) => <button key={value} type="button" className={mode === value ? 'active' : ''} onClick={() => setMode(value)}>{value === 'solo' ? '1 VS 1' : '2 VS 2'}</button>)}</div>
             <div className="step-label">02 / Formato</div>
@@ -156,13 +156,13 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
             <div className="group-panel"><h3>Participantes</h3>{entries.map((e) => <p key={e.id}>{e.label}</p>)}</div>
             <button type="button" className="primary-btn form-submit" onClick={() => void start()}>GENERAR CRUCES</button>
           </> : <>
-            <p className="hint">Cruces de esta fecha. Tocá «Jugar» para cargar el resultado. Los ganadores avanzan automáticamente en eliminatorias.</p>
+            <p className="hint">Los ganadores avanzan automáticamente en eliminación directa.</p>
             {fixtures.rounds.map((round, index) => <section key={index} style={{ marginBottom: 22 }}><div className="section-header"><h3 className="section-title">{plan.format === 'groups' ? (index === fixtures.rounds.length - 1 && fixtures.rounds.length === 3 ? 'Final' : `Grupo ${index + 1}`) : plan.format === 'round-robin' ? `Ronda ${index + 1}` : index === fixtures.rounds.length - 1 ? 'Final' : index === fixtures.rounds.length - 2 ? 'Semifinales' : `Ronda ${index + 1}`}</h3></div>{round.map((game) => <div key={game.id} className="pair-built" style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}><span>{game.home?.label ?? 'Por definir'} <strong>vs</strong> {game.away?.label ?? 'Por definir'} <small style={{ display: 'block' }}>{game.score}</small></span>{!readOnly && game.home && game.away && !game.done && <button type="button" className="small-btn" onClick={() => play(game.home,game.away)}>JUGAR</button>}</div>)}</section>)}
             {fixtures.champion && <div className="group-panel"><h3>Campeón del torneo</h3><p>{fixtures.champion}</p></div>}
             {!readOnly && <button type="button" className="outline-mini" onClick={() => { if (!window.confirm('¿Crear otro cuadro? Se reemplaza el cuadro compartido, no los partidos.')) return; void api.savePlan(matchdayId, null).then(() => setPlan(null)).catch(() => setMessage('No se pudo borrar el cuadro.')); }}>NUEVO CUADRO</button>}
           </>}
           {message && <p className="error" role="alert">{message}</p>}
-          <p className="hint">El cuadro se guarda en el grupo y se comparte con los participantes.</p>
+
         </div>
       </div>
     </div>
