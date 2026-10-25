@@ -12,6 +12,7 @@ import TournamentPlanner from '@/components/tournaments/TournamentPlanner';
 import MatchRow from '@/components/tournaments/MatchRow';
 import { FullBoard, StandingList } from '@/components/tournaments/Standings';
 import TournamentShell, { type FechaPage } from '@/components/tournaments/TournamentShell';
+import { computeRankingsBundle } from '@/lib/tournaments/rankings/compute';
 import { groupApi, type TournamentClientApi } from '@/lib/tournaments/clientApi';
 import { canvasToPngBlob, renderNightCard, shareOrDownloadPng } from '@/lib/tournaments/export/cards';
 import type {
@@ -64,6 +65,7 @@ export default function GroupApp({
   const [toast, setToast] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pairs' | 'solo'>('all');
   const [scope, setScope] = useState<'matchday' | 'annual' | 'allTime'>('matchday');
+  const [year, setYear] = useState(new Date().getFullYear());
   const [secret, setSecret] = useState('');
   const [closing, setClosing] = useState(false);
   const [bestGoalId, setBestGoalId] = useState('');
@@ -125,6 +127,13 @@ export default function GroupApp({
     const map = new Map((state?.group.players ?? []).map((p) => [p.id, p.displayName]));
     return (id: string) => map.get(id) ?? id;
   }, [state?.group.players]);
+
+  const annualRankings = useMemo(() => {
+    if (!state) return null;
+    const ids = new Set(state.matchdays.filter((day) => new Date(day.startedAt ?? day.createdAt).getFullYear() === year).map((day) => day.id));
+    return computeRankingsBundle(state.matches.filter((match) => ids.has(match.matchdayId)), state.group.players);
+  }, [state, year]);
+  const years = useMemo(() => [...new Set([new Date().getFullYear(), ...(state?.matchdays ?? []).map((day) => new Date(day.startedAt ?? day.createdAt).getFullYear())])].sort((a,b) => b-a), [state]);
 
   const activeMatches = useMemo(() => {
     if (!state?.activeMatchday) return [];
@@ -646,10 +655,16 @@ function RankingPage({
   scope,
   setScope,
   rankings,
+  year,
+  years,
+  setYear,
 }: {
   scope: 'matchday' | 'annual' | 'allTime';
   setScope: (v: 'matchday' | 'annual' | 'allTime') => void;
   rankings: GroupState['rankings']['matchday'];
+  year: number;
+  years: number[];
+  setYear: (year: number) => void;
 }) {
   return (
     <>
@@ -662,9 +677,10 @@ function RankingPage({
       </div>
       <div className="tab-row" role="group" aria-label="Período del ranking">
         <button type="button" className={`tab ${scope === 'matchday' ? 'active' : ''}`} aria-pressed={scope === 'matchday'} onClick={() => setScope('matchday')}>Esta fecha</button>
-        <button type="button" className={`tab ${scope === 'annual' ? 'active' : ''}`} aria-pressed={scope === 'annual'} onClick={() => setScope('annual')}>Año {new Date().getFullYear()}</button>
+        <button type="button" className={`tab ${scope === 'annual' ? 'active' : ''}`} aria-pressed={scope === 'annual'} onClick={() => setScope('annual')}>Por año</button>
         <button type="button" className={`tab ${scope === 'allTime' ? 'active' : ''}`} aria-pressed={scope === 'allTime'} onClick={() => setScope('allTime')}>Histórico</button>
       </div>
+      {scope === 'annual' && <div className="form-group"><label htmlFor="ranking-year">Temporada</label><select id="ranking-year" value={year} onChange={(e) => setYear(Number(e.target.value))}>{years.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>}
       <section aria-label="Ranking individual">
         <div className="section-header"><h2 className="section-title">Mejor jugador · 1 vs 1</h2></div>
         <FullBoard rows={rankings.solo} kind="solo" />
@@ -673,8 +689,8 @@ function RankingPage({
         <div className="section-header"><h2 className="section-title">Mejor pareja · 2 vs 2</h2></div>
         <FullBoard rows={rankings.pairs} kind="pairs" />
       </section>
-      {scope === 'annual' && <div className="group-panel" style={{ marginTop: 24 }}><h3>Estadísticas del año</h3><p>Los números de cada modalidad se calculan solo con partidos del año actual.</p>{(['solo', 'pairs'] as const).map((mode) => { const rows = rankings[mode].filter((r) => r.scoredMatches > 0); const best = (key: 'goalsFor' | 'goalsAgainst' | 'draws') => [...rows].sort((a,b) => b[key] - a[key])[0]; return <div key={mode} style={{ marginTop: 12 }}><strong>{mode === 'solo' ? '1 vs 1' : '2 vs 2'}</strong><p>Más goles: {best('goalsFor')?.label ?? '—'} ({best('goalsFor')?.goalsFor ?? 0}) · Más recibidos: {best('goalsAgainst')?.label ?? '—'} ({best('goalsAgainst')?.goalsAgainst ?? 0}) · Más empates: {best('draws')?.label ?? '—'} ({best('draws')?.draws ?? 0})</p></div>; })}</div>}
-      <p className="hint">Cada modalidad tiene su clasificación. El ranking anual cuenta solo los partidos de este año; el histórico incluye todas las fechas.</p>
+      {scope === 'annual' && <div className="group-panel" style={{ marginTop: 24 }}><h3>Estadísticas del año</h3><p>Los números se calculan solo con partidos de la temporada seleccionada.</p>{(['solo', 'pairs'] as const).map((mode) => { const rows = rankings[mode].filter((r) => r.scoredMatches > 0); const best = (key: 'goalsFor' | 'goalsAgainst' | 'draws') => [...rows].sort((a,b) => b[key] - a[key])[0]; return <div key={mode} style={{ marginTop: 12 }}><strong>{mode === 'solo' ? '1 vs 1' : '2 vs 2'}</strong><p>Más goles: {best('goalsFor')?.label ?? '—'} ({best('goalsFor')?.goalsFor ?? 0}) · Más recibidos: {best('goalsAgainst')?.label ?? '—'} ({best('goalsAgainst')?.goalsAgainst ?? 0}) · Más empates: {best('draws')?.label ?? '—'} ({best('draws')?.draws ?? 0})</p></div>; })}</div>}
+      <p className="hint">Cada modalidad tiene su clasificación. El ranking anual cuenta solo los partidos de la temporada elegida; el histórico incluye todas las fechas.</p>
     </>
   );
 }
