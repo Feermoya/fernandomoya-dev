@@ -44,7 +44,7 @@ export default function AwardsSheet({
         </div>
         <div className="dialog-body">
           <p className="hint" style={{ marginTop: 0 }}>
-            El sistema calcula los campeones de 1 vs 1 y 2 vs 2 según los partidos jugados. Vos elegís el mejor gol de la fecha.
+            Se reconoce al mejor jugador de 1 vs 1 y a la mejor pareja de 2 vs 2 cuando se jugaron ambas modalidades. Solo elegís el gol destacado.
           </p>
           <div className="form-group">
             <label htmlFor="award-goal">El autor del mejor gol</label>
