@@ -9,8 +9,8 @@ export default function LeaderboardHero({ row }: { row: StandingRow | null }) {
     return (
       <div className="empty">
         <Trophy size={36} />
-        <h3>El trono está vacío</h3>
-        <p>La primera pareja ganadora aparece cuando cargues un partido.</p>
+        <h3>Sin líder</h3>
+        <p>Todavía no hay resultados.</p>
       </div>
     );
   }
