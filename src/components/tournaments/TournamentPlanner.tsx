@@ -41,7 +41,6 @@ function findResult(matches: TournamentMatch[], home: BracketEntrant, away: Brac
   return { a: homeWon ? 1 : 0, b: awayWon ? 1 : 0, complete: outcome !== 'draw' };
 }
 export default function TournamentPlanner({ players, matches, groupId, matchdayId, api, onClose, onPlay }: Props) {
-  const storageKey = `lf-plan:${groupId}:${matchdayId}`;
   const active = players.filter((p) => p.active);
   const [mode, setMode] = useState<MatchMode>('solo');
   const [format, setFormat] = useState<Format>('round-robin');
@@ -49,16 +48,17 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
   const [plan, setPlan] = useState<Plan | null>(null);
   const [message, setMessage] = useState('');
   useEffect(() => {
-    try {
-      const stored = null;
-      if (stored) {
-        const parsed = JSON.parse(stored) as Plan;
-        if (parsed.entrants?.length >= 2 && ['solo', 'pairs'].includes(parsed.mode)) {
-          setPlan(parsed); setMode(parsed.mode); setFormat(parsed.format);
-        }
+    let cancelled = false;
+    void api.getPlan(matchdayId).then((result) => {
+      const saved = result.plan as Plan | null;
+      if (!cancelled && saved && Array.isArray(saved.entrants)) {
+        setPlan(saved);
+        setMode(saved.mode);
+        setFormat(saved.format);
       }
-    } catch { /* storage may be unavailable */ }
-  }, [storageKey]);
+    }).catch(() => { if (!cancelled) setMessage('No se pudo cargar el cuadro compartido.'); });
+    return () => { cancelled = true; };
+  }, [api, matchdayId]);
   const entries = useMemo(() => {
     const ids = selected.filter((id) => active.some((p) => p.id === id));
     const perTeam = mode === 'solo' ? 1 : 2;
@@ -124,7 +124,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
             <p className="hint">Cruces de esta fecha. Tocá «Jugar» para cargar el resultado. Los ganadores avanzan automáticamente en eliminatorias.</p>
             {fixtures.rounds.map((round, index) => <section key={index} style={{ marginBottom: 22 }}><div className="section-header"><h3 className="section-title">{plan.format === 'round-robin' ? `Ronda ${index + 1}` : index === fixtures.rounds.length - 1 ? 'Final' : index === fixtures.rounds.length - 2 ? 'Semifinales' : `Ronda ${index + 1}`}</h3></div>{round.map((game) => <div key={game.id} className="pair-built" style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}><span>{game.home?.label ?? 'Por definir'} <strong>vs</strong> {game.away?.label ?? 'Por definir'} <small style={{ display: 'block' }}>{game.score}</small></span>{game.home && game.away && !game.done && <button type="button" className="small-btn" onClick={() => play(game.home,game.away)}>JUGAR</button>}</div>)}</section>)}
             {fixtures.champion && <div className="group-panel"><h3>Campeón del torneo</h3><p>{fixtures.champion}</p></div>}
-            <button type="button" className="outline-mini" onClick={() => { if (!window.confirm('¿Crear otro cuadro? Se reemplaza la organización guardada en este dispositivo, no los partidos.')) return; setPlan(null); try { localStorage.removeItem(storageKey); } catch {} }}>NUEVO CUADRO</button>
+            <button type="button" className="outline-mini" onClick={() => { if (!window.confirm('¿Crear otro cuadro? Se reemplaza el cuadro compartido, no los partidos.')) return; void api.savePlan(matchdayId, null).then(() => setPlan(null)).catch(() => setMessage('No se pudo borrar el cuadro.')); }}>NUEVO CUADRO</button>
           </>}
           {message && <p className="error" role="alert">{message}</p>}
           <p className="hint">El cuadro se guarda en el grupo y se comparte con los participantes.</p>
