@@ -79,11 +79,7 @@ export default function LiveHome({
             <Trophy size={56} />
           </div>
           <span className="small-lime">{matchday.name} terminó</span>
-          <h2>
-            Tenemos
-            <br />
-            campeones.
-          </h2>
+          <h2>Fecha finalizada</h2>
           <div className="winning">{leader?.label ?? 'Sin ganador'}</div>
           <p>
             {leader
@@ -137,7 +133,7 @@ export default function LiveHome({
                 </button>
               )}
               {!isAdmin && !matchday && (
-                <p className="hero-sub">Cuando el organizador inicie la fecha, el marcador aparece acá.</p>
+                <p className="hero-sub">Sin fecha activa.</p>
               )}
             </div>
           </div>
