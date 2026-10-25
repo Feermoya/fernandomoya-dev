@@ -118,11 +118,14 @@ type MatchBody = {
   action?: 'undo';
 };
 
+const demoPlans = new Map<string, unknown>();
 export function createDemoApi(): TournamentClientApi {
   return {
     async state() {
       return { ok: true, state: snapshot() };
     },
+    async getPlan(matchdayId) { return { ok: true as const, plan: demoPlans.get(matchdayId) ?? null }; },
+    async savePlan(matchdayId, plan) { if (plan == null) demoPlans.delete(matchdayId); else demoPlans.set(matchdayId, plan); return { ok: true as const }; },
     async createMatchday(name) {
       if (store.matchdays.some((day) => day.status === 'live' || day.status === 'prepared')) {
         fail('Ya hay una fecha abierta. Finalizala o usala.');
