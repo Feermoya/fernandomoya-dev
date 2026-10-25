@@ -725,7 +725,7 @@ function AdminMenu({
           {isAdmin ? (
             <>
               <p className="hint" style={{ marginTop: 0 }}>
-                Quien mira el enlace ve la tabla. Solo vos editás el grupo y cargás resultados.
+                Tus amigos entran con el enlace y pueden ver los resultados. Tu código privado permite administrar el grupo.
               </p>
               {onEdit && (
                 <button type="button" className="primary-btn form-submit" onClick={onEdit}>
@@ -744,7 +744,7 @@ function AdminMenu({
                 disabled={busy}
                 onClick={onRevoke}
               >
-                REVOCAR ACCESO
+                GENERAR NUEVO CÓDIGO
               </button>
             </>
           ) : (
