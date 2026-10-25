@@ -71,15 +71,7 @@ export default function LiveHome({
 
   return (
     <>
-      <div className="page-intro">
-        <div>
-          <div className="eyebrow">
-            {matchday?.name ?? 'La fecha'} <span className="slash">/</span> {status}
-          </div>
-          <h1 className="page-title">El vestuario</h1>
-          <p className="page-desc">Donde cada juntada tiene su historia.</p>
-        </div>
-      </div>
+
 
       {finished && matchday ? (
         <div className="finished">
@@ -127,24 +119,9 @@ export default function LiveHome({
           <div className="hero-watermark">{seq === '—' ? '00' : seq}</div>
           <div className="hero-inner">
             <div className="hero-kicker">
-              {matchday ? `${matchday.name} · en juego` : 'Listos para la noche'}
+              {matchday ? `${matchday.name} · ${status}` : 'SIN FECHA ACTIVA'}
             </div>
-            <h2 className="hero-title">
-              {matchday ? (
-                <>
-                  Hoy se
-                  <br />
-                  <span>juega.</span>
-                </>
-              ) : (
-                <>
-                  Arrancá
-                  <br />
-                  <span>la fecha.</span>
-                </>
-              )}
-            </h2>
-            <p className="hero-sub">Hay rivalidades que no se arreglan hablando.</p>
+            <h1 className="hero-title">LA <span>FECHA</span></h1>
             <div className="hero-bottom">
               {isAdmin && matchday && (
                 <button type="button" className="primary-btn" onClick={onLoadMatch}>
@@ -162,26 +139,6 @@ export default function LiveHome({
               {!isAdmin && !matchday && (
                 <p className="hero-sub">Cuando el organizador inicie la fecha, el marcador aparece acá.</p>
               )}
-              <span className="hero-counter">
-                <strong>
-                  <QuietNumber value={matches.length} pad={2} />
-                </strong>
-                <small>
-                  PARTIDOS
-                  <br />
-                  JUGADOS
-                </small>
-              </span>
-              <span className="hero-counter">
-                <strong>
-                  <QuietNumber value={activeCount} pad={2} />
-                </strong>
-                <small>
-                  JUGADORES
-                  <br />
-                  EN CANCHA
-                </small>
-              </span>
             </div>
           </div>
         </section>
@@ -224,7 +181,7 @@ export default function LiveHome({
       </section>
 
       <div className="section-header">
-        <h2 className="section-title">Los que mandan</h2>
+        <h2 className="section-title">Líder actual</h2>
         <button type="button" className="section-link" onClick={onSeeRanking}>
           VER RANKING <ChevronRight size={14} />
         </button>
@@ -232,15 +189,14 @@ export default function LiveHome({
       <LeaderboardHero row={leader} />
 
       <div className="section-header" style={{ marginTop: 28 }}>
-        <h2 className="section-title">Últimos cruces</h2>
+        <h2 className="section-title">Últimos partidos</h2>
         <button type="button" className="section-link" onClick={onSeeMatches}>
           TODOS <ChevronRight size={14} />
         </button>
       </div>
       {recent.length === 0 ? (
         <div className="empty">
-          <h3>Todavía no hay partidos</h3>
-          <p>La primera victoria está a un resultado de distancia.</p>
+          <h3>Sin partidos registrados</h3>
         </div>
       ) : (
         <div className="matches">
