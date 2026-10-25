@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { X, Shuffle } from 'lucide-react';
 import { createKnockout, createRoundRobin, recordKnockoutResult, type BracketEntrant, type BracketFormat } from '@/lib/tournaments/bracket';
+import type { TournamentClientApi } from '@/lib/tournaments/clientApi';
 import type { MatchMode, MatchParticipant, TournamentMatch, TournamentPlayer } from '@/lib/tournaments/types';
 
 type Format = BracketFormat | 'semifinal';
@@ -10,6 +11,7 @@ type Props = {
   matches: TournamentMatch[];
   groupId: string;
   matchdayId: string;
+  api: TournamentClientApi;
   onClose: () => void;
   onPlay: (mode: MatchMode, participants: MatchParticipant[]) => void;
 };
@@ -38,7 +40,7 @@ function findResult(matches: TournamentMatch[], home: BracketEntrant, away: Brac
   const awayWon = homeIsHome ? outcome === 'away' : outcome === 'home';
   return { a: homeWon ? 1 : 0, b: awayWon ? 1 : 0, complete: outcome !== 'draw' };
 }
-export default function TournamentPlanner({ players, matches, groupId, matchdayId, onClose, onPlay }: Props) {
+export default function TournamentPlanner({ players, matches, groupId, matchdayId, api, onClose, onPlay }: Props) {
   const storageKey = `lf-plan:${groupId}:${matchdayId}`;
   const active = players.filter((p) => p.active);
   const [mode, setMode] = useState<MatchMode>('solo');
@@ -48,7 +50,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
   const [message, setMessage] = useState('');
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(storageKey);
+      const stored = null;
       if (stored) {
         const parsed = JSON.parse(stored) as Plan;
         if (parsed.entrants?.length >= 2 && ['solo', 'pairs'].includes(parsed.mode)) {
@@ -91,13 +93,12 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
     });
     return { rounds, champion: bracket.entrants.find((e) => e.id === bracket.championId)?.label ?? '' };
   }, [plan, matches]);
-  function start() {
+  async function start() {
     if (mode === 'pairs' && selected.length % 2) { setMessage('Para parejas, seleccioná una cantidad par de jugadores.'); return; }
     if (entries.length < 2) { setMessage('Seleccioná al menos dos participantes o parejas.'); return; }
     if (format === 'semifinal' && entries.length !== 4) { setMessage('Las semifinales necesitan exactamente cuatro jugadores o parejas.'); return; }
     const next: Plan = { mode, format, entrants: entries };
-    setPlan(next);
-    try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { setMessage('El plan no se pudo guardar en este dispositivo.'); }
+    try { await api.savePlan(matchdayId, next); setPlan(next); } catch { setMessage('No se pudo guardar el cuadro compartido.'); }
   }
   function play(home: BracketEntrant | null, away: BracketEntrant | null) {
     if (!plan || !home || !away) return;
@@ -118,7 +119,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
             <p className="hint">Tocá para incluir o excluir. En 2 vs 2, cada dos nombres consecutivos forman una pareja.</p>
             <div className="choices">{active.map((p) => <button type="button" key={p.id} className={`tg-chip ${selected.includes(p.id) ? 'active' : ''}`} aria-pressed={selected.includes(p.id)} onClick={() => setSelected((old) => old.includes(p.id) ? old.filter((id) => id !== p.id) : [...old,p.id])}>{p.displayName}</button>)}</div>
             <div className="group-panel"><h3>Participantes</h3>{entries.map((e) => <p key={e.id}>{e.label}</p>)}</div>
-            <button type="button" className="primary-btn form-submit" onClick={start}>GENERAR CRUCES</button>
+            <button type="button" className="primary-btn form-submit" onClick={() => void start()}>GENERAR CRUCES</button>
           </> : <>
             <p className="hint">Cruces de esta fecha. Tocá «Jugar» para cargar el resultado. Los ganadores avanzan automáticamente en eliminatorias.</p>
             {fixtures.rounds.map((round, index) => <section key={index} style={{ marginBottom: 22 }}><div className="section-header"><h3 className="section-title">{plan.format === 'round-robin' ? `Ronda ${index + 1}` : index === fixtures.rounds.length - 1 ? 'Final' : index === fixtures.rounds.length - 2 ? 'Semifinales' : `Ronda ${index + 1}`}</h3></div>{round.map((game) => <div key={game.id} className="pair-built" style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}><span>{game.home?.label ?? 'Por definir'} <strong>vs</strong> {game.away?.label ?? 'Por definir'} <small style={{ display: 'block' }}>{game.score}</small></span>{game.home && game.away && !game.done && <button type="button" className="small-btn" onClick={() => play(game.home,game.away)}>JUGAR</button>}</div>)}</section>)}
@@ -126,7 +127,7 @@ export default function TournamentPlanner({ players, matches, groupId, matchdayI
             <button type="button" className="outline-mini" onClick={() => { if (!window.confirm('¿Crear otro cuadro? Se reemplaza la organización guardada en este dispositivo, no los partidos.')) return; setPlan(null); try { localStorage.removeItem(storageKey); } catch {} }}>NUEVO CUADRO</button>
           </>}
           {message && <p className="error" role="alert">{message}</p>}
-          <p className="hint">La organización de los cruces se guarda en este dispositivo. Los partidos y rankings sí se guardan en el grupo.</p>
+          <p className="hint">El cuadro se guarda en el grupo y se comparte con los participantes.</p>
         </div>
       </div>
     </div>
