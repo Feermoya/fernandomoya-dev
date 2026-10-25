@@ -282,6 +282,7 @@ export default function GroupApp({
   const canEdit = Boolean(state.isAdmin && state.activeMatchday && !finished);
   const rankings = scope === 'annual' ? annualRankings ?? state.rankings.annual : state.rankings[scope];
   const leader = rankings.pairs[0] ?? rankings.solo[0] ?? null;
+  const streakLeader = ([...state.rankings.matchday.solo.map((row) => ({ row, mode: 'solo' as const })), ...state.rankings.matchday.pairsPlayer.map((row) => ({ row, mode: 'pairsPlayer' as const })), ...state.rankings.matchday.pairs.map((row) => ({ row, mode: 'pairs' as const }))].filter((item) => item.row.undefeatedRun >= 2).sort((a, b) => b.row.undefeatedRun - a.row.undefeatedRun || b.row.wins - a.row.wins)[0] ?? null);
   const mvp = state.awards.find(
     (a) => a.matchdayId === state.activeMatchday?.id && a.awardType === 'mvp',
   );
@@ -341,6 +342,7 @@ export default function GroupApp({
                   players={state.group.players}
                   leader={leader}
                   leaderWins={leader?.wins ?? 0}
+                  streakLeader={streakLeader}
                   isAdmin={state.isAdmin}
                   mvpName={mvp?.playerId ? nameOf(mvp.playerId) : undefined}
                   nameOf={nameOf}
