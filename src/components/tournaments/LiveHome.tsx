@@ -1,4 +1,4 @@
-import { ChevronRight, Flame, Plus, Trophy, Users, Zap } from 'lucide-react';
+import { ChevronRight, Plus, Trophy, Users, Zap } from 'lucide-react';
 import LeaderboardHero from '@/components/tournaments/LeaderboardHero';
 import MatchRow from '@/components/tournaments/MatchRow';
 import QuietNumber from '@/components/tournaments/motion/QuietNumber';
@@ -180,7 +180,7 @@ export default function LiveHome({
 
       {streakLeader && streakLeader.row.undefeatedRun >= 2 && (
         <div className="streak-card" aria-label={`Racha invicta de ${streakLeader.row.label}: ${streakLeader.row.undefeatedRun} partidos`}>
-          <span className="streak-fire" aria-hidden="true"><Flame size={32} strokeWidth={2.2} /></span>
+          <span className="streak-pixel-fire" aria-hidden="true"><span className="streak-pixel-fire-core" /></span>
           <div className="streak-info">
             <span className="streak-kicker">RACHA INVICTA · {streakLeader.mode === 'solo' ? '1 VS 1' : streakLeader.mode === 'pairs' ? 'PAREJA 2 VS 2' : 'JUGADOR 2 VS 2'}</span>
             <strong className="streak-name">{streakLeader.row.label}</strong>
