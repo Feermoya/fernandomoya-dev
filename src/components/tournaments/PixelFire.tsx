@@ -13,19 +13,12 @@ const PIXELS = FRAMES.map((rows) => rows.flatMap((line,y) => [...line].flatMap((
 
 export default function PixelFire() {
   const [frame,setFrame] = useState(0);
-  const [reduced,setReduced] = useState(false);
   useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReduced(media.matches);
-    update();
-    media.addEventListener?.('change',update);
-    return () => media.removeEventListener?.('change',update);
-  },[]);
-  useEffect(() => {
-    if(reduced) return;
-    const timer = window.setInterval(() => setFrame((previous) => (previous + 1) % PIXELS.length), 105);
+    // The user explicitly requested a continuously animated flame, including on iOS
+    // devices configured to reduce interface motion. Keep the sprite small and cheap.
+    const timer = window.setInterval(() => setFrame((previous) => (previous + 1) % PIXELS.length), 110);
     return () => window.clearInterval(timer);
-  },[reduced]);
+  },[]);
   return <span className="streak-fire-scene" aria-hidden="true">
     <svg className="streak-flame-sprite" viewBox="0 0 12 14" shapeRendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
       {PIXELS[frame].map((pixel,index) => <rect key={index} x={pixel.x} y={pixel.y} width="1" height="1" fill={pixel.color}/>)}
