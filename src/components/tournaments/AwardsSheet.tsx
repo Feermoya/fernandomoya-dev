@@ -4,7 +4,6 @@ import type { TournamentPlayer } from '@/lib/tournaments/types';
 
 export default function AwardsSheet({
   players,
-  mvpId,
   bestGoalId,
   bestGoalNote,
   busy,
@@ -13,19 +12,17 @@ export default function AwardsSheet({
   onFinish,
 }: {
   players: TournamentPlayer[];
-  mvpId: string;
   bestGoalId: string;
   bestGoalNote: string;
   busy: boolean;
   onClose: () => void;
-  onSave: (payload: { mvpId: string; bestGoalId: string; bestGoalNote: string }) => Promise<void>;
+  onSave: (payload: { bestGoalId: string; bestGoalNote: string }) => Promise<void>;
   onFinish: (payload: { mvpId: string; bestGoalId: string; bestGoalNote: string }) => Promise<void>;
 }) {
-  const [mvp, setMvp] = useState(mvpId);
   const [goal, setGoal] = useState(bestGoalId);
   const [note, setNote] = useState(bestGoalNote);
   const active = players.filter((p) => p.active);
-  const payload = { mvpId: mvp, bestGoalId: goal, bestGoalNote: note };
+  const payload = { bestGoalId: goal, bestGoalNote: note };
 
   return (
     <div className="overlay" onClick={onClose}>
@@ -33,7 +30,7 @@ export default function AwardsSheet({
         className="dialog"
         role="dialog"
         aria-modal="true"
-        aria-label="Premios de la noche"
+        aria-label="Cerrar la fecha"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="dialog-top">
@@ -47,19 +44,8 @@ export default function AwardsSheet({
         </div>
         <div className="dialog-body">
           <p className="hint" style={{ marginTop: 0 }}>
-            Elegí los premios opcionales. La pareja ganadora la calcula la tabla.
+            El sistema calcula los campeones de 1 vs 1 y 2 vs 2 según los partidos jugados. Vos elegís el mejor gol de la fecha.
           </p>
-          <div className="form-group">
-            <label htmlFor="award-mvp">El MVP de la noche</label>
-            <select id="award-mvp" value={mvp} onChange={(e) => setMvp(e.target.value)}>
-              <option value="">Sin elegir</option>
-              {active.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
           <div className="form-group">
             <label htmlFor="award-goal">El autor del mejor gol</label>
             <select id="award-goal" value={goal} onChange={(e) => setGoal(e.target.value)}>
@@ -83,8 +69,7 @@ export default function AwardsSheet({
             </div>
           )}
           <div className="notice">
-            Cuando cierren la fecha, se genera una tarjeta de campeones para compartir. Los premios
-            no son obligatorios.
+            Al cerrar la fecha se calculan los mejores de cada modalidad. El mejor gol es opcional.
           </div>
           <button
             type="button"
