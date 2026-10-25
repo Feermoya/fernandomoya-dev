@@ -22,6 +22,8 @@ export function groupApi(publicId: string) {
   const base = `/torneos/api/groups/${encodeURIComponent(publicId)}`;
   return {
     state: () => tgFetch<{ ok: true; state: GroupState }>(`${base}/state`),
+    getPlan: (matchdayId: string) => tgFetch<{ ok: true; plan: unknown }>(`${base}/plan?matchdayId=${encodeURIComponent(matchdayId)}`),
+    savePlan: (matchdayId: string, plan: unknown) => tgFetch<{ ok: true }>(`${base}/plan`, { method: 'PUT', body: JSON.stringify({ matchdayId, plan }) }),
     createMatchday: (name?: string) =>
       tgFetch(`${base}/matchdays`, {
         method: 'POST',
