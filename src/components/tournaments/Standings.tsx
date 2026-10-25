@@ -19,7 +19,7 @@ export function StandingList({
       <div className="heading">
         <div>
           <span className="over">Tabla en vivo</span>
-          <h3>El podio</h3>
+          <h3>Ranking</h3>
         </div>
         <span className="icon-round">
           <Trophy size={16} />
@@ -68,8 +68,8 @@ export function FullBoard({
   if (!rows.length) {
     return (
       <div className="empty">
-        <h3>La tabla espera</h3>
-        <p>Jugá un partido de esta modalidad para estrenar el ranking.</p>
+        <h3>Sin resultados</h3>
+        <p>No hay partidos registrados en esta modalidad.</p>
       </div>
     );
   }
