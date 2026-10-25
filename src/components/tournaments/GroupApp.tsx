@@ -200,10 +200,10 @@ export default function GroupApp({
       setPage('inicio');
       if (finish) {
         const night = next.rankings.matchday;
-        const winner = night.pairs[0] ?? night.solo[0] ?? night.pairsPlayer[0] ?? null;
+        const winner = night.pairs[0] ?? night.solo[0] ?? null;
         setCeremony({
           matchdayName: next.activeMatchday?.name ?? 'Fecha',
-          winner: winner?.label ?? 'Sin ganador',
+          winner: [night.solo[0] ? `Individual: ${night.solo[0].label}` : null, night.pairs[0] ? `Pareja: ${night.pairs[0].label}` : null].filter(Boolean).join(' · ') || 'Sin ganador',
           wins: winner?.wins ?? 0,
           points: winner?.points ?? 0,
         });
@@ -270,7 +270,7 @@ export default function GroupApp({
   const finished = state.activeMatchday?.status === 'finished';
   const canEdit = Boolean(state.isAdmin && state.activeMatchday && !finished);
   const rankings = state.rankings[scope];
-  const leader = rankings.pairs[0] ?? null;
+  const leader = rankings.pairs[0] ?? rankings.solo[0] ?? null;
   const mvp = state.awards.find(
     (a) => a.matchdayId === state.activeMatchday?.id && a.awardType === 'mvp',
   );
@@ -304,7 +304,7 @@ export default function GroupApp({
   );
 
   return (
-    <MotionConfig reducedMotion="never">
+    <MotionConfig reducedMotion="user">
     <div>
       <TournamentShell
         groupName={state.group.name}
@@ -502,9 +502,9 @@ function HomeExtras({
             </span>
           </span>
           <h3>Que hablen los premios</h3>
-          <p>MVP y mejor gol. Los eligen cuando termina la noche, no antes.</p>
+          <p>El sistema calcula los campeones. Vos elegís el mejor gol.</p>
           <button type="button" className="linkish" onClick={onAwards}>
-            ELEGIR PREMIOS →
+            CERRAR FECHA Y ELEGIR GOL →
           </button>
         </div>
       )}
