@@ -521,15 +521,15 @@ function HomeExtras({
               El tercer tiempo
             </span>
           </span>
-          <h3>Que hablen los premios</h3>
-          <p>El sistema calcula los campeones. Vos elegís el mejor gol.</p>
+          <h3>Cerrar fecha</h3>
+          <p>Campeones automáticos · mejor gol opcional.</p>
           <button type="button" className="linkish" onClick={onAwards}>
             CERRAR FECHA Y ELEGIR GOL →
           </button>
         </div>
       )}
       <div className="group-panel">
-        <h3>La banda</h3>
+        <h3>Jugadores</h3>
         <p>
           {active.length} jugadores en el plantel.
         </p>
@@ -579,16 +579,16 @@ function MatchesPage({
     <>
       <div className="page-intro">
         <div>
-          <div className="eyebrow">El marcador</div>
+          
           <h1 className="page-title">Partidos</h1>
-          <p className="page-desc">Cada resultado cambia la historia de la noche.</p>
+          
         </div>
       </div>
       <div className="inner-hero">
         <div>
-          <span className="small-lime">El marcador</span>
-          <h2>Cada partido cuenta.</h2>
-          <p>Cargá quién jugó y cómo terminó. La tabla se actualiza sola.</p>
+          
+          <h2>Cargar partido</h2>
+          
         </div>
         {canEdit && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}><button type="button" className="primary-btn" onClick={onNew}>PARTIDO RÁPIDO</button><button type="button" className="outline-mini" onClick={onPlan}>ORGANIZAR TORNEO</button></div>
@@ -623,7 +623,7 @@ function MatchesPage({
       {matches.length === 0 ? (
         <div className="empty">
           <h3>Sin partidos</h3>
-          <p>Todavía no hay encuentros registrados en esta modalidad.</p>
+          
         </div>
       ) : (
         <div className="matches">
@@ -673,9 +673,9 @@ function RankingPage({
     <>
       <div className="page-intro">
         <div>
-          <div className="eyebrow">La competencia</div>
+          
           <h1 className="page-title">Ranking</h1>
-          <p className="page-desc">Los que mandan en la cancha.</p>
+          
         </div>
       </div>
       <div className="tab-row" role="group" aria-label="Período del ranking">
@@ -685,15 +685,15 @@ function RankingPage({
       </div>
       {scope === 'annual' && <div className="form-group"><label htmlFor="ranking-year">Temporada</label><select id="ranking-year" value={year} onChange={(e) => setYear(Number(e.target.value))}>{years.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>}
       <section aria-label="Ranking individual">
-        <div className="section-header"><h2 className="section-title">Mejor jugador · 1 vs 1</h2></div>
+        <div className="section-header"><h2 className="section-title">Individual · 1 vs 1</h2></div>
         <FullBoard rows={rankings.solo} kind="solo" />
       </section>
       <section aria-label="Ranking de parejas" style={{ marginTop: 30 }}>
-        <div className="section-header"><h2 className="section-title">Mejor pareja · 2 vs 2</h2></div>
+        <div className="section-header"><h2 className="section-title">Parejas · 2 vs 2</h2></div>
         <FullBoard rows={rankings.pairs} kind="pairs" />
       </section>
-      {scope === 'annual' && <div className="group-panel" style={{ marginTop: 24 }}><h3>Estadísticas del año</h3><p>Los números se calculan solo con partidos de la temporada seleccionada.</p>{(['solo', 'pairs'] as const).map((mode) => { const rows = rankings[mode].filter((r) => r.scoredMatches > 0); const best = (key: 'goalsFor' | 'goalsAgainst' | 'draws') => [...rows].sort((a,b) => b[key] - a[key])[0]; return <div key={mode} style={{ marginTop: 12 }}><strong>{mode === 'solo' ? '1 vs 1' : '2 vs 2'}</strong><p>Más goles: {best('goalsFor')?.label ?? '—'} ({best('goalsFor')?.goalsFor ?? 0}) · Más recibidos: {best('goalsAgainst')?.label ?? '—'} ({best('goalsAgainst')?.goalsAgainst ?? 0}) · Más empates: {best('draws')?.label ?? '—'} ({best('draws')?.draws ?? 0})</p></div>; })}</div>}
-      <p className="hint">Cada modalidad tiene su clasificación. El ranking anual cuenta solo los partidos de la temporada elegida; el histórico incluye todas las fechas.</p>
+      {scope === 'annual' && <div className="group-panel" style={{ marginTop: 24 }}><h3>Estadísticas del año</h3>{(['solo', 'pairs'] as const).map((mode) => { const rows = rankings[mode].filter((r) => r.scoredMatches > 0); const best = (key: 'goalsFor' | 'goalsAgainst' | 'draws') => [...rows].sort((a,b) => b[key] - a[key])[0]; return <div key={mode} style={{ marginTop: 12 }}><strong>{mode === 'solo' ? '1 vs 1' : '2 vs 2'}</strong><p>Más goles: {best('goalsFor')?.label ?? '—'} ({best('goalsFor')?.goalsFor ?? 0}) · Más recibidos: {best('goalsAgainst')?.label ?? '—'} ({best('goalsAgainst')?.goalsAgainst ?? 0}) · Más empates: {best('draws')?.label ?? '—'} ({best('draws')?.draws ?? 0})</p></div>; })}</div>}
+
     </>
   );
 }
