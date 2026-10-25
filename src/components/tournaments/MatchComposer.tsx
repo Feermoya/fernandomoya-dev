@@ -84,8 +84,8 @@ export default function MatchComposer({
   const active = players.filter((p) => p.active);
   const activeIds = active.map((player) => player.id);
   const board = useScoreboard();
-  const [intent, setIntent] = useState<Intent>(rematch ? 'match' : 'choose');
-  const [mode, setMode] = useState<MatchMode>(rematch?.mode ?? 'pairs');
+  const [intent, setIntent] = useState<Intent>('match');
+  const [mode, setMode] = useState<MatchMode>(rematch?.mode ?? 'solo');
   const [selected, setSelected] = useState<string[]>(
     rematch?.participants
       .slice()
@@ -471,7 +471,7 @@ export default function MatchComposer({
                 ))}
               </div>
               <div className="choose-status">
-                {ready ? 'Equipos listos. Cargá el marcador.' : 'Tocá los nombres en orden para armar los equipos.'}
+                {ready ? 'Equipos listos. Cargá el marcador.' : 'Elegí los jugadores en orden: primero el equipo A y después el B.'}
               </div>
               <Teams
                 ready={ready}
