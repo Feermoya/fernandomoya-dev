@@ -17,7 +17,7 @@ export default function AwardsSheet({
   busy: boolean;
   onClose: () => void;
   onSave: (payload: { bestGoalId: string; bestGoalNote: string }) => Promise<void>;
-  onFinish: (payload: { mvpId: string; bestGoalId: string; bestGoalNote: string }) => Promise<void>;
+  onFinish: (payload: { bestGoalId: string; bestGoalNote: string }) => Promise<void>;
 }) {
   const [goal, setGoal] = useState(bestGoalId);
   const [note, setNote] = useState(bestGoalNote);
@@ -36,7 +36,7 @@ export default function AwardsSheet({
         <div className="dialog-top">
           <div>
             <div className="dialog-kicker">El tercer tiempo</div>
-            <h2>Premios de la noche</h2>
+            <h2>Cerrar la fecha</h2>
           </div>
           <button type="button" className="close" onClick={onClose} aria-label="Cerrar">
             <X size={16} />
@@ -46,17 +46,7 @@ export default function AwardsSheet({
           <p className="hint" style={{ marginTop: 0 }}>
             Se reconoce al mejor jugador de 1 vs 1 y a la mejor pareja de 2 vs 2 cuando se jugaron ambas modalidades. Solo elegís el gol destacado.
           </p>
-          <div className="form-group">
-            <label htmlFor="award-goal">El autor del mejor gol</label>
-            <select id="award-goal" value={goal} onChange={(e) => setGoal(e.target.value)}>
-              <option value="">Sin elegir</option>
-              {active.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <div className="form-group"><label>¿Quién hizo el mejor gol? (opcional)</label><div className="choices"><button type="button" className={`tg-chip ${!goal ? "active" : ""}`} aria-pressed={!goal} onClick={() => setGoal("")}>Sin elegir</button>{active.map((p) => <button type="button" key={p.id} className={`tg-chip ${goal === p.id ? "active" : ""}`} aria-pressed={goal === p.id} onClick={() => setGoal(p.id)}>{p.displayName}</button>)}</div></div>
           {goal && (
             <div className="form-group">
               <label htmlFor="award-note">Descripción del gol</label>
