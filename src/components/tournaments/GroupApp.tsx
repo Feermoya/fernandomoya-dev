@@ -61,7 +61,7 @@ export default function GroupApp({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pairs' | 'solo'>('all');
-  const [scope, setScope] = useState<'matchday' | 'allTime'>('matchday');
+  const [scope, setScope] = useState<'matchday' | 'annual' | 'allTime'>('matchday');
   const [secret, setSecret] = useState('');
   const [closing, setClosing] = useState(false);
   const [bestGoalId, setBestGoalId] = useState('');
@@ -639,8 +639,8 @@ function RankingPage({
   setScope,
   rankings,
 }: {
-  scope: 'matchday' | 'allTime';
-  setScope: (v: 'matchday' | 'allTime') => void;
+  scope: 'matchday' | 'annual' | 'allTime';
+  setScope: (v: 'matchday' | 'annual' | 'allTime') => void;
   rankings: GroupState['rankings']['matchday'];
 }) {
   return (
@@ -654,6 +654,7 @@ function RankingPage({
       </div>
       <div className="tab-row" role="group" aria-label="Período del ranking">
         <button type="button" className={`tab ${scope === 'matchday' ? 'active' : ''}`} aria-pressed={scope === 'matchday'} onClick={() => setScope('matchday')}>Esta fecha</button>
+        <button type="button" className={`tab ${scope === 'annual' ? 'active' : ''}`} aria-pressed={scope === 'annual'} onClick={() => setScope('annual')}>Año {new Date().getFullYear()}</button>
         <button type="button" className={`tab ${scope === 'allTime' ? 'active' : ''}`} aria-pressed={scope === 'allTime'} onClick={() => setScope('allTime')}>Histórico</button>
       </div>
       <section aria-label="Ranking individual">
@@ -664,7 +665,8 @@ function RankingPage({
         <div className="section-header"><h2 className="section-title">Mejor pareja · 2 vs 2</h2></div>
         <FullBoard rows={rankings.pairs} kind="pairs" />
       </section>
-      <p className="hint">Cada modalidad tiene su propia clasificación. El histórico incluye todas las fechas; la clasificación anual se incorporará por temporada.</p>
+      {scope === 'annual' && <div className="group-panel" style={{ marginTop: 24 }}><h3>Estadísticas del año</h3><p>Los números de cada modalidad se calculan solo con partidos del año actual.</p>{(['solo', 'pairs'] as const).map((mode) => { const rows = rankings[mode].filter((r) => r.scoredMatches > 0); const best = (key: 'goalsFor' | 'goalsAgainst' | 'draws') => [...rows].sort((a,b) => b[key] - a[key])[0]; return <div key={mode} style={{ marginTop: 12 }}><strong>{mode === 'solo' ? '1 vs 1' : '2 vs 2'}</strong><p>Más goles: {best('goalsFor')?.label ?? '—'} ({best('goalsFor')?.goalsFor ?? 0}) · Más recibidos: {best('goalsAgainst')?.label ?? '—'} ({best('goalsAgainst')?.goalsAgainst ?? 0}) · Más empates: {best('draws')?.label ?? '—'} ({best('draws')?.draws ?? 0})</p></div>; })}</div>}
+      <p className="hint">Cada modalidad tiene su clasificación. El ranking anual cuenta solo los partidos de este año; el histórico incluye todas las fechas.</p>
     </>
   );
 }
