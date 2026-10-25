@@ -418,8 +418,8 @@ export default function GroupApp({
         />
       )}
 
-      {planner && canEdit && state.activeMatchday && (
-        <TournamentPlanner api={api} players={state.group.players} matches={activeMatches} groupId={publicId} matchdayId={state.activeMatchday.id} onClose={() => setPlanner(false)} onPlay={(mode, participants) => { setPlanner(false); setRematch({ mode, participants }); setComposer(true); }} />
+      {planner && state.activeMatchday && (
+        <TournamentPlanner readOnly={!canEdit} api={api} players={state.group.players} matches={activeMatches} groupId={publicId} matchdayId={state.activeMatchday.id} onClose={() => setPlanner(false)} onPlay={(mode, participants) => { setPlanner(false); setRematch({ mode, participants }); setComposer(true); }} />
       )}
 
       {composer && canEdit && (
