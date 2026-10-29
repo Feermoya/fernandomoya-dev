@@ -74,7 +74,7 @@ export async function upsertFinanceStateRemote(
 
   const revision = revisions.get(originalState);
   if (!revision) throw new Error('Missing remote revision');
-  const res = await fetch(`${financeGameStateSelectUrl(base, syncId)}&updated_at=eq.${encodeURIComponent(revision)}`, {
+  const res = await fetch(`${financeGameStateSelectUrl(base, syncId).replace('&limit=1', '')}&updated_at=eq.${encodeURIComponent(revision)}`, {
     method: 'PATCH',
     headers: {
       ...headers,

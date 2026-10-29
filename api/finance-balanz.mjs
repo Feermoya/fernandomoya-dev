@@ -247,7 +247,7 @@ async function handler(req, res) {
       return send(400, { ok: false, error: e instanceof Error ? e.message : "Lote inv\xE1lido." });
     }
     if (!batch.added.length) return send(200, { ok: true, row, added: [], omitted: batch.omitted });
-    const patchUrl = `${readUrl}&updated_at=eq.${encodeURIComponent(row.updated_at)}`;
+    const patchUrl = `${readUrl.replace("&limit=1", "")}&updated_at=eq.${encodeURIComponent(row.updated_at)}`;
     const saved = await fetch(patchUrl, { method: "PATCH", headers: { ...headers, Prefer: "return=representation" }, body: JSON.stringify({ body: batch.state }) });
     if (!saved.ok) return send(502, { ok: false, error: "Supabase rechaz\xF3 el guardado. No se confirm\xF3 la importaci\xF3n." });
     const written = await saved.json();

@@ -125,7 +125,7 @@ export default async function handler(req, res) {
       if (typeof payload.expectedUpdatedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T/.test(payload.expectedUpdatedAt)) {
         return json(res, 409, { ok: false, error: 'Actualizá la aplicación y consultá el historial antes de guardar.' });
       }
-      const upstream = await fetch(`${selectUrl(url, syncId)}&updated_at=eq.${encodeURIComponent(payload.expectedUpdatedAt)}`, {
+      const upstream = await fetch(`${selectUrl(url, syncId).replace('&limit=1', '')}&updated_at=eq.${encodeURIComponent(payload.expectedUpdatedAt)}`, {
         method: 'PATCH',
         headers: {
           ...restHeaders(key),

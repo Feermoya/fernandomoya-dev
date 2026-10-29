@@ -28,7 +28,7 @@ export default async function handler(req: any, res: any) {
     try { batch = buildBalanzImportBatch(row.body,payload.operations,payload.selections,new Date().toISOString()); }
     catch (e) { return send(400,{ok:false,error:e instanceof Error ? e.message : 'Lote inválido.'}); }
     if (!batch.added.length) return send(200,{ok:true,row,added:[],omitted:batch.omitted});
-    const patchUrl = `${readUrl}&updated_at=eq.${encodeURIComponent(row.updated_at)}`;
+    const patchUrl = `${readUrl.replace('&limit=1', '')}&updated_at=eq.${encodeURIComponent(row.updated_at)}`;
     const saved = await fetch(patchUrl,{method:'PATCH',headers:{...headers,Prefer:'return=representation'},body:JSON.stringify({body:batch.state})});
     if (!saved.ok) return send(502,{ok:false,error:'Supabase rechazó el guardado. No se confirmó la importación.'});
     const written = await saved.json();
