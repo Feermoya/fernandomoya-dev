@@ -322,6 +322,7 @@ function importFinanceState(jsonString) {
       return { ok: false, error: "Hay retos con campos inv\xE1lidos." };
     }
     const state = {
+      ...o,
       entries: o.entries,
       goals: o.goals,
       challenges: o.challenges,
@@ -348,6 +349,7 @@ function importFinanceState(jsonString) {
 }
 
 // src/lib/finance/remoteFinanceState.ts
+var revisions = /* @__PURE__ */ new WeakMap();
 function phoneDigitsFromWaUrl(url) {
   const m = url.match(/wa\.me\/(\d+)/i);
   return m?.[1] ?? "";
@@ -380,7 +382,7 @@ async function fetchFinanceStateRemote(syncId = DEFAULT_FINANCE_SYNC_ID) {
   const base = supabaseRestBase();
   const headers = supabaseHeaders();
   if (!base || !headers) return null;
-  const res = await fetch(financeGameStateSelectUrl(base, syncId, "body"), {
+  const res = await fetch(financeGameStateSelectUrl(base, syncId, "body,updated_at"), {
     headers,
     method: "GET",
     cache: "no-store"
@@ -393,6 +395,7 @@ async function fetchFinanceStateRemote(syncId = DEFAULT_FINANCE_SYNC_ID) {
   const body = rows[0].body;
   const parsed = importFinanceState(typeof body === "string" ? body : JSON.stringify(body));
   if (!parsed.ok) throw new Error(parsed.error);
+  revisions.set(parsed.state, rows[0].updated_at);
   return parsed.state;
 }
 

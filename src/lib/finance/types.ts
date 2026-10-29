@@ -7,6 +7,7 @@ export type FinanceEntryType =
   | 'income'
   | 'fixed_expense'
   | 'variable_expense'
+  | 'investment_sale'
   | 'investment'
   | 'saving'
   | 'debt_payment'
@@ -40,7 +41,14 @@ export type FinanceEntryMarketData = {
   buySnapshot?: FinanceEntryMarketSnapshot;
 };
 
+export type FinanceImportedSource = {
+  provider: 'balanz'; externalId: string; importedAt: string; tradeDate: string;
+  settlementDate?: string; quantity: number; unitPrice: number; currency: 'ARS' | 'USD';
+  operation: 'BUY' | 'SELL'; grossAmount: number; netAmount?: number; fees?: number;
+};
+
 export type FinanceEntry = {
+  importedSource?: FinanceImportedSource;
   id: string;
   month: string;
   type: FinanceEntryType;

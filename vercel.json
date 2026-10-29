@@ -18,6 +18,9 @@
     },
     "api/finance-cloud.mjs": {
       "maxDuration": 20
+    },
+    "api/finance-balanz.mjs": {
+      "maxDuration": 20
     }
   },
   "crons": [

@@ -1,3 +1,4 @@
+import { markStateRevision, stateRevision } from './stateRevision';
 import type { FinanceState } from '@/lib/finance/types';
 import { DEFAULT_FINANCE_SYNC_ID, importFinanceState } from '@/lib/finance/storage';
 
@@ -114,7 +115,7 @@ export async function pingFinanceCloudKeepalive(
     const res = await fetch('/api/finance-keepalive', {
       method: 'GET',
       cache: 'no-store',
-      credentials: 'omit',
+      credentials: 'same-origin',
     });
     if (import.meta.env.DEV) {
       console.debug('[finance-sync] keepalive', { status: res.status, ok: res.ok });
@@ -139,7 +140,7 @@ export async function fetchFinanceRemote(
   const res = await financeCloudFetch(proxyReadUrl(syncId), {
     method: 'GET',
     cache: 'no-store',
-    credentials: 'omit',
+    credentials: 'same-origin',
     headers: {
       Accept: 'application/json',
       'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -185,12 +186,14 @@ export async function fetchFinanceRemote(
   if (import.meta.env.DEV) {
     console.debug('[finance-sync] fetch ok', { syncId, updated_at: payload.row.updated_at });
   }
+  markStateRevision(parsed.state, payload.row.updated_at);
   return { state: parsed.state, updatedAt: payload.row.updated_at };
 }
 
 export async function upsertFinanceRemote(
   syncId: string = DEFAULT_FINANCE_SYNC_ID,
   state: FinanceState,
+  expectedUpdatedAt: string | null = stateRevision(state),
 ): Promise<string> {
   if (!isFinanceCloudConfigured()) throw new Error('Nube no configurada');
   if (import.meta.env.DEV) {
@@ -200,12 +203,12 @@ export async function upsertFinanceRemote(
   const res = await financeCloudFetch('/api/finance-cloud', {
     method: 'POST',
     cache: 'no-store',
-    credentials: 'omit',
+    credentials: 'same-origin',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ id: syncId, state }),
+    body: JSON.stringify({ id: syncId, state, expectedUpdatedAt }),
   });
 
   if (!res.ok) {
@@ -228,5 +231,6 @@ export async function upsertFinanceRemote(
   if (import.meta.env.DEV) {
     console.debug('[finance-sync] upsert ok', { syncId, updated_at: updatedAt });
   }
+  markStateRevision(state, updatedAt);
   return updatedAt;
 }

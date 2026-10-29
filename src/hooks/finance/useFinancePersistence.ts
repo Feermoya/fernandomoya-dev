@@ -1,3 +1,4 @@
+import { markStateRevision, stateRevision } from '@/lib/finance/stateRevision';
 import { useCallback, useRef, useState } from 'react';
 import type { FinanceState } from '@/lib/finance/types';
 import {
@@ -36,10 +37,11 @@ export function useFinancePersistence(options: PersistenceOptions = {}) {
   const scheduleRemoteSave = useCallback((syncId: string, next: FinanceState) => {
     if (!isFinanceCloudConfigured()) return;
       if (remoteTimer.current) clearTimeout(remoteTimer.current);
+    const expectedUpdatedAt = stateRevision(next);
     remoteTimer.current = setTimeout(() => {
       remoteTimer.current = null;
 
-      void upsertFinanceRemote(syncId, next)
+      void upsertFinanceRemote(syncId, next, expectedUpdatedAt)
         .then((iso) => {
           setFinanceLocalSavedAt(iso);
           clearFinancePendingCloudPush();
@@ -70,6 +72,8 @@ export function useFinancePersistence(options: PersistenceOptions = {}) {
     (updater: (prev: FinanceState) => FinanceState) => {
       setState((prev) => {
         const next = updater(prev);
+        const revision = stateRevision(prev);
+        if (revision) markStateRevision(next, revision);
         saveFinanceState(next);
         if (typeof window !== 'undefined' && isFinanceCloudConfigured()) {
           optionsRef.current.onSaving?.();
