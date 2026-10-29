@@ -24,6 +24,7 @@ import { FinanceMonthlyInsightPanel } from '@/components/finance/FinanceMonthlyI
 import { FinanceConcentrationPanel } from '@/components/finance/FinanceConcentrationPanel';
 import { FinanceTickerHistoryPanel } from '@/components/finance/FinanceTickerHistoryPanel';
 import { FinanceRecentInvestments } from '@/components/finance/FinanceRecentInvestments';
+import { FinanceBalanzImporter } from '@/components/finance/FinanceBalanzImporter';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
 import { FinanceEntryLoadSummaryCard } from '@/components/finance/entry';
 import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
@@ -127,6 +128,7 @@ export default function FinanceGameApp() {
     setLastRemoteAt,
     setCloudErr,
     markOffline,
+    applyCloudState,
   } = useFinanceCloudSync({ stateRef, setState });
 
   cloudSyncRef.current = { setSyncChip, setLastRemoteAt, setCloudErr, markOffline };
@@ -141,6 +143,7 @@ export default function FinanceGameApp() {
     handleAddEntry,
   } = useFinanceCelebrations({ persist });
 
+  const [balanzBusy, setBalanzBusy] = useState(false);
   const [editingEntry, setEditingEntry] = useState<FinanceEntry | null>(null);
 
   const month = state.currentMonth;
@@ -168,7 +171,7 @@ export default function FinanceGameApp() {
 
   const sortedMonthInvestments = useMemo(() => {
     return [...monthEntries]
-      .filter((e) => e.type === 'investment')
+      .filter((e) => e.type === 'investment' || e.type === 'investment_sale')
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }, [monthEntries]);
 
@@ -264,7 +267,7 @@ export default function FinanceGameApp() {
   const isEmpty = !hasInvestments && state.goals.length === 0;
 
   return (
-    <div className="finance-app-shell relative isolate min-w-0 overflow-x-hidden sm:pt-2">
+    <div inert={balanzBusy} aria-busy={balanzBusy} className="finance-app-shell relative isolate min-w-0 overflow-x-hidden sm:pt-2">
       <FinanceToaster />
       <div className="finance-page-container relative z-[1] mx-auto min-w-0 px-4 py-4 sm:px-5 sm:py-6 lg:px-6">
         {cloudErr && cloudReady && syncChip === 'error' ? (
@@ -417,6 +420,16 @@ export default function FinanceGameApp() {
                   quickAmounts={preferences.quickAmounts}
                   pendingPlanLabels={pendingPlanLabels}
                   onAddEntry={handleAddEntry}
+                />
+                <FinanceBalanzImporter
+                  onBusyChange={setBalanzBusy}
+                  disabled={!cloudReady || syncChip !== 'synced'}
+                  onImported={(next, iso) => {
+                    applyCloudState(next, iso);
+                    setLastRemoteAt(iso);
+                    setSyncChip('synced');
+                    setCloudErr(null);
+                  }}
                 />
                 {loadSummary ? (
                   <FinanceEntryLoadSummaryCard

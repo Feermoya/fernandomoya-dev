@@ -248,7 +248,7 @@ export async function runFinanceMarketMonitor(
           preferences: { ...prefs, reminder },
         };
         try {
-          await upsertFinanceStateRemote(syncId, nextState);
+          await upsertFinanceStateRemote(syncId, nextState, state);
         } catch {
           /* status best-effort */
         }
@@ -279,7 +279,7 @@ export async function runFinanceMarketMonitor(
           await upsertFinanceStateRemote(syncId, {
             ...state,
             monitorStatus: buildStatusPatch(state.monitorStatus, summary),
-          });
+          }, state);
         } catch {
           /* ignore */
         }
@@ -311,7 +311,7 @@ export async function runFinanceMarketMonitor(
           await upsertFinanceStateRemote(syncId, {
             ...state,
             monitorStatus: buildStatusPatch(state.monitorStatus, summary),
-          });
+          }, state);
         } catch {
           /* ignore */
         }
@@ -335,7 +335,7 @@ export async function runFinanceMarketMonitor(
               ...summary,
               errorCode: 'prices_unavailable',
             }),
-          });
+          }, state);
         } catch {
           /* ignore */
         }
@@ -391,7 +391,7 @@ export async function runFinanceMarketMonitor(
             ...state,
             monitorStatus: buildStatusPatch(state.monitorStatus, summary),
             preferences: { ...prefs, reminder: pruned },
-          });
+          }, state);
         } catch {
           /* ignore */
         }
@@ -445,7 +445,7 @@ export async function runFinanceMarketMonitor(
             ...state,
             monitorStatus: buildStatusPatch(state.monitorStatus, summary),
             preferences: { ...prefs, reminder: pruned },
-          });
+          }, state);
         } catch {
           /* ignore */
         }
@@ -477,7 +477,7 @@ export async function runFinanceMarketMonitor(
           await upsertFinanceStateRemote(syncId, {
             ...state,
             monitorStatus: buildStatusPatch(state.monitorStatus, summary),
-          });
+          }, state);
         } catch {
           /* ignore */
         }
@@ -513,7 +513,7 @@ export async function runFinanceMarketMonitor(
           ...state,
           monitorStatus: buildStatusPatch(state.monitorStatus, summary),
           preferences: { ...prefs, reminder },
-        });
+        }, state);
       } catch {
         return {
           ...summary,

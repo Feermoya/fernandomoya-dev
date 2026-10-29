@@ -1,3 +1,4 @@
+import { markStateRevision } from '@/lib/finance/stateRevision';
 import {
   useCallback,
   useEffect,
@@ -96,6 +97,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
 
   const applyCloudState = useCallback(
     (next: FinanceState, updatedAt: string) => {
+      markStateRevision(next, updatedAt);
       setState(next);
       saveFinanceState(next);
       setLastRemoteAt(updatedAt);

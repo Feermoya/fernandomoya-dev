@@ -122,14 +122,17 @@ export default async function handler(req, res) {
         return json(res, 400, { ok: false, error: 'Body inválido: se espera { id, state }.' });
       }
 
-      const upstream = await fetch(`${url}/rest/v1/${TABLE}`, {
-        method: 'POST',
+      if (typeof payload.expectedUpdatedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T/.test(payload.expectedUpdatedAt)) {
+        return json(res, 409, { ok: false, error: 'Actualizá la aplicación y consultá el historial antes de guardar.' });
+      }
+      const upstream = await fetch(`${selectUrl(url, syncId)}&updated_at=eq.${encodeURIComponent(payload.expectedUpdatedAt)}`, {
+        method: 'PATCH',
         headers: {
           ...restHeaders(key),
           'Content-Type': 'application/json',
-          Prefer: 'return=representation,resolution=merge-duplicates',
+          Prefer: 'return=representation',
         },
-        body: JSON.stringify([{ id: syncId, body: payload.state }]),
+        body: JSON.stringify({ body: payload.state }),
         cache: 'no-store',
       });
       const text = await upstream.text();
@@ -145,9 +148,10 @@ export default async function handler(req, res) {
       try {
         rows = JSON.parse(text);
       } catch {
-        return json(res, 200, { ok: true, updated_at: new Date().toISOString() });
+        return json(res, 502, { ok: false, error: 'Guardado sin confirmación válida de Supabase.' });
       }
 
+      if (!rows?.length) return json(res, 409, { ok: false, error: 'El historial cambió en otro dispositivo. Recargá antes de guardar.' });
       return json(res, 200, {
         ok: true,
         updated_at: rows?.[0]?.updated_at || new Date().toISOString(),

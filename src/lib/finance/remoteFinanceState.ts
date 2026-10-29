@@ -4,6 +4,7 @@ import { DEFAULT_FINANCE_SYNC_ID, importFinanceState } from '@/lib/finance/stora
 import type { FinanceState } from '@/lib/finance/types';
 
 const TABLE = 'finance_game_state';
+const revisions = new WeakMap<FinanceState, string>();
 
 export function phoneDigitsFromWaUrl(url: string): string {
   const m = url.match(/wa\.me\/(\d+)/i);
@@ -45,7 +46,7 @@ export async function fetchFinanceStateRemote(
   const headers = supabaseHeaders();
   if (!base || !headers) return null;
 
-  const res = await fetch(financeGameStateSelectUrl(base, syncId, 'body'), {
+  const res = await fetch(financeGameStateSelectUrl(base, syncId, 'body,updated_at'), {
     headers,
     method: 'GET',
     cache: 'no-store',
@@ -53,34 +54,41 @@ export async function fetchFinanceStateRemote(
   if (!res.ok) {
     throw new Error(`Supabase read failed (${res.status})`);
   }
-  const rows = (await res.json()) as { body: unknown }[];
+  const rows = (await res.json()) as { body: unknown; updated_at: string }[];
   if (!rows?.length) return null;
   const body = rows[0].body;
   const parsed = importFinanceState(typeof body === 'string' ? body : JSON.stringify(body));
   if (!parsed.ok) throw new Error(parsed.error);
+  revisions.set(parsed.state, rows[0].updated_at);
   return parsed.state;
 }
 
 export async function upsertFinanceStateRemote(
   syncId: string,
   state: FinanceState,
+  originalState: FinanceState,
 ): Promise<void> {
   const base = supabaseRestBase();
   const headers = supabaseHeaders();
   if (!base || !headers) throw new Error('Supabase not configured');
 
-  const res = await fetch(`${base}/${TABLE}`, {
-    method: 'POST',
+  const revision = revisions.get(originalState);
+  if (!revision) throw new Error('Missing remote revision');
+  const res = await fetch(`${financeGameStateSelectUrl(base, syncId)}&updated_at=eq.${encodeURIComponent(revision)}`, {
+    method: 'PATCH',
     headers: {
       ...headers,
-      Prefer: 'return=minimal,resolution=merge-duplicates',
+      Prefer: 'return=representation',
     },
-    body: JSON.stringify([{ id: syncId, body: state }]),
+    body: JSON.stringify({ body: state }),
   });
   if (!res.ok) {
     const t = await res.text().catch(() => '');
     throw new Error(`Supabase write failed (${res.status}): ${t.slice(0, 120)}`);
   }
+  const written = await res.json();
+  if (!written?.length) throw new Error('Remote version conflict');
+  revisions.set(originalState, written[0].updated_at);
 }
 
 /** Ping liviano para keep-alive del plan Free de Supabase. */

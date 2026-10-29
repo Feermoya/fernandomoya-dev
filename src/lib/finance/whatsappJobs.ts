@@ -331,7 +331,7 @@ export async function runFinanceWhatsAppJobs(
       preferences: { ...prefs, reminder },
     };
     try {
-      await upsertFinanceStateRemote(syncId, nextState);
+      await upsertFinanceStateRemote(syncId, nextState, state);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'upsert failed';
       const persistError = (job: WhatsAppJobResult): WhatsAppJobResult =>

@@ -77,6 +77,8 @@ async function fetchBestCloudRow(): Promise<{ id: string; remote: RemoteFinanceR
     return null;
   }
 
+  const canonical = rows.find(r => r.id === DEFAULT_FINANCE_SYNC_ID);
+  if (canonical) return canonical;
   let best = rows[0];
   for (const row of rows.slice(1)) {
     if (scoreRemote(row.remote) > scoreRemote(best.remote)) {

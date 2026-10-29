@@ -269,6 +269,7 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
     }
 
     const state: FinanceState = {
+      ...o,
       entries: o.entries as FinanceState['entries'],
       goals: o.goals as FinanceState['goals'],
       challenges: o.challenges as FinanceState['challenges'],

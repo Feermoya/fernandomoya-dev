@@ -23,7 +23,7 @@ function breakdownLabel(entry: FinanceEntry): string {
 
 export function getTickerMonthlyBreakdown(entries: FinanceEntry[], month: string): TickerMonthlyBreakdown {
   const investments = entries.filter(
-    (e) => e.type === 'investment' && e.month === month && e.amount > 0,
+    (e) => e.type === 'investment' && e.amountCurrency !== 'USD' && e.month === month && e.amount > 0,
   );
 
   const buckets = new Map<string, { amount: number; count: number }>();

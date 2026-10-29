@@ -330,6 +330,7 @@ function importFinanceState(jsonString) {
       return { ok: false, error: "Hay retos con campos inv\xE1lidos." };
     }
     const state = {
+      ...o,
       entries: o.entries,
       goals: o.goals,
       challenges: o.challenges,
@@ -371,7 +372,7 @@ function financeGameStateSelectUrl(restBase, syncId, columns = "body,updated_at"
 }
 
 // src/lib/finance/remoteFinanceState.ts
-var TABLE = "finance_game_state";
+var revisions = /* @__PURE__ */ new WeakMap();
 function phoneDigitsFromWaUrl(url) {
   const m = url.match(/wa\.me\/(\d+)/i);
   return m?.[1] ?? "";
@@ -404,7 +405,7 @@ async function fetchFinanceStateRemote(syncId = DEFAULT_FINANCE_SYNC_ID) {
   const base = supabaseRestBase();
   const headers = supabaseHeaders();
   if (!base || !headers) return null;
-  const res = await fetch(financeGameStateSelectUrl(base, syncId, "body"), {
+  const res = await fetch(financeGameStateSelectUrl(base, syncId, "body,updated_at"), {
     headers,
     method: "GET",
     cache: "no-store"
@@ -417,24 +418,30 @@ async function fetchFinanceStateRemote(syncId = DEFAULT_FINANCE_SYNC_ID) {
   const body = rows[0].body;
   const parsed = importFinanceState(typeof body === "string" ? body : JSON.stringify(body));
   if (!parsed.ok) throw new Error(parsed.error);
+  revisions.set(parsed.state, rows[0].updated_at);
   return parsed.state;
 }
-async function upsertFinanceStateRemote(syncId, state) {
+async function upsertFinanceStateRemote(syncId, state, originalState) {
   const base = supabaseRestBase();
   const headers = supabaseHeaders();
   if (!base || !headers) throw new Error("Supabase not configured");
-  const res = await fetch(`${base}/${TABLE}`, {
-    method: "POST",
+  const revision = revisions.get(originalState);
+  if (!revision) throw new Error("Missing remote revision");
+  const res = await fetch(`${financeGameStateSelectUrl(base, syncId)}&updated_at=eq.${encodeURIComponent(revision)}`, {
+    method: "PATCH",
     headers: {
       ...headers,
-      Prefer: "return=minimal,resolution=merge-duplicates"
+      Prefer: "return=representation"
     },
-    body: JSON.stringify([{ id: syncId, body: state }])
+    body: JSON.stringify({ body: state })
   });
   if (!res.ok) {
     const t = await res.text().catch(() => "");
     throw new Error(`Supabase write failed (${res.status}): ${t.slice(0, 120)}`);
   }
+  const written = await res.json();
+  if (!written?.length) throw new Error("Remote version conflict");
+  revisions.set(originalState, written[0].updated_at);
 }
 async function pingFinanceRemote(syncId = DEFAULT_FINANCE_SYNC_ID) {
   const base = supabaseRestBase();
@@ -1738,7 +1745,7 @@ async function runFinanceWhatsAppJobs(syncId = DEFAULT_FINANCE_SYNC_ID, options 
       preferences: { ...prefs, reminder }
     };
     try {
-      await upsertFinanceStateRemote(syncId, nextState);
+      await upsertFinanceStateRemote(syncId, nextState, state);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "upsert failed";
       const persistError = (job) => job.action === "sent" ? { ...job, ok: false, action: "error", error: `Sent but failed to save state: ${msg}` } : job;

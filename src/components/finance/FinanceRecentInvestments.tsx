@@ -22,7 +22,7 @@ function formatBuyPrice(entry: FinanceEntry): string | null {
   const ticker = getEntryTicker(entry) ?? entry.ticker;
   if (!ticker) return null;
   const priceStr = formatFinancePrice(entry.buyPrice, entry.buyCurrency ?? 'ARS');
-  return `${ticker} · compra ${priceStr}`;
+  return `${ticker} · ${entry.type === 'investment_sale' ? 'venta' : 'compra'} ${priceStr}`;
 }
 
 function InvestmentRow({
@@ -60,6 +60,7 @@ function InvestmentRow({
           <p className={`font-bold tabular-nums tracking-tight text-slate-900 ${compact ? 'text-base' : 'text-lg'}`}>
             {formatEntryAmount(entry.amount, entryAmountCurrency(entry))}
           </p>
+          {entry.type === 'investment_sale' ? <span className="text-xs font-bold text-amber-700">Venta</span> : null}
           {ticker ? <FinanceTickerBadge ticker={ticker} tone="blue" /> : null}
           {!ticker && entry.asset ? (
             <span className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-500">
@@ -72,7 +73,7 @@ function InvestmentRow({
         ) : null}
         {entry.estimatedUnits && entry.estimatedUnits > 0 ? (
           <p className="text-[10px] font-medium text-slate-500">
-            ~{entry.estimatedUnits.toLocaleString('es-AR', { maximumFractionDigits: 2 })} unidades
+            {entry.importedSource ? '' : '~'}{entry.estimatedUnits.toLocaleString('es-AR', { maximumFractionDigits: 2 })} unidades
           </p>
         ) : null}
         {metaParts ? (
@@ -83,6 +84,8 @@ function InvestmentRow({
       <div className="flex shrink-0 gap-0.5">
         <button
           type="button"
+          disabled={!!entry.importedSource}
+          title={entry.importedSource ? 'Operación importada con boleto. Conservá sus datos de origen.' : undefined}
           onClick={onEdit}
           className="finance-touch-target rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-500 hover:text-blue-600"
         >
@@ -102,10 +105,10 @@ function InvestmentRow({
 
 export function FinanceRecentInvestments({ investments, onEdit, onRemove }: Props) {
   const totalArs = investments
-    .filter((e) => entryAmountCurrency(e) === 'ARS')
+    .filter((e) => e.type === 'investment' && entryAmountCurrency(e) === 'ARS')
     .reduce((s, e) => s + e.amount, 0);
   const totalUsd = investments
-    .filter((e) => entryAmountCurrency(e) === 'USD')
+    .filter((e) => e.type === 'investment' && entryAmountCurrency(e) === 'USD')
     .reduce((s, e) => s + e.amount, 0);
   const count = investments.length;
   const totalLabel =
