@@ -1,10 +1,10 @@
 import {
   authorizeFinanceMonitor,
-} from '../src/lib/finance/monitor/auth';
+} from '../../src/lib/finance/monitor/auth';
 import {
   runFinanceMarketMonitor,
   type MarketMonitorMode,
-} from '../src/lib/finance/monitor/runMarketMonitor';
+} from '../../src/lib/finance/monitor/runMarketMonitor';
 
 type Req = {
   method?: string;

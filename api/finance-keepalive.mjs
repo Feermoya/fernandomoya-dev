@@ -1763,7 +1763,7 @@ async function runFinanceWhatsAppJobs(syncId = DEFAULT_FINANCE_SYNC_ID, options 
   };
 }
 
-// api/finance-keepalive.entry.ts
+// scripts/finance-api/finance-keepalive.entry.ts
 function headerValue(headers, name) {
   if (!headers) return "";
   const raw = headers[name] ?? headers[name.toLowerCase()];

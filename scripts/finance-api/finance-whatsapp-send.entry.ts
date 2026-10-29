@@ -1,12 +1,12 @@
-import { sendCallMeBotWhatsAppServer } from '../src/lib/finance/callMeBotServer';
-import { normalizePreferences } from '../src/lib/finance/preferences';
+import { sendCallMeBotWhatsAppServer } from '../../src/lib/finance/callMeBotServer';
+import { normalizePreferences } from '../../src/lib/finance/preferences';
 import {
   fetchFinanceStateRemote,
   isFinanceRemoteConfigured,
   resolveWhatsAppPhone,
-} from '../src/lib/finance/remoteFinanceState';
-import { DEFAULT_FINANCE_SYNC_ID } from '../src/lib/finance/storage';
-import type { FinanceReminderSettings } from '../src/lib/finance/types';
+} from '../../src/lib/finance/remoteFinanceState';
+import { DEFAULT_FINANCE_SYNC_ID } from '../../src/lib/finance/storage';
+import type { FinanceReminderSettings } from '../../src/lib/finance/types';
 
 type Req = {
   method?: string;

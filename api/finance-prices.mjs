@@ -411,7 +411,7 @@ async function buildFinancePricesResponse(rawTickers) {
   };
 }
 
-// api/finance-prices.entry.ts
+// scripts/finance-api/finance-prices.entry.ts
 async function handler(req, res) {
   try {
     if (req.method !== "GET") {

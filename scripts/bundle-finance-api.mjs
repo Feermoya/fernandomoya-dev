@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
+const entriesDir = path.join(root, 'scripts/finance-api');
 
 const shared = {
   bundle: true,
@@ -18,25 +19,25 @@ const shared = {
 };
 
 const entries = [
-  { entry: path.join(root, 'api/finance-balanz.entry.ts'), outfile: path.join(root, 'api/finance-balanz.mjs') },
+  { entry: path.join(entriesDir, 'finance-balanz.entry.ts'), outfile: path.join(root, 'api/finance-balanz.mjs') },
   {
-    entry: path.join(root, 'api/finance-prices.entry.ts'),
+    entry: path.join(entriesDir, 'finance-prices.entry.ts'),
     outfile: path.join(root, 'api/finance-prices.mjs'),
   },
   {
-    entry: path.join(root, 'api/finance-keepalive.entry.ts'),
+    entry: path.join(entriesDir, 'finance-keepalive.entry.ts'),
     outfile: path.join(root, 'api/finance-keepalive.mjs'),
   },
   {
-    entry: path.join(root, 'api/finance-whatsapp-send.entry.ts'),
+    entry: path.join(entriesDir, 'finance-whatsapp-send.entry.ts'),
     outfile: path.join(root, 'api/finance-whatsapp-send.mjs'),
   },
   {
-    entry: path.join(root, 'api/finance-symbol-search.entry.ts'),
+    entry: path.join(entriesDir, 'finance-symbol-search.entry.ts'),
     outfile: path.join(root, 'api/finance-symbol-search.mjs'),
   },
   {
-    entry: path.join(root, 'api/finance-market-monitor.entry.ts'),
+    entry: path.join(entriesDir, 'finance-market-monitor.entry.ts'),
     outfile: path.join(root, 'api/finance-market-monitor.mjs'),
   },
 ];

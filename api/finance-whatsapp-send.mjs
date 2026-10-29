@@ -399,7 +399,7 @@ async function fetchFinanceStateRemote(syncId = DEFAULT_FINANCE_SYNC_ID) {
   return parsed.state;
 }
 
-// api/finance-whatsapp-send.entry.ts
+// scripts/finance-api/finance-whatsapp-send.entry.ts
 function json(res, status, body) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");

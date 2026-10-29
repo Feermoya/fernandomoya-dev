@@ -1,6 +1,6 @@
-import { PANEL_SESSION_COOKIE, verifyPanelSessionToken } from '../src/lib/panel/auth';
-import { financeGameStateSelectUrl } from '../src/lib/finance/postgrest';
-import { buildBalanzImportBatch } from '../src/lib/finance/importers/balanz/importBatch';
+import { PANEL_SESSION_COOKIE, verifyPanelSessionToken } from '../../src/lib/panel/auth';
+import { financeGameStateSelectUrl } from '../../src/lib/finance/postgrest';
+import { buildBalanzImportBatch } from '../../src/lib/finance/importers/balanz/importBatch';
 const BOOK = 'fernando-foco-financiero-main';
 export default async function handler(req: any, res: any) {
   const send = (code: number, data: unknown) => { res.setHeader('Cache-Control','no-store'); return res.status(code).json(data); };

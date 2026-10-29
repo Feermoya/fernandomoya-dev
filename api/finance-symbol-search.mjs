@@ -64,7 +64,7 @@ async function searchFinanceSymbols(query, opts) {
   }
 }
 
-// api/finance-symbol-search.entry.ts
+// scripts/finance-api/finance-symbol-search.entry.ts
 async function handler(req, res) {
   try {
     if (req.method !== "GET") {

@@ -1678,7 +1678,7 @@ async function runFinanceMarketMonitor(options = {}) {
   }
 }
 
-// api/finance-market-monitor.entry.ts
+// scripts/finance-api/finance-market-monitor.entry.ts
 function headerValue(headers, name) {
   if (!headers) return "";
   const raw = headers[name] ?? headers[name.toLowerCase()];

@@ -1,7 +1,7 @@
 import {
   buildFinancePricesResponse,
   FINANCE_PRICES_CACHE_HEADERS,
-} from '../src/lib/finance/financePricesServer';
+} from '../../src/lib/finance/financePricesServer';
 
 type Req = { method?: string; query?: { tickers?: string } };
 type Res = {

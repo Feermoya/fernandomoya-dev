@@ -68,6 +68,6 @@ Máximo **4** alertas en pantalla.
 - `src/lib/finance/marketAlertAutoNotify.ts` — envío desde UI + dedupe
 - `src/lib/finance/whatsappJobs.ts` — jobs CallMeBot (cron)
 - `src/lib/finance/remoteFinanceState.ts` — lectura/escritura Supabase en servidor
-- `api/finance-keepalive.entry.ts` — ping + cron WhatsApp
+- `scripts/finance-api/finance-keepalive.entry.ts` — ping + cron WhatsApp
 - `src/components/finance/FinanceMarketAlerts.tsx` — UI + auto-WhatsApp
 - `src/components/finance/FinanceWhatsAppReminders.tsx` — configuración

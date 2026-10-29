@@ -1,9 +1,9 @@
-import { DEFAULT_FINANCE_SYNC_ID } from '../src/lib/finance/storage';
-import { pingFinanceRemote } from '../src/lib/finance/remoteFinanceState';
+import { DEFAULT_FINANCE_SYNC_ID } from '../../src/lib/finance/storage';
+import { pingFinanceRemote } from '../../src/lib/finance/remoteFinanceState';
 import {
   runFinanceWhatsAppJobs,
   type WhatsAppJobKind,
-} from '../src/lib/finance/whatsappJobs';
+} from '../../src/lib/finance/whatsappJobs';
 
 type Req = {
   method?: string;

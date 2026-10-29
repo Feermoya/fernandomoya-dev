@@ -213,7 +213,7 @@ function buildBalanzImportBatch(state, operations, selections, now) {
   };
 }
 
-// api/finance-balanz.entry.ts
+// scripts/finance-api/finance-balanz.entry.ts
 var BOOK = "fernando-foco-financiero-main";
 async function handler(req, res) {
   const send = (code, data) => {

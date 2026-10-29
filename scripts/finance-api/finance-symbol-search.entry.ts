@@ -1,4 +1,4 @@
-import { searchFinanceSymbols } from '../src/lib/finance/portfolio/symbolSearch';
+import { searchFinanceSymbols } from '../../src/lib/finance/portfolio/symbolSearch';
 
 type Req = { method?: string; query?: { q?: string; limit?: string } };
 type Res = {
