@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/lib/panel/auth',()=>({PANEL_SESSION_COOKIE:'fm_panel_session',verifyPanelSessionToken:(s:string)=>s==='valid'}));
-import handler from '../../../../../../api/finance-balanz.entry';
+import handler from '../../../../../../scripts/finance-api/finance-balanz.entry';
 import { parseBalanzOperations } from '../parseBalanzOperations';
 import { balanzKey } from '../types';
 import { getInitialFinanceState } from '../../../storage';
@@ -12,6 +12,14 @@ beforeEach(()=>{vi.stubEnv('FINANCE_BALANZ_IMPORT_ENABLED','true');vi.stubEnv('F
 afterEach(()=>{vi.unstubAllGlobals();vi.unstubAllEnvs();});
 describe('atomic Balanz API',()=>{
  it('requires a signed panel session',async()=>{const res=response();const fetch=vi.fn();vi.stubGlobal('fetch',fetch);await handler(request({headers:{}}),res);expect(res.code).toBe(401);expect(fetch).not.toHaveBeenCalled();});
+ it('returns 401 instead of 500 when the cookie is invalid',async()=>{
+   const res=response();
+   const fetch=vi.fn();
+   vi.stubGlobal('fetch',fetch);
+   await handler(request({headers:{cookie:'fm_panel_session=not-a-real-token'}}),res);
+   expect(res.code).toBe(401);
+   expect(fetch).not.toHaveBeenCalled();
+ });
  it('rejects cross-site submission',async()=>{const res=response();await handler(request({headers:{cookie:'fm_panel_session=valid','sec-fetch-site':'cross-site'}}),res);expect(res.code).toBe(403);});
  it('keeps writes disabled until backup verification',async()=>{vi.stubEnv('FINANCE_BALANZ_IMPORT_ENABLED','false');const res=response();await handler(request(),res);expect(res.code).toBe(503);});
  it('reports Supabase read failures without writing',async()=>{const fetch=vi.fn().mockResolvedValue(new Response('',{status:503}));vi.stubGlobal('fetch',fetch);const res=response();await handler(request(),res);expect(res.code).toBe(502);expect(fetch).toHaveBeenCalledTimes(1);});

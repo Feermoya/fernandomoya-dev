@@ -12,9 +12,8 @@ function readEnv(name: string): string {
     typeof process !== 'undefined' ? (process.env[name] ?? '').trim() : '';
   if (fromProcess) return fromProcess;
 
-  const fromImport = String(
-    (import.meta.env as Record<string, string | undefined>)[name] ?? '',
-  ).trim();
+  const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+  const fromImport = String(viteEnv?.[name] ?? '').trim();
   if (fromImport && typeof process !== 'undefined') {
     process.env[name] = fromImport;
   }

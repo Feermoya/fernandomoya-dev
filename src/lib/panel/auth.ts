@@ -74,9 +74,9 @@ function readServerEnv(name: 'PANEL_ACCESS_SECRET' | 'PANEL_SESSION_SECRET'): st
     typeof process !== 'undefined' ? (process.env[name] ?? '').trim() : '';
   if (fromProcess) return fromProcess;
 
-  const fromImport = String(
-    (import.meta.env as Record<string, string | undefined>)[name] ?? '',
-  ).trim();
+  // En bundles Node (api/*.mjs) import.meta.env no existe: no puede tirar.
+  const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+  const fromImport = String(viteEnv?.[name] ?? '').trim();
   if (fromImport && typeof process !== 'undefined') {
     process.env[name] = fromImport;
   }

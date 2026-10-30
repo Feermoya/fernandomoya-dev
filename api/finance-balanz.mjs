@@ -4,9 +4,8 @@ var PANEL_SESSION_COOKIE = "fm_panel_session";
 function readServerEnv(name) {
   const fromProcess = typeof process !== "undefined" ? (process.env[name] ?? "").trim() : "";
   if (fromProcess) return fromProcess;
-  const fromImport = String(
-    import.meta.env[name] ?? ""
-  ).trim();
+  const viteEnv = import.meta.env;
+  const fromImport = String(viteEnv?.[name] ?? "").trim();
   if (fromImport && typeof process !== "undefined") {
     process.env[name] = fromImport;
   }
@@ -215,46 +214,140 @@ function buildBalanzImportBatch(state, operations, selections, now) {
 
 // scripts/finance-api/finance-balanz.entry.ts
 var BOOK = "fernando-foco-financiero-main";
+function headerValue(headers, name) {
+  if (!headers) return "";
+  const raw = headers[name] ?? headers[name.toLowerCase()];
+  if (Array.isArray(raw)) return raw[0] ?? "";
+  return typeof raw === "string" ? raw : "";
+}
+async function readBody(req) {
+  if (typeof req.body === "object" && req.body !== null) return req.body;
+  if (typeof req.body === "string" && req.body.trim()) {
+    try {
+      return JSON.parse(req.body);
+    } catch {
+      return null;
+    }
+  }
+  if (typeof req.on === "function") {
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    }
+    const raw = Buffer.concat(chunks).toString("utf8");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
 async function handler(req, res) {
   const send = (code, data) => {
     res.setHeader("Cache-Control", "no-store");
     return res.status(code).json(data);
   };
   try {
-    const cookies = String(req.headers?.cookie ?? "").split(";").map((s) => s.trim());
+    const cookies = headerValue(req.headers, "cookie").split(";").map((s) => s.trim());
     const token = cookies.find((s) => s.startsWith(`${PANEL_SESSION_COOKIE}=`))?.slice(PANEL_SESSION_COOKIE.length + 1);
-    if (!verifyPanelSessionToken(token)) return send(401, { ok: false, error: "Ingres\xE1 al panel para importar." });
-    if (req.method !== "POST") return send(405, { ok: false, error: "M\xE9todo no permitido." });
-    if (req.headers?.["sec-fetch-site"] === "cross-site") return send(403, { ok: false, error: "Origen no permitido." });
-    if (process.env.FINANCE_BALANZ_IMPORT_ENABLED !== "true") return send(503, { ok: false, error: "Importaci\xF3n pendiente de verificaci\xF3n del respaldo y habilitaci\xF3n." });
-    const payload = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    if (!payload || typeof payload.expectedUpdatedAt !== "string" || JSON.stringify(payload).length > 8e5) return send(400, { ok: false, error: "Lote o versi\xF3n inv\xE1lidos." });
+    if (!verifyPanelSessionToken(token)) {
+      return send(401, { ok: false, error: "Ingres\xE1 al panel para importar." });
+    }
+    if (req.method !== "POST") {
+      return send(405, { ok: false, error: "M\xE9todo no permitido." });
+    }
+    if (headerValue(req.headers, "sec-fetch-site") === "cross-site") {
+      return send(403, { ok: false, error: "Origen no permitido." });
+    }
+    if (process.env.FINANCE_BALANZ_IMPORT_ENABLED !== "true") {
+      return send(503, {
+        ok: false,
+        error: "Importaci\xF3n pendiente de verificaci\xF3n del respaldo y habilitaci\xF3n."
+      });
+    }
+    const payload = await readBody(req);
+    if (!payload || typeof payload.expectedUpdatedAt !== "string" || JSON.stringify(payload).length > 8e5) {
+      return send(400, { ok: false, error: "Lote o versi\xF3n inv\xE1lidos." });
+    }
     const url = (process.env.FINANCE_SUPABASE_URL || process.env.PUBLIC_FINANCE_SUPABASE_URL || "").replace(/\/$/, "");
     const key = process.env.FINANCE_SUPABASE_SERVICE_ROLE_KEY || process.env.FINANCE_SUPABASE_ANON_KEY || process.env.PUBLIC_FINANCE_SUPABASE_ANON_KEY;
-    if (!url || !key) return send(503, { ok: false, error: "Supabase no configurado." });
-    const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
+    if (!url || !key) {
+      return send(503, { ok: false, error: "Supabase no configurado." });
+    }
+    const headers = {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json"
+    };
     const readUrl = financeGameStateSelectUrl(`${url}/rest/v1`, BOOK);
     const response = await fetch(readUrl, { headers, cache: "no-store" });
-    if (!response.ok) return send(502, { ok: false, error: "No se pudo consultar Supabase." });
+    if (!response.ok) {
+      return send(502, { ok: false, error: "No se pudo consultar Supabase." });
+    }
     const rows = await response.json();
     const row = rows?.[0];
-    if (!row || !Array.isArray(row.body?.entries)) return send(409, { ok: false, error: "Historial remoto ausente o inv\xE1lido. No se escribi\xF3 nada." });
-    if (row.updated_at !== payload.expectedUpdatedAt) return send(409, { ok: false, error: "El historial cambi\xF3. Actualiz\xE1 la revisi\xF3n antes de importar." });
+    if (!row || !Array.isArray(row.body?.entries) || typeof row.updated_at !== "string") {
+      return send(409, {
+        ok: false,
+        error: "Historial remoto ausente o inv\xE1lido. No se escribi\xF3 nada."
+      });
+    }
+    if (row.updated_at !== payload.expectedUpdatedAt) {
+      return send(409, {
+        ok: false,
+        error: "El historial cambi\xF3. Actualiz\xE1 la revisi\xF3n antes de importar."
+      });
+    }
     let batch;
     try {
-      batch = buildBalanzImportBatch(row.body, payload.operations, payload.selections, (/* @__PURE__ */ new Date()).toISOString());
+      batch = buildBalanzImportBatch(
+        row.body,
+        payload.operations,
+        payload.selections,
+        (/* @__PURE__ */ new Date()).toISOString()
+      );
     } catch (e) {
-      return send(400, { ok: false, error: e instanceof Error ? e.message : "Lote inv\xE1lido." });
+      return send(400, {
+        ok: false,
+        error: e instanceof Error ? e.message : "Lote inv\xE1lido."
+      });
     }
-    if (!batch.added.length) return send(200, { ok: true, row, added: [], omitted: batch.omitted });
+    if (!batch.added.length) {
+      return send(200, { ok: true, row, added: [], omitted: batch.omitted });
+    }
     const patchUrl = `${readUrl.replace("&limit=1", "")}&updated_at=eq.${encodeURIComponent(row.updated_at)}`;
-    const saved = await fetch(patchUrl, { method: "PATCH", headers: { ...headers, Prefer: "return=representation" }, body: JSON.stringify({ body: batch.state }) });
-    if (!saved.ok) return send(502, { ok: false, error: "Supabase rechaz\xF3 el guardado. No se confirm\xF3 la importaci\xF3n." });
+    const saved = await fetch(patchUrl, {
+      method: "PATCH",
+      headers: { ...headers, Prefer: "return=representation" },
+      body: JSON.stringify({ body: batch.state })
+    });
+    if (!saved.ok) {
+      return send(502, {
+        ok: false,
+        error: "Supabase rechaz\xF3 el guardado. No se confirm\xF3 la importaci\xF3n."
+      });
+    }
     const written = await saved.json();
-    if (!written?.length) return send(409, { ok: false, error: "Otra escritura cambi\xF3 el historial. Volv\xE9 a revisar." });
-    return send(200, { ok: true, row: written[0], added: batch.added, omitted: batch.omitted });
-  } catch {
-    return send(500, { ok: false, error: "No se pudo completar la importaci\xF3n. Consult\xE1 el historial antes de reintentar." });
+    if (!written?.length) {
+      return send(409, {
+        ok: false,
+        error: "Otra escritura cambi\xF3 el historial. Volv\xE9 a revisar."
+      });
+    }
+    return send(200, {
+      ok: true,
+      row: written[0],
+      added: batch.added,
+      omitted: batch.omitted
+    });
+  } catch (e) {
+    console.error("[finance-balanz]", e);
+    return send(500, {
+      ok: false,
+      error: "No se pudo completar la importaci\xF3n. Consult\xE1 el historial antes de reintentar."
+    });
   }
 }
 export {
