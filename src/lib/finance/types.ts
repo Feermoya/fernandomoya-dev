@@ -1,7 +1,9 @@
+import type { FinanceBitcoinModule } from '@/lib/finance/bitcoin/types';
 import type { FinanceMonitorStatus } from '@/lib/finance/monitor/status';
 import type { FinancePortfolioHolding } from '@/lib/finance/portfolio/types';
 
 export type { FinanceMonitorStatus };
+export type { FinanceBitcoinModule };
 
 export type FinanceEntryType =
   | 'income'
@@ -158,6 +160,11 @@ export type FinanceState = {
    * No cuentan como inversiones del mes (objetivo, racha, niveles, ops).
    */
   portfolioHoldings?: FinancePortfolioHolding[];
+  /**
+   * Módulo Bitcoin (planificación / simulación).
+   * No altera movimientos ni cartera; solo lee IBIT y guarda tenencia BTC/config.
+   */
+  bitcoin?: FinanceBitcoinModule;
   /** Última corrida del monitor automático (no destructivo). */
   monitorStatus?: FinanceMonitorStatus;
 };

@@ -1,4 +1,5 @@
 import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
+import { getDefaultBitcoinModule, normalizeBitcoinModule } from '@/lib/finance/bitcoin/defaults';
 import { isMonthlyPlanAnchorItem } from '@/lib/finance/monthlyInvestmentPlan';
 import { normalizeMonitorStatus } from '@/lib/finance/monitor/status';
 import { normalizePortfolioHoldings } from '@/lib/finance/portfolio/validateHolding';
@@ -125,6 +126,7 @@ export function getInitialFinanceState(): FinanceState {
     preferences: getDefaultPreferences(),
     monthlyInvestmentPlan: [],
     portfolioHoldings: [],
+    bitcoin: getDefaultBitcoinModule(),
   };
 }
 
@@ -236,6 +238,7 @@ export function withFinanceStateDefaults(state: FinanceState): FinanceState {
     ...state,
     monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
     portfolioHoldings: state.portfolioHoldings ?? [],
+    bitcoin: normalizeBitcoinModule(state.bitcoin),
     monitorStatus: state.monitorStatus,
   };
 }
@@ -276,6 +279,11 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
       currentMonth: o.currentMonth,
       monthlyInvestmentPlan: normalizeMonthlyInvestmentPlan(o.monthlyInvestmentPlan),
       portfolioHoldings: normalizePortfolioHoldings(o.portfolioHoldings),
+      bitcoin: normalizeBitcoinModule(
+        o.bitcoin && typeof o.bitcoin === 'object'
+          ? (o.bitcoin as FinanceState['bitcoin'])
+          : undefined,
+      ),
     };
     if (typeof o.wealthTarget === 'number' && Number.isFinite(o.wealthTarget)) {
       state.wealthTarget = o.wealthTarget;

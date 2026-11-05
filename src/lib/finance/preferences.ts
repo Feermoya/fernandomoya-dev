@@ -1,4 +1,5 @@
 import { site } from '@/data/site';
+import { normalizeBitcoinModule } from '@/lib/finance/bitcoin/defaults';
 import type { FinancePreferences, FinanceReminderSettings, FinanceState } from '@/lib/finance/types';
 
 export const DEFAULT_QUICK_AMOUNTS = [50_000, 100_000, 200_000, 500_000] as const;
@@ -65,6 +66,7 @@ export function withPreferences(state: FinanceState): FinanceState {
     preferences: normalizePreferences(state.preferences),
     monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
     portfolioHoldings: state.portfolioHoldings ?? [],
+    bitcoin: normalizeBitcoinModule(state.bitcoin),
     monitorStatus: state.monitorStatus,
   };
 }

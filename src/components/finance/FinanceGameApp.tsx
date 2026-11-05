@@ -34,6 +34,7 @@ import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmou
 import { FinancePortfolioPanel } from '@/components/finance/portfolio';
 import { FinanceToaster } from '@/components/finance/FinanceToaster';
 import { FinanceDetailsSummary } from '@/components/finance/FinanceDetailsSummary';
+import { FinanceBitcoinPanel } from '@/components/finance/bitcoin';
 import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
 import { normalizePreferences } from '@/lib/finance/preferences';
 import type { FinancePreferences } from '@/lib/finance/types';
@@ -50,6 +51,8 @@ import {
 import { useFinanceMonthlyPlanActions } from '@/hooks/finance/useFinanceMonthlyPlanActions';
 import { useFinanceCelebrations } from '@/hooks/finance/useFinanceCelebrations';
 import { sileo } from 'sileo';
+
+type FinanceAppSection = 'dashboard' | 'bitcoin';
 
 function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
   const label =
@@ -142,6 +145,7 @@ export default function FinanceGameApp() {
   const [balanzBusy, setBalanzBusy] = useState(false);
   const [editingEntry, setEditingEntry] = useState<FinanceEntry | null>(null);
   const [investOpen, setInvestOpen] = useState(false);
+  const [section, setSection] = useState<FinanceAppSection>('dashboard');
 
   const month = state.currentMonth;
 
@@ -304,7 +308,7 @@ export default function FinanceGameApp() {
             <p className="finance-brand-sub mt-1">Inversión mensual con claridad</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-            {cloudReady ? (
+            {cloudReady && section === 'dashboard' ? (
               <button
                 type="button"
                 onClick={() => setInvestOpen(true)}
@@ -346,6 +350,38 @@ export default function FinanceGameApp() {
           </div>
         </header>
 
+        {cloudReady ? (
+          <nav
+            className="finance-app-tabs mb-4 flex gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm"
+            aria-label="Secciones de Foco financiero"
+          >
+            <button
+              type="button"
+              onClick={() => setSection('dashboard')}
+              className={`finance-touch-target min-h-[42px] flex-1 rounded-xl px-3 text-sm font-bold transition ${
+                section === 'dashboard'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+              aria-current={section === 'dashboard' ? 'page' : undefined}
+            >
+              Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => setSection('bitcoin')}
+              className={`finance-touch-target min-h-[42px] flex-1 rounded-xl px-3 text-sm font-bold transition ${
+                section === 'bitcoin'
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+              aria-current={section === 'bitcoin' ? 'page' : undefined}
+            >
+              Bitcoin
+            </button>
+          </nav>
+        ) : null}
+
         {!cloudReady ? (
           <div
             className="mb-4 flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-8"
@@ -359,7 +395,16 @@ export default function FinanceGameApp() {
           </div>
         ) : null}
 
-        {cloudReady ? (
+        {cloudReady && section === 'bitcoin' ? (
+          <FinanceBitcoinPanel
+            entries={state.entries}
+            holdings={state.portfolioHoldings ?? []}
+            bitcoin={state.bitcoin}
+            onChange={(bitcoin) => persist((prev) => ({ ...prev, bitcoin }))}
+          />
+        ) : null}
+
+        {cloudReady && section === 'dashboard' ? (
           <>
             <FinanceInstallHint />
 
@@ -549,7 +594,7 @@ export default function FinanceGameApp() {
         ) : null}
       </div>
 
-      {cloudReady && !investOpen ? (
+      {cloudReady && section === 'dashboard' && !investOpen ? (
         <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40 lg:hidden">
           <button
             type="button"
