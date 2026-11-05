@@ -70,7 +70,7 @@ export function FinanceMonthSelector({ value, onChange }: Props) {
   const { year: todayYear, month: todayMonth } = parseMonthKey(now);
 
   return (
-    <div ref={rootRef} className="relative flex w-full flex-wrap items-center gap-1.5 sm:gap-2">
+    <div ref={rootRef} className="relative flex w-full items-center gap-1.5 sm:justify-end sm:gap-2">
       <button type="button" className={navBtnClass} onClick={goPrev} aria-label="Mes anterior">
         <ChevronLeft size={16} strokeWidth={2.25} aria-hidden />
       </button>
@@ -78,7 +78,7 @@ export function FinanceMonthSelector({ value, onChange }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="finance-touch-target flex min-h-[40px] min-w-[8.5rem] flex-1 items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 shadow-sm transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:min-w-[10rem] sm:flex-none sm:text-base"
+        className="finance-touch-target flex min-h-[40px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:min-w-[11rem] sm:flex-none sm:text-base"
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls={popoverId}

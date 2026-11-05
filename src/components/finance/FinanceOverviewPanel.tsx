@@ -37,21 +37,21 @@ function StatCell({
 }) {
   return (
     <article
-      className={`rounded-xl border px-2.5 py-2 ${
+      className={`rounded-2xl border px-3 py-2.5 transition ${
         primary
-          ? 'border-blue-200/90 bg-blue-50/50 sm:col-span-1'
-          : 'border-slate-200/80 bg-white'
-      } ${compact ? '' : 'sm:px-3 sm:py-3'} ${emphasis ? 'sm:col-span-2' : ''}`}
+          ? 'border-blue-200/90 bg-gradient-to-br from-blue-50/80 to-white sm:col-span-1'
+          : 'border-slate-200/80 bg-slate-50/40'
+      } ${compact ? '' : 'sm:px-3.5 sm:py-3'} ${emphasis ? 'sm:col-span-2' : ''}`}
     >
       <p className={`finance-label ${primary ? 'text-blue-700' : ''}`}>{label}</p>
       <p
-        className={`mt-0.5 tabular-nums tracking-tight text-slate-900 ${
+        className={`mt-1 tabular-nums tracking-tight text-slate-900 ${
           primary ? 'text-xl font-black sm:text-2xl' : 'text-sm font-bold text-slate-700'
         }`}
       >
         {value}
       </p>
-      {delta ? <div className="mt-1">{delta}</div> : null}
+      {delta ? <div className="mt-1.5">{delta}</div> : null}
     </article>
   );
 }
@@ -158,7 +158,7 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
 
   return (
     <section
-      className={`finance-card ${compact ? 'p-3' : 'p-3.5 sm:p-4'}`}
+      className={`finance-card finance-panel-enter h-full ${compact ? 'p-3.5 sm:p-4' : 'p-3.5 sm:p-4 lg:p-5'}`}
       aria-labelledby="finance-overview-heading"
     >
       <FinanceSectionHeading
@@ -169,7 +169,7 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
         iconTone="blue"
       />
 
-      <div className="mt-2.5 grid grid-cols-2 gap-2">
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
         <StatCell
           label="Este mes"
           value={formatARS(monthInvested)}

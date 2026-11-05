@@ -30,6 +30,9 @@ type Props = {
   entries: FinanceEntry[];
   quickAmounts?: number[];
   pendingPlanLabels?: string[];
+  /** `plain` quita el marco de tarjeta (modales / sheets). */
+  variant?: 'card' | 'plain';
+  onDirtyChange?: (dirty: boolean) => void;
   onAddEntry: (entry: FinanceEntry) => void;
   onEntrySaved?: (entry: FinanceEntry) => void;
 };
@@ -52,6 +55,8 @@ export function FinanceEntryForm({
   entries,
   quickAmounts,
   pendingPlanLabels,
+  variant = 'card',
+  onDirtyChange,
   onAddEntry,
   onEntrySaved,
 }: Props) {
@@ -73,6 +78,15 @@ export function FinanceEntryForm({
   useEffect(() => {
     setFormMonth(month);
   }, [month]);
+
+  useEffect(() => {
+    const dirty =
+      Boolean(amount.trim()) ||
+      Boolean(units.trim()) ||
+      Boolean(note.trim()) ||
+      Boolean(category.trim());
+    onDirtyChange?.(dirty);
+  }, [amount, units, note, category, onDirtyChange]);
 
   const tickerHint = useMemo(() => {
     const raw = category.trim().toUpperCase();
@@ -175,7 +189,11 @@ export function FinanceEntryForm({
   return (
     <form
       onSubmit={submit}
-      className="finance-card-compact relative scroll-mt-24 overflow-hidden p-3 transition sm:p-3.5"
+      className={
+        variant === 'plain'
+          ? 'relative scroll-mt-24 overflow-hidden'
+          : 'finance-card-compact relative scroll-mt-24 overflow-hidden p-3 transition sm:p-3.5'
+      }
     >
       <div className="relative z-[1]">
         <div className="flex flex-wrap items-start justify-between gap-2">

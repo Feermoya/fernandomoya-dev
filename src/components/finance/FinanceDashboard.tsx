@@ -91,115 +91,121 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
   const progressComplete = mission.percent >= 100;
 
   return (
-    <section className="finance-card finance-hero-enter overflow-visible p-4 motion-reduce:animate-none sm:p-5">
-      <div className="flex flex-col gap-3.5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+    <section
+      className="finance-card finance-hero-card finance-hero-enter overflow-visible p-4 motion-reduce:animate-none sm:p-5 lg:p-6"
+      key={month}
+    >
+      <div className="flex flex-col gap-4 lg:gap-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <span
-            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
+            className="finance-level-chip inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide"
             style={{ backgroundColor: `${accent}18`, color: accent, border: `1px solid ${accent}40` }}
           >
             <Trophy size={14} strokeWidth={2.25} aria-hidden />
             Nivel {levelInfo.level}
           </span>
-          <div className="min-w-0 flex-1 sm:max-w-[14rem] sm:flex-none">
+          <div className="min-w-0 sm:max-w-md sm:flex-1 lg:max-w-lg">
             <FinanceMonthSelector value={month} onChange={onMonthChange} />
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5 sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-            <p className="finance-label flex items-center gap-1">
-              <Target size={11} strokeWidth={2.25} className="text-blue-600" aria-hidden />
-              Objetivo del mes
-            </p>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                missionDone
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : mission.status === 'in_progress'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              {missionDone ? 'Completado' : mission.status === 'in_progress' ? 'En curso' : 'Pendiente'}
-            </span>
-          </div>
-
-          <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="finance-metric">{formatARS(mission.currentAmount)}</span>
-            <span className="finance-metric-meta">
-              de {formatARS(mission.targetAmount)} · {mission.percent.toFixed(0)}%
-            </span>
-          </div>
-
-          {investedPrevMonth > 0 ? (
-            <div className="mt-2">
-              <FinanceDelta
-                absolute={deltaVsPrev}
-                percent={deltaPct}
-                versus={`vs ${formatMonthShort(prevMonth)}`}
-                sense="invest"
-                size="md"
-              />
-            </div>
-          ) : null}
-
-          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className={`h-full rounded-full transition-[width] duration-700 ${
-                progressComplete ? 'bg-emerald-500' : 'bg-blue-600'
-              }`}
-              style={{ width: `${Math.min(100, mission.percent)}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white px-3.5 py-3">
-          <div className="mb-1.5 flex items-center justify-between gap-2">
-            <span className="finance-label flex items-center gap-1">
-              <TrendingUp size={11} strokeWidth={2.25} aria-hidden />
-              Progreso de nivel
-            </span>
-            {showProgressPercent ? (
-              <span className="text-[11px] font-bold tabular-nums text-slate-700">
-                {rawProgress.toFixed(0)}%
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-stretch lg:gap-5">
+          <div className="finance-goal-panel flex flex-col justify-between rounded-2xl border border-blue-100/80 bg-gradient-to-br from-blue-50/90 via-white to-slate-50/60 p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+              <p className="finance-label flex items-center gap-1.5 text-blue-700">
+                <Target size={12} strokeWidth={2.25} aria-hidden />
+                Objetivo del mes
+              </p>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                  missionDone
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : mission.status === 'in_progress'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {missionDone ? 'Completado' : mission.status === 'in_progress' ? 'En curso' : 'Pendiente'}
               </span>
-            ) : (
-              <span className="text-[11px] font-semibold text-slate-500">En curso</span>
-            )}
+            </div>
+
+            <div className="mt-3">
+              <p className="finance-metric finance-metric-hero">{formatARS(mission.currentAmount)}</p>
+              <p className="mt-1.5 text-sm font-semibold text-slate-600">
+                de{' '}
+                <span className="tabular-nums text-slate-900">{formatARS(mission.targetAmount)}</span>
+                <span className="mx-1.5 text-slate-300">·</span>
+                <span
+                  className={`tabular-nums font-bold ${
+                    progressComplete ? 'text-emerald-700' : 'text-blue-700'
+                  }`}
+                >
+                  {mission.percent.toFixed(0)}%
+                </span>
+              </p>
+            </div>
+
+            {investedPrevMonth > 0 ? (
+              <div className="mt-3">
+                <FinanceDelta
+                  absolute={deltaVsPrev}
+                  percent={deltaPct}
+                  versus={`vs ${formatMonthShort(prevMonth)}`}
+                  sense="invest"
+                  size="md"
+                />
+              </div>
+            ) : null}
+
+            <div className="mt-4">
+              <div className="h-3 overflow-hidden rounded-full bg-slate-200/80">
+                <div
+                  className={`finance-progress-fill h-full w-full origin-left rounded-full ${
+                    progressComplete ? 'bg-emerald-500' : 'bg-blue-600'
+                  }`}
+                  style={{
+                    transform: `scaleX(${Math.min(1, Math.max(0, mission.percent / 100))})`,
+                  }}
+                />
+              </div>
+            </div>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className="h-full rounded-full bg-blue-600 motion-reduce:transition-none"
-              style={{
-                width: `${widthPct}%`,
-                minWidth: widthPct > 0 ? '6px' : undefined,
-                transition: `width ${barTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1)`,
-              }}
-            />
+
+          <div className="flex flex-col gap-3">
+            <div className="rounded-2xl border border-slate-200/90 bg-white px-3.5 py-3 sm:px-4">
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className="finance-label flex items-center gap-1">
+                  <TrendingUp size={11} strokeWidth={2.25} aria-hidden />
+                  Progreso de nivel
+                </span>
+                {showProgressPercent ? (
+                  <span className="text-[11px] font-bold tabular-nums text-slate-700">
+                    {rawProgress.toFixed(0)}%
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-semibold text-slate-500">En curso</span>
+                )}
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full w-full origin-left rounded-full bg-blue-600 motion-reduce:transition-none"
+                  style={{
+                    transform: `scaleX(${Math.min(1, Math.max(0, widthPct / 100))})`,
+                    transition: `transform ${barTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+                  }}
+                />
+              </div>
+              {gap && gap.amountMissing > 0 ? (
+                <p className="mt-1.5 text-[11px] font-semibold text-slate-500">
+                  Faltan {formatARS(gap.amountMissing)} para nivel {gap.nextLevel}
+                </p>
+              ) : null}
+            </div>
+
+            <FinanceStreakCalendar entries={entries} streakCount={streak.streakCount} compact />
           </div>
-          {gap && gap.amountMissing > 0 ? (
-            <p className="mt-1.5 text-[11px] font-semibold text-slate-500">
-              Faltan {formatARS(gap.amountMissing)} para nivel {gap.nextLevel}
-            </p>
-          ) : null}
         </div>
-
-        <FinanceStreakCalendar entries={entries} streakCount={streak.streakCount} compact />
       </div>
-
-      <style>{`
-        @keyframes finance-hero-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: none; }
-        }
-        .finance-hero-enter {
-          animation: finance-hero-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .finance-hero-enter { animation: none !important; }
-        }
-      `}</style>
     </section>
   );
 }

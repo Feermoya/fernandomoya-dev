@@ -4,6 +4,7 @@ import {
   Coins,
   Goal,
   Lock,
+  Plus,
   Settings,
   ShieldAlert,
   Trophy,
@@ -23,7 +24,6 @@ import { FinanceConcentrationPanel } from '@/components/finance/FinanceConcentra
 import { FinanceTickerHistoryPanel } from '@/components/finance/FinanceTickerHistoryPanel';
 import { FinanceRecentInvestments } from '@/components/finance/FinanceRecentInvestments';
 import { FinanceBalanzImporter } from '@/components/finance/FinanceBalanzImporter';
-import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
 import { FinanceEntryLoadSummaryCard } from '@/components/finance/entry';
 import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
 import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
@@ -298,12 +298,22 @@ export default function FinanceGameApp() {
           </div>
         ) : null}
 
-        <header className="finance-app-header mb-4 flex items-start justify-between gap-3 sm:mb-5">
+        <header className="finance-app-header mb-4 flex flex-wrap items-start justify-between gap-3 sm:mb-5">
           <div className="min-w-0">
             <h1 className="finance-brand-title">Foco financiero</h1>
             <p className="finance-brand-sub mt-1">Inversión mensual con claridad</p>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+            {cloudReady ? (
+              <button
+                type="button"
+                onClick={() => setInvestOpen(true)}
+                className="finance-primary-button hidden min-h-[42px] items-center gap-1.5 px-4 text-sm shadow-sm lg:inline-flex"
+              >
+                <Plus size={16} strokeWidth={2.5} aria-hidden />
+                Cargar inversión
+              </button>
+            ) : null}
             <a
               href="/admin"
               className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
@@ -326,7 +336,7 @@ export default function FinanceGameApp() {
                   });
                 }}
                 disabled={syncChip === 'loading' || !cloudReady}
-                className="finance-touch-target inline-flex min-h-[36px] items-center justify-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-40"
+                className="finance-touch-target inline-flex min-h-[36px] items-center justify-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-40"
                 title="Sincronizar con la nube"
               >
                 <Cloud size={15} strokeWidth={2.25} aria-hidden />
@@ -342,8 +352,8 @@ export default function FinanceGameApp() {
             role="status"
             aria-live="polite"
           >
-            <p className="text-sm font-black text-blue-800">Sincronizando con la nube…</p>
-            <p className="max-w-xs text-center text-xs font-semibold text-blue-600">
+            <p className="text-sm font-black text-blue-900">Sincronizando con la nube…</p>
+            <p className="max-w-xs text-center text-xs font-semibold text-blue-800">
               Traemos siempre los últimos datos guardados. Si tarda, revisá la conexión.
             </p>
           </div>
@@ -363,42 +373,61 @@ export default function FinanceGameApp() {
             ) : null}
 
             <main className="finance-page-grid">
-              <div className="finance-main-column">
-                <section id="dashboard-financiero" className="order-1 scroll-mt-20 lg:order-none">
-                  <FinanceDashboard
-                    state={state}
-                    mission={mission}
-                    onMonthChange={handleMonthChange}
-                    celebration={celebration}
-                  />
-                </section>
+              <section
+                id="dashboard-financiero"
+                className="order-1 scroll-mt-20 lg:col-span-2 lg:order-none"
+              >
+                <FinanceDashboard
+                  state={state}
+                  mission={mission}
+                  onMonthChange={handleMonthChange}
+                  celebration={celebration}
+                />
+              </section>
 
-                <section className="order-7 min-w-0 scroll-mt-20 lg:order-none">
-                  <details className="finance-details group open:pb-1 lg:hidden">
-                    <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-                      <span className="text-sm font-bold text-slate-900">Plan del mes</span>
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-black tabular-nums text-slate-700">
-                        {pendingPlanCount > 0
-                          ? `${pendingPlanCount} pendiente${pendingPlanCount === 1 ? '' : 's'}`
-                          : 'Sin pendientes'}
-                      </span>
-                    </summary>
-                    <div className="border-t border-slate-100 p-2 sm:p-3">
-                      <FinanceMonthlyInvestmentPlan
-                        embedded
-                        month={month}
-                        entries={state.entries}
-                        plan={state.monthlyInvestmentPlan}
-                        onAddItems={addMonthlyPlanItems}
-                        onRemoveItem={removeMonthlyPlanItem}
-                        onSplitMergedItem={splitMergedMonthlyPlanItem}
-                        hasPreviousMonthPlan={hasPreviousMonthPlan}
-                        onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
-                      />
-                    </div>
-                  </details>
-                  <div className="hidden lg:block">
+              <section className="order-2 min-w-0 lg:order-none">
+                <FinanceConcentrationPanel entries={state.entries} month={month} />
+              </section>
+
+              <section className="order-3 scroll-mt-20 lg:order-none">
+                <FinanceOverviewPanel state={state} month={month} variant="compact" />
+              </section>
+
+              <section className="order-4 min-w-0 lg:order-none">
+                <FinanceRecentInvestments
+                  month={month}
+                  investments={sortedMonthInvestments}
+                  onEdit={setEditingEntry}
+                  onRemove={removeEntry}
+                />
+              </section>
+
+              <section className="order-5 min-w-0 lg:order-none">
+                <FinancePortfolioPanel
+                  holdings={state.portfolioHoldings ?? []}
+                  onChange={(portfolioHoldings) =>
+                    persist((prev) => ({ ...prev, portfolioHoldings }))
+                  }
+                />
+              </section>
+
+              <section className="order-6 min-w-0 lg:col-span-2 lg:order-none">
+                <FinanceTickerHistoryPanel entries={state.entries} />
+              </section>
+
+              <section className="order-7 min-w-0 scroll-mt-20 lg:col-span-2 lg:order-none">
+                <details className="finance-details group open:pb-1">
+                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                    <span className="text-sm font-bold text-slate-900">Plan del mes</span>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-black tabular-nums text-slate-700">
+                      {pendingPlanCount > 0
+                        ? `${pendingPlanCount} pendiente${pendingPlanCount === 1 ? '' : 's'}`
+                        : 'Sin pendientes'}
+                    </span>
+                  </summary>
+                  <div className="border-t border-slate-100 p-2 sm:p-3">
                     <FinanceMonthlyInvestmentPlan
+                      embedded
                       month={month}
                       entries={state.entries}
                       plan={state.monthlyInvestmentPlan}
@@ -409,61 +438,8 @@ export default function FinanceGameApp() {
                       onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
                     />
                   </div>
-                </section>
-
-                <section className="order-4 min-w-0 lg:order-none">
-                  <FinanceRecentInvestments
-                    month={month}
-                    investments={sortedMonthInvestments}
-                    onEdit={setEditingEntry}
-                    onRemove={removeEntry}
-                  />
-                </section>
-
-                <section className="order-5 min-w-0 lg:order-none">
-                  <FinancePortfolioPanel
-                    holdings={state.portfolioHoldings ?? []}
-                    onChange={(portfolioHoldings) =>
-                      persist((prev) => ({ ...prev, portfolioHoldings }))
-                    }
-                  />
-                </section>
-
-                <section className="order-6 min-w-0 lg:order-none">
-                  <FinanceTickerHistoryPanel entries={state.entries} />
-                </section>
-              </div>
-
-              <aside className="finance-side-column">
-                <section
-                  id="inversion"
-                  className="order-2 hidden min-w-0 scroll-mt-24 lg:order-none lg:block"
-                >
-                  <div className="flex flex-col gap-2.5">
-                    <FinanceEntryForm
-                      month={month}
-                      entries={state.entries}
-                      quickAmounts={preferences.quickAmounts}
-                      pendingPlanLabels={pendingPlanLabels}
-                      onAddEntry={handleAddEntry}
-                    />
-                    {loadSummary ? (
-                      <FinanceEntryLoadSummaryCard
-                        summary={loadSummary}
-                        onDismiss={dismissLoadSummary}
-                      />
-                    ) : null}
-                  </div>
-                </section>
-
-                <section className="order-2 min-w-0 lg:order-none">
-                  <FinanceConcentrationPanel entries={state.entries} month={month} />
-                </section>
-
-                <section className="order-3 scroll-mt-20 lg:order-none">
-                  <FinanceOverviewPanel state={state} month={month} variant="compact" />
-                </section>
-              </aside>
+                </details>
+              </section>
 
               <div className="finance-advanced-section flex min-w-0 flex-col gap-2 sm:gap-2.5 lg:grid lg:grid-cols-2 lg:gap-3">
                 <details className="finance-details group open:pb-1">
@@ -586,7 +562,7 @@ export default function FinanceGameApp() {
       ) : null}
 
       {cloudReady && loadSummary && !investOpen ? (
-        <div className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] z-50 px-3 lg:hidden">
+        <div className="finance-load-toast fixed inset-x-0 z-50 px-3 lg:bottom-6 lg:left-auto lg:right-6 lg:w-[min(100%,22rem)] lg:px-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))]">
           <FinanceEntryLoadSummaryCard summary={loadSummary} onDismiss={dismissLoadSummary} />
         </div>
       ) : null}
