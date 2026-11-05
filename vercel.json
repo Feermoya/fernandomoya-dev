@@ -7,14 +7,8 @@
     "api/finance-keepalive.mjs": {
       "maxDuration": 60
     },
-    "api/finance-whatsapp-send.mjs": {
-      "maxDuration": 20
-    },
     "api/finance-symbol-search.mjs": {
       "maxDuration": 15
-    },
-    "api/finance-market-monitor.mjs": {
-      "maxDuration": 60
     },
     "api/finance-cloud.mjs": {
       "maxDuration": 20

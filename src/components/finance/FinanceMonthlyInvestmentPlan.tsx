@@ -30,6 +30,8 @@ type Props = {
   onSplitMergedItem?: (itemId: string, rawLabel: string) => void;
   onCopyFromPreviousMonth?: () => void;
   hasPreviousMonthPlan?: boolean;
+  /** Cuando va dentro de un <details>, oculta el título duplicado. */
+  embedded?: boolean;
 };
 
 function tickerInitial(ticker: string): string {
@@ -428,6 +430,7 @@ export function FinanceMonthlyInvestmentPlan({
   onSplitMergedItem,
   onCopyFromPreviousMonth,
   hasPreviousMonthPlan,
+  embedded = false,
 }: Props) {
   const [rawInput, setRawInput] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
@@ -537,24 +540,28 @@ export function FinanceMonthlyInvestmentPlan({
 
   return (
     <section
-      className={`finance-card-compact p-3 sm:p-3.5 ${
-        allComplete ? 'border-emerald-200 bg-emerald-50/30' : ''
+      className={`${embedded ? '' : 'finance-card-compact p-3 sm:p-3.5'} ${
+        allComplete && !embedded ? 'border-emerald-200 bg-emerald-50/30' : ''
       }`}
-      aria-labelledby="monthly-plan-heading"
+      aria-labelledby={embedded ? undefined : 'monthly-plan-heading'}
     >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h3
-            id="monthly-plan-heading"
-            className="finance-section-title flex items-center gap-2"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600">
-              <Target size={16} strokeWidth={2.25} aria-hidden />
-            </span>
-            Plan del mes
-          </h3>
-          <p className="finance-section-sub mt-1 pl-10">Activos a cubrir</p>
-        </div>
+      <div className={`flex flex-wrap items-start justify-between gap-2 ${embedded ? 'mb-2' : ''}`}>
+        {embedded ? (
+          <div className="min-w-0 flex-1" />
+        ) : (
+          <div className="min-w-0 flex-1">
+            <h3
+              id="monthly-plan-heading"
+              className="finance-section-title flex items-center gap-2"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600">
+                <Target size={16} strokeWidth={2.25} aria-hidden />
+              </span>
+              Plan del mes
+            </h3>
+            <p className="finance-section-sub mt-1 pl-10">Activos a cubrir</p>
+          </div>
+        )}
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {hasPlan ? (
             <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-black tabular-nums text-slate-700">

@@ -29,16 +29,8 @@ const entries = [
     outfile: path.join(root, 'api/finance-keepalive.mjs'),
   },
   {
-    entry: path.join(entriesDir, 'finance-whatsapp-send.entry.ts'),
-    outfile: path.join(root, 'api/finance-whatsapp-send.mjs'),
-  },
-  {
     entry: path.join(entriesDir, 'finance-symbol-search.entry.ts'),
     outfile: path.join(root, 'api/finance-symbol-search.mjs'),
-  },
-  {
-    entry: path.join(entriesDir, 'finance-market-monitor.entry.ts'),
-    outfile: path.join(root, 'api/finance-market-monitor.mjs'),
   },
 ];
 

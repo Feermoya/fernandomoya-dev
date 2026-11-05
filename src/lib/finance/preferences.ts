@@ -12,10 +12,10 @@ export function getDefaultPreferences(): FinancePreferences {
   return {
     quickAmounts: [...DEFAULT_QUICK_AMOUNTS],
     reminder: {
-      enabled: true,
+      enabled: false,
       phoneDigits: site.social.whatsappPhoneDigits,
       daysOfMonth: [...DEFAULT_REMINDER_DAYS],
-      marketWhatsAppEnabled: true,
+      marketWhatsAppEnabled: false,
     },
   };
 }
@@ -32,7 +32,7 @@ export function normalizePreferences(raw?: FinancePreferences): FinancePreferenc
   return {
     quickAmounts: quickAmounts.length > 0 ? quickAmounts : base.quickAmounts,
     reminder: {
-      enabled: reminder.enabled !== false,
+      enabled: reminder.enabled === true,
       phoneDigits: site.social.whatsappPhoneDigits,
       daysOfMonth: normalizeReminderDays(reminder.daysOfMonth),
       messageTemplate: undefined,
@@ -40,7 +40,7 @@ export function normalizePreferences(raw?: FinancePreferences): FinancePreferenc
       lastCronReminderKeys: Array.isArray(reminder.lastCronReminderKeys)
         ? reminder.lastCronReminderKeys.filter((k) => typeof k === 'string').slice(-36)
         : undefined,
-      marketWhatsAppEnabled: reminder.marketWhatsAppEnabled !== false,
+      marketWhatsAppEnabled: reminder.marketWhatsAppEnabled === true,
       lastMarketAlertKeys: Array.isArray(reminder.lastMarketAlertKeys)
         ? reminder.lastMarketAlertKeys.filter((k) => typeof k === 'string').slice(-64)
         : undefined,

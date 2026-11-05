@@ -4,7 +4,6 @@ import {
   Coins,
   Goal,
   Lock,
-  MessageCircle,
   Settings,
   ShieldAlert,
   Trophy,
@@ -20,7 +19,6 @@ import {
 } from '@/lib/finance/monthNavigation';
 import { FinanceDashboard } from '@/components/finance/FinanceDashboard';
 import { FinanceOverviewPanel } from '@/components/finance/FinanceOverviewPanel';
-import { FinanceMonthlyInsightPanel } from '@/components/finance/FinanceMonthlyInsightPanel';
 import { FinanceConcentrationPanel } from '@/components/finance/FinanceConcentrationPanel';
 import { FinanceTickerHistoryPanel } from '@/components/finance/FinanceTickerHistoryPanel';
 import { FinanceRecentInvestments } from '@/components/finance/FinanceRecentInvestments';
@@ -28,11 +26,10 @@ import { FinanceBalanzImporter } from '@/components/finance/FinanceBalanzImporte
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
 import { FinanceEntryLoadSummaryCard } from '@/components/finance/entry';
 import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
-import { FinanceMarketAlerts } from '@/components/finance/FinanceMarketAlerts';
 import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
 import { FinanceConfettiBurst } from '@/components/finance/FinanceConfettiBurst';
 import { FinanceEntryEditModal } from '@/components/finance/FinanceEntryEditModal';
-import { FinanceWhatsAppReminders } from '@/components/finance/FinanceWhatsAppReminders';
+import { FinanceInvestSheet } from '@/components/finance/FinanceInvestSheet';
 import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmountsEditor';
 import { FinancePortfolioPanel } from '@/components/finance/portfolio';
 import { FinanceToaster } from '@/components/finance/FinanceToaster';
@@ -115,7 +112,6 @@ export default function FinanceGameApp() {
   });
 
   const {
-    cloudOn,
     cloudReady,
     syncChip,
     lastRemoteAt,
@@ -145,6 +141,7 @@ export default function FinanceGameApp() {
 
   const [balanzBusy, setBalanzBusy] = useState(false);
   const [editingEntry, setEditingEntry] = useState<FinanceEntry | null>(null);
+  const [investOpen, setInvestOpen] = useState(false);
 
   const month = state.currentMonth;
 
@@ -174,6 +171,8 @@ export default function FinanceGameApp() {
       .filter((e) => e.type === 'investment' || e.type === 'investment_sale')
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   }, [monthEntries]);
+
+  const pendingPlanCount = pendingPlanLabels.length;
 
   const updateEntry = useCallback(
     (updated: FinanceEntry) => {
@@ -267,9 +266,13 @@ export default function FinanceGameApp() {
   const isEmpty = !hasInvestments && state.goals.length === 0;
 
   return (
-    <div inert={balanzBusy} aria-busy={balanzBusy} className="finance-app-shell relative isolate min-w-0 overflow-x-hidden sm:pt-2">
+    <div
+      inert={balanzBusy}
+      aria-busy={balanzBusy}
+      className="finance-app-shell relative isolate min-w-0 overflow-x-hidden sm:pt-2"
+    >
       <FinanceToaster />
-      <div className="finance-page-container relative z-[1] mx-auto min-w-0 px-4 py-4 sm:px-5 sm:py-6 lg:px-6">
+      <div className="finance-page-container relative z-[1] mx-auto min-w-0 px-4 pb-4 pt-0 sm:px-5 sm:py-6 lg:px-6">
         {cloudErr && cloudReady && syncChip === 'error' ? (
           <div
             className="mb-2 flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50 p-3 sm:mb-3"
@@ -348,228 +351,255 @@ export default function FinanceGameApp() {
 
         {cloudReady ? (
           <>
-        <FinanceInstallHint />
+            <FinanceInstallHint />
 
-        {isEmpty ? (
-          <div className="finance-card-compact mb-4 p-4">
-            <p className="finance-label">Primer paso</p>
-            <p className="mt-2 text-sm font-bold text-slate-900">Tu primera carga desbloquea el tablero del mes.</p>
-          </div>
-        ) : null}
-
-        <main className="finance-page-grid">
-          <div className="finance-main-column">
-            <section id="dashboard-financiero" className="order-1 scroll-mt-20 lg:order-none">
-              <FinanceDashboard
-                state={state}
-                mission={mission}
-                onMonthChange={handleMonthChange}
-                celebration={celebration}
-              />
-            </section>
-
-            <section className="order-3 min-w-0 scroll-mt-20 lg:order-none">
-              <FinanceMonthlyInvestmentPlan
-                month={month}
-                entries={state.entries}
-                plan={state.monthlyInvestmentPlan}
-                onAddItems={addMonthlyPlanItems}
-                onRemoveItem={removeMonthlyPlanItem}
-                onSplitMergedItem={splitMergedMonthlyPlanItem}
-                hasPreviousMonthPlan={hasPreviousMonthPlan}
-                onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
-              />
-            </section>
-
-            <section className="order-5 min-w-0 scroll-mt-20 lg:order-none lg:hidden">
-              <FinanceMarketAlerts
-                entries={state.entries}
-                holdings={state.portfolioHoldings ?? []}
-                preferences={preferences}
-                onPreferencesChange={patchPreferences}
-              />
-            </section>
-
-            <section className="order-8 min-w-0 lg:order-none">
-              <FinanceRecentInvestments
-                month={month}
-                investments={sortedMonthInvestments}
-                onEdit={setEditingEntry}
-                onRemove={removeEntry}
-              />
-            </section>
-
-            <section className="order-9 min-w-0 lg:order-none">
-              <FinancePortfolioPanel
-                holdings={state.portfolioHoldings ?? []}
-                onChange={(portfolioHoldings) => persist((prev) => ({ ...prev, portfolioHoldings }))}
-              />
-            </section>
-
-            <section className="order-10 min-w-0 lg:order-none">
-              <FinanceTickerHistoryPanel entries={state.entries} />
-            </section>
-          </div>
-
-          <aside className="finance-side-column">
-            <section id="inversion" className="order-2 scroll-mt-24 min-w-0 lg:order-none">
-              <div className="flex flex-col gap-2.5">
-                <FinanceEntryForm
-                  month={month}
-                  entries={state.entries}
-                  quickAmounts={preferences.quickAmounts}
-                  pendingPlanLabels={pendingPlanLabels}
-                  onAddEntry={handleAddEntry}
-                />
-                <FinanceBalanzImporter
-                  onBusyChange={setBalanzBusy}
-                  disabled={!cloudReady || syncChip !== 'synced'}
-                  onImported={(next, iso) => {
-                    applyCloudState(next, iso);
-                    setLastRemoteAt(iso);
-                    setSyncChip('synced');
-                    setCloudErr(null);
-                  }}
-                />
-                {loadSummary ? (
-                  <FinanceEntryLoadSummaryCard
-                    summary={loadSummary}
-                    onDismiss={dismissLoadSummary}
-                  />
-                ) : null}
+            {isEmpty ? (
+              <div className="finance-card-compact mb-4 p-4">
+                <p className="finance-label">Primer paso</p>
+                <p className="mt-2 text-sm font-bold text-slate-900">
+                  Tu primera carga desbloquea el tablero del mes.
+                </p>
               </div>
-            </section>
+            ) : null}
 
-            <section className="order-4 min-w-0 lg:order-none">
-              <FinanceMonthlyInsightPanel state={state} month={month} mission={mission} />
-            </section>
+            <main className="finance-page-grid">
+              <div className="finance-main-column">
+                <section id="dashboard-financiero" className="order-1 scroll-mt-20 lg:order-none">
+                  <FinanceDashboard
+                    state={state}
+                    mission={mission}
+                    onMonthChange={handleMonthChange}
+                    celebration={celebration}
+                  />
+                </section>
 
-            <section className="order-5 hidden min-w-0 lg:order-none lg:block">
-              <FinanceMarketAlerts
-                entries={state.entries}
-                holdings={state.portfolioHoldings ?? []}
-                preferences={preferences}
-                onPreferencesChange={patchPreferences}
-              />
-            </section>
+                <section className="order-7 min-w-0 scroll-mt-20 lg:order-none">
+                  <details className="finance-details group open:pb-1 lg:hidden">
+                    <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                      <span className="text-sm font-bold text-slate-900">Plan del mes</span>
+                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-black tabular-nums text-slate-700">
+                        {pendingPlanCount > 0
+                          ? `${pendingPlanCount} pendiente${pendingPlanCount === 1 ? '' : 's'}`
+                          : 'Sin pendientes'}
+                      </span>
+                    </summary>
+                    <div className="border-t border-slate-100 p-2 sm:p-3">
+                      <FinanceMonthlyInvestmentPlan
+                        embedded
+                        month={month}
+                        entries={state.entries}
+                        plan={state.monthlyInvestmentPlan}
+                        onAddItems={addMonthlyPlanItems}
+                        onRemoveItem={removeMonthlyPlanItem}
+                        onSplitMergedItem={splitMergedMonthlyPlanItem}
+                        hasPreviousMonthPlan={hasPreviousMonthPlan}
+                        onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
+                      />
+                    </div>
+                  </details>
+                  <div className="hidden lg:block">
+                    <FinanceMonthlyInvestmentPlan
+                      month={month}
+                      entries={state.entries}
+                      plan={state.monthlyInvestmentPlan}
+                      onAddItems={addMonthlyPlanItems}
+                      onRemoveItem={removeMonthlyPlanItem}
+                      onSplitMergedItem={splitMergedMonthlyPlanItem}
+                      hasPreviousMonthPlan={hasPreviousMonthPlan}
+                      onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
+                    />
+                  </div>
+                </section>
 
-            <section className="order-6 min-w-0 lg:order-none">
-              <FinanceConcentrationPanel entries={state.entries} month={month} />
-            </section>
+                <section className="order-4 min-w-0 lg:order-none">
+                  <FinanceRecentInvestments
+                    month={month}
+                    investments={sortedMonthInvestments}
+                    onEdit={setEditingEntry}
+                    onRemove={removeEntry}
+                  />
+                </section>
 
-            <section className="order-7 scroll-mt-20 lg:order-none">
-              <FinanceOverviewPanel state={state} month={month} variant="compact" />
-            </section>
-          </aside>
+                <section className="order-5 min-w-0 lg:order-none">
+                  <FinancePortfolioPanel
+                    holdings={state.portfolioHoldings ?? []}
+                    onChange={(portfolioHoldings) =>
+                      persist((prev) => ({ ...prev, portfolioHoldings }))
+                    }
+                  />
+                </section>
 
-          <div className="finance-advanced-section flex min-w-0 flex-col gap-2 sm:gap-2.5 lg:grid lg:grid-cols-2 lg:gap-3">
-          <details className="finance-details group open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-              <FinanceDetailsSummary icon={Trophy} label="Niveles" />
-            </summary>
-            <div className="px-3 pb-4 pt-3 sm:px-4">
-              <FinanceLevels
-                compact
-                state={state}
-                month={month}
-                onWealthTargetChange={(n) =>
-                  patchState({
-                    wealthTarget: n === undefined || n === null || Number.isNaN(n) ? undefined : n,
-                  })
-                }
-              />
-            </div>
-          </details>
+                <section className="order-6 min-w-0 lg:order-none">
+                  <FinanceTickerHistoryPanel entries={state.entries} />
+                </section>
+              </div>
 
-          <details className="finance-details open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-              <FinanceDetailsSummary icon={Goal} label="Objetivos" />
-            </summary>
-            <div className="px-3 pb-4 pt-3 sm:px-4">
-              <FinanceGoals goals={state.goals} onAdd={addGoal} onUpdate={updateGoal} onRemove={removeGoal} />
-            </div>
-          </details>
+              <aside className="finance-side-column">
+                <section
+                  id="inversion"
+                  className="order-2 hidden min-w-0 scroll-mt-24 lg:order-none lg:block"
+                >
+                  <div className="flex flex-col gap-2.5">
+                    <FinanceEntryForm
+                      month={month}
+                      entries={state.entries}
+                      quickAmounts={preferences.quickAmounts}
+                      pendingPlanLabels={pendingPlanLabels}
+                      onAddEntry={handleAddEntry}
+                    />
+                    {loadSummary ? (
+                      <FinanceEntryLoadSummaryCard
+                        summary={loadSummary}
+                        onDismiss={dismissLoadSummary}
+                      />
+                    ) : null}
+                  </div>
+                </section>
 
-          <details className="finance-details open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-              <FinanceDetailsSummary icon={MessageCircle} label="Avisos WhatsApp" />
-            </summary>
-            <div className="px-3 pb-4 pt-3 sm:px-4">
-              <FinanceWhatsAppReminders
-                state={state}
-                onPreferencesChange={patchPreferences}
-                onMonitorStatusChange={(monitorStatus) =>
-                  patchState({
-                    monitorStatus: { ...state.monitorStatus, ...monitorStatus },
-                  })
-                }
-              />
-            </div>
-          </details>
+                <section className="order-2 min-w-0 lg:order-none">
+                  <FinanceConcentrationPanel entries={state.entries} month={month} />
+                </section>
 
-          <details className="finance-details open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-              <FinanceDetailsSummary icon={Coins} label="Montos rápidos" />
-            </summary>
-            <div className="px-3 pb-4 pt-3 sm:px-4">
-              <FinanceQuickAmountsEditor preferences={preferences} onChange={patchPreferences} />
-            </div>
-          </details>
+                <section className="order-3 scroll-mt-20 lg:order-none">
+                  <FinanceOverviewPanel state={state} month={month} variant="compact" />
+                </section>
+              </aside>
 
-          <details className="finance-details open:pb-1">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-              <FinanceDetailsSummary icon={Settings} label="Configuración" />
-            </summary>
-            <div className="px-3 pb-4 pt-3 sm:px-4">
-              <FinanceJsonTools
-                state={state}
-                onImport={replaceState}
-                cloudAutoSync={isFinanceCloudConfigured()}
-                activeSyncId={activeSyncId}
-                cloudError={cloudErr}
-                lastSyncIso={lastRemoteAt}
-                onForcePull={pullFromCloudImmediate}
-                onForcePush={handleForcePush}
-                onResetSyncIdToDefault={handleResetSyncIdToDefault}
-              />
-            </div>
-          </details>
+              <div className="finance-advanced-section flex min-w-0 flex-col gap-2 sm:gap-2.5 lg:grid lg:grid-cols-2 lg:gap-3">
+                <details className="finance-details group open:pb-1">
+                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                    <FinanceDetailsSummary icon={Trophy} label="Niveles" />
+                  </summary>
+                  <div className="px-3 pb-4 pt-3 sm:px-4">
+                    <FinanceLevels
+                      compact
+                      state={state}
+                      month={month}
+                      onWealthTargetChange={(n) =>
+                        patchState({
+                          wealthTarget:
+                            n === undefined || n === null || Number.isNaN(n) ? undefined : n,
+                        })
+                      }
+                    />
+                  </div>
+                </details>
 
-          <details className="finance-details open:pb-1 border-red-200 bg-red-50">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-              <FinanceDetailsSummary icon={ShieldAlert} label="Zona peligrosa" tone="danger" />
-            </summary>
-            <div className="border-t border-red-200 px-4 pb-4 pt-3">
-              <p className="text-xs font-medium text-red-700">
-                {isFinanceCloudConfigured()
-                  ? 'Borrá todo en la nube y en este navegador. Exportá JSON antes si querés un archivo de respaldo.'
-                  : 'Borrá todo en este navegador. Exportá o copiá el JSON antes si querés conservarlo.'}
-              </p>
-              <button
-                type="button"
-                className="mt-3 w-full rounded-xl border border-red-300 bg-red-600 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
-                onClick={clearAll}
-              >
-                Borrar todo
-              </button>
-            </div>
-          </details>
-          </div>
-        </main>
+                <details className="finance-details open:pb-1">
+                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                    <FinanceDetailsSummary icon={Goal} label="Objetivos" />
+                  </summary>
+                  <div className="px-3 pb-4 pt-3 sm:px-4">
+                    <FinanceGoals
+                      goals={state.goals}
+                      onAdd={addGoal}
+                      onUpdate={updateGoal}
+                      onRemove={removeGoal}
+                    />
+                  </div>
+                </details>
+
+                <details className="finance-details open:pb-1">
+                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                    <FinanceDetailsSummary icon={Coins} label="Montos rápidos" />
+                  </summary>
+                  <div className="px-3 pb-4 pt-3 sm:px-4">
+                    <FinanceQuickAmountsEditor
+                      preferences={preferences}
+                      onChange={patchPreferences}
+                    />
+                  </div>
+                </details>
+
+                <details className="finance-details open:pb-1">
+                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                    <FinanceDetailsSummary icon={Settings} label="Configuración" />
+                  </summary>
+                  <div className="px-3 pb-4 pt-3 sm:px-4">
+                    <FinanceJsonTools
+                      state={state}
+                      onImport={replaceState}
+                      cloudAutoSync={isFinanceCloudConfigured()}
+                      activeSyncId={activeSyncId}
+                      cloudError={cloudErr}
+                      lastSyncIso={lastRemoteAt}
+                      onForcePull={pullFromCloudImmediate}
+                      onForcePush={handleForcePush}
+                      onResetSyncIdToDefault={handleResetSyncIdToDefault}
+                    />
+                  </div>
+                </details>
+
+                <details className="finance-details open:pb-1 border-red-200 bg-red-50">
+                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                    <FinanceDetailsSummary icon={ShieldAlert} label="Zona peligrosa" tone="danger" />
+                  </summary>
+                  <div className="border-t border-red-200 px-4 pb-4 pt-3">
+                    <p className="text-xs font-medium text-red-700">
+                      {isFinanceCloudConfigured()
+                        ? 'Borrá todo en la nube y en este navegador. Exportá JSON antes si querés un archivo de respaldo.'
+                        : 'Borrá todo en este navegador. Exportá o copiá el JSON antes si querés conservarlo.'}
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-3 w-full rounded-xl border border-red-300 bg-red-600 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
+                      onClick={clearAll}
+                    >
+                      Borrar todo
+                    </button>
+                  </div>
+                </details>
+
+                <details className="finance-details order-last open:pb-1 lg:col-span-2">
+                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                    <span className="text-sm font-bold text-slate-700">Importar PDF de Balanz</span>
+                  </summary>
+                  <div className="border-t border-slate-100 px-3 pb-4 pt-3 sm:px-4">
+                    <FinanceBalanzImporter
+                      onBusyChange={setBalanzBusy}
+                      disabled={!cloudReady || syncChip !== 'synced'}
+                      onImported={(next, iso) => {
+                        applyCloudState(next, iso);
+                        setLastRemoteAt(iso);
+                        setSyncChip('synced');
+                        setCloudErr(null);
+                      }}
+                    />
+                  </div>
+                </details>
+              </div>
+            </main>
           </>
         ) : null}
       </div>
 
-      {cloudReady ? (
-      <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40 sm:hidden">
-        <a
-          href="#inversion"
-          className="finance-primary-button mx-auto flex min-h-[52px] max-w-lg items-center justify-center px-5 text-base shadow-sm active:scale-[0.99]"
-        >
-          Cargar inversión
-        </a>
-      </div>
+      {cloudReady && !investOpen ? (
+        <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setInvestOpen(true)}
+            className="finance-primary-button mx-auto flex min-h-[52px] w-full max-w-lg items-center justify-center px-5 text-base shadow-sm active:scale-[0.99]"
+          >
+            Cargar inversión
+          </button>
+        </div>
       ) : null}
+
+      {cloudReady && loadSummary && !investOpen ? (
+        <div className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] z-50 px-3 lg:hidden">
+          <FinanceEntryLoadSummaryCard summary={loadSummary} onDismiss={dismissLoadSummary} />
+        </div>
+      ) : null}
+
+      <FinanceInvestSheet
+        open={investOpen && cloudReady}
+        month={month}
+        entries={state.entries}
+        quickAmounts={preferences.quickAmounts}
+        pendingPlanLabels={pendingPlanLabels}
+        onAddEntry={handleAddEntry}
+        onClose={() => setInvestOpen(false)}
+      />
 
       {confettiKey > 0 ? <FinanceConfettiBurst burstKey={confettiKey} /> : null}
 
