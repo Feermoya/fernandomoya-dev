@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { sileo } from 'sileo';
 import type { FinanceDashboardCelebration } from '@/components/finance/FinanceDashboard';
 import type { FinanceEntry, FinanceState } from '@/lib/finance/types';
-import { triggerEntryHaptic } from '@/lib/finance/celebration';
+import { triggerEntryHaptic, triggerSuccessHaptic } from '@/lib/finance/celebration';
 import { buildEntryLoadSummary, type EntryLoadSummary } from '@/lib/finance/entry';
 import {
   getLevelProgressPercent,
   getMonthlyLevel,
+  getMonthlyMissionView,
 } from '@/lib/finance/levels';
 
 type Options = {
@@ -40,13 +41,19 @@ export function useFinanceCelebrations({ persist }: Options) {
       let dash: FinanceDashboardCelebration | null = null;
       let summary: EntryLoadSummary | null = null;
 
+      let missionJustCompleted = false;
+
       persist((prev) => {
         const m = entry.month;
         const prevLevel = getMonthlyLevel(prev, m).level;
+        const prevMission = getMonthlyMissionView(prev, m);
         const next: FinanceState = { ...prev, entries: [...prev.entries, entry] };
         const newLevel = getMonthlyLevel(next, m).level;
+        const nextMission = getMonthlyMissionView(next, m);
 
         summary = buildEntryLoadSummary({ prev, next, entry });
+        missionJustCompleted =
+          prevMission.percent < 100 && nextMission.percent >= 100;
 
         if (summary.levelUp) {
           overlay = summary.levelUp;
@@ -71,8 +78,13 @@ export function useFinanceCelebrations({ persist }: Options) {
             description: summary.toastDescription,
           });
         }
-        setConfettiKey((k) => k + 1);
         triggerEntryHaptic();
+        if (missionJustCompleted) {
+          setConfettiKey((k) => k + 1);
+          triggerSuccessHaptic();
+        } else if (overlay) {
+          triggerSuccessHaptic();
+        }
         if (overlay) setLevelUp(overlay);
         if (dash) setCelebration(dash);
       });

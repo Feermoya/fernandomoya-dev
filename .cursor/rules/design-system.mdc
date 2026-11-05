@@ -1,0 +1,15 @@
+---
+description: Sistema visual Foco financiero — DESIGN.md es la única fuente de verdad
+alwaysApply: true
+---
+
+# Foco financiero · Design system
+
+Todo cambio de UI debe seguir `docs/DESIGN.md`. No inventar colores, fuentes, radios ni sombras. Usar solo los tokens definidos en `src/styles/foco-design-tokens.css`. Un solo botón primario por pantalla. No tocar la lógica de negocio al editar UI.
+
+## Referencias
+
+- Manual: `docs/DESIGN.md`
+- Tokens: `src/styles/foco-design-tokens.css` (scoped a `.finance-app-html`)
+- Íconos: Lucide outline, `strokeWidth={1.75}`
+- Tipografía: Bricolage Grotesque (títulos/números) + Manrope (UI)

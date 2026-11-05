@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { Wallet } from 'lucide-react';
 import {
   formatARS,
   formatEntryAmount,
@@ -11,8 +10,8 @@ import {
 } from '@/lib/finance/calculations';
 import { addMonths } from '@/lib/finance/levels';
 import type { FinanceState } from '@/lib/finance/types';
-import { FinanceDelta, deltaPercent, formatMonthShort } from '@/components/finance/FinanceDelta';
-import { FinanceSectionHeading } from '@/components/finance/FinanceSectionHeading';
+import { deltaPercent, formatMonthShort } from '@/components/finance/FinanceDelta';
+import { FocoCard, FocoTrendChip } from '@/components/finance/ui';
 
 type Props = {
   state: FinanceState;
@@ -24,34 +23,16 @@ function StatCell({
   label,
   value,
   delta,
-  emphasis,
-  compact,
-  primary,
 }: {
   label: string;
   value: string;
   delta?: ReactNode;
-  emphasis?: boolean;
-  compact?: boolean;
-  primary?: boolean;
 }) {
   return (
-    <article
-      className={`rounded-2xl border px-3 py-2.5 transition ${
-        primary
-          ? 'border-blue-200/90 bg-gradient-to-br from-blue-50/80 to-white sm:col-span-1'
-          : 'border-slate-200/80 bg-slate-50/40'
-      } ${compact ? '' : 'sm:px-3.5 sm:py-3'} ${emphasis ? 'sm:col-span-2' : ''}`}
-    >
-      <p className={`finance-label ${primary ? 'text-blue-700' : ''}`}>{label}</p>
-      <p
-        className={`mt-1 tabular-nums tracking-tight text-slate-900 ${
-          primary ? 'text-xl font-black sm:text-2xl' : 'text-sm font-bold text-slate-700'
-        }`}
-      >
-        {value}
-      </p>
-      {delta ? <div className="mt-1.5">{delta}</div> : null}
+    <article className="foco-subcard">
+      <p className="foco-label">{label}</p>
+      <p className="foco-amount-secondary mt-1 tabular-nums">{value}</p>
+      {delta ? <div className="mt-2">{delta}</div> : null}
     </article>
   );
 }
@@ -86,7 +67,7 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
     () =>
       new Set(
         entries
-          .filter((x) => x.type === 'investment' && x.amount > 0 && (x.amountCurrency !== 'USD'))
+          .filter((x) => x.type === 'investment' && x.amount > 0 && x.amountCurrency !== 'USD')
           .map((x) => x.month),
       ).size,
     [entries],
@@ -103,17 +84,11 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
       <StatCell
         label="Promedio mensual"
         value={formatARS(avgMonthly)}
-        compact={compact}
         delta={
-          avgMonthly > 0 && monthInvested > 0 ? (
-            <FinanceDelta
-              absolute={monthInvested - avgMonthly}
-              percent={vsAvgPct}
-              versus="vs promedio"
-              sense="invest"
-            />
+          avgMonthly > 0 && monthInvested > 0 && vsAvgPct != null && vsAvgPct !== 0 ? (
+            <FocoTrendChip percent={vsAvgPct} versus="vs promedio" />
           ) : (
-            <span className="text-[10px] font-medium text-slate-500">
+            <span className="text-[13px] font-medium text-[var(--text-muted)]">
               {activeMonths > 0 ? `${activeMonths} meses` : 'Sin datos'}
             </span>
           )
@@ -122,34 +97,22 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
       <StatCell
         label="Operaciones"
         value={String(opsThisMonth)}
-        compact={compact}
         delta={
-          opsPrevMonth > 0 ? (
-            <FinanceDelta
-              absolute={opsThisMonth - opsPrevMonth}
-              percent={opsPct}
-              versus={`vs ${formatMonthShort(prevMonth)}`}
-              sense="neutral"
-            />
+          opsPrevMonth > 0 && opsPct != null && opsPct !== 0 ? (
+            <FocoTrendChip percent={opsPct} versus={`vs ${formatMonthShort(prevMonth)}`} />
           ) : (
-            <span className="text-[10px] font-medium text-slate-500">En el mes</span>
+            <span className="text-[13px] font-medium text-[var(--text-muted)]">En el mes</span>
           )
         }
       />
       <StatCell
         label={`Año ${year}`}
         value={formatARS(yearInvested)}
-        compact={compact}
         delta={
-          prevYearInvested > 0 ? (
-            <FinanceDelta
-              absolute={yearInvested - prevYearInvested}
-              percent={yearPct}
-              versus={`vs ${year - 1}`}
-              sense="invest"
-            />
+          prevYearInvested > 0 && yearPct != null && yearPct !== 0 ? (
+            <FocoTrendChip percent={yearPct} versus={`vs ${year - 1}`} />
           ) : (
-            <span className="text-[10px] font-medium text-slate-500">Acumulado</span>
+            <span className="text-[13px] font-medium text-[var(--text-muted)]">Acumulado</span>
           )
         }
       />
@@ -157,36 +120,23 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
   );
 
   return (
-    <section
-      className={`finance-card finance-panel-enter h-full ${compact ? 'p-3.5 sm:p-4' : 'p-3.5 sm:p-4 lg:p-5'}`}
-      aria-labelledby="finance-overview-heading"
-    >
-      <FinanceSectionHeading
-        id="finance-overview-heading"
-        title="Cartera"
-        subtitle="Resumen de inversión"
-        icon={Wallet}
-        iconTone="blue"
-      />
+    <FocoCard className="h-full" aria-labelledby="finance-overview-heading">
+      <h3 id="finance-overview-heading" className="foco-card-title">
+        Cartera
+      </h3>
+      <p className="mt-0.5 text-[13px] font-medium text-[var(--text-muted)]">Resumen de inversión</p>
 
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
+      <div className="mt-4 grid grid-cols-2 gap-3">
         <StatCell
           label="Este mes"
           value={formatARS(monthInvested)}
-          primary
-          compact={compact}
           delta={
             <>
-              {prevMonthInvested > 0 ? (
-                <FinanceDelta
-                  absolute={monthInvested - prevMonthInvested}
-                  percent={monthPct}
-                  versus={`vs ${formatMonthShort(prevMonth)}`}
-                  sense="invest"
-                />
+              {prevMonthInvested > 0 && monthPct != null && monthPct !== 0 ? (
+                <FocoTrendChip percent={monthPct} versus={`vs ${formatMonthShort(prevMonth)}`} />
               ) : null}
               {monthInvestedUsd > 0 ? (
-                <p className="mt-0.5 text-[10px] font-semibold tabular-nums text-slate-500">
+                <p className="mt-1 text-[13px] font-medium tabular-nums text-[var(--text-muted)]">
                   + {formatEntryAmount(monthInvestedUsd, 'USD')} en dólares
                 </p>
               ) : null}
@@ -196,13 +146,11 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
         <StatCell
           label="Total histórico"
           value={formatARS(total)}
-          primary
-          compact={compact}
           delta={
             <>
-              <span className="text-[10px] font-medium text-slate-500">Desde el inicio</span>
+              <span className="text-[13px] font-medium text-[var(--text-muted)]">Desde el inicio</span>
               {totalUsd > 0 ? (
-                <p className="mt-0.5 text-[10px] font-semibold tabular-nums text-slate-500">
+                <p className="mt-1 text-[13px] font-medium tabular-nums text-[var(--text-muted)]">
                   + {formatEntryAmount(totalUsd, 'USD')} en dólares
                 </p>
               ) : null}
@@ -212,15 +160,15 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
       </div>
 
       {compact ? (
-        <details className="mt-2">
-          <summary className="cursor-pointer list-none text-[11px] font-bold text-blue-700 underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+        <details className="mt-3">
+          <summary className="cursor-pointer list-none text-[13px] font-semibold text-[var(--primary)] [&::-webkit-details-marker]:hidden">
             Ver promedio, ops y año
           </summary>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">{secondary}</div>
+          <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">{secondary}</div>
         </details>
       ) : (
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">{secondary}</div>
+        <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">{secondary}</div>
       )}
-    </section>
+    </FocoCard>
   );
 }

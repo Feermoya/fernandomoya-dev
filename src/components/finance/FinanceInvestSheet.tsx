@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { FinanceEntry } from '@/lib/finance/types';
 import { FinanceEntryForm } from '@/components/finance/FinanceEntryForm';
 
@@ -69,26 +69,24 @@ export function FinanceInvestSheet({
         onClick={requestClose}
       />
       <div className="finance-invest-overlay__panel">
+        <div className="finance-invest-overlay__handle" aria-hidden />
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h2 id={titleId} className="finance-section-title flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white">
-                <Plus size={16} strokeWidth={2.5} aria-hidden />
-              </span>
+            <h2 id={titleId} className="finance-section-title">
               Cargar inversión
             </h2>
-            <p className="mt-1 text-xs font-medium text-slate-500">
+            <p className="mt-1 text-[14px] font-medium text-[var(--text-muted)]">
               Registrá el movimiento y el tablero se actualiza al instante.
             </p>
           </div>
           <button
             ref={closeRef}
             type="button"
-            className="finance-touch-target inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition hover:bg-slate-100"
+            className="finance-touch-target inline-flex items-center justify-center rounded-full border border-[var(--border-card)] bg-[var(--bg-segment)] text-[var(--text-secondary)]"
             onClick={requestClose}
             aria-label="Cerrar"
           >
-            <X size={18} strokeWidth={2.25} />
+            <X size={20} strokeWidth={1.75} />
           </button>
         </div>
 

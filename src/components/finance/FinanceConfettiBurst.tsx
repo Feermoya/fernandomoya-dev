@@ -1,15 +1,16 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 type Props = {
   burstKey: number;
 };
 
-const COLORS = ['#34d399', '#22d3ee', '#a78bfa', '#fbbf24', '#f472b6'];
+/** Colores del manual: success, primary, chart-1 */
+const COLORS = ['#34B36B', '#2F5BEA', '#F29D38'];
 
 export function FinanceConfettiBurst({ burstKey }: Props) {
   const pieces = useMemo(
     () =>
-      Array.from({ length: 28 }, (_, i) => ({
+      Array.from({ length: 24 }, (_, i) => ({
         id: `${burstKey}-${i}`,
         left: `${(i * 17) % 100}%`,
         delay: `${(i % 7) * 0.04}s`,
@@ -19,10 +20,6 @@ export function FinanceConfettiBurst({ burstKey }: Props) {
       })),
     [burstKey],
   );
-
-  useEffect(() => {
-    /* solo montaje visual por burstKey */
-  }, [burstKey]);
 
   return (
     <div
@@ -40,6 +37,7 @@ export function FinanceConfettiBurst({ burstKey }: Props) {
             backgroundColor: p.color,
             animationDelay: p.delay,
             transform: `rotate(${p.rotate})`,
+            animationDuration: '1.2s',
           }}
         />
       ))}

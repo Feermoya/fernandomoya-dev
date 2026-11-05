@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   addMonthsToKey,
   buildMonthKey,
@@ -10,14 +10,12 @@ import {
   MONTH_LABELS_SHORT_ES,
   parseMonthKey,
 } from '@/lib/finance/monthNavigation';
+import { FOCO_ICON_STROKE } from '@/components/finance/ui';
 
 type Props = {
   value: string;
   onChange: (month: string) => void;
 };
-
-const navBtnClass =
-  'finance-touch-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500';
 
 export function FinanceMonthSelector({ value, onChange }: Props) {
   const popoverId = useId();
@@ -27,7 +25,6 @@ export function FinanceMonthSelector({ value, onChange }: Props) {
   const safeValue = isValidMonthKey(value) ? value : getCurrentMonthKey();
   const atCurrent = isCurrentMonthKey(safeValue);
   const { year: selectedYear, month: selectedMonth } = parseMonthKey(safeValue);
-
   const [viewYear, setViewYear] = useState(selectedYear);
 
   useEffect(() => {
@@ -70,33 +67,28 @@ export function FinanceMonthSelector({ value, onChange }: Props) {
   const { year: todayYear, month: todayMonth } = parseMonthKey(now);
 
   return (
-    <div ref={rootRef} className="relative flex w-full items-center gap-1.5 sm:justify-end sm:gap-2">
-      <button type="button" className={navBtnClass} onClick={goPrev} aria-label="Mes anterior">
-        <ChevronLeft size={16} strokeWidth={2.25} aria-hidden />
+    <div ref={rootRef} className="foco-month relative flex w-full items-center gap-2">
+      <button type="button" className="foco-month__nav" onClick={goPrev} aria-label="Mes anterior">
+        <ChevronLeft size={20} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
       </button>
 
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="finance-touch-target flex min-h-[40px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:min-w-[11rem] sm:flex-none sm:text-base"
+        className="foco-month__label"
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls={popoverId}
       >
-        <CalendarDays size={16} strokeWidth={2} className="shrink-0 text-blue-600" aria-hidden />
         <span className="capitalize">{formatMonthLongEs(safeValue)}</span>
       </button>
 
-      <button type="button" className={navBtnClass} onClick={goNext} aria-label="Mes siguiente">
-        <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
+      <button type="button" className="foco-month__nav" onClick={goNext} aria-label="Mes siguiente">
+        <ChevronRight size={20} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
       </button>
 
       {!atCurrent ? (
-        <button
-          type="button"
-          onClick={goToday}
-          className="finance-touch-target shrink-0 rounded-xl border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[11px] font-bold text-blue-700 transition hover:bg-blue-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-        >
+        <button type="button" onClick={goToday} className="foco-chip foco-chip--primary shrink-0">
           Hoy
         </button>
       ) : null}
@@ -107,25 +99,25 @@ export function FinanceMonthSelector({ value, onChange }: Props) {
           role="dialog"
           aria-modal="false"
           aria-label="Elegir mes"
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(100vw-2rem,17.5rem)] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl sm:right-auto sm:left-1/2 sm:-translate-x-1/2"
+          className="foco-month__popover"
         >
           <div className="mb-3 flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setViewYear((y) => y - 1)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+              className="foco-month__nav"
               aria-label="Año anterior"
             >
-              <ChevronLeft size={16} strokeWidth={2.25} aria-hidden />
+              <ChevronLeft size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
             </button>
-            <span className="text-sm font-black tabular-nums text-slate-900">{viewYear}</span>
+            <span className="text-sm font-bold tabular-nums text-[var(--text-primary)]">{viewYear}</span>
             <button
               type="button"
               onClick={() => setViewYear((y) => y + 1)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+              className="foco-month__nav"
               aria-label="Año siguiente"
             >
-              <ChevronRight size={16} strokeWidth={2.25} aria-hidden />
+              <ChevronRight size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
             </button>
           </div>
 
@@ -140,12 +132,8 @@ export function FinanceMonthSelector({ value, onChange }: Props) {
                   key={label}
                   type="button"
                   onClick={() => pickMonth(monthNum)}
-                  className={`finance-touch-target min-h-[40px] rounded-xl border text-xs font-bold capitalize transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-500 ${
-                    isSelected
-                      ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                      : isToday
-                        ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-slate-50'
+                  className={`foco-month__pick ${isSelected ? 'is-selected' : ''} ${
+                    isToday && !isSelected ? 'is-today' : ''
                   }`}
                   aria-pressed={isSelected}
                   aria-label={`${label} ${viewYear}`}
@@ -154,25 +142,6 @@ export function FinanceMonthSelector({ value, onChange }: Props) {
                 </button>
               );
             })}
-          </div>
-
-          <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
-            <button
-              type="button"
-              onClick={close}
-              className="min-h-[36px] rounded-lg px-2 text-xs font-bold text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
-            >
-              Cerrar
-            </button>
-            {!atCurrent ? (
-              <button
-                type="button"
-                onClick={goToday}
-                className="min-h-[36px] rounded-lg bg-blue-50 px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-100"
-              >
-                Este mes
-              </button>
-            ) : null}
           </div>
         </div>
       ) : null}

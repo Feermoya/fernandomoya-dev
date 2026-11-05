@@ -1,9 +1,7 @@
 import type { FinanceEntry, FinanceGoal } from '@/lib/finance/types';
 import { formatFinancePrice } from '@/lib/finance/financePrices';
 
-const ars = new Intl.NumberFormat('es-AR', {
-  style: 'currency',
-  currency: 'ARS',
+const arsDigits = new Intl.NumberFormat('es-AR', {
   maximumFractionDigits: 0,
 });
 
@@ -16,8 +14,10 @@ export function entryAmountCurrency(
   return entry.amountCurrency === 'USD' ? 'USD' : 'ARS';
 }
 
+/** Formato manual DESIGN.md: `$ 1.393.725` (espacio tras el símbolo). */
 export function formatARS(value: number): string {
-  return ars.format(Number.isFinite(value) ? value : 0);
+  const n = Number.isFinite(value) ? value : 0;
+  return `$ ${arsDigits.format(n)}`;
 }
 
 /** Formatea el monto de una entrada según su moneda. */

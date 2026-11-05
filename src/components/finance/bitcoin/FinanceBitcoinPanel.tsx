@@ -12,6 +12,7 @@ import {
 } from '@/lib/finance/bitcoin';
 import type { FinanceEntry } from '@/lib/finance/types';
 import type { FinancePortfolioHolding } from '@/lib/finance/portfolio/types';
+import { FocoCard, FOCO_ICON_STROKE } from '@/components/finance/ui';
 
 type Props = {
   entries: FinanceEntry[];
@@ -153,13 +154,13 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
     <div className="finance-bitcoin-panel flex flex-col gap-4 lg:gap-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="finance-section-title flex items-center gap-2 text-base sm:text-lg">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-white">
-              <Bitcoin size={18} strokeWidth={2.25} aria-hidden />
+          <h2 className="foco-card-title flex items-center gap-2">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] bg-[var(--chart-1)] text-white">
+              <Bitcoin size={20} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
             </span>
             Bitcoin
           </h2>
-          <p className="mt-1 text-xs font-medium text-slate-500">
+          <p className="mt-1 text-[14px] font-medium text-[var(--text-muted)]">
             Distribuí nuevas compras entre IBIT y BTC directo · simulación
           </p>
         </div>
@@ -171,7 +172,8 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
             className="finance-secondary-button finance-touch-target inline-flex min-h-[40px] items-center gap-1.5 px-3 text-xs"
           >
             <RefreshCcw
-              size={14}
+              size={16}
+              strokeWidth={FOCO_ICON_STROKE}
               className={pricesLoading ? 'motion-safe:animate-spin' : ''}
               aria-hidden
             />
@@ -183,7 +185,7 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
             className="finance-secondary-button finance-touch-target inline-flex min-h-[40px] items-center gap-1.5 px-3 text-xs"
             aria-expanded={settingsOpen}
           >
-            <Settings2 size={14} aria-hidden />
+            <Settings2 size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
             Config
           </button>
         </div>
@@ -301,8 +303,8 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
-        <section className="finance-card finance-bitcoin-card space-y-4 p-4 sm:p-5">
-          <h3 className="text-sm font-bold text-slate-900">Distribución actual</h3>
+        <FocoCard className="space-y-4">
+          <h3 className="foco-card-title">Distribución actual</h3>
           <DistributionBar
             label={`Objetivo ${targets.ibit}/${targets.btc}`}
             ibitPct={targets.ibit}
@@ -315,42 +317,42 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
           />
 
           <div className="grid grid-cols-2 gap-2.5">
-            <article className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3">
-              <p className="finance-label text-blue-700">IBIT</p>
-              <p className="mt-1 text-lg font-black tabular-nums text-slate-900">
+            <article className="foco-subcard">
+              <p className="foco-label text-[var(--primary)]">IBIT</p>
+              <p className="foco-amount-secondary mt-1 tabular-nums">
                 {formatARS(valuation.ibit.valueArs)}
               </p>
-              <p className="mt-1 text-[11px] font-semibold text-blue-800/80">
+              <p className="mt-1 text-[13px] font-semibold text-[var(--text-muted)]">
                 {formatPct(allocation.pctIbitActual)} · {valuation.ibit.detail}
               </p>
             </article>
-            <article className="rounded-2xl border border-amber-100 bg-amber-50/70 p-3">
-              <p className="finance-label text-amber-800">BTC directo</p>
-              <p className="mt-1 text-lg font-black tabular-nums text-slate-900">
+            <article className="foco-subcard">
+              <p className="foco-label text-[var(--warning-text)]">BTC directo</p>
+              <p className="foco-amount-secondary mt-1 tabular-nums">
                 {formatARS(valuation.btc.valueArs)}
               </p>
-              <p className="mt-1 text-[11px] font-semibold text-amber-900/80">
+              <p className="mt-1 text-[13px] font-semibold text-[var(--text-muted)]">
                 {formatPct(allocation.pctBtcActual)} · {valuation.btc.detail}
               </p>
             </article>
           </div>
 
           {totalActual > 0 ? (
-            <p className="text-xs font-semibold text-slate-500">
+            <p className="text-[13px] font-semibold text-[var(--text-muted)]">
               Total Bitcoin {formatARS(totalActual)}
             </p>
           ) : null}
 
           {valuation.notes.map((n) => (
-            <p key={n} className="text-[11px] font-semibold text-amber-800">
+            <p key={n} className="text-[13px] font-semibold text-[var(--warning-text)]">
               {n}
             </p>
           ))}
-        </section>
+        </FocoCard>
 
-        <section className="finance-card space-y-4 p-4 sm:p-5">
+        <FocoCard className="space-y-4">
           <label className="block">
-            <span className="text-sm font-bold text-slate-900">¿Cuánto vas a invertir hoy?</span>
+            <span className="foco-card-title">¿Cuánto vas a invertir hoy?</span>
             <div className="relative mt-2">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
                 $
@@ -358,29 +360,28 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
               <input
                 type="text"
                 inputMode="numeric"
-                className="finance-input-mobile w-full rounded-2xl border border-slate-200 py-3.5 pl-8 pr-3 text-xl font-black tabular-nums tracking-tight text-slate-900 shadow-sm"
+                className="finance-input-mobile w-full rounded-[14px] border border-[var(--border-card)] py-3.5 pl-8 pr-3 text-[22px] font-bold tabular-nums tracking-tight text-[var(--text-primary)]"
+                style={{ fontFamily: 'var(--font-display)' }}
                 placeholder="50.000"
                 value={amountRaw}
                 onChange={(e) => setAmountRaw(e.target.value)}
                 aria-describedby="btc-calc-hint"
               />
             </div>
-            <p id="btc-calc-hint" className="mt-1.5 text-[11px] font-medium text-slate-500">
+            <p id="btc-calc-hint" className="mt-1.5 text-[13px] font-medium text-[var(--text-muted)]">
               Simulación en pesos. No registra compras ni mueve la cartera.
             </p>
           </label>
 
           {nuevaInversion > 0 ? (
             <div className="finance-bitcoin-recs space-y-2.5">
-              <article className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3.5">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700">
-                  Comprá IBIT
-                </p>
-                <p className="mt-1 text-2xl font-black tabular-nums tracking-tight text-slate-900">
+              <article className="rounded-[18px] border border-[var(--border-card)] bg-[var(--bg-segment)] px-4 py-3.5">
+                <p className="foco-label text-[var(--primary)]">Comprá IBIT</p>
+                <p className="foco-amount-secondary mt-1 tabular-nums">
                   {formatARS(allocation.compraIBIT)}
                 </p>
                 {quantities.ibitUnits != null ? (
-                  <p className="mt-1 text-[11px] font-semibold text-blue-800">
+                  <p className="mt-1 text-[13px] font-semibold text-[var(--primary)]">
                     ≈ {quantities.ibitUnits} nominales
                     {quantities.ibitRemainder && quantities.ibitRemainder > 0
                       ? ` · remanente ${formatARS(quantities.ibitRemainder)}`
@@ -388,34 +389,32 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
                   </p>
                 ) : null}
               </article>
-              <article className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-amber-800">
-                  Comprá BTC
-                </p>
-                <p className="mt-1 text-2xl font-black tabular-nums tracking-tight text-slate-900">
+              <article className="rounded-[18px] border border-[var(--warning-border)] bg-[var(--warning-bg)] px-4 py-3.5">
+                <p className="foco-label text-[var(--warning-text)]">Comprá BTC</p>
+                <p className="foco-amount-secondary mt-1 tabular-nums">
                   {formatARS(allocation.compraBTC)}
                 </p>
                 {quantities.btcAmount != null ? (
-                  <p className="mt-1 text-[11px] font-semibold text-amber-900">
+                  <p className="mt-1 text-[13px] font-semibold text-[var(--warning-text)]">
                     ≈ {quantities.btcAmount.toFixed(8)} BTC
                   </p>
                 ) : null}
               </article>
-              <p className="text-sm font-semibold leading-snug text-slate-700">
+              <p className="text-[14px] font-semibold leading-snug text-[var(--text-secondary)]">
                 {allocation.explanation}
               </p>
             </div>
           ) : (
-            <p className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 text-sm font-medium text-slate-500">
+            <p className="rounded-[12px] bg-[var(--bg-app)] px-3 py-3 text-[14px] font-medium text-[var(--text-muted)]">
               Escribí un importe para ver la recomendación al instante.
             </p>
           )}
-        </section>
+        </FocoCard>
       </div>
 
       {nuevaInversion > 0 ? (
-        <section className="finance-card space-y-4 p-4 sm:p-5">
-          <h3 className="text-sm font-bold text-slate-900">Después de comprar (simulación)</h3>
+        <FocoCard className="space-y-4">
+          <h3 className="foco-card-title">Después de comprar (simulación)</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <DistributionBar
               label="Actual"
@@ -428,7 +427,7 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
               btcPct={allocation.pctBtcProyectado}
             />
           </div>
-          <div className="grid grid-cols-2 gap-2.5 text-xs font-semibold text-slate-600">
+          <div className="grid grid-cols-2 gap-2.5 text-[13px] font-semibold text-[var(--text-secondary)]">
             <p>
               IBIT {formatARS(allocation.ibitFuturo)} · {formatPct(allocation.pctIbitProyectado)}
             </p>
@@ -436,7 +435,7 @@ export function FinanceBitcoinPanel({ entries, holdings, bitcoin, onChange }: Pr
               BTC {formatARS(allocation.btcFuturo)} · {formatPct(allocation.pctBtcProyectado)}
             </p>
           </div>
-        </section>
+        </FocoCard>
       ) : null}
     </div>
   );

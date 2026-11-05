@@ -4,7 +4,6 @@ import {
   Coins,
   Goal,
   Lock,
-  Plus,
   Settings,
   ShieldAlert,
   Trophy,
@@ -50,6 +49,7 @@ import {
 } from '@/hooks/finance/useFinanceCloudSync';
 import { useFinanceMonthlyPlanActions } from '@/hooks/finance/useFinanceMonthlyPlanActions';
 import { useFinanceCelebrations } from '@/hooks/finance/useFinanceCelebrations';
+import { FocoChip, FocoPrimaryButton, FocoTabs, FOCO_ICON_STROKE } from '@/components/finance/ui';
 import { sileo } from 'sileo';
 
 type FinanceAppSection = 'dashboard' | 'bitcoin';
@@ -67,25 +67,19 @@ function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
             : status === 'error'
               ? 'No se pudo guardar'
               : 'Solo en este dispositivo';
-  const cls =
+  const tone =
     status === 'synced'
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      ? 'success'
       : status === 'error'
-        ? 'border-red-200 bg-red-50 text-red-700'
-        : status === 'offline'
-          ? 'border-amber-200 bg-amber-50 text-amber-800'
-          : status === 'loading'
-            ? 'border-blue-200 bg-blue-50 text-blue-700'
-            : 'border-amber-200 bg-amber-50 text-amber-700';
+        ? 'danger'
+        : status === 'loading'
+          ? 'primary'
+          : 'warning';
 
   return (
-    <span
-      role="status"
-      className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${cls}`}
-    >
-      <Cloud size={12} strokeWidth={2.25} aria-hidden />
+    <FocoChip tone={tone as 'success' | 'danger' | 'primary' | 'warning'} icon={<Cloud size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />}>
       <span className="truncate">{label}</span>
-    </span>
+    </FocoChip>
   );
 }
 
@@ -308,22 +302,12 @@ export default function FinanceGameApp() {
             <p className="finance-brand-sub mt-1">Inversión mensual con claridad</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-            {cloudReady && section === 'dashboard' ? (
-              <button
-                type="button"
-                onClick={() => setInvestOpen(true)}
-                className="finance-primary-button hidden min-h-[42px] items-center gap-1.5 px-4 text-sm shadow-sm lg:inline-flex"
-              >
-                <Plus size={16} strokeWidth={2.5} aria-hidden />
-                Cargar inversión
-              </button>
-            ) : null}
             <a
               href="/admin"
-              className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-bold uppercase tracking-[0.06em] text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+              className="foco-chip foco-chip--neutral"
               aria-label="Admin"
             >
-              <Lock size={12} strokeWidth={2.25} aria-hidden />
+              <Lock size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
               Admin
             </a>
             {isFinanceCloudConfigured() ? (
@@ -340,10 +324,10 @@ export default function FinanceGameApp() {
                   });
                 }}
                 disabled={syncChip === 'loading' || !cloudReady}
-                className="finance-touch-target inline-flex min-h-[36px] items-center justify-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 disabled:opacity-40"
+                className="finance-touch-target inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-card)] bg-[var(--bg-card)] text-[var(--text-secondary)] disabled:opacity-40"
                 title="Sincronizar con la nube"
               >
-                <Cloud size={15} strokeWidth={2.25} aria-hidden />
+                <Cloud size={20} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
               </button>
             ) : null}
             <SyncStatusChip status={syncChip} />
@@ -351,35 +335,17 @@ export default function FinanceGameApp() {
         </header>
 
         {cloudReady ? (
-          <nav
-            className="finance-app-tabs mb-4 flex gap-1 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm"
-            aria-label="Secciones de Foco financiero"
-          >
-            <button
-              type="button"
-              onClick={() => setSection('dashboard')}
-              className={`finance-touch-target min-h-[42px] flex-1 rounded-xl px-3 text-sm font-bold transition ${
-                section === 'dashboard'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-              aria-current={section === 'dashboard' ? 'page' : undefined}
-            >
-              Dashboard
-            </button>
-            <button
-              type="button"
-              onClick={() => setSection('bitcoin')}
-              className={`finance-touch-target min-h-[42px] flex-1 rounded-xl px-3 text-sm font-bold transition ${
-                section === 'bitcoin'
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-              aria-current={section === 'bitcoin' ? 'page' : undefined}
-            >
-              Bitcoin
-            </button>
-          </nav>
+          <div className="mb-4">
+            <FocoTabs
+              aria-label="Secciones de Foco financiero"
+              value={section}
+              onChange={(id) => setSection(id as FinanceAppSection)}
+              items={[
+                { id: 'dashboard', label: 'Dashboard' },
+                { id: 'bitcoin', label: 'Bitcoin' },
+              ]}
+            />
+          </div>
         ) : null}
 
         {!cloudReady ? (
@@ -595,14 +561,13 @@ export default function FinanceGameApp() {
       </div>
 
       {cloudReady && section === 'dashboard' && !investOpen ? (
-        <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40 lg:hidden">
-          <button
-            type="button"
+        <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40">
+          <FocoPrimaryButton
             onClick={() => setInvestOpen(true)}
-            className="finance-primary-button mx-auto flex min-h-[52px] w-full max-w-lg items-center justify-center px-5 text-base shadow-sm active:scale-[0.99]"
+            className="mx-auto w-full max-w-lg"
           >
             Cargar inversión
-          </button>
+          </FocoPrimaryButton>
         </div>
       ) : null}
 

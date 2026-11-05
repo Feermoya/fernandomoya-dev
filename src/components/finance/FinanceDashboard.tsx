@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Target, TrendingUp, Trophy } from 'lucide-react';
+import { Flame, Target, Trophy } from 'lucide-react';
 import type { FinanceState } from '@/lib/finance/types';
 import {
   formatARS,
   getMonthlyInvested,
   getMonthlyInvestmentStreak,
+  getStreakCalendarCells,
+  MONTHLY_STREAK_MINIMUM_ARS,
 } from '@/lib/finance/calculations';
 import {
   addMonths,
@@ -13,29 +15,23 @@ import {
   getMonthlyLevel,
   type MonthlyMissionView,
 } from '@/lib/finance/levels';
-import { FinanceStreakCalendar } from '@/components/finance/FinanceStreakCalendar';
 import { FinanceMonthSelector } from '@/components/finance/FinanceMonthSelector';
-import { FinanceDelta, deltaPercent, formatMonthShort } from '@/components/finance/FinanceDelta';
+import { deltaPercent, formatMonthShort } from '@/components/finance/FinanceDelta';
+import {
+  FocoCard,
+  FocoChip,
+  FocoProgressRing,
+  FocoSegmentedBar,
+  FocoStreakStrip,
+  FocoTrendChip,
+  FOCO_ICON_STROKE,
+} from '@/components/finance/ui';
 
 export type FinanceDashboardCelebration = {
   key: number;
   barFrom: number;
   barTo: number;
 };
-
-const LEVEL_ACCENT: Record<number, string> = {
-  0: '#64748b',
-  1: '#16a34a',
-  2: '#2563eb',
-  3: '#7c3aed',
-  4: '#d97706',
-  5: '#ca8a04',
-};
-
-function levelAccent(level: number): string {
-  if (level >= 6) return '#0891b2';
-  return LEVEL_ACCENT[level] ?? '#2563eb';
-}
 
 type Props = {
   state: FinanceState;
@@ -44,14 +40,48 @@ type Props = {
   celebration?: FinanceDashboardCelebration | null;
 };
 
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mq.matches);
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return reduced;
+}
+
+function useCountUp(target: number, durationMs: number, reduced: boolean, key: string) {
+  const [value, setValue] = useState(reduced ? target : 0);
+  useEffect(() => {
+    if (reduced) {
+      setValue(target);
+      return;
+    }
+    setValue(0);
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(Math.round(target * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, durationMs, reduced, key]);
+  return value;
+}
+
 export function FinanceDashboard({ state, mission, onMonthChange, celebration }: Props) {
   const month = state.currentMonth;
   const entries = state.entries;
   const levelInfo = getMonthlyLevel(state, month);
-  const accent = levelAccent(levelInfo.level);
   const rawProgress = getLevelProgressPercent(state, month, levelInfo.level);
   const gap = getGapToNextInvestmentMilestone(state, month);
   const investedMonth = getMonthlyInvested(entries, month);
+  const reduced = usePrefersReducedMotion();
 
   const showProgressPercent = !(rawProgress < 1 && levelInfo.level >= 1);
   const barWidth = Math.min(
@@ -80,132 +110,91 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
   }, [celebration?.key, celebration?.barFrom, celebration?.barTo]);
 
   const widthPct = barOverride !== null ? barOverride : barWidth;
-  const barTransitionMs = barOverride !== null ? 1000 : 700;
+  const counted = useCountUp(mission.currentAmount, 700, reduced, month);
 
   const prevMonth = addMonths(month, -1);
   const investedPrevMonth = getMonthlyInvested(entries, prevMonth);
-  const deltaVsPrev = investedMonth - investedPrevMonth;
   const deltaPct = deltaPercent(investedMonth, investedPrevMonth);
   const streak = getMonthlyInvestmentStreak(entries, month);
-  const missionDone = mission.status === 'completed';
-  const progressComplete = mission.percent >= 100;
+  const cells = getStreakCalendarCells(entries, 12);
+  const missionDone = mission.status === 'completed' || mission.percent >= 100;
 
   return (
-    <section
-      className="finance-card finance-hero-card finance-hero-enter overflow-visible p-4 motion-reduce:animate-none sm:p-5 lg:p-6"
-      key={month}
-    >
-      <div className="flex flex-col gap-4 lg:gap-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <span
-            className="finance-level-chip inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide"
-            style={{ backgroundColor: `${accent}18`, color: accent, border: `1px solid ${accent}40` }}
-          >
-            <Trophy size={14} strokeWidth={2.25} aria-hidden />
-            Nivel {levelInfo.level}
-          </span>
-          <div className="min-w-0 sm:max-w-md sm:flex-1 lg:max-w-lg">
-            <FinanceMonthSelector value={month} onChange={onMonthChange} />
-          </div>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-stretch lg:gap-5">
-          <div className="finance-goal-panel flex flex-col justify-between rounded-2xl border border-blue-100/80 bg-gradient-to-br from-blue-50/90 via-white to-slate-50/60 p-4 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-              <p className="finance-label flex items-center gap-1.5 text-blue-700">
-                <Target size={12} strokeWidth={2.25} aria-hidden />
-                Objetivo del mes
-              </p>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                  missionDone
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : mission.status === 'in_progress'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-slate-100 text-slate-600'
-                }`}
-              >
-                {missionDone ? 'Completado' : mission.status === 'in_progress' ? 'En curso' : 'Pendiente'}
-              </span>
-            </div>
-
-            <div className="mt-3">
-              <p className="finance-metric finance-metric-hero">{formatARS(mission.currentAmount)}</p>
-              <p className="mt-1.5 text-sm font-semibold text-slate-600">
-                de{' '}
-                <span className="tabular-nums text-slate-900">{formatARS(mission.targetAmount)}</span>
-                <span className="mx-1.5 text-slate-300">·</span>
-                <span
-                  className={`tabular-nums font-bold ${
-                    progressComplete ? 'text-emerald-700' : 'text-blue-700'
-                  }`}
-                >
-                  {mission.percent.toFixed(0)}%
-                </span>
-              </p>
-            </div>
-
-            {investedPrevMonth > 0 ? (
-              <div className="mt-3">
-                <FinanceDelta
-                  absolute={deltaVsPrev}
-                  percent={deltaPct}
-                  versus={`vs ${formatMonthShort(prevMonth)}`}
-                  sense="invest"
-                  size="md"
-                />
-              </div>
-            ) : null}
-
-            <div className="mt-4">
-              <div className="h-3 overflow-hidden rounded-full bg-slate-200/80">
-                <div
-                  className={`finance-progress-fill h-full w-full origin-left rounded-full ${
-                    progressComplete ? 'bg-emerald-500' : 'bg-blue-600'
-                  }`}
-                  style={{
-                    transform: `scaleX(${Math.min(1, Math.max(0, mission.percent / 100))})`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <div className="rounded-2xl border border-slate-200/90 bg-white px-3.5 py-3 sm:px-4">
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="finance-label flex items-center gap-1">
-                  <TrendingUp size={11} strokeWidth={2.25} aria-hidden />
-                  Progreso de nivel
-                </span>
-                {showProgressPercent ? (
-                  <span className="text-[11px] font-bold tabular-nums text-slate-700">
-                    {rawProgress.toFixed(0)}%
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-semibold text-slate-500">En curso</span>
-                )}
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className="h-full w-full origin-left rounded-full bg-blue-600 motion-reduce:transition-none"
-                  style={{
-                    transform: `scaleX(${Math.min(1, Math.max(0, widthPct / 100))})`,
-                    transition: `transform ${barTransitionMs}ms cubic-bezier(0.22, 1, 0.36, 1)`,
-                  }}
-                />
-              </div>
-              {gap && gap.amountMissing > 0 ? (
-                <p className="mt-1.5 text-[11px] font-semibold text-slate-500">
-                  Faltan {formatARS(gap.amountMissing)} para nivel {gap.nextLevel}
-                </p>
-              ) : null}
-            </div>
-
-            <FinanceStreakCalendar entries={entries} streakCount={streak.streakCount} compact />
-          </div>
+    <div className="foco-dashboard-stack" key={month}>
+      <div className="foco-level-row">
+        <FocoChip tone="level" icon={<Trophy size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />}>
+          Nivel {levelInfo.level}
+        </FocoChip>
+        <div className="foco-level-row__month">
+          <FinanceMonthSelector value={month} onChange={onMonthChange} />
         </div>
       </div>
-    </section>
+
+      <FocoCard className="foco-goal-card">
+        <div className="foco-goal-card__top">
+          <p className="foco-label">
+            <Target size={12} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
+            Objetivo del mes
+          </p>
+          <FocoChip tone={missionDone ? 'successSolid' : 'primary'}>
+            {missionDone ? 'Objetivo cumplido' : 'En curso'}
+          </FocoChip>
+        </div>
+
+        <div className="foco-goal-card__body">
+          <FocoProgressRing
+            percent={mission.percent}
+            label={`Objetivo del mes: ${Math.round(mission.percent)}%`}
+            reducedMotion={reduced}
+          />
+          <div className="min-w-0">
+            <p className="foco-amount-hero tabular-nums">{formatARS(counted)}</p>
+            <p className="foco-amount-sub">de {formatARS(mission.targetAmount)}</p>
+          </div>
+        </div>
+
+        {investedPrevMonth > 0 && deltaPct != null && deltaPct !== 0 ? (
+          <FocoTrendChip percent={deltaPct} versus={`vs ${formatMonthShort(prevMonth)}`} />
+        ) : null}
+      </FocoCard>
+
+      <FocoCard>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="foco-label">Progreso de nivel</p>
+          {showProgressPercent ? (
+            <span className="text-[12px] font-semibold tabular-nums text-[var(--text-secondary)]">
+              {rawProgress.toFixed(0)}%
+            </span>
+          ) : (
+            <span className="text-[12px] font-semibold text-[var(--text-muted)]">En curso</span>
+          )}
+        </div>
+        <FocoSegmentedBar
+          percent={widthPct}
+          aria-label={`Progreso de nivel: ${rawProgress.toFixed(0)}%`}
+          reducedMotion={reduced}
+        />
+        {gap && gap.amountMissing > 0 ? (
+          <p className="mt-2 text-[13px] font-medium text-[var(--text-muted)]">
+            Faltan {formatARS(gap.amountMissing)} para nivel {gap.nextLevel}
+          </p>
+        ) : null}
+      </FocoCard>
+
+      <FocoCard>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="foco-label">
+            <Flame size={12} strokeWidth={FOCO_ICON_STROKE} className="text-[var(--warning-text)]" aria-hidden />
+            Racha · {streak.streakCount} {streak.streakCount === 1 ? 'mes' : 'meses'}
+          </p>
+          <FocoChip tone="warning">Mín. {formatARS(MONTHLY_STREAK_MINIMUM_ARS)}</FocoChip>
+        </div>
+        <FocoStreakStrip
+          cells={cells}
+          streakCount={streak.streakCount}
+          ariaLabel={`Racha: ${streak.streakCount} meses`}
+        />
+      </FocoCard>
+    </div>
   );
 }
