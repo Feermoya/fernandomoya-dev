@@ -1,7 +1,7 @@
 import { normalizePlanLabel } from '@/lib/finance/monthlyInvestmentPlan';
 import type { FinanceAsset } from '@/lib/finance/types';
 
-const PLATFORM_OPTIONS = ['Balanz', 'Exchange crypto', 'Banco', 'Otro'] as const;
+const PLATFORM_OPTIONS = ['Balanz', 'Binance', 'Exchange crypto', 'Banco', 'Otro'] as const;
 
 export type EntryPlatform = (typeof PLATFORM_OPTIONS)[number];
 
@@ -20,13 +20,13 @@ export function applyPendingPlanLabel(
   setCategory(base);
 
   if (base === 'BTC') {
-    setAsset('BTC');
-    setPlatform('Exchange crypto');
+    setAsset('CRYPTO');
+    setPlatform('Binance');
     return base;
   }
   if (base === 'ETH' || base === 'SOL') {
-    setAsset('OTHER');
-    setPlatform('Exchange crypto');
+    setAsset('CRYPTO');
+    setPlatform('Binance');
     return base;
   }
   if (!currentAsset) setAsset('CEDEAR');
