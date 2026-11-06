@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { FinanceAuthError, replaceTemporaryFinancePassword } from '@/lib/finance/authClient';
+import { FinancePasswordField } from '@/components/finance/FinancePasswordField';
 import { FocoPrimaryButton } from '@/components/finance/ui';
 
 type Props = {
@@ -45,33 +46,27 @@ export function FinanceSetPassword({ email, onDone, onSignOut }: Props) {
           La que te pasaron es temporal. Elegí una fácil de recordar. Solo la vas a usar vos, {email}.
         </p>
 
-        <label className="mt-5 block text-xs font-bold text-[var(--text-secondary)]" htmlFor="finance-new-password">
-          Contraseña nueva
-        </label>
-        <input
-          id="finance-new-password"
-          type="password"
-          autoComplete="new-password"
-          required
-          value={password}
-          disabled={busy}
-          onChange={(event) => setPassword(event.target.value)}
-          className="finance-input-mobile mt-1 min-h-[44px] w-full rounded-xl px-3 py-2 text-sm font-semibold"
-        />
+        <div className="mt-5">
+          <FinancePasswordField
+            id="finance-new-password"
+            label="Contraseña nueva"
+            autoComplete="new-password"
+            value={password}
+            disabled={busy}
+            onChange={setPassword}
+          />
+        </div>
 
-        <label className="mt-3 block text-xs font-bold text-[var(--text-secondary)]" htmlFor="finance-confirm-password">
-          Repetila
-        </label>
-        <input
-          id="finance-confirm-password"
-          type="password"
-          autoComplete="new-password"
-          required
-          value={confirm}
-          disabled={busy}
-          onChange={(event) => setConfirm(event.target.value)}
-          className="finance-input-mobile mt-1 min-h-[44px] w-full rounded-xl px-3 py-2 text-sm font-semibold"
-        />
+        <div className="mt-3">
+          <FinancePasswordField
+            id="finance-confirm-password"
+            label="Repetila"
+            autoComplete="new-password"
+            value={confirm}
+            disabled={busy}
+            onChange={setConfirm}
+          />
+        </div>
 
         {error ? (
           <p className="mt-3 rounded-[var(--radius-inner)] bg-[var(--danger-bg)] px-3 py-2 text-sm font-semibold text-[var(--danger-text)]" role="alert">

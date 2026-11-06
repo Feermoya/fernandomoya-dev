@@ -51,6 +51,7 @@ import {
 import { useFinanceMonthlyPlanActions } from '@/hooks/finance/useFinanceMonthlyPlanActions';
 import { useFinanceCelebrations } from '@/hooks/finance/useFinanceCelebrations';
 import { FocoChip, FocoPrimaryButton, FocoTabs, FOCO_ICON_STROKE } from '@/components/finance/ui';
+import { FinanceWelcomeTour } from '@/components/finance/FinanceWelcomeTour';
 import { sileo } from 'sileo';
 
 type FinanceAppSection = 'dashboard' | 'bitcoin';
@@ -486,7 +487,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                   </div>
                 </details>
 
-                <details className="finance-details open:pb-1">
+                <details className="finance-details open:pb-1" data-tour="goals">
                   <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
                     <FinanceDetailsSummary icon={Goal} label="Objetivos" />
                   </summary>
@@ -575,6 +576,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
       {bookOpen && section === 'dashboard' && !investOpen ? (
         <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40">
           <FocoPrimaryButton
+            data-tour="invest"
             onClick={() => setInvestOpen(true)}
             className="mx-auto w-full max-w-lg"
           >
@@ -598,6 +600,8 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         onAddEntry={handleAddEntry}
         onClose={() => setInvestOpen(false)}
       />
+
+      {bookOpen && section === 'dashboard' && !investOpen ? <FinanceWelcomeTour userId={userId} /> : null}
 
       {confettiKey > 0 ? <FinanceConfettiBurst burstKey={confettiKey} /> : null}
 

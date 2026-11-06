@@ -151,13 +151,13 @@ Contenedor `--bg-segment`, radio pill, padding 4px. Pestaña activa: fondo `--pr
 ### 5.4 Tarjeta "Objetivo del mes" (componente estrella)
 Estructura:
 - Fila superior: etiqueta `OBJETIVO DEL MES` + chip de estado a la derecha.
-- Fila central: **anillo de progreso** (84px, trazo 9px, radio 34, `stroke-linecap: round`, empieza arriba) + a la derecha el monto grande y debajo "de $ X".
+- Fila central: **anillo de progreso** (112px, trazo 9px, `stroke-linecap: round`, empieza arriba) + a la derecha el monto grande y debajo "de $ X". El 112px deja aire entre el trazo y el porcentaje; 84px apretaba el 100%.
 - Fila inferior: chip de tendencia a ancho completo.
 
 Anillo:
 - Pista `--border-card`. Progreso: `--primary` si es menor a 100%, `--success` si llega a 100% o más.
 - El porcentaje del centro se limita visualmente a 100% en el trazo, pero el número puede mostrar el real (ej. 164%).
-- Animación al montar: trazo de 0 al valor en 800ms `cubic-bezier(.22,1,.36,1)`; el monto cuenta de 0 al valor en 700ms.
+- Animación al montar: trazo, porcentaje y monto comparten 1200ms con ease-out cubic (`1 - (1 - t)³`) y terminan juntos. El monto cuenta desde 0. La tarjeta no se desvanece aparte, para que el conteo se vea desde el primer instante.
 
 Chip de estado:
 - Menor a 100%: "En curso" (fondo `--bg-segment`, texto `--primary`).

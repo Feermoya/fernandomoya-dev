@@ -52,26 +52,32 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-function useCountUp(target: number, durationMs: number, reduced: boolean, key: string) {
-  const [value, setValue] = useState(reduced ? target : 0);
+/** ease-out cubic. Empieza ya y deja ver el conteo; el expo del token termina demasiado pronto. */
+function easeOutCubic(t: number): number {
+  const x = Math.min(1, Math.max(0, t));
+  return 1 - (1 - x) ** 3;
+}
+
+/** 1200ms: el monto y el anillo terminan juntos, y el conteo se lee. */
+function useEnterProgress(key: string, reduced: boolean) {
+  const [progress, setProgress] = useState(reduced ? 1 : 0);
   useEffect(() => {
     if (reduced) {
-      setValue(target);
+      setProgress(1);
       return;
     }
-    setValue(0);
+    setProgress(0);
     const start = performance.now();
     let raf = 0;
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / durationMs);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(target * eased));
+      const t = Math.min(1, (now - start) / 1200);
+      setProgress(easeOutCubic(t));
       if (t < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, durationMs, reduced, key]);
-  return value;
+  }, [key, reduced]);
+  return progress;
 }
 
 export function FinanceDashboard({ state, mission, onMonthChange, celebration }: Props) {
@@ -110,7 +116,8 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
   }, [celebration?.key, celebration?.barFrom, celebration?.barTo]);
 
   const widthPct = barOverride !== null ? barOverride : barWidth;
-  const counted = useCountUp(mission.currentAmount, 700, reduced, month);
+  const enter = useEnterProgress(month, reduced);
+  const counted = Math.round(mission.currentAmount * enter);
 
   const prevMonth = addMonths(month, -1);
   const investedPrevMonth = getMonthlyInvested(entries, prevMonth);
@@ -130,7 +137,7 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
         </div>
       </div>
 
-      <FocoCard className="foco-goal-card">
+      <FocoCard className="foco-goal-card" data-tour="goal">
         <div className="foco-goal-card__top">
           <p className="foco-label">
             <Target size={12} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
@@ -144,11 +151,18 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
         <div className="foco-goal-card__body">
           <FocoProgressRing
             percent={mission.percent}
+            progress={enter}
             label={`Objetivo del mes: ${Math.round(mission.percent)}%`}
-            reducedMotion={reduced}
           />
           <div className="min-w-0">
-            <p className="foco-amount-hero tabular-nums">{formatARS(counted)}</p>
+            <p className="foco-amount-hero tabular-nums">
+              <span className="foco-amount-sizer">
+                <span className="foco-amount-sizer__ghost" aria-hidden>
+                  {formatARS(mission.currentAmount)}
+                </span>
+                <span className="foco-amount-sizer__value">{formatARS(counted)}</span>
+              </span>
+            </p>
             <p className="foco-amount-sub">de {formatARS(mission.targetAmount)}</p>
           </div>
         </div>
@@ -181,7 +195,7 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
         ) : null}
       </FocoCard>
 
-      <FocoCard>
+      <FocoCard data-tour="streak">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <p className="foco-label">
             <Flame size={12} strokeWidth={FOCO_ICON_STROKE} className="text-[var(--warning-text)]" aria-hidden />

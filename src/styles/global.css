@@ -671,7 +671,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    animation: finance-hero-in 150ms var(--ease-out-expo) both;
   }
 
   .foco-level-row {
@@ -742,20 +741,123 @@
     flex-shrink: 0;
   }
 
-  .foco-ring__progress {
-    transition: stroke-dashoffset var(--dur-enter) var(--ease-out-expo);
-  }
-
   .foco-ring__pct {
     position: absolute;
-    inset: 0;
+    inset: 14px;
     display: grid;
     place-items: center;
     font-family: var(--font-display);
     font-size: var(--text-ring-pct);
     font-weight: 700;
     letter-spacing: -0.02em;
+    line-height: 1;
     color: var(--text-primary);
+  }
+
+  .foco-amount-sizer {
+    display: inline-grid;
+  }
+
+  .foco-amount-sizer__ghost,
+  .foco-amount-sizer__value {
+    grid-area: 1 / 1;
+  }
+
+  .foco-amount-sizer__ghost {
+    visibility: hidden;
+  }
+
+  .foco-tour {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    pointer-events: none;
+  }
+
+  [data-tour='goals'],
+  [data-tour='streak'],
+  [data-tour='goal'] {
+    scroll-margin-top: 16px;
+    scroll-margin-bottom: 96px;
+  }
+
+  .foco-tour-dim,
+  .foco-tour-catch,
+  .foco-tour-card {
+    pointer-events: auto;
+  }
+
+  .foco-tour-dim {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--text-primary) 42%, transparent);
+  }
+
+  .foco-tour-hole {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    box-shadow:
+      0 0 0 2px var(--primary),
+      0 0 0 100vmax color-mix(in srgb, var(--text-primary) 42%, transparent);
+    transition:
+      transform var(--dur-base) var(--ease-out-expo),
+      width var(--dur-base) var(--ease-out-expo),
+      height var(--dur-base) var(--ease-out-expo),
+      border-radius var(--dur-base) var(--ease-out-expo);
+  }
+
+  .foco-tour-catch {
+    position: absolute;
+    inset: 0;
+  }
+
+  .foco-tour-card {
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left, 0px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+    width: min(22rem, calc(100% - 32px));
+    margin-inline: auto;
+    border: 1px solid var(--border-card);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius-card);
+    padding: var(--space-4);
+    animation: foco-tour-in var(--dur-base) var(--ease-out-expo) both;
+  }
+
+  .foco-tour-copy {
+    animation: foco-tour-fade 150ms var(--ease-out-expo) both;
+  }
+
+  @keyframes foco-tour-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes foco-tour-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .foco-tour-hole,
+    .foco-tour-card,
+    .foco-tour-copy {
+      animation: none;
+      transition: none;
+    }
   }
 
   .foco-segments {

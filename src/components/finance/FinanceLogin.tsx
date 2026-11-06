@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { FinanceAuthError, getFinanceAuthClient, signInToFinance } from '@/lib/finance/authClient';
+import { FinancePasswordField } from '@/components/finance/FinancePasswordField';
 import { FocoPrimaryButton } from '@/components/finance/ui';
 
 export function FinanceLogin() {
@@ -52,19 +53,16 @@ export function FinanceLogin() {
           className="finance-input-mobile mt-1 min-h-[44px] w-full rounded-xl px-3 py-2 text-sm font-semibold"
         />
 
-        <label className="mt-3 block text-xs font-bold text-[var(--text-secondary)]" htmlFor="finance-password">
-          Contraseña
-        </label>
-        <input
-          id="finance-password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          disabled={!configured || busy}
-          onChange={(event) => setPassword(event.target.value)}
-          className="finance-input-mobile mt-1 min-h-[44px] w-full rounded-xl px-3 py-2 text-sm font-semibold"
-        />
+        <div className="mt-3">
+          <FinancePasswordField
+            id="finance-password"
+            label="Contraseña"
+            autoComplete="current-password"
+            value={password}
+            disabled={!configured || busy}
+            onChange={setPassword}
+          />
+        </div>
 
         {error ? (
           <p className="mt-3 rounded-[var(--radius-inner)] bg-[var(--danger-bg)] px-3 py-2 text-sm font-semibold text-[var(--danger-text)]" role="alert">
