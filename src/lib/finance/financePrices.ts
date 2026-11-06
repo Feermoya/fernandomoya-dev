@@ -1,4 +1,4 @@
-export type FinancePriceSource = 'google-finance' | 'yahoo-finance' | 'fallback' | 'missing';
+export type FinancePriceSource = 'google-finance' | 'yahoo-finance' | 'binance' | 'fallback' | 'missing';
 
 export type FinancePrice = {
   ticker: string;
@@ -99,6 +99,20 @@ export async function fetchFinancePrices(tickers: string[]): Promise<FetchFinanc
   }
 }
 
+export type CryptoSearchResult = { symbol: string; name: string };
+
+export async function fetchBinanceCryptoSearch(query: string): Promise<CryptoSearchResult[]> {
+  try {
+    const url = `/api/finance-prices?cryptoSearch=${encodeURIComponent(query)}`;
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { results?: CryptoSearchResult[] };
+    return Array.isArray(data.results) ? data.results : [];
+  } catch {
+    return [];
+  }
+}
+
 export function formatPricesFetchedTime(iso: string | null): string {
   if (!iso) return '';
   try {
@@ -113,7 +127,7 @@ export function formatFinancePrice(value: number, currency = 'ARS'): string {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'USD',
-      maximumFractionDigits: value >= 1000 ? 0 : 2,
+      maximumFractionDigits: value >= 1000 ? 2 : value >= 1 ? 4 : value >= 0.0001 ? 8 : 12,
     }).format(value);
   }
   return new Intl.NumberFormat('es-AR', {

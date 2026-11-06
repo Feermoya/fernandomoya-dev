@@ -1,9 +1,10 @@
+import { searchBinanceCrypto } from '../../src/lib/finance/binanceMarket';
 import {
   buildFinancePricesResponse,
   FINANCE_PRICES_CACHE_HEADERS,
 } from '../../src/lib/finance/financePricesServer';
 
-type Req = { method?: string; query?: { tickers?: string } };
+type Req = { method?: string; query?: { tickers?: string; cryptoSearch?: string } };
 type Res = {
   status: (code: number) => { json: (body: unknown) => void };
   setHeader: (key: string, value: string) => void;
@@ -14,6 +15,13 @@ export default async function handler(req: Req, res: Res) {
     if (req.method !== 'GET') {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       return res.status(405).json({ ok: false, error: 'Method not allowed' });
+    }
+
+    if (typeof req.query?.cryptoSearch === 'string') {
+      const results = await searchBinanceCrypto(req.query.cryptoSearch, 9);
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=900');
+      return res.status(200).json({ ok: true, results });
     }
 
     const raw = typeof req.query?.tickers === 'string' ? req.query.tickers : '';

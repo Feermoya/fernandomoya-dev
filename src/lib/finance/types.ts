@@ -19,6 +19,7 @@ export type FinanceAsset =
   | 'ARS'
   | 'USD'
   | 'BTC'
+  | 'CRYPTO'
   | 'CEDEAR'
   | 'ETF'
   | 'EMERGENCY_FUND'
@@ -29,7 +30,7 @@ export type FinanceEntryMarketSnapshot = {
   ticker: string;
   price: number;
   currency: string;
-  source: 'google-finance' | 'yahoo-finance' | 'fallback' | 'missing';
+  source: 'google-finance' | 'yahoo-finance' | 'binance' | 'fallback' | 'missing';
   fetchedAt: string;
   exchange?: string;
   url?: string;

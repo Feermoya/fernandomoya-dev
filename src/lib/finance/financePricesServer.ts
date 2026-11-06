@@ -7,6 +7,7 @@ import {
 } from './googleFinanceParse';
 import type { FinancePrice } from './financePrices';
 import { isCryptoTicker, getCryptoLogoFallbackUrl } from './tickerPricing';
+import { fetchBinanceCryptoPrice } from './binanceMarket';
 import {
   buildYahooChartUrl,
   buildYahooFinanceQuoteUrl,
@@ -29,7 +30,7 @@ const FETCH_HEADERS = {
 };
 
 export const FINANCE_PRICES_CACHE_HEADERS = {
-  'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=3600',
+  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=180',
   'Content-Type': 'application/json; charset=utf-8',
 };
 
@@ -155,7 +156,8 @@ async function fetchYahooCryptoPrice(ticker: string, fetchedAt: string): Promise
 
 async function fetchTickerPrice(ticker: string, fetchedAt: string): Promise<FinancePrice> {
   if (isCryptoTicker(ticker)) {
-    return fetchYahooCryptoPrice(ticker, fetchedAt);
+    return (await fetchBinanceCryptoPrice(ticker, fetchedAt))
+      ?? fetchYahooCryptoPrice(ticker, fetchedAt);
   }
   const bcba = await fetchGoogleBcbaPrice(ticker, fetchedAt);
   if (bcba.price > 0 && bcba.source !== 'missing') return bcba;
