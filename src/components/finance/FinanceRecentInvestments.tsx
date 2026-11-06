@@ -73,7 +73,7 @@ function InvestmentRow({
         ) : null}
         {entry.estimatedUnits && entry.estimatedUnits > 0 ? (
           <p className="text-[10px] font-medium text-slate-500">
-            {entry.importedSource ? '' : '~'}{entry.estimatedUnits.toLocaleString('es-AR', { maximumFractionDigits: 2 })} unidades
+            {entry.importedSource ? '' : '~'}{entry.estimatedUnits.toLocaleString('es-AR', { maximumFractionDigits: entry.asset === 'CRYPTO' || entry.asset === 'BTC' ? 8 : 2 })} {entry.asset === 'CRYPTO' || entry.asset === 'BTC' ? ticker || 'cripto' : 'unidades'}
           </p>
         ) : null}
         {metaParts ? (
