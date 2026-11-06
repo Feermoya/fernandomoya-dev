@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Banknote, Hash } from 'lucide-react';
+import { Banknote, Hash, Coins, Landmark } from 'lucide-react';
+import { FinanceCryptoPicker } from '@/components/finance/entry/FinanceCryptoPicker';
 import { sileo } from 'sileo';
 import { formatEntryAmount } from '@/lib/finance/calculations';
 import {
@@ -41,6 +42,7 @@ const ASSET_OPTIONS: { value: FinanceAsset; label: string }[] = [
   { value: 'ARS', label: 'ARS' },
   { value: 'USD', label: 'Dólar MEP / USD' },
   { value: 'BTC', label: 'Bitcoin (BTC)' },
+  { value: 'CRYPTO', label: 'Criptomoneda (Binance)' },
   { value: 'CEDEAR', label: 'Acciones / CEDEARs' },
   { value: 'ETF', label: 'ETF' },
   { value: 'EMERGENCY_FUND', label: 'Fondo emergencia' },
@@ -66,6 +68,7 @@ export function FinanceEntryForm({
   const [amountCurrency, setAmountCurrency] = useState<EntryAmountCurrency>('ARS');
   const [amount, setAmount] = useState('');
   const [units, setUnits] = useState('');
+  const [cryptoActualUnits, setCryptoActualUnits] = useState('');
   const [asset, setAsset] = useState<FinanceAsset | ''>('');
   const [platform, setPlatform] = useState<EntryPlatform>('Balanz');
   const [category, setCategory] = useState('');
@@ -74,6 +77,7 @@ export function FinanceEntryForm({
   const [priceLoading, setPriceLoading] = useState(false);
   const [livePrice, setLivePrice] = useState<FinancePrice | null>(null);
   const [priceError, setPriceError] = useState<string | null>(null);
+  const isCrypto = asset === 'CRYPTO' || asset === 'BTC';
 
   useEffect(() => {
     setFormMonth(month);
@@ -83,10 +87,11 @@ export function FinanceEntryForm({
     const dirty =
       Boolean(amount.trim()) ||
       Boolean(units.trim()) ||
+      Boolean(cryptoActualUnits.trim()) ||
       Boolean(note.trim()) ||
       Boolean(category.trim());
     onDirtyChange?.(dirty);
-  }, [amount, units, note, category, onDirtyChange]);
+  }, [amount, units, cryptoActualUnits, note, category, onDirtyChange]);
 
   const tickerHint = useMemo(() => {
     const raw = category.trim().toUpperCase();
@@ -95,17 +100,19 @@ export function FinanceEntryForm({
   }, [category]);
 
   useEffect(() => {
-    if (mode !== 'units' || !tickerHint) {
+    if ((mode !== 'units' && !isCrypto) || !tickerHint) {
       setLivePrice(null);
+      setPriceLoading(false);
       setPriceError(null);
       return;
     }
+    setLivePrice(null);
 
     let cancelled = false;
     const t = window.setTimeout(() => {
       setPriceLoading(true);
       setPriceError(null);
-      void fetchTickerPriceForEntry(tickerHint).then((row) => {
+      void fetchTickerPriceForEntry(tickerHint, isCrypto).then((row) => {
         if (cancelled) return;
         setPriceLoading(false);
         if (!row) {
@@ -121,7 +128,7 @@ export function FinanceEntryForm({
       cancelled = true;
       window.clearTimeout(t);
     };
-  }, [mode, tickerHint]);
+  }, [mode, tickerHint, isCrypto]);
 
   const lastSameMonth = entries
     .filter(
@@ -143,6 +150,17 @@ export function FinanceEntryForm({
       ? amountFromUnits(unitsNum, livePrice.price, priceCurrency)
       : null;
 
+  const cryptoEstimatedQuantity = amountCurrency === 'USD' && livePrice?.price && parsePositiveNumber(amount)
+    ? Number((Number(amount) / livePrice.price).toFixed(8))
+    : null;
+  const selectCrypto = (symbol: string) => {
+    setAsset('CRYPTO');
+    setCategory(symbol);
+    setPlatform('Binance');
+    setLivePrice(null);
+    setPriceError(null);
+  };
+
   const addQuickAmount = (n: number) => {
     const cur = Number(amount.replace(',', '.'));
     const base = Number.isFinite(cur) && cur > 0 ? cur : 0;
@@ -159,6 +177,7 @@ export function FinanceEntryForm({
         mode,
         amountRaw: amount,
         unitsRaw: units,
+        cryptoUnitsRaw: isCrypto && mode === 'amount' ? cryptoActualUnits : '',
         amountCurrency,
         month: formMonth,
         asset,
@@ -177,6 +196,7 @@ export function FinanceEntryForm({
       onEntrySaved?.(result.entry);
       setAmount('');
       setUnits('');
+      setCryptoActualUnits('');
       setNote('');
       if (result.price) setLivePrice(result.price);
     } finally {
@@ -212,6 +232,24 @@ export function FinanceEntryForm({
           </div>
           <FinanceEntryModeToggle value={mode} onChange={setMode} disabled={submitting} />
         </div>
+
+        <div className="mt-3 flex gap-2" role="group" aria-label="Tipo de inversión">
+          <button type="button" disabled={submitting}
+            onClick={() => { setAsset(''); setPlatform('Balanz'); setCategory(''); setLivePrice(null); }}
+            aria-pressed={!isCrypto}
+            className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-bold transition active:scale-[0.98] ${!isCrypto ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-600'}`}>
+            <Landmark size={16} aria-hidden /> Tradicional
+          </button>
+          <button type="button" disabled={submitting}
+            onClick={() => selectCrypto(isCrypto ? (category || 'BTC') : 'BTC')}
+            aria-pressed={isCrypto}
+            className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-bold transition active:scale-[0.98] ${isCrypto ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-slate-200 bg-white text-slate-600'}`}>
+            <Coins size={16} aria-hidden /> Cripto · Binance
+          </button>
+        </div>
+        {isCrypto ? (
+          <FinanceCryptoPicker selected={tickerHint} disabled={submitting} onSelect={selectCrypto} />
+        ) : null}
 
         {mode === 'amount' ? (
           <>
@@ -283,6 +321,31 @@ export function FinanceEntryForm({
                 </button>
               ) : null}
             </div>
+            {isCrypto ? (
+              <div className="mt-3 space-y-2 rounded-2xl border border-amber-100 bg-amber-50/60 p-3">
+                <div aria-live="polite" className="text-xs font-semibold text-slate-700">
+                  {priceLoading ? 'Consultando Binance…' : livePrice?.price
+                    ? `${tickerHint} · ${formatFinancePrice(livePrice.price, 'USD')} (par USDT)`
+                    : priceError ?? 'Seleccioná una moneda para consultar su cotización.'}
+                </div>
+                {livePrice?.price && amountCurrency === 'USD' && cryptoEstimatedQuantity != null ? (
+                  <p className="text-xs font-extrabold tabular-nums text-amber-900">
+                    Estimación: ≈ {cryptoEstimatedQuantity.toLocaleString('es-AR', { maximumFractionDigits: 8 })} {tickerHint}
+                  </p>
+                ) : null}
+                <label className="flex flex-col gap-1">
+                  <span className="finance-label">Cantidad real recibida ({tickerHint || 'cripto'}) · opcional</span>
+                  <input type="number" inputMode="decimal" step="any" min="0.00000001"
+                    value={cryptoActualUnits} onChange={(e) => setCryptoActualUnits(e.target.value)}
+                    placeholder="Ej. 0.00047521" disabled={submitting}
+                    className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm font-semibold" />
+                </label>
+                <p className="text-[11px] leading-snug text-amber-950/70">
+                  Binance cotiza en USDT. Si invertiste ARS, ingresá la cantidad recibida:
+                  no convertimos pesos con una cotización inventada. Para USD, la estimación es orientativa.
+                </p>
+              </div>
+            ) : null}
             {amountCurrency === 'USD' ? (
               <p className="mt-1.5 text-[10px] font-medium text-slate-500">
                 Los dólares no suman al objetivo mensual en pesos; se llevan aparte.
@@ -295,18 +358,19 @@ export function FinanceEntryForm({
               <span className="finance-label">Ticker / etiqueta</span>
               <input
                 className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold uppercase"
-                placeholder="Ej. MELI, TSLA, GGAL"
+                placeholder={isCrypto ? 'Ej. ETH, BTC, BNB' : 'Ej. MELI, TSLA, GGAL'}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                readOnly={isCrypto}
                 required
               />
               <p className="text-[10px] font-medium leading-snug text-slate-500">
-                El monto se calcula en la moneda del precio (ARS o USD).
+                {isCrypto ? 'Cantidad de cripto × precio Spot en USDT, tomado como referencia USD.' : 'El monto se calcula en la moneda del precio (ARS o USD).'}
               </p>
             </label>
 
             <label className="mt-2.5 flex flex-col gap-1">
-              <span className="finance-label">Nominales</span>
+              <span className="finance-label">{isCrypto ? 'Cantidad de cripto' : 'Nominales'}</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -385,7 +449,7 @@ export function FinanceEntryForm({
                 : 'Cargar inversión'}
         </button>
 
-        {visiblePending.length > 0 ? (
+        {!isCrypto && visiblePending.length > 0 ? (
           <div className="mt-2.5">
             <p className="finance-label">Pendientes del plan</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -434,7 +498,11 @@ export function FinanceEntryForm({
               <select
                 className="finance-input-mobile min-h-[44px] rounded-xl px-3 py-2 text-sm font-semibold"
                 value={asset}
-                onChange={(e) => setAsset(e.target.value as FinanceAsset | '')}
+                onChange={(e) => {
+                   const next = e.target.value as FinanceAsset | '';
+                   if (next === 'CRYPTO' || next === 'BTC') selectCrypto(next === 'BTC' ? 'BTC' : (isCrypto ? category : 'BTC'));
+                   else { setAsset(next); if (isCrypto) { setCategory(''); setPlatform('Balanz'); } }
+                 }}
               >
                 <option value="">—</option>
                 {ASSET_OPTIONS.map((o) => (
