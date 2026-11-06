@@ -273,7 +273,7 @@ function resolveItemPrice(
   if (
     external &&
     external.price > 0 &&
-    (external.source === 'google-finance' || external.source === 'yahoo-finance')
+    (external.source === 'google-finance' || external.source === 'yahoo-finance' || external.source === 'binance')
   ) {
     const referencePrice = external.price;
     const referenceCurrency = external.currency ?? (external.source === 'yahoo-finance' ? 'USD' : 'ARS');
