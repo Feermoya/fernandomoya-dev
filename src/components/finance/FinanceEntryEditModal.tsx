@@ -10,6 +10,7 @@ const ASSET_OPTIONS: { value: FinanceAsset; label: string }[] = [
   { value: 'ARS', label: 'ARS' },
   { value: 'USD', label: 'Dólar MEP / USD' },
   { value: 'BTC', label: 'Bitcoin (BTC)' },
+  { value: 'CRYPTO', label: 'Criptomoneda (Binance)' },
   { value: 'CEDEAR', label: 'CEDEARs' },
   { value: 'ETF', label: 'ETF' },
   { value: 'EMERGENCY_FUND', label: 'Fondo emergencia' },
@@ -17,7 +18,7 @@ const ASSET_OPTIONS: { value: FinanceAsset; label: string }[] = [
   { value: 'OTHER', label: 'Otro' },
 ];
 
-const PLATFORM_OPTIONS = ['Balanz', 'Exchange crypto', 'Banco', 'Otro'] as const;
+const PLATFORM_OPTIONS = ['Balanz', 'Binance', 'Exchange crypto', 'Banco', 'Otro'] as const;
 
 type Props = {
   entry: FinanceEntry | null;
@@ -38,6 +39,7 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
   const [platform, setPlatform] = useState<(typeof PLATFORM_OPTIONS)[number]>('Balanz');
   const [category, setCategory] = useState('');
   const [note, setNote] = useState('');
+  const [cryptoUnits, setCryptoUnits] = useState('');
 
   useEffect(() => {
     if (!entry) return;
@@ -48,6 +50,7 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
     setPlatform((entry.platform as (typeof PLATFORM_OPTIONS)[number]) || 'Balanz');
     setCategory(entry.category ?? '');
     setNote(entry.note ?? '');
+    setCryptoUnits(entry.estimatedUnits != null ? String(entry.estimatedUnits) : '');
   }, [entry]);
 
   if (!entry) return null;
@@ -76,6 +79,12 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
     if (note.trim()) updated.note = note.trim();
     else delete updated.note;
 
+    if (asset === 'CRYPTO' || asset === 'BTC') {
+      const quantity = cryptoUnits.trim() ? Number(cryptoUnits.replace(',', '.')) : 0;
+      if (cryptoUnits.trim() && (!Number.isFinite(quantity) || quantity <= 0)) return;
+      if (quantity > 0) updated.estimatedUnits = Number(quantity.toFixed(8));
+      else delete updated.estimatedUnits;
+    }
     const ticker = getEntryTicker(updated);
     if (ticker) updated.ticker = ticker;
     else delete updated.ticker;
@@ -207,6 +216,15 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
             onChange={(e) => setCategory(e.target.value)}
           />
         </label>
+
+        {(asset === 'CRYPTO' || asset === 'BTC') ? (
+          <label className="mt-3 flex flex-col gap-1.5">
+            <span className="finance-label">Cantidad de cripto recibida (hasta 8 decimales)</span>
+            <input type="number" step="any" min="0.00000001"
+              className="finance-input-mobile min-h-[44px] rounded-xl px-3 text-sm"
+              value={cryptoUnits} onChange={(e) => setCryptoUnits(e.target.value)} />
+          </label>
+        ) : null}
 
         <label className="mt-3 flex flex-col gap-1.5">
           <span className="finance-label">Nota</span>
