@@ -1,27 +1,23 @@
+import { assertFinanceSessionUser, FinanceAuthError } from '@/lib/finance/authClient';
 import {
   fetchFinanceRemote,
+  FinanceCloudHttpError,
   FINANCE_CLOUD_UNREACHABLE_MESSAGE,
   FINANCE_OFFLINE_USER_MESSAGE,
   FinanceCloudNetworkError,
   isBrowserOnline,
   isFinanceCloudConfigured,
   isFinanceCloudNetworkError,
-  upsertFinanceRemote,
   type RemoteFinanceRow,
 } from '@/lib/finance/cloudSync';
 import { withPreferences } from '@/lib/finance/preferences';
 import type { FinanceState } from '@/lib/finance/types';
 import {
-  DEFAULT_FINANCE_SYNC_ID,
-  captureLegacySyncId,
   ensureFinanceAppDataVersion,
   getFinanceLocalSavedAt,
-  getInitialFinanceState,
   loadFinanceState,
-  resetFinanceSyncIdToDefault,
   saveFinanceState,
   setFinanceLocalSavedAt,
-  listCloudSyncCandidateIds,
 } from '@/lib/finance/storage';
 
 export type CloudPullResult =
@@ -31,74 +27,45 @@ export type CloudPullResult =
       updatedAt: string;
       sourceId: string;
       migrated: boolean;
-      /** Falló la nube pero hay datos locales; la app sigue usable. */
       offline?: boolean;
-      /** `offline` = sin internet; `unreachable` = internet ok pero Supabase no responde. */
       cloudIssue?: 'offline' | 'unreachable';
       warning?: string;
     }
-  | { ok: false; reason: 'not_configured' | 'empty' | 'error'; message?: string };
+  | {
+      ok: false;
+      reason: 'not_configured' | 'empty' | 'error' | 'unauthorized' | 'unlinked';
+      message?: string;
+    };
 
-function investmentCount(state: FinanceState): number {
-  return state.entries.filter((e) => e.type === 'investment').length;
-}
-
-function hasMeaningfulData(state: FinanceState): boolean {
-  return investmentCount(state) > 0 || state.entries.length > 0 || state.goals.length > 0;
-}
-
-function scoreRemote(row: RemoteFinanceRow): number {
-  const inv = investmentCount(row.state);
-  const ts = Date.parse(row.updatedAt) || 0;
-  return inv * 1_000_000 + row.state.entries.length * 100 + (Number.isFinite(ts) ? ts / 1000 : 0);
-}
-
-async function fetchBestCloudRow(): Promise<{ id: string; remote: RemoteFinanceRow } | null> {
-  const ids = listCloudSyncCandidateIds();
-  let networkFailures = 0;
-
-  const results = await Promise.all(
-    ids.map(async (id) => {
-      try {
-        const remote = await fetchFinanceRemote(id);
-        return remote ? { id, remote } : null;
-      } catch (error) {
-        if (isFinanceCloudNetworkError(error)) networkFailures += 1;
-        return null;
-      }
-    }),
-  );
-
-  const rows = results.filter((r): r is { id: string; remote: RemoteFinanceRow } => r !== null);
-  if (rows.length === 0) {
-    if (networkFailures > 0) {
-      throw new FinanceCloudNetworkError();
-    }
-    return null;
-  }
-
-  const canonical = rows.find(r => r.id === DEFAULT_FINANCE_SYNC_ID);
-  if (canonical) return canonical;
-  let best = rows[0];
-  for (const row of rows.slice(1)) {
-    if (scoreRemote(row.remote) > scoreRemote(best.remote)) {
-      best = row;
-    }
-  }
-  return best;
-}
-
-/** Prepara sesión: versión + ID canónico (sin borrar datos locales). */
+/** Prepara la versión de la app. No elige ni reescribe el id del libro. */
 export function prepareFinanceCloudSession(): void {
-  captureLegacySyncId();
   ensureFinanceAppDataVersion();
-  resetFinanceSyncIdToDefault();
+}
+
+function accessFailure(error: unknown): CloudPullResult | null {
+  if (error instanceof FinanceAuthError) {
+    return {
+      ok: false,
+      reason: error.status === 403 ? 'unlinked' : 'unauthorized',
+      message: error.message,
+    };
+  }
+  if (error instanceof FinanceCloudHttpError) {
+    if (error.status === 401) {
+      return { ok: false, reason: 'unauthorized', message: error.message };
+    }
+    if (error.code === 'profile_missing' || error.code === 'book_missing' || error.status === 403) {
+      return { ok: false, reason: 'unlinked', message: error.message };
+    }
+  }
+  return null;
 }
 
 /**
- * Lee la mejor fila en Supabase (canónica + IDs viejos) y unifica en el libro principal.
+ * Lee únicamente el libro de la sesión. No consulta la fila canónica ni la legacy,
+ * y no copia un documento dentro de otra cuenta.
  */
-export async function pullCanonicalFromCloud(): Promise<CloudPullResult> {
+export async function pullSessionBook(userId: string): Promise<CloudPullResult> {
   if (!isFinanceCloudConfigured()) {
     return { ok: false, reason: 'not_configured' };
   }
@@ -106,55 +73,24 @@ export async function pullCanonicalFromCloud(): Promise<CloudPullResult> {
   prepareFinanceCloudSession();
 
   try {
-    const best = await fetchBestCloudRow();
-    if (!best || !hasMeaningfulData(best.remote.state)) {
-      const local = loadFinanceState();
-      if (hasMeaningfulData(local)) {
-        const state = withPreferences(local);
-        saveFinanceState(state);
-        return {
-          ok: true,
-          state,
-          updatedAt: new Date().toISOString(),
-          sourceId: 'local-cache',
-          migrated: false,
-        };
-      }
-      return { ok: false, reason: 'empty' };
+    await assertFinanceSessionUser(userId);
+    const remote: RemoteFinanceRow | null = await fetchFinanceRemote();
+    if (!remote) {
+      return { ok: false, reason: 'empty', message: 'Esta cuenta no tiene un libro financiero.' };
     }
-
-    let state = withPreferences(best.remote.state);
-    let updatedAt = best.remote.updatedAt;
-    let migrated = false;
-
-    if (best.id !== DEFAULT_FINANCE_SYNC_ID && hasMeaningfulData(state)) {
-      try {
-        updatedAt = await upsertFinanceRemote(DEFAULT_FINANCE_SYNC_ID, state);
-        migrated = true;
-        if (import.meta.env.DEV) {
-          console.debug('[finance-sync] migrated legacy row to canonical', {
-            from: best.id,
-            to: DEFAULT_FINANCE_SYNC_ID,
-          });
-        }
-      } catch (e) {
-        if (import.meta.env.DEV) {
-          console.debug('[finance-sync] migrate to canonical failed', e);
-        }
-      }
-    }
-
-    saveFinanceState(state);
-    setFinanceLocalSavedAt(updatedAt);
-    return { ok: true, state, updatedAt, sourceId: best.id, migrated };
+    const state = withPreferences(remote.state);
+    saveFinanceState(userId, state);
+    setFinanceLocalSavedAt(userId, remote.updatedAt);
+    return { ok: true, state, updatedAt: remote.updatedAt, sourceId: 'session', migrated: false };
   } catch (e) {
-    const local = loadFinanceState();
-    const state = withPreferences(local);
-    saveFinanceState(state);
-    const isNetwork = e instanceof FinanceCloudNetworkError || isFinanceCloudNetworkError(e);
+    const denied = accessFailure(e);
+    if (denied) return denied;
 
-    /** Nube inaccesible: la app siempre arranca con lo local. Mes/año no importan. */
-    if (isNetwork) {
+    const local = loadFinanceState(userId);
+    const isNetwork = e instanceof FinanceCloudNetworkError || isFinanceCloudNetworkError(e);
+    if (isNetwork && local) {
+      const state = withPreferences(local);
+      saveFinanceState(userId, state);
       const cloudIssue =
         e instanceof FinanceCloudNetworkError
           ? e.kind
@@ -170,7 +106,7 @@ export async function pullCanonicalFromCloud(): Promise<CloudPullResult> {
       return {
         ok: true,
         state,
-        updatedAt: getFinanceLocalSavedAt() ?? new Date().toISOString(),
+        updatedAt: getFinanceLocalSavedAt(userId) ?? new Date().toISOString(),
         sourceId: 'local-cache',
         migrated: false,
         offline: true,
@@ -179,22 +115,15 @@ export async function pullCanonicalFromCloud(): Promise<CloudPullResult> {
       };
     }
 
-    if (hasMeaningfulData(state)) {
+    if (isNetwork) {
       return {
-        ok: true,
-        state,
-        updatedAt: getFinanceLocalSavedAt() ?? new Date().toISOString(),
-        sourceId: 'local-cache',
-        migrated: false,
-        warning: e instanceof Error ? e.message : 'Error al leer la nube.',
+        ok: false,
+        reason: 'error',
+        message: e instanceof FinanceCloudNetworkError ? e.message : FINANCE_CLOUD_UNREACHABLE_MESSAGE,
       };
     }
 
     const message = e instanceof Error ? e.message : 'Error al leer la nube.';
     return { ok: false, reason: 'error', message };
   }
-}
-
-export function emptyFinanceStateForCloudMiss(): FinanceState {
-  return getInitialFinanceState();
 }

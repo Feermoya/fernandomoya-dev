@@ -1,54 +1,3 @@
-// src/lib/panel/auth.ts
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-var PANEL_SESSION_COOKIE = "fm_panel_session";
-function readServerEnv(name) {
-  const fromProcess = typeof process !== "undefined" ? (process.env[name] ?? "").trim() : "";
-  if (fromProcess) return fromProcess;
-  const viteEnv = import.meta.env;
-  const fromImport = String(viteEnv?.[name] ?? "").trim();
-  if (fromImport && typeof process !== "undefined") {
-    process.env[name] = fromImport;
-  }
-  return fromImport;
-}
-function getPanelAccessSecret() {
-  return readServerEnv("PANEL_ACCESS_SECRET");
-}
-function getPanelSessionSecret() {
-  const dedicated = readServerEnv("PANEL_SESSION_SECRET");
-  if (dedicated) return dedicated;
-  const access = getPanelAccessSecret();
-  if (!access) return "";
-  return createHash("sha256").update(`panel-session:${access}`).digest("hex");
-}
-function verifyPanelSessionToken(token) {
-  if (!token) return false;
-  const secret = getPanelSessionSecret();
-  if (!secret) return false;
-  const parts = token.split(".");
-  if (parts.length !== 2) return false;
-  const [payload, sig] = parts;
-  if (!payload || !sig) return false;
-  const expected = createHmac("sha256", secret).update(payload).digest("base64url");
-  try {
-    const a = Buffer.from(sig);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    if (!timingSafeEqual(a, b)) return false;
-  } catch {
-    return false;
-  }
-  try {
-    const raw = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    if (raw.v !== 1 || typeof raw.iat !== "number") return false;
-    const maxAgeMs = 14 * 24 * 60 * 60 * 1e3;
-    if (Date.now() - raw.iat > maxAgeMs) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 // src/lib/finance/postgrest.ts
 function escapePostgrestString(value) {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
@@ -212,8 +161,130 @@ function buildBalanzImportBatch(state, operations, selections, now) {
   };
 }
 
+// src/lib/finance/accountAccess.ts
+function financeStateIdFromAppMetadata(appMetadata) {
+  if (!appMetadata || typeof appMetadata !== "object") return "";
+  const value = appMetadata.finance_state_id;
+  return typeof value === "string" ? value.trim() : "";
+}
+
+// src/lib/finance/server/financeIdentity.ts
+function readRequestHeader(headers, name) {
+  if (!headers) return "";
+  const lower = name.toLowerCase();
+  const raw = headers[lower] ?? headers[name];
+  if (Array.isArray(raw)) return raw[0] ?? "";
+  return typeof raw === "string" ? raw : "";
+}
+function readBearerToken(authorization) {
+  if (!authorization) return "";
+  const match = authorization.match(/^Bearer\s+(\S+)/i);
+  return match?.[1]?.trim() ?? "";
+}
+function readServerEnv(name) {
+  if (typeof window !== "undefined") return "";
+  const fromProcess = (process.env[name] ?? "").trim();
+  if (fromProcess) return fromProcess;
+  const viteEnv = import.meta.env;
+  const fromImport = String(viteEnv?.[name] ?? "").trim();
+  if (fromImport) process.env[name] = fromImport;
+  return fromImport;
+}
+function financeServiceConfig() {
+  if (typeof window !== "undefined") return null;
+  const url = (readServerEnv("SUPABASE_URL") || readServerEnv("PUBLIC_FINANCE_SUPABASE_URL") || readServerEnv("FINANCE_SUPABASE_URL")).replace(/\/$/, "");
+  const key = readServerEnv("SUPABASE_SERVICE_ROLE_KEY") || readServerEnv("FINANCE_SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+  return { url, key };
+}
+function serviceRoleHeaders(key, extra) {
+  return {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    Accept: "application/json",
+    ...extra
+  };
+}
+async function resolveFinanceIdentity(authorizationHeader) {
+  const token = readBearerToken(authorizationHeader);
+  if (!token) {
+    return { ok: false, status: 401, error: "Ten\xE9s que iniciar sesi\xF3n.", code: "unauthorized" };
+  }
+  const config = financeServiceConfig();
+  if (!config) {
+    return {
+      ok: false,
+      status: 503,
+      error: "Supabase no est\xE1 configurado en el servidor.",
+      code: "supabase_not_configured"
+    };
+  }
+  const userResponse = await fetch(`${config.url}/auth/v1/user`, {
+    method: "GET",
+    headers: {
+      apikey: config.key,
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json"
+    },
+    cache: "no-store"
+  });
+  if (userResponse.status === 401 || userResponse.status === 403) {
+    return { ok: false, status: 401, error: "La sesi\xF3n no es v\xE1lida.", code: "unauthorized" };
+  }
+  if (!userResponse.ok) {
+    return {
+      ok: false,
+      status: 502,
+      error: "No se pudo verificar la sesi\xF3n.",
+      code: "auth_unavailable"
+    };
+  }
+  const user = await userResponse.json();
+  if (!user.id || typeof user.id !== "string") {
+    return { ok: false, status: 401, error: "La sesi\xF3n no es v\xE1lida.", code: "unauthorized" };
+  }
+  const linkedStateId = financeStateIdFromAppMetadata(user.app_metadata);
+  if (linkedStateId) {
+    return {
+      ok: true,
+      identity: { userId: user.id, email: user.email || "", stateId: linkedStateId }
+    };
+  }
+  const profileUrl = `${config.url}/rest/v1/finance_profiles?user_id=eq.${encodeURIComponent(user.id)}&select=state_id,email&limit=1`;
+  const profileResponse = await fetch(profileUrl, {
+    method: "GET",
+    headers: serviceRoleHeaders(config.key),
+    cache: "no-store"
+  });
+  if (!profileResponse.ok) {
+    return {
+      ok: false,
+      status: 502,
+      error: "No se pudo consultar la cuenta.",
+      code: "auth_unavailable"
+    };
+  }
+  const profiles = await profileResponse.json();
+  const stateId = profiles?.[0]?.state_id?.trim();
+  if (!stateId) {
+    return {
+      ok: false,
+      status: 403,
+      error: "Esta cuenta todav\xEDa no tiene un libro vinculado.",
+      code: "profile_missing"
+    };
+  }
+  return {
+    ok: true,
+    identity: {
+      userId: user.id,
+      email: profiles[0]?.email || user.email || "",
+      stateId
+    }
+  };
+}
+
 // scripts/finance-api/finance-balanz.entry.ts
-var BOOK = "fernando-foco-financiero-main";
 function headerValue(headers, name) {
   if (!headers) return "";
   const raw = headers[name] ?? headers[name.toLowerCase()];
@@ -250,11 +321,6 @@ async function handler(req, res) {
     return res.status(code).json(data);
   };
   try {
-    const cookies = headerValue(req.headers, "cookie").split(";").map((s) => s.trim());
-    const token = cookies.find((s) => s.startsWith(`${PANEL_SESSION_COOKIE}=`))?.slice(PANEL_SESSION_COOKIE.length + 1);
-    if (!verifyPanelSessionToken(token)) {
-      return send(401, { ok: false, error: "Ingres\xE1 al panel para importar." });
-    }
     if (req.method !== "POST") {
       return send(405, { ok: false, error: "M\xE9todo no permitido." });
     }
@@ -267,21 +333,23 @@ async function handler(req, res) {
         error: "Importaci\xF3n pendiente de verificaci\xF3n del respaldo y habilitaci\xF3n."
       });
     }
+    const access = await resolveFinanceIdentity(readRequestHeader(req.headers, "authorization"));
+    if (!access.ok) {
+      return send(access.status, { ok: false, error: access.error, code: access.code });
+    }
     const payload = await readBody(req);
     if (!payload || typeof payload.expectedUpdatedAt !== "string" || JSON.stringify(payload).length > 8e5) {
       return send(400, { ok: false, error: "Lote o versi\xF3n inv\xE1lidos." });
     }
-    const url = (process.env.FINANCE_SUPABASE_URL || process.env.PUBLIC_FINANCE_SUPABASE_URL || "").replace(/\/$/, "");
-    const key = process.env.FINANCE_SUPABASE_SERVICE_ROLE_KEY || process.env.FINANCE_SUPABASE_ANON_KEY || process.env.PUBLIC_FINANCE_SUPABASE_ANON_KEY;
-    if (!url || !key) {
+    const config = financeServiceConfig();
+    if (!config) {
       return send(503, { ok: false, error: "Supabase no configurado." });
     }
     const headers = {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
+      ...serviceRoleHeaders(config.key),
       "Content-Type": "application/json"
     };
-    const readUrl = financeGameStateSelectUrl(`${url}/rest/v1`, BOOK);
+    const readUrl = financeGameStateSelectUrl(`${config.url}/rest/v1`, access.identity.stateId);
     const response = await fetch(readUrl, { headers, cache: "no-store" });
     if (!response.ok) {
       return send(502, { ok: false, error: "No se pudo consultar Supabase." });

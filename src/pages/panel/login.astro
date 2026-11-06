@@ -16,12 +16,7 @@ const errorMessage =
       ? 'Clave incorrecta. Probá de nuevo.'
       : null;
 
-const nextHint =
-  next === '/foco-financiero'
-    ? 'Vas a entrar a Foco financiero.'
-    : next === '/admin'
-      ? 'Vas a entrar a Admin.'
-      : null;
+const nextHint = next === '/admin' ? 'Vas a entrar a Admin.' : null;
 ---
 
 <PanelLayout title="Ingresar" path={PANEL_PATHS.login} description="Acceso privado." showNav={false}>

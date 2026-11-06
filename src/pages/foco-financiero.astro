@@ -2,9 +2,8 @@
 export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
-import FinanceGameApp from '@/components/finance/FinanceGameApp';
+import FinanceAppRoot from '@/components/finance/FinanceAppRoot';
 import { pageTitle } from '@/utils/seo';
-import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
 ---
 
 <Layout
@@ -14,25 +13,5 @@ import { FINANCE_APP_DATA_VERSION } from '@/lib/finance/appVersion';
   noindex={true}
   appShell={true}
 >
-  <script is:inline define:vars={{ financeAppVersion: FINANCE_APP_DATA_VERSION }}>
-    (function () {
-      try {
-        var key = 'fm-finance-app-version';
-        var bookId = 'fernando-foco-financiero-main';
-        var syncKey = 'fm-finance-sync-id';
-        var legacyKey = 'fm-finance-legacy-sync-id';
-        var prevSync = localStorage.getItem(syncKey);
-        if (prevSync && prevSync !== bookId && !localStorage.getItem(legacyKey)) {
-          localStorage.setItem(legacyKey, prevSync);
-        }
-        if (localStorage.getItem(key) !== financeAppVersion) {
-          localStorage.setItem(key, financeAppVersion);
-        }
-        localStorage.setItem(syncKey, bookId);
-      } catch (e) {
-        /* ignore */
-      }
-    })();
-  </script>
-  <FinanceGameApp client:only="react" />
+  <FinanceAppRoot client:only="react" />
 </Layout>

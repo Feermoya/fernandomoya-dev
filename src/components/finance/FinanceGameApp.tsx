@@ -4,6 +4,7 @@ import {
   Coins,
   Goal,
   Lock,
+  LogOut,
   Settings,
   ShieldAlert,
   Trophy,
@@ -54,6 +55,12 @@ import { sileo } from 'sileo';
 
 type FinanceAppSection = 'dashboard' | 'bitcoin';
 
+type FinanceGameAppProps = {
+  userId: string;
+  email: string;
+  onSignOut: () => void;
+};
+
 function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
   const label =
     status === 'loading'
@@ -83,7 +90,8 @@ function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
   );
 }
 
-export default function FinanceGameApp() {
+export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGameAppProps) {
+  const bookReadyRef = useRef(false);
   const cloudSyncRef = useRef<{
     setSyncChip: (value: FinanceSyncChip | ((prev: FinanceSyncChip) => FinanceSyncChip)) => void;
     setLastRemoteAt: (value: string | null) => void;
@@ -92,6 +100,8 @@ export default function FinanceGameApp() {
   } | null>(null);
 
   const { state, setState, stateRef, persist, replaceState, patchState } = useFinancePersistence({
+    userId,
+    bookReadyRef,
     onSaving: () => cloudSyncRef.current?.setSyncChip('saving'),
     onSoloLocal: () => cloudSyncRef.current?.setSyncChip('solo_local'),
     onRemoteSaved: (iso) => {
@@ -109,20 +119,19 @@ export default function FinanceGameApp() {
   });
 
   const {
+    bookOpen,
     cloudReady,
     syncChip,
     lastRemoteAt,
     cloudErr,
-    activeSyncId,
     pullFromCloudImmediate,
     handleForcePush,
-    handleResetSyncIdToDefault,
     setSyncChip,
     setLastRemoteAt,
     setCloudErr,
     markOffline,
     applyCloudState,
-  } = useFinanceCloudSync({ stateRef, setState });
+  } = useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, onUnauthorized: onSignOut });
 
   cloudSyncRef.current = { setSyncChip, setLastRemoteAt, setCloudErr, markOffline };
 
@@ -226,7 +235,7 @@ export default function FinanceGameApp() {
       typeof window !== 'undefined' &&
       !window.confirm(
         isFinanceCloudConfigured()
-          ? '¿Borrar todo en este navegador y en la nube (mismo libro)? No se puede deshacer.'
+          ? '¿Borrar los datos de tu cuenta en este navegador y en la nube? No se puede deshacer y no afecta a otras cuentas.'
           : '¿Borrar todas las inversiones registradas, objetivos y retos en este dispositivo? No se puede deshacer.',
       )
     ) {
@@ -300,6 +309,7 @@ export default function FinanceGameApp() {
           <div className="min-w-0">
             <h1 className="finance-brand-title">Foco financiero</h1>
             <p className="finance-brand-sub mt-1">Inversión mensual con claridad</p>
+            <p className="mt-1 max-w-[16rem] truncate text-xs font-semibold text-[var(--text-muted)]">{email}</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             <a
@@ -330,11 +340,15 @@ export default function FinanceGameApp() {
                 <Cloud size={20} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
               </button>
             ) : null}
+            <button type="button" className="foco-chip foco-chip--neutral" onClick={onSignOut}>
+              <LogOut size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
+              Salir
+            </button>
             <SyncStatusChip status={syncChip} />
           </div>
         </header>
 
-        {cloudReady ? (
+        {bookOpen ? (
           <div className="mb-4">
             <FocoTabs
               aria-label="Secciones de Foco financiero"
@@ -361,7 +375,7 @@ export default function FinanceGameApp() {
           </div>
         ) : null}
 
-        {cloudReady && section === 'bitcoin' ? (
+        {bookOpen && section === 'bitcoin' ? (
           <FinanceBitcoinPanel
             entries={state.entries}
             holdings={state.portfolioHoldings ?? []}
@@ -370,7 +384,7 @@ export default function FinanceGameApp() {
           />
         ) : null}
 
-        {cloudReady && section === 'dashboard' ? (
+        {bookOpen && section === 'dashboard' ? (
           <>
             <FinanceInstallHint />
 
@@ -507,12 +521,10 @@ export default function FinanceGameApp() {
                       state={state}
                       onImport={replaceState}
                       cloudAutoSync={isFinanceCloudConfigured()}
-                      activeSyncId={activeSyncId}
                       cloudError={cloudErr}
                       lastSyncIso={lastRemoteAt}
                       onForcePull={pullFromCloudImmediate}
                       onForcePush={handleForcePush}
-                      onResetSyncIdToDefault={handleResetSyncIdToDefault}
                     />
                   </div>
                 </details>
@@ -560,7 +572,7 @@ export default function FinanceGameApp() {
         ) : null}
       </div>
 
-      {cloudReady && section === 'dashboard' && !investOpen ? (
+      {bookOpen && section === 'dashboard' && !investOpen ? (
         <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40">
           <FocoPrimaryButton
             onClick={() => setInvestOpen(true)}
@@ -571,14 +583,14 @@ export default function FinanceGameApp() {
         </div>
       ) : null}
 
-      {cloudReady && loadSummary && !investOpen ? (
+      {bookOpen && loadSummary && !investOpen ? (
         <div className="finance-load-toast fixed inset-x-0 z-50 px-3 lg:bottom-6 lg:left-auto lg:right-6 lg:w-[min(100%,22rem)] lg:px-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))]">
           <FinanceEntryLoadSummaryCard summary={loadSummary} onDismiss={dismissLoadSummary} />
         </div>
       ) : null}
 
       <FinanceInvestSheet
-        open={investOpen && cloudReady}
+        open={investOpen && bookOpen}
         month={month}
         entries={state.entries}
         quickAmounts={preferences.quickAmounts}

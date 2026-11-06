@@ -1,10 +1,67 @@
-import { describe,it,expect,vi,afterEach } from 'vitest';
-// The legacy Vercel handler is JavaScript and intentionally remains framework-independent.
-// @ts-ignore no separate declaration file for Vercel JS API
-import handler from '../../../../../../api/finance-cloud.mjs';
-function res(){const r={code:0,data:null as any,setHeader:vi.fn(),status(c:number){r.code=c;return r;},json(d:unknown){r.data=d;return r;}};return r;}
-afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
-describe('all normal saves must use a conditional update',()=>{
- it('rejects old clients without a remote version',async()=>{vi.stubEnv('FINANCE_SUPABASE_URL','https://example.invalid');vi.stubEnv('FINANCE_SUPABASE_ANON_KEY','test');const fetch=vi.fn();vi.stubGlobal('fetch',fetch);const r=res();await handler({method:'POST',body:{state:{entries:[]}}},r);expect(r.code).toBe(409);expect(fetch).not.toHaveBeenCalled();});
- it('does not overwrite an imported record after the remote version changes',async()=>{vi.stubEnv('FINANCE_SUPABASE_URL','https://example.invalid');vi.stubEnv('FINANCE_SUPABASE_ANON_KEY','test');const fetch=vi.fn().mockResolvedValue(Response.json([]));vi.stubGlobal('fetch',fetch);const r=res();await handler({method:'POST',body:{state:{entries:[]},expectedUpdatedAt:'2026-10-01T00:00:00Z'}},r);expect(r.code).toBe(409);expect(fetch.mock.calls[0][1].method).toBe('PATCH');expect(fetch.mock.calls[0][0]).toContain('updated_at=eq.');expect(fetch.mock.calls[0][0]).not.toContain('limit=');});
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import handler from '@/lib/finance/server/financeCloudHandler';
+
+function res() {
+  const result = {
+    code: 0,
+    data: null as unknown,
+    setHeader: vi.fn(),
+    status(code: number) {
+      result.code = code;
+      return result;
+    },
+    json(data: unknown) {
+      result.data = data;
+      return result;
+    },
+  };
+  return result;
+}
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
+
+describe('all normal saves must use a conditional update', () => {
+  it('rejects a save without a session before touching Supabase', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://example.invalid');
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'test');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const result = res();
+    await handler({ method: 'POST', body: { state: { entries: [] } } }, result);
+    expect(result.code).toBe(401);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('does not overwrite an imported record after the remote version changes', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://example.invalid');
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'test');
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const target = String(url);
+      if (target.includes('/auth/v1/user')) {
+        return Response.json({ id: '11111111-1111-4111-8111-111111111111', email: 'a@example.com' });
+      }
+      if (target.includes('/finance_profiles')) {
+        return Response.json([{ state_id: 'book-a', email: 'a@example.com' }]);
+      }
+      if (init?.method === 'PATCH') return Response.json([]);
+      return Response.json([{ body: { entries: [] }, updated_at: '2026-10-01T00:00:00Z' }]);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const result = res();
+    await handler(
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: { state: { entries: [] }, expectedUpdatedAt: '2026-10-01T00:00:00Z' },
+      },
+      result,
+    );
+    expect(result.code).toBe(409);
+    const patch = fetchMock.mock.calls.find((call) => call[1]?.method === 'PATCH');
+    expect(String(patch?.[0])).toContain('updated_at=eq.');
+    expect(String(patch?.[0])).not.toContain('limit=');
+  });
 });

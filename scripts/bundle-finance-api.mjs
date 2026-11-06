@@ -19,6 +19,7 @@ const shared = {
 };
 
 const entries = [
+  { entry: path.join(entriesDir, 'finance-cloud.entry.ts'), outfile: path.join(root, 'api/finance-cloud.mjs') },
   { entry: path.join(entriesDir, 'finance-balanz.entry.ts'), outfile: path.join(root, 'api/finance-balanz.mjs') },
   {
     entry: path.join(entriesDir, 'finance-prices.entry.ts'),

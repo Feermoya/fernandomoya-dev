@@ -9,8 +9,8 @@ export const PANEL_PATHS = {
 
 export const PANEL_SESSION_COOKIE = 'fm_panel_session';
 
-/** Herramientas privadas que reutilizan la misma sesión/PIN del panel. */
-export const PRIVATE_TOOL_PATHS = ['/foco-financiero', '/admin'] as const;
+/** Herramientas privadas que reutilizan la misma sesión/PIN del panel. Foco tiene sesión propia. */
+export const PRIVATE_TOOL_PATHS = ['/admin'] as const;
 
 export function isPanelPath(pathname: string): boolean {
   return pathname === '/panel' || pathname.startsWith('/panel/');

@@ -11,7 +11,8 @@ import {
 } from '@/lib/panel/auth';
 
 /**
- * Protege `/panel/*`, `/foco-financiero` y `/admin` con la misma cookie/PIN.
+ * Protege `/panel/*` y `/admin` con la cookie/PIN del panel.
+ * `/foco-financiero` usa Supabase Auth y no comparte esa sesión.
  */
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;

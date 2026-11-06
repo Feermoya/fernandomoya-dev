@@ -16,16 +16,18 @@ export function resolveWhatsAppPhone(_reminderPhone?: string): string {
 }
 
 function supabaseRestBase(): string | null {
-  const url = (process.env.PUBLIC_FINANCE_SUPABASE_URL ?? process.env.FINANCE_SUPABASE_URL)?.replace(
-    /\/$/,
-    '',
-  );
+  const url = (
+    process.env.SUPABASE_URL ??
+    process.env.PUBLIC_FINANCE_SUPABASE_URL ??
+    process.env.FINANCE_SUPABASE_URL
+  )?.replace(/\/$/, '');
   if (!url) return null;
   return `${url}/rest/v1`;
 }
 
 function supabaseHeaders(): HeadersInit | null {
-  const key = process.env.PUBLIC_FINANCE_SUPABASE_ANON_KEY ?? process.env.FINANCE_SUPABASE_ANON_KEY;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.FINANCE_SUPABASE_SERVICE_ROLE_KEY;
   if (!key?.trim()) return null;
   return {
     apikey: key,

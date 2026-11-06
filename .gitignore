@@ -19,3 +19,6 @@ pnpm-debug.log*
 
 # os
 .DS_Store
+
+# Respaldo local de Foco (datos financieros). Nunca commitear.
+.finance-backups/

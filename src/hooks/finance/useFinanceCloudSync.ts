@@ -1,8 +1,8 @@
+import { assertFinanceSessionUser, FinanceAuthError } from '@/lib/finance/authClient';
 import { markStateRevision } from '@/lib/finance/stateRevision';
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -11,14 +11,9 @@ import {
 } from 'react';
 import type { FinanceState } from '@/lib/finance/types';
 import {
-  DEFAULT_FINANCE_SYNC_ID,
   clearFinancePendingCloudPush,
-  getFinanceLocalSavedAt,
-  getFinanceSyncId,
   isFinancePendingCloudPush,
-  loadFinanceState,
   markFinancePendingCloudPush,
-  resetFinanceSyncIdToDefault,
   saveFinanceState,
   setFinanceLocalSavedAt,
 } from '@/lib/finance/storage';
@@ -31,11 +26,7 @@ import {
   pingFinanceCloudKeepalive,
   upsertFinanceRemote,
 } from '@/lib/finance/cloudSync';
-import {
-  emptyFinanceStateForCloudMiss,
-  prepareFinanceCloudSession,
-  pullCanonicalFromCloud,
-} from '@/lib/finance/syncBootstrap';
+import { prepareFinanceCloudSession, pullSessionBook } from '@/lib/finance/syncBootstrap';
 import { isStandalonePwa } from '@/lib/finance/pwa';
 
 export type FinanceSyncChip = 'loading' | 'synced' | 'saving' | 'error' | 'solo_local' | 'offline';
@@ -47,13 +38,17 @@ function initialSyncChip(): FinanceSyncChip {
 }
 
 type Options = {
+  userId: string;
+  bookReadyRef: MutableRefObject<boolean>;
   stateRef: MutableRefObject<FinanceState>;
   setState: Dispatch<SetStateAction<FinanceState>>;
+  onUnauthorized?: () => void;
 };
 
-export function useFinanceCloudSync({ stateRef, setState }: Options) {
+export function useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, onUnauthorized }: Options) {
   const cloudOn = isFinanceCloudConfigured();
 
+  const [bookOpen, setBookOpen] = useState(false);
   const [cloudReady, setCloudReady] = useState(() => !cloudOn);
   const [syncChip, setSyncChip] = useState<FinanceSyncChip>(() => initialSyncChip());
   const [lastRemoteAt, setLastRemoteAt] = useState<string | null>(null);
@@ -61,17 +56,15 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
   const [isOfflineMode, setIsOfflineMode] = useState(
     () => typeof navigator !== 'undefined' && !isBrowserOnline(),
   );
-  const [syncIdTick, setSyncIdTick] = useState(0);
-
   const pullInFlight = useRef(false);
   const bootGenRef = useRef(0);
   const flushInFlight = useRef(false);
-
-  const activeSyncId = useMemo(() => getFinanceSyncId(), [syncIdTick]);
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
 
   useEffect(() => {
     prepareFinanceCloudSession();
-    setLastRemoteAt(getFinanceLocalSavedAt());
+    setLastRemoteAt(null);
     /** Cada visita/recarga cuenta como actividad en Supabase (anti-pausa Free). */
     if (isFinanceCloudConfigured()) {
       void pingFinanceCloudKeepalive();
@@ -97,12 +90,16 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
 
   const applyCloudState = useCallback(
     (next: FinanceState, updatedAt: string) => {
+      const owner = userIdRef.current;
+      if (!owner) return;
       markStateRevision(next, updatedAt);
+      bookReadyRef.current = true;
+      setBookOpen(true);
       setState(next);
-      saveFinanceState(next);
+      saveFinanceState(owner, next);
       setLastRemoteAt(updatedAt);
     },
-    [setState],
+    [bookReadyRef, setState],
   );
 
   const markOffline = useCallback((message = FINANCE_OFFLINE_USER_MESSAGE) => {
@@ -133,25 +130,40 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     setCloudErr(null);
   }, []);
 
+  const rejectBook = useCallback(
+    (message: string, reason: 'unauthorized' | 'unlinked' | 'error') => {
+      bookReadyRef.current = false;
+      setBookOpen(false);
+      setCloudErr(message);
+      setSyncChip('error');
+      if (reason === 'unauthorized') onUnauthorized?.();
+    },
+    [bookReadyRef, onUnauthorized],
+  );
+
   const flushPendingCloudPush = useCallback(async () => {
-    if (!isFinanceCloudConfigured()) return;
-    if (!isFinancePendingCloudPush()) return;
+    const owner = userIdRef.current;
+    if (!isFinanceCloudConfigured() || !owner || !bookReadyRef.current) return;
+    if (!isFinancePendingCloudPush(owner)) return;
     if (flushInFlight.current) return;
     flushInFlight.current = true;
     setSyncChip('saving');
     try {
-      const iso = await upsertFinanceRemote(DEFAULT_FINANCE_SYNC_ID, stateRef.current);
-      setFinanceLocalSavedAt(iso);
+      await assertFinanceSessionUser(owner);
+      const iso = await upsertFinanceRemote(stateRef.current);
+      if (userIdRef.current !== owner) return;
+      setFinanceLocalSavedAt(owner, iso);
       setLastRemoteAt(iso);
-      clearFinancePendingCloudPush();
+      clearFinancePendingCloudPush(owner);
       clearSoftOffline();
       setSyncChip('synced');
       if (import.meta.env.DEV) {
         console.debug('[finance-sync] pending push flushed', { updated_at: iso });
       }
     } catch (e) {
+      if (e instanceof FinanceAuthError || userIdRef.current !== owner) return;
       if (isFinanceCloudNetworkError(e)) {
-        markFinancePendingCloudPush();
+        markFinancePendingCloudPush(owner);
         markCloudIssue(isBrowserOnline() ? 'unreachable' : 'offline');
       } else {
         const msg = e instanceof Error ? e.message : 'Error al subir.';
@@ -161,15 +173,17 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     } finally {
       flushInFlight.current = false;
     }
-  }, [clearSoftOffline, markCloudIssue, stateRef]);
+  }, [bookReadyRef, clearSoftOffline, markCloudIssue, stateRef]);
 
   const pullFromCloudImmediate = useCallback(async () => {
-    if (!isFinanceCloudConfigured()) return;
+    const owner = userIdRef.current;
+    if (!isFinanceCloudConfigured() || !owner) return;
     if (pullInFlight.current) return;
     pullInFlight.current = true;
     setSyncChip((prev) => (prev === 'loading' ? 'loading' : 'saving'));
     try {
-      const result = await pullCanonicalFromCloud();
+      const result = await pullSessionBook(owner);
+      if (userIdRef.current !== owner) return;
       if (result.ok) {
         applyCloudState(result.state, result.updatedAt);
         if (result.offline) {
@@ -188,42 +202,37 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
         }
         return;
       }
-      if (result.reason === 'empty') {
-        const empty = emptyFinanceStateForCloudMiss();
-        applyCloudState(empty, new Date().toISOString());
-        setCloudErr('No hay inversiones en la nube. Si tenías datos, probá Forzar subir desde el PC.');
-        setSyncChip('error');
-        return;
-      }
-      const msg = result.message ?? 'Error al leer la nube.';
-      setCloudErr(msg);
-      setSyncChip('error');
+      rejectBook(result.message ?? 'No se pudo leer tu cuenta.', result.reason === 'unauthorized' ? 'unauthorized' : result.reason === 'unlinked' || result.reason === 'empty' ? 'unlinked' : 'error');
       if (import.meta.env.DEV) {
-        console.debug('[finance-sync] pull failed', msg);
+        console.debug('[finance-sync] pull failed', result.message);
       }
-      throw new Error(msg);
+      throw new Error(result.message ?? 'No se pudo leer tu cuenta.');
     } finally {
       pullInFlight.current = false;
     }
-  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markCloudIssue]);
+  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markCloudIssue, rejectBook]);
 
   const handleForcePush = useCallback(async () => {
-    if (!isFinanceCloudConfigured()) return;
+    const owner = userIdRef.current;
+    if (!isFinanceCloudConfigured() || !owner || !bookReadyRef.current) return;
     setSyncChip('saving');
     setCloudErr(null);
     try {
-      const iso = await upsertFinanceRemote(DEFAULT_FINANCE_SYNC_ID, stateRef.current);
-      setFinanceLocalSavedAt(iso);
+      await assertFinanceSessionUser(owner);
+      const iso = await upsertFinanceRemote(stateRef.current);
+      if (userIdRef.current !== owner) return;
+      setFinanceLocalSavedAt(owner, iso);
       setLastRemoteAt(iso);
-      clearFinancePendingCloudPush();
+      clearFinancePendingCloudPush(owner);
       clearSoftOffline();
       setSyncChip('synced');
       if (import.meta.env.DEV) {
-        console.debug('[finance-sync] force push ok', { syncId: DEFAULT_FINANCE_SYNC_ID, updated_at: iso });
+        console.debug('[finance-sync] force push ok', { updated_at: iso });
       }
     } catch (e) {
+      if (e instanceof FinanceAuthError || userIdRef.current !== owner) return;
       if (isFinanceCloudNetworkError(e)) {
-        markFinancePendingCloudPush();
+        markFinancePendingCloudPush(owner);
         markCloudIssue(isBrowserOnline() ? 'unreachable' : 'offline');
         return;
       }
@@ -231,20 +240,15 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
       setCloudErr(msg);
       setSyncChip('error');
       if (import.meta.env.DEV) {
-        console.debug('[finance-sync] force push fail', { syncId: DEFAULT_FINANCE_SYNC_ID, error: msg });
+        console.debug('[finance-sync] force push fail', { error: msg });
       }
       throw e;
     }
-  }, [clearSoftOffline, markCloudIssue, stateRef]);
+  }, [bookReadyRef, clearSoftOffline, markCloudIssue, stateRef]);
 
   const handleRefreshFromCloud = useCallback(() => {
     void pullFromCloudImmediate();
   }, [pullFromCloudImmediate]);
-
-  const handleResetSyncIdToDefault = useCallback(() => {
-    resetFinanceSyncIdToDefault();
-    setSyncIdTick((n) => n + 1);
-  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -262,17 +266,16 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
 
     async function boot() {
       try {
+        const owner = userIdRef.current;
         if (import.meta.env.DEV) {
           console.debug('[finance-sync] boot start', {
-            syncId: DEFAULT_FINANCE_SYNC_ID,
             pwa: isStandalonePwa(),
             online: isBrowserOnline(),
           });
         }
 
-        /** Siempre intentar sync vía /api (same-origin). No abortar por navigator.onLine. */
-        const result = await pullCanonicalFromCloud();
-        if (gen !== bootGenRef.current) return;
+        const result = await pullSessionBook(owner);
+        if (gen !== bootGenRef.current || userIdRef.current !== owner) return;
 
         if (result.ok) {
           applyCloudState(result.state, result.updatedAt);
@@ -293,18 +296,11 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
           return;
         }
 
-        if (result.reason === 'empty') {
-          const empty = emptyFinanceStateForCloudMiss();
-          applyCloudState(empty, new Date().toISOString());
-          setCloudErr('No hay inversiones en la nube todavía.');
-          setSyncChip('error');
-          return;
-        }
-
-        setCloudErr(result.message ?? 'Error al leer la nube.');
+        bookReadyRef.current = false;
+        setBookOpen(false);
+        setCloudErr(result.message ?? 'No se pudo leer tu cuenta.');
         setSyncChip('error');
-        const local = loadFinanceState();
-        applyCloudState(local, getFinanceLocalSavedAt() ?? new Date().toISOString());
+        if (result.reason === 'unauthorized') onUnauthorized?.();
       } finally {
         if (gen === bootGenRef.current) {
           setCloudReady(true);
@@ -313,7 +309,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     }
 
     void boot();
-  }, [applyCloudState, clearSoftOffline, flushPendingCloudPush, markCloudIssue, syncIdTick]);
+  }, [applyCloudState, bookReadyRef, clearSoftOffline, flushPendingCloudPush, markCloudIssue, onUnauthorized, userId]);
 
   useEffect(() => {
     if (!isFinanceCloudConfigured()) return;
@@ -369,6 +365,7 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
 
   return {
     cloudOn,
+    bookOpen,
     cloudReady,
     syncChip,
     setSyncChip,
@@ -377,11 +374,9 @@ export function useFinanceCloudSync({ stateRef, setState }: Options) {
     cloudErr,
     setCloudErr,
     isOfflineMode,
-    activeSyncId,
     pullFromCloudImmediate,
     handleForcePush,
     handleRefreshFromCloud,
-    handleResetSyncIdToDefault,
     applyCloudState,
     markOffline: () => markCloudIssue(isBrowserOnline() ? 'unreachable' : 'offline'),
     markPendingCloudPush: markFinancePendingCloudPush,

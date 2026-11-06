@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { sileo } from 'sileo';
 import type { FinanceState } from '@/lib/finance/types';
-import { DEFAULT_FINANCE_SYNC_ID, exportFinanceState, importFinanceState } from '@/lib/finance/storage';
+import { exportFinanceState, importFinanceState } from '@/lib/finance/storage';
 
 export type FinanceCloudChipStatus = 'synced' | 'saving' | 'error' | 'solo_local';
 
@@ -9,28 +9,23 @@ type Props = {
   state: FinanceState;
   onImport: (next: FinanceState) => void;
   cloudAutoSync?: boolean;
-  /** ID usado en este navegador (puede diferir del default si quedó valor viejo en localStorage). */
-  activeSyncId: string;
   cloudError?: string | null;
   lastSyncIso: string | null;
   onForcePull: () => Promise<void>;
   onForcePush: () => Promise<void>;
-  onResetSyncIdToDefault: () => void;
 };
 
 export function FinanceJsonTools({
   state,
   onImport,
   cloudAutoSync = false,
-  activeSyncId,
   cloudError,
   lastSyncIso,
   onForcePull,
   onForcePush,
-  onResetSyncIdToDefault,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [diagBusy, setDiagBusy] = useState<'pull' | 'push' | 'reset' | null>(null);
+  const [diagBusy, setDiagBusy] = useState<'pull' | 'push' | null>(null);
 
   const download = () => {
     const json = exportFinanceState(state);
@@ -164,20 +159,8 @@ export function FinanceJsonTools({
             Diagnóstico de sincronización
           </summary>
           <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 text-xs text-slate-600">
-            <p>
-              <span className="font-semibold text-slate-700">ID esperado en Supabase:</span>{' '}
-              <code className="break-all rounded bg-emerald-50 px-1 font-mono text-[10px] text-emerald-700">
-                {DEFAULT_FINANCE_SYNC_ID}
-              </code>
-            </p>
-            <p>
-              <span className="font-semibold text-slate-700">ID en este navegador:</span>{' '}
-              <code className="break-all rounded bg-slate-100 px-1 font-mono text-[10px] text-slate-700">{activeSyncId}</code>
-              {activeSyncId !== DEFAULT_FINANCE_SYNC_ID ? (
-                <span className="mt-1 block text-amber-600">
-                  Este dispositivo tenía otro ID; la app ahora usa siempre el libro principal.
-                </span>
-              ) : null}
+            <p className="text-[var(--text-secondary)]">
+              La nube guarda el libro de la cuenta con la que iniciaste sesión.
             </p>
             <p>
               <span className="font-semibold text-slate-700">Última sync conocida:</span> {fmtLast(lastSyncIso)}
@@ -223,26 +206,6 @@ export function FinanceJsonTools({
                 }}
               >
                 {diagBusy === 'push' ? 'Subiendo…' : 'Forzar subir este dispositivo'}
-              </button>
-              <button
-                type="button"
-                disabled={diagBusy !== null || activeSyncId === DEFAULT_FINANCE_SYNC_ID}
-                className="min-h-[40px] rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-40"
-                title="Si tenías un ID distinto guardado, esto alinea este navegador al libro principal."
-                onClick={() => {
-                  setDiagBusy('reset');
-                  try {
-                    onResetSyncIdToDefault();
-                    sileo.info({
-                      title: 'ID restablecido',
-                      description: 'Podés “Forzar traer de la nube”.',
-                    });
-                  } finally {
-                    setDiagBusy(null);
-                  }
-                }}
-              >
-                Restablecer ID al predeterminado
               </button>
             </div>
           </div>

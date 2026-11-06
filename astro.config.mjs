@@ -44,11 +44,10 @@ function financeApiDevPlugin() {
 
         if (urlPath === '/api/finance-keepalive' || urlPath === '/api/finance-cloud') {
           try {
-            const modPath =
+            const mod =
               urlPath === '/api/finance-keepalive'
-                ? path.resolve(__dirname, 'api/finance-keepalive.mjs')
-                : path.resolve(__dirname, 'api/finance-cloud.mjs');
-            const mod = await import(/* @vite-ignore */ modPath);
+                ? await import(/* @vite-ignore */ path.resolve(__dirname, 'api/finance-keepalive.mjs'))
+                : await server.ssrLoadModule('/src/lib/finance/server/financeCloudHandler.ts');
             const handler = mod.default;
             const fullUrl = new URL(req.url ?? '/', 'http://localhost');
 
@@ -68,6 +67,10 @@ function financeApiDevPlugin() {
 
             const fakeReq = {
               method: req.method,
+              headers: {
+                authorization: req.headers.authorization,
+                'sec-fetch-site': req.headers['sec-fetch-site'],
+              },
               query: Object.fromEntries(fullUrl.searchParams.entries()),
               body: parsedBody,
             };

@@ -1,8 +1,8 @@
+import { assertFinanceSessionUser, FinanceAuthError } from '@/lib/finance/authClient';
 import { markStateRevision, stateRevision } from '@/lib/finance/stateRevision';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { FinanceState } from '@/lib/finance/types';
 import {
-  DEFAULT_FINANCE_SYNC_ID,
   getInitialFinanceState,
   markFinancePendingCloudPush,
   saveFinanceState,
@@ -16,6 +16,9 @@ import {
 } from '@/lib/finance/cloudSync';
 
 type PersistenceOptions = {
+  userId: string;
+  /** Solo se escribe después de cargar el libro de esta sesión. */
+  bookReadyRef: MutableRefObject<boolean>;
   onRemoteSaved?: (iso: string) => void;
   onRemoteError?: (message: string) => void;
   /** Red caída: datos locales ok, sync pendiente. */
@@ -24,7 +27,7 @@ type PersistenceOptions = {
   onSoloLocal?: () => void;
 };
 
-export function useFinancePersistence(options: PersistenceOptions = {}) {
+export function useFinancePersistence(options: PersistenceOptions) {
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
@@ -34,50 +37,64 @@ export function useFinancePersistence(options: PersistenceOptions = {}) {
 
   const remoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scheduleRemoteSave = useCallback((syncId: string, next: FinanceState) => {
-    if (!isFinanceCloudConfigured()) return;
-      if (remoteTimer.current) clearTimeout(remoteTimer.current);
+  const scheduleRemoteSave = useCallback((userId: string, next: FinanceState) => {
+    if (!isFinanceCloudConfigured() || !userId) return;
+    if (remoteTimer.current) clearTimeout(remoteTimer.current);
     const expectedUpdatedAt = stateRevision(next);
     remoteTimer.current = setTimeout(() => {
       remoteTimer.current = null;
+      if (!optionsRef.current.bookReadyRef.current) return;
+      if (optionsRef.current.userId !== userId) return;
 
-      void upsertFinanceRemote(syncId, next, expectedUpdatedAt)
+      void assertFinanceSessionUser(userId)
+        .then(() => upsertFinanceRemote(next, expectedUpdatedAt))
         .then((iso) => {
-          setFinanceLocalSavedAt(iso);
-          clearFinancePendingCloudPush();
+          setFinanceLocalSavedAt(userId, iso);
+          clearFinancePendingCloudPush(userId);
           optionsRef.current.onRemoteSaved?.(iso);
           if (import.meta.env.DEV) {
-            console.debug('[finance-sync] upsert persist ok', { syncId, updated_at: iso });
+            console.debug('[finance-sync] upsert persist ok', { updated_at: iso });
           }
         })
         .catch((e: unknown) => {
+          if (optionsRef.current.userId !== userId) return;
+          if (e instanceof FinanceAuthError) return;
           if (isFinanceCloudNetworkError(e)) {
-            markFinancePendingCloudPush();
+            markFinancePendingCloudPush(userId);
             optionsRef.current.onRemoteOffline?.();
             if (import.meta.env.DEV) {
-              console.debug('[finance-sync] upsert persist offline', { syncId });
+              console.debug('[finance-sync] upsert persist offline');
             }
             return;
           }
           const msg = e instanceof Error ? e.message : 'Error al guardar en la nube.';
           optionsRef.current.onRemoteError?.(msg);
           if (import.meta.env.DEV) {
-            console.debug('[finance-sync] upsert persist fail', { syncId, error: msg });
+            console.debug('[finance-sync] upsert persist fail', { error: msg });
           }
         });
     }, 600);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (remoteTimer.current) clearTimeout(remoteTimer.current);
+    };
+  }, []);
+
   const persist = useCallback(
     (updater: (prev: FinanceState) => FinanceState) => {
+      if (!optionsRef.current.bookReadyRef.current) return;
+      const userId = optionsRef.current.userId;
+      if (!userId) return;
       setState((prev) => {
         const next = updater(prev);
         const revision = stateRevision(prev);
         if (revision) markStateRevision(next, revision);
-        saveFinanceState(next);
+        saveFinanceState(userId, next);
         if (typeof window !== 'undefined' && isFinanceCloudConfigured()) {
           optionsRef.current.onSaving?.();
-          scheduleRemoteSave(DEFAULT_FINANCE_SYNC_ID, next);
+          scheduleRemoteSave(userId, next);
         } else if (typeof window !== 'undefined') {
           optionsRef.current.onSoloLocal?.();
         }

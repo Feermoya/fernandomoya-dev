@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { FileUp, LoaderCircle } from 'lucide-react';
+import { getFinanceAccessToken } from '@/lib/finance/authClient';
 import { fetchFinanceRemote, type RemoteFinanceRow } from '@/lib/finance/cloudSync';
 import type { FinanceState } from '@/lib/finance/types';
 import { importFinanceState } from '@/lib/finance/storage';
@@ -43,7 +44,8 @@ export function FinanceBalanzImporter({ disabled, onImported, onBusyChange }: Pr
       if (!latest || latest.updatedAt !== remote.updatedAt) {
         await refresh(parsed); throw new Error('El historial cambió. Revisá la lista actualizada y volvé a confirmar.');
       }
-      const response = await fetch('/api/finance-balanz',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+      const token = await getFinanceAccessToken();
+      const response = await fetch('/api/finance-balanz',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
         body:JSON.stringify({expectedUpdatedAt:latest.updatedAt,operations:parsed.operations,selections:[...selected].map(key=>({key,distinctReviewed:reviewed.has(key)}))})});
       const result = await response.json();
       if (!response.ok || !result.ok) {

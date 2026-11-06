@@ -28,23 +28,27 @@ export function ensureFinanceAppDataVersion(): boolean {
   if (changed) {
     window.localStorage.setItem(FINANCE_APP_VERSION_KEY, FINANCE_APP_DATA_VERSION);
   }
-  resetFinanceSyncIdToDefault();
   return changed;
 }
 
-export function isFinancePendingCloudPush(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(FINANCE_PENDING_CLOUD_PUSH_KEY) === '1';
+/** Clave de caché de un usuario. Nunca usa el localStorage global histórico. */
+export function financeScopedKey(base: string, userId: string): string {
+  return `${base}:${userId}`;
 }
 
-export function markFinancePendingCloudPush(): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(FINANCE_PENDING_CLOUD_PUSH_KEY, '1');
+export function isFinancePendingCloudPush(userId: string): boolean {
+  if (typeof window === 'undefined' || !userId) return false;
+  return window.localStorage.getItem(financeScopedKey(FINANCE_PENDING_CLOUD_PUSH_KEY, userId)) === '1';
 }
 
-export function clearFinancePendingCloudPush(): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(FINANCE_PENDING_CLOUD_PUSH_KEY);
+export function markFinancePendingCloudPush(userId: string): void {
+  if (typeof window === 'undefined' || !userId) return;
+  window.localStorage.setItem(financeScopedKey(FINANCE_PENDING_CLOUD_PUSH_KEY, userId), '1');
+}
+
+export function clearFinancePendingCloudPush(userId: string): void {
+  if (typeof window === 'undefined' || !userId) return;
+  window.localStorage.removeItem(financeScopedKey(FINANCE_PENDING_CLOUD_PUSH_KEY, userId));
 }
 
 /** ID fijo de la fila en Supabase para esta app personal (un solo libro). */
@@ -67,31 +71,24 @@ export function captureLegacySyncId(): void {
   }
 }
 
-/** IDs a consultar en Supabase: canónico + legado (si existe). */
+/**
+ * El cliente no elige filas. La fila legacy permanece en Supabase y no se copia
+ * a otra cuenta. Esta lista queda vacía a propósito.
+ */
 export function listCloudSyncCandidateIds(): string[] {
-  const ids = new Set<string>([DEFAULT_FINANCE_SYNC_ID, ...KNOWN_LEGACY_CLOUD_IDS]);
-  if (typeof window !== 'undefined') {
-    const legacy = window.localStorage.getItem(FINANCE_LEGACY_SYNC_ID_KEY)?.trim();
-    if (legacy) ids.add(legacy);
-    const stored = window.localStorage.getItem(FINANCE_SYNC_ID_KEY)?.trim();
-    if (stored) ids.add(stored);
-  }
-  return [...ids];
+  return [];
 }
 
-/** Escrituras van siempre al libro canónico. */
+/**
+ * El navegador no elige el libro. Se conserva el helper para no reescribir
+ * el id canónico en localStorage.
+ */
 export function getFinanceSyncId(): string {
-  if (typeof window !== 'undefined') {
-    captureLegacySyncId();
-    window.localStorage.setItem(FINANCE_SYNC_ID_KEY, DEFAULT_FINANCE_SYNC_ID);
-  }
   return DEFAULT_FINANCE_SYNC_ID;
 }
 
 export function resetFinanceSyncIdToDefault(): void {
-  if (typeof window === 'undefined') return;
-  captureLegacySyncId();
-  window.localStorage.setItem(FINANCE_SYNC_ID_KEY, DEFAULT_FINANCE_SYNC_ID);
+  /* El id del libro lo resuelve el servidor a partir de la sesión. */
 }
 
 export function setFinanceSyncId(id: string): void {
@@ -99,15 +96,15 @@ export function setFinanceSyncId(id: string): void {
   window.localStorage.setItem(FINANCE_SYNC_ID_KEY, id);
 }
 
-export function getFinanceLocalSavedAt(): string | null {
-  if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(FINANCE_LOCAL_SAVED_AT_KEY);
+export function getFinanceLocalSavedAt(userId: string): string | null {
+  if (typeof window === 'undefined' || !userId) return null;
+  return window.localStorage.getItem(financeScopedKey(FINANCE_LOCAL_SAVED_AT_KEY, userId));
 }
 
 /** Último `updated_at` remoto conocido tras fetch/upsert exitoso (metadata de sync, no árbitro de merge). */
-export function setFinanceLocalSavedAt(iso: string): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(FINANCE_LOCAL_SAVED_AT_KEY, iso);
+export function setFinanceLocalSavedAt(userId: string, iso: string): void {
+  if (typeof window === 'undefined' || !userId) return;
+  window.localStorage.setItem(financeScopedKey(FINANCE_LOCAL_SAVED_AT_KEY, userId), iso);
 }
 
 function currentMonthStr(): string {
@@ -130,29 +127,26 @@ export function getInitialFinanceState(): FinanceState {
   };
 }
 
-export function loadFinanceState(): FinanceState {
-  if (typeof window === 'undefined') {
-    return getInitialFinanceState();
-  }
+/** `null` si este usuario no tiene caché propio. No lee `fm-finance-game-v1` sin dueño. */
+export function loadFinanceState(userId: string): FinanceState | null {
+  if (typeof window === 'undefined' || !userId) return null;
   try {
-    const raw = window.localStorage.getItem(FINANCE_STORAGE_KEY);
-    if (!raw) return getInitialFinanceState();
+    const raw = window.localStorage.getItem(financeScopedKey(FINANCE_STORAGE_KEY, userId));
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     const imported = importFinanceState(JSON.stringify(parsed));
-    if (imported.ok) {
-      return withPreferences(imported.state);
-    }
-    return getInitialFinanceState();
+    if (imported.ok) return withPreferences(imported.state);
+    return null;
   } catch {
-    return getInitialFinanceState();
+    return null;
   }
 }
 
 /** Persiste solo el JSON en localStorage (caché). No toca `fm-finance-local-saved-at`; eso lo actualiza la nube al sincronizar bien. */
-export function saveFinanceState(state: FinanceState): void {
-  if (typeof window === 'undefined') return;
+export function saveFinanceState(userId: string, state: FinanceState): void {
+  if (typeof window === 'undefined' || !userId) return;
   try {
-    window.localStorage.setItem(FINANCE_STORAGE_KEY, JSON.stringify(state));
+    window.localStorage.setItem(financeScopedKey(FINANCE_STORAGE_KEY, userId), JSON.stringify(state));
   } catch {
     /* ignore quota / private mode */
   }

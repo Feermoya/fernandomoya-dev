@@ -1,6 +1,7 @@
+import { FinanceAuthError, getFinanceAccessToken } from '@/lib/finance/authClient';
 import { markStateRevision, stateRevision } from './stateRevision';
 import type { FinanceState } from '@/lib/finance/types';
-import { DEFAULT_FINANCE_SYNC_ID, importFinanceState } from '@/lib/finance/storage';
+import { importFinanceState } from '@/lib/finance/storage';
 
 /**
  * Sync vía same-origin `/api/finance-cloud`.
@@ -23,6 +24,18 @@ export const FINANCE_OFFLINE_USER_MESSAGE =
 
 export const FINANCE_CLOUD_UNREACHABLE_MESSAGE =
   'No se pudo sincronizar con la nube. Tus datos siguen en este dispositivo; se reintenta al recargar.';
+
+export class FinanceCloudHttpError extends Error {
+  readonly status: number;
+  readonly code?: string;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'FinanceCloudHttpError';
+    this.status = status;
+    this.code = code;
+  }
+}
 
 export class FinanceCloudNetworkError extends Error {
   readonly kind: 'offline' | 'unreachable';
@@ -87,8 +100,13 @@ async function readErrorDetail(res: Response): Promise<string> {
   }
 }
 
-function proxyReadUrl(syncId: string): string {
-  return `/api/finance-cloud?id=${encodeURIComponent(syncId)}`;
+async function financeAuthHeaders(): Promise<HeadersInit> {
+  const token = await getFinanceAccessToken();
+  return {
+    Accept: 'application/json',
+    Authorization: `Bearer ${token}`,
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+  };
 }
 
 /**
@@ -107,9 +125,7 @@ async function financeCloudFetch(url: string, init: RequestInit): Promise<Respon
 }
 
 /** Ping vía API propia (Vercel → Supabase). */
-export async function pingFinanceCloudKeepalive(
-  _syncId: string = DEFAULT_FINANCE_SYNC_ID,
-): Promise<boolean> {
+export async function pingFinanceCloudKeepalive(): Promise<boolean> {
   if (!isFinanceCloudConfigured()) return false;
   try {
     const res = await fetch('/api/finance-keepalive', {
@@ -129,28 +145,35 @@ export async function pingFinanceCloudKeepalive(
   }
 }
 
-export async function fetchFinanceRemote(
-  syncId: string = DEFAULT_FINANCE_SYNC_ID,
-): Promise<RemoteFinanceRow | null> {
+export async function fetchFinanceRemote(): Promise<RemoteFinanceRow | null> {
   if (!isFinanceCloudConfigured()) return null;
   if (import.meta.env.DEV) {
-    console.debug('[finance-sync] fetch start', { syncId });
+    console.debug('[finance-sync] fetch start');
   }
 
-  const res = await financeCloudFetch(proxyReadUrl(syncId), {
+  const res = await financeCloudFetch('/api/finance-cloud', {
     method: 'GET',
     cache: 'no-store',
     credentials: 'same-origin',
-    headers: {
-      Accept: 'application/json',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-    },
+    headers: await financeAuthHeaders(),
   });
 
   if (!res.ok) {
     const detail = await readErrorDetail(res);
     if (import.meta.env.DEV) {
-      console.debug('[finance-sync] fetch error', { syncId, status: res.status, detail });
+      console.debug('[finance-sync] fetch error', { status: res.status, detail });
+    }
+    if (res.status === 401 || res.status === 403 || res.status === 409) {
+      let code: string | undefined;
+      let message = detail || 'No se pudo leer tu cuenta.';
+      try {
+        const parsed = JSON.parse(detail) as { code?: string; error?: string };
+        code = parsed.code;
+        if (parsed.error) message = parsed.error;
+      } catch {
+        code = undefined;
+      }
+      throw new FinanceCloudHttpError(message, res.status, code);
     }
     if (res.status === 502 || res.status === 503 || res.status >= 500) {
       throw cloudFetchErrorForContext();
@@ -162,15 +185,16 @@ export async function fetchFinanceRemote(
     ok?: boolean;
     row?: { body: unknown; updated_at: string } | null;
     error?: string;
+    code?: string;
   };
 
   if (!payload.ok) {
-    throw new Error(payload.error || 'Nube: lectura falló.');
+    throw new FinanceCloudHttpError(payload.error || 'Nube: lectura falló.', res.status, payload.code);
   }
 
   if (!payload.row) {
     if (import.meta.env.DEV) {
-      console.debug('[finance-sync] fetch empty row', { syncId });
+      console.debug('[finance-sync] fetch empty row');
     }
     return null;
   }
@@ -179,25 +203,24 @@ export async function fetchFinanceRemote(
   const parsed = importFinanceState(typeof body === 'string' ? body : JSON.stringify(body));
   if (!parsed.ok) {
     if (import.meta.env.DEV) {
-      console.debug('[finance-sync] fetch parse error', { syncId, error: parsed.error });
+      console.debug('[finance-sync] fetch parse error', { error: parsed.error });
     }
     throw new Error(parsed.error);
   }
   if (import.meta.env.DEV) {
-    console.debug('[finance-sync] fetch ok', { syncId, updated_at: payload.row.updated_at });
+    console.debug('[finance-sync] fetch ok', { updated_at: payload.row.updated_at });
   }
   markStateRevision(parsed.state, payload.row.updated_at);
   return { state: parsed.state, updatedAt: payload.row.updated_at };
 }
 
 export async function upsertFinanceRemote(
-  syncId: string = DEFAULT_FINANCE_SYNC_ID,
   state: FinanceState,
   expectedUpdatedAt: string | null = stateRevision(state),
 ): Promise<string> {
   if (!isFinanceCloudConfigured()) throw new Error('Nube no configurada');
   if (import.meta.env.DEV) {
-    console.debug('[finance-sync] upsert start', { syncId });
+    console.debug('[finance-sync] upsert start');
   }
 
   const res = await financeCloudFetch('/api/finance-cloud', {
@@ -205,16 +228,19 @@ export async function upsertFinanceRemote(
     cache: 'no-store',
     credentials: 'same-origin',
     headers: {
-      Accept: 'application/json',
+      ...(await financeAuthHeaders()),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ id: syncId, state, expectedUpdatedAt }),
+    body: JSON.stringify({ state, expectedUpdatedAt }),
   });
 
   if (!res.ok) {
     const detail = await readErrorDetail(res);
     if (import.meta.env.DEV) {
-      console.debug('[finance-sync] upsert error', { syncId, status: res.status, detail });
+      console.debug('[finance-sync] upsert error', { status: res.status, detail });
+    }
+    if (res.status === 401 || res.status === 403) {
+      throw new FinanceAuthError(detail || 'La sesión no es válida.', res.status);
     }
     if (res.status === 502 || res.status === 503 || res.status >= 500) {
       throw cloudFetchErrorForContext();
@@ -229,7 +255,7 @@ export async function upsertFinanceRemote(
 
   const updatedAt = payload.updated_at || new Date().toISOString();
   if (import.meta.env.DEV) {
-    console.debug('[finance-sync] upsert ok', { syncId, updated_at: updatedAt });
+    console.debug('[finance-sync] upsert ok', { updated_at: updatedAt });
   }
   markStateRevision(state, updatedAt);
   return updatedAt;
