@@ -151,4 +151,32 @@ describe('buildInvestmentEntry', () => {
     expect(result.entry.amountCurrency).toBe('ARS');
     expect(result.entry.estimatedUnits).toBe(10);
   });
+
+  it('registers ETH on Binance in ARS with the actual received quantity', async () => {
+    const result = await buildInvestmentEntry({
+      mode: 'amount', amountRaw: '50000', unitsRaw: '', cryptoUnitsRaw: '0.01234567',
+      amountCurrency: 'ARS', month: '2026-11', asset: 'CRYPTO',
+      platform: 'Binance', category: 'ETH', note: '',
+      cachedPrice: price({ ticker: 'ETH-USD', price: 2800, currency: 'USD', source: 'binance' }),
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.entry.ticker).toBe('ETH');
+    expect(result.entry.asset).toBe('CRYPTO');
+    expect(result.entry.amount).toBe(50_000);
+    expect(result.entry.estimatedUnits).toBe(0.01234567);
+    expect(result.entry.buyCurrency).toBe('USD');
+  });
+
+  it('preserves BTC 8-decimal precision when estimating a USD purchase', async () => {
+    const result = await buildInvestmentEntry({
+      mode: 'amount', amountRaw: '50', unitsRaw: '', amountCurrency: 'USD',
+      month: '2026-11', asset: 'CRYPTO', platform: 'Binance', category: 'BTC', note: '',
+      cachedPrice: price({ ticker: 'BTC-USD', price: 100000, currency: 'USD', source: 'binance' }),
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.entry.estimatedUnits).toBe(0.0005);
+    expect(result.entry.ticker).toBe('BTC');
+  });
 });
