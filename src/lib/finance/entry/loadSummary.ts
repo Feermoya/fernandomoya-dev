@@ -81,7 +81,7 @@ export function buildEntryLoadSummary(params: {
     lines.push({
       tone: 'neutral',
       text: entry.estimatedUnits
-        ? `${amountLabel} · ${formatUnits(entry.estimatedUnits)} nominales de ${ticker}`
+        ? `${amountLabel} · ${formatUnits(entry.estimatedUnits)} ${entry.asset === 'CRYPTO' || entry.asset === 'BTC' ? ticker : `nominales de ${ticker}`}`
         : `${amountLabel} en ${ticker}`,
     });
   } else {
@@ -154,7 +154,7 @@ export function buildEntryLoadSummary(params: {
 
   return {
     id: entry.id,
-    headline: levelUp ? `Nivel ${levelUp.level} desbloqueado` : 'Inversión cargada',
+    headline: levelUp ? `Nivel ${levelUp.level} desbloqueado` : '¡Inversión registrada!',
     lines,
     toastDescription: toastParts.join(' · ') || formatEntryAmount(entry.amount, entry.amountCurrency),
     levelUp,
