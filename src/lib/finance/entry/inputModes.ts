@@ -43,7 +43,7 @@ export function unitsFromAmount(amount: number, unitPrice: number): number {
 export function formatUnits(units: number): string {
   if (!Number.isFinite(units)) return '—';
   return units.toLocaleString('es-AR', {
-    maximumFractionDigits: units % 1 === 0 ? 0 : 3,
+    maximumFractionDigits: units % 1 === 0 ? 0 : 8,
   });
 }
 
