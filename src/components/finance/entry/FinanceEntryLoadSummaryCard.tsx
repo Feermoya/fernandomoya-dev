@@ -1,4 +1,5 @@
-import { CheckCircle2, Info, TriangleAlert, X } from 'lucide-react';
+import { CheckCircle2, Info, Sparkles, TriangleAlert, X } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import type { EntryLoadSummary, EntryLoadSummaryLineTone } from '@/lib/finance/entry';
 
 type Props = {
@@ -32,12 +33,22 @@ function toneIcon(tone: EntryLoadSummaryLineTone) {
 
 /** Tarjeta con el resumen post-carga (celebración + plan + nivel). */
 export function FinanceEntryLoadSummaryCard({ summary, onDismiss }: Props) {
+  const reduced = useReducedMotion();
   return (
-    <aside
-      className="rounded-2xl border border-emerald-200 bg-emerald-50/90 p-3.5 shadow-sm"
+    <motion.aside
+      initial={reduced ? false : { opacity: 0, y: 14, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 330, damping: 23 }}
+      className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 p-3.5 shadow-[0_10px_30px_-20px_rgba(5,150,105,0.5)]"
       role="status"
       aria-live="polite"
     >
+      <motion.div aria-hidden className="pointer-events-none absolute right-10 top-2 text-emerald-400"
+        initial={reduced ? false : { opacity: 0, rotate: -35, scale: 0.4 }}
+        animate={{ opacity: 0.9, rotate: 14, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}>
+        <Sparkles size={24} strokeWidth={1.6} />
+      </motion.div>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="finance-label text-emerald-700">Resumen de la carga</p>
@@ -66,6 +77,6 @@ export function FinanceEntryLoadSummaryCard({ summary, onDismiss }: Props) {
           );
         })}
       </ul>
-    </aside>
+    </motion.aside>
   );
 }
