@@ -21,6 +21,8 @@ export type BuildInvestmentEntryInput = {
   amountRaw: string;
   /** Nominales (modo units) o vacío. */
   unitsRaw: string;
+  /** Cantidad efectiva recibida en Binance; opcional en modo monto. */
+  cryptoUnitsRaw?: string;
   /** Moneda del monto en modo amount. En modo units se toma del precio. */
   amountCurrency?: EntryAmountCurrency;
   month: string;
@@ -78,14 +80,21 @@ export async function buildInvestmentEntry(
   if (input.note.trim()) draft.note = input.note.trim();
 
   const ticker = getEntryTicker(draft);
+  const isCrypto = draft.asset === 'CRYPTO' || draft.asset === 'BTC';
+  if (draft.asset === 'CRYPTO' && !ticker) {
+    return { ok: false, error: 'Seleccioná una criptomoneda antes de guardar.' };
+  }
   if (ticker) draft.ticker = ticker;
 
+  const quoteTicker = ticker && isCrypto ? `${ticker}-USD` : ticker;
   let priceRow: FinancePrice | undefined =
-    input.cachedPrice && input.cachedPrice.price > 0 ? input.cachedPrice : undefined;
+    input.cachedPrice && input.cachedPrice.price > 0 &&
+    input.cachedPrice.ticker.replace(/-USD$/, '') === ticker
+      ? input.cachedPrice : undefined;
 
   if (ticker && !priceRow) {
-    const result = await fetchFinancePrices([ticker]);
-    const row = result.prices[ticker];
+    const result = await fetchFinancePrices([quoteTicker!]);
+    const row = result.prices[quoteTicker!];
     if (row && row.price > 0) priceRow = row;
   }
 
@@ -113,7 +122,7 @@ export async function buildInvestmentEntry(
       return { ok: false, error: 'El monto calculado es inválido.' };
     }
     attachMarketFields(draft, ticker, priceRow);
-    draft.estimatedUnits = Math.round(units * 1000) / 1000;
+    draft.estimatedUnits = isCrypto ? Number(units.toFixed(8)) : Math.round(units * 1000) / 1000;
     if (!draft.asset && currency === 'USD') draft.asset = 'USD';
     return { ok: true, entry: draft, price: priceRow };
   }
@@ -131,8 +140,17 @@ export async function buildInvestmentEntry(
     attachMarketFields(draft, ticker, priceRow);
     const priceCurrency = normalizeAmountCurrency(priceRow.currency);
     if (priceCurrency === amountCurrency) {
-      draft.estimatedUnits = unitsFromAmount(draft.amount, priceRow.price);
+      draft.estimatedUnits = isCrypto
+        ? Number((draft.amount / priceRow.price).toFixed(8))
+        : unitsFromAmount(draft.amount, priceRow.price);
     }
+  }
+  if (isCrypto && input.cryptoUnitsRaw?.trim()) {
+    const actualUnits = parsePositiveNumber(input.cryptoUnitsRaw);
+    if (actualUnits == null || Number(actualUnits.toFixed(8)) <= 0) {
+      return { ok: false, error: 'Revisá la cantidad de criptomoneda recibida.' };
+    }
+    draft.estimatedUnits = Number(actualUnits.toFixed(8));
   }
 
   return { ok: true, entry: draft, price: priceRow };
@@ -141,11 +159,13 @@ export async function buildInvestmentEntry(
 /** Consulta precio para preview en UI (modo nominales). */
 export async function fetchTickerPriceForEntry(
   ticker: string,
+  isCrypto = false,
 ): Promise<FinancePrice | null> {
   const normalized = ticker.trim().toUpperCase();
   if (!normalized) return null;
-  const result = await fetchFinancePrices([normalized]);
-  const row = result.prices[normalized];
+  const symbol = isCrypto ? `${normalized.replace(/-USD$/, '')}-USD` : normalized;
+  const result = await fetchFinancePrices([symbol]);
+  const row = result.prices[symbol];
   if (!row || !(row.price > 0)) return null;
   return row;
 }
