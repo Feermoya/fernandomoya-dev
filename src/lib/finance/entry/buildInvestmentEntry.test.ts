@@ -165,6 +165,7 @@ describe('buildInvestmentEntry', () => {
     expect(result.entry.asset).toBe('CRYPTO');
     expect(result.entry.amount).toBe(50_000);
     expect(result.entry.estimatedUnits).toBe(0.01234567);
+    expect(result.entry.quantitySource).toBe('actual');
     expect(result.entry.buyCurrency).toBe('USD');
   });
 

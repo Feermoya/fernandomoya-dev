@@ -325,7 +325,7 @@ export function FinanceEntryForm({
               <div className="mt-3 space-y-2 rounded-2xl border border-amber-100 bg-amber-50/60 p-3">
                 <div aria-live="polite" className="text-xs font-semibold text-slate-700">
                   {priceLoading ? 'Consultando Binance…' : livePrice?.price
-                    ? `${tickerHint} · ${formatFinancePrice(livePrice.price, 'USD')} (par USDT)`
+                    ? `${tickerHint} · ${formatFinancePrice(livePrice.price, 'USD')} (${livePrice.source === 'binance' ? 'Binance, par USDT' : 'referencia USD'})`
                     : priceError ?? 'Seleccioná una moneda para consultar su cotización.'}
                 </div>
                 {livePrice?.price && amountCurrency === 'USD' && cryptoEstimatedQuantity != null ? (

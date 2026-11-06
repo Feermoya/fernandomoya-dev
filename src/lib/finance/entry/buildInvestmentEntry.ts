@@ -123,6 +123,7 @@ export async function buildInvestmentEntry(
     }
     attachMarketFields(draft, ticker, priceRow);
     draft.estimatedUnits = isCrypto ? Number(units.toFixed(8)) : Math.round(units * 1000) / 1000;
+    if (isCrypto) draft.quantitySource = 'actual';
     if (!draft.asset && currency === 'USD') draft.asset = 'USD';
     return { ok: true, entry: draft, price: priceRow };
   }
@@ -151,6 +152,7 @@ export async function buildInvestmentEntry(
       return { ok: false, error: 'Revisá la cantidad de criptomoneda recibida.' };
     }
     draft.estimatedUnits = Number(actualUnits.toFixed(8));
+    draft.quantitySource = 'actual';
   }
 
   return { ok: true, entry: draft, price: priceRow };

@@ -41,6 +41,8 @@ export type FinanceEntryMarketData = {
   buyPrice?: number;
   buyCurrency?: string;
   estimatedUnits?: number;
+  /** Cantidad real informada por usuario o estimada mediante cotización. */
+  quantitySource?: 'actual' | 'estimated';
   buySnapshot?: FinanceEntryMarketSnapshot;
 };
 

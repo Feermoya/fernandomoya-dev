@@ -82,8 +82,8 @@ export function FinanceEntryEditModal({ entry, onClose, onSave }: Props) {
     if (asset === 'CRYPTO' || asset === 'BTC') {
       const quantity = cryptoUnits.trim() ? Number(cryptoUnits.replace(',', '.')) : 0;
       if (cryptoUnits.trim() && (!Number.isFinite(quantity) || quantity <= 0)) return;
-      if (quantity > 0) updated.estimatedUnits = Number(quantity.toFixed(8));
-      else delete updated.estimatedUnits;
+      if (quantity > 0) { updated.estimatedUnits = Number(quantity.toFixed(8)); updated.quantitySource = 'actual'; }
+      else { delete updated.estimatedUnits; delete updated.quantitySource; }
     }
     const ticker = getEntryTicker(updated);
     if (ticker) updated.ticker = ticker;

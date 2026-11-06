@@ -74,18 +74,22 @@ export function buildConsolidatedPortfolio(
     const cur = (entry.amountCurrency ?? entry.buyCurrency ?? 'ARS').toUpperCase();
     b.investedAmountByCurrency[cur] = (b.investedAmountByCurrency[cur] ?? 0) + entry.amount;
 
-    if (
-      typeof entry.estimatedUnits === 'number' &&
-      entry.estimatedUnits > 0 &&
-      typeof entry.buyPrice === 'number' &&
-      entry.buyPrice > 0
-    ) {
+    if (typeof entry.estimatedUnits === 'number' && entry.estimatedUnits > 0) {
       b.hasEntryUnits = true;
       b.quantityFromEntries += entry.estimatedUnits;
-      const w = b.weightedCostByCurrency[cur] ?? { qty: 0, cost: 0 };
-      w.qty += entry.estimatedUnits;
-      w.cost += entry.estimatedUnits * entry.buyPrice;
-      b.weightedCostByCurrency[cur] = w;
+      if (typeof entry.buyPrice === 'number' && entry.buyPrice > 0) {
+        const buyCurrency = (entry.buyCurrency ?? cur).toUpperCase();
+        if (buyCurrency === cur) {
+          const w = b.weightedCostByCurrency[cur] ?? { qty: 0, cost: 0 };
+          w.qty += entry.estimatedUnits;
+          w.cost += entry.estimatedUnits * entry.buyPrice;
+          b.weightedCostByCurrency[cur] = w;
+        } else {
+          b.limitations.push('Precio de referencia y monto en monedas distintas; no se calcula un promedio mezclado.');
+        }
+      } else {
+        b.limitations.push('Cantidad registrada sin precio de referencia; promedio no disponible.');
+      }
     } else {
       b.limitations.push('Hay movimientos sin cantidad estimada; no se inventan unidades.');
     }
@@ -113,12 +117,8 @@ export function buildConsolidatedPortfolio(
         'Hay montos en distintas monedas; no se calcula un único precio promedio.';
     }
 
-    if (b.limitations.length > 0 && !b.hasHoldings && !b.hasEntryUnits) {
-      limitation = b.limitations[0];
-    } else if (b.limitations.length > 0 && limitation) {
-      limitation = `${limitation} ${b.limitations[0]}`;
-    } else if (b.limitations.length > 0 && !quantity) {
-      limitation = b.limitations[0];
+    if (b.limitations.length > 0) {
+      limitation = [limitation, ...new Set(b.limitations)].filter(Boolean).join(' ');
     }
 
     const qty =
