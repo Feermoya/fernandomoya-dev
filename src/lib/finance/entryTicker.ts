@@ -43,6 +43,11 @@ function tickerFromCategory(category: string | undefined): string | undefined {
 
 /** Detecta ticker de una inversión (nuevos campos o datos legacy). */
 export function getEntryTicker(entry: FinanceEntry): string | undefined {
+  // Binance admite símbolos más largos que los tickers bursátiles tradicionales.
+  if (entry.asset === 'CRYPTO') {
+    const coin = String(entry.ticker || entry.category || '').trim().toUpperCase();
+    return /^[A-Z0-9]{2,20}$/.test(coin) ? coin : undefined;
+  }
   if (entry.ticker && looksLikeFinanceTicker(entry.ticker)) {
     return normalizeTicker(entry.ticker);
   }
