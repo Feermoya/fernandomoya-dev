@@ -76,6 +76,8 @@ export type FinanceEntry = {
   buyCurrency?: string;
   /** Cantidad estimada comprada: amount / buyPrice (solo si moneda compatible). */
   estimatedUnits?: number;
+  /** Cantidad efectiva de cripto o estimación de cotización. */
+  quantitySource?: 'actual' | 'estimated';
   /** Snapshot opcional del precio al cargar la compra. */
   buySnapshot?: FinanceEntryMarketSnapshot;
 };
