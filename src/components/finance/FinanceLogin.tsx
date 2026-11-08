@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { FinanceAuthError, getFinanceAuthClient, signInToFinance } from '@/lib/finance/authClient';
 import { FinancePasswordField } from '@/components/finance/FinancePasswordField';
 import { FocoPrimaryButton } from '@/components/finance/ui';
+import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
 
 export function FinanceLogin() {
   const [email, setEmail] = useState('');
@@ -28,7 +29,11 @@ export function FinanceLogin() {
     <div className="finance-app-shell mx-auto flex min-h-[70vh] w-full max-w-md items-center px-4 py-8">
       <form onSubmit={onSubmit} className="finance-card w-full">
         <p className="finance-label">Acceso</p>
-        <h1 className="finance-brand-title mt-2">Foco financiero</h1>
+        <div className="mt-3 flex items-center gap-3">
+          <img src="/foco/icon-192.png" width="54" height="54" alt=""
+            className="h-[54px] w-[54px] shrink-0 rounded-2xl shadow-sm" />
+          <h1 className="finance-brand-title">Foco financiero</h1>
+        </div>
         <p className="finance-brand-sub mt-2">
           Entrá con la cuenta que te crearon. Cada persona ve solo sus inversiones.
         </p>
@@ -77,6 +82,7 @@ export function FinanceLogin() {
         <p className="mt-4 text-xs font-medium text-[var(--text-muted)]">
           El alta y la recuperación de la contraseña se hacen en Supabase. Esta pantalla no registra cuentas nuevas.
         </p>
+        <FinanceInstallHint variant="card" />
       </form>
     </div>
   );

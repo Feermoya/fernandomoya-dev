@@ -307,10 +307,14 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         ) : null}
 
         <header className="finance-app-header mb-4 flex flex-wrap items-start justify-between gap-3 sm:mb-5">
-          <div className="min-w-0">
-            <h1 className="finance-brand-title">Foco financiero</h1>
-            <p className="finance-brand-sub mt-1">Inversión mensual con claridad</p>
-            <p className="mt-1 max-w-[16rem] truncate text-xs font-semibold text-[var(--text-muted)]">{email}</p>
+          <div className="flex min-w-0 items-start gap-3">
+            <img src="/foco/icon-192.png" width="48" height="48" alt=""
+              className="h-12 w-12 shrink-0 rounded-2xl shadow-sm" />
+            <div className="min-w-0">
+              <h1 className="finance-brand-title">Foco financiero</h1>
+              <p className="finance-brand-sub mt-1">Inversión mensual con claridad</p>
+              <p className="mt-1 max-w-[16rem] truncate text-xs font-semibold text-[var(--text-muted)]">{email}</p>
+            </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             <a
@@ -341,6 +345,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                 <Cloud size={20} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
               </button>
             ) : null}
+            <FinanceInstallHint variant="button" />
             <button type="button" className="foco-chip foco-chip--neutral" onClick={onSignOut}>
               <LogOut size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
               Salir
@@ -387,8 +392,6 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
 
         {bookOpen && section === 'dashboard' ? (
           <>
-            <FinanceInstallHint />
-
             {isEmpty ? (
               <div className="finance-card-compact mb-4 p-4">
                 <p className="finance-label">Primer paso</p>

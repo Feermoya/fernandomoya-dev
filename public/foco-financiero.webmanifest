@@ -1,26 +1,33 @@
 {
   "name": "Foco financiero",
   "short_name": "Foco",
-  "description": "Progreso e inversión mensual.",
+  "description": "Tu inversión, cartera y objetivos en una app.",
   "id": "/foco-financiero?pwa=3",
-  "start_url": "/foco-financiero?pwa=3",
+  "start_url": "/foco-financiero",
   "scope": "/foco-financiero",
   "display": "standalone",
-  "background_color": "#F6F8FB",
-  "theme_color": "#F6F8FB",
+  "orientation": "any",
+  "background_color": "#F3F6FD",
+  "theme_color": "#F3F6FD",
+  "categories": [
+    "finance",
+    "productivity"
+  ],
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/foco/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/foco/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/icon-512-maskable.png",
+      "src": "/foco/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
