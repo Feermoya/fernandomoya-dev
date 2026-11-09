@@ -64,7 +64,7 @@ export function FinanceMarketVolatility() {
       ) : (
         <>
           <div className="relative mx-auto mt-2 max-w-[310px]">
-            <svg viewBox="0 0 320 158" role="img" aria-label={\`VIX \${data.value.toFixed(2)}, \${current?.title}\`} className="h-auto w-full">
+            <svg viewBox="0 0 320 158" role="img" aria-label={`VIX ${data.value.toFixed(2)}, ${current?.title}`} className="h-auto w-full">
               <defs>
                 <linearGradient id="vix-gauge-colors" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stopColor="#10b981"/><stop offset="32%" stopColor="#60a5fa"/>

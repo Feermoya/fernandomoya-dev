@@ -22,7 +22,7 @@ function chartPath(points: { x: number; y: number }[]): string {
   return path;
 }
 function drawCoords(timeline: InvestmentTimelinePoint[], key: 'cumulativeArs' | 'cumulativeUsd') {
-  const w = 344, x0 = 16, x1 = 330, y0 = 155, y1 = 20;
+  const x0 = 16, x1 = 330, y0 = 155, y1 = 20;
   const max = Math.max(1, ...timeline.map(p => p[key]));
   return timeline.map((p, i) => ({
     x: x0 + (timeline.length === 1 ? 1 : i / (timeline.length - 1)) * (x1 - x0),
@@ -45,6 +45,12 @@ export function FinanceInvestmentGrowthChart({ entries, throughMonth }: Props) {
   const first = coord[0];
 
   if (!history.length) return null;
+  if (!points.length) return (
+    <section className="rounded-2xl border border-blue-100 bg-white p-5 text-sm font-semibold text-slate-600">
+      Este año todavía no registraste aportes. Podés ver el histórico completo.
+      <button type="button" className="ml-2 text-blue-700 underline" onClick={() => setMode('all')}>Ver histórico</button>
+    </section>
+  );
 
   return (
     <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-[#d7e4fd] bg-gradient-to-br from-white via-[#f8fbff] to-[#eef5ff] p-3.5 shadow-sm sm:p-5" aria-labelledby="investment-growth-heading">
@@ -63,12 +69,12 @@ export function FinanceInvestmentGrowthChart({ entries, throughMonth }: Props) {
         <div className="flex rounded-xl border border-blue-100 bg-blue-50/60 p-1 text-[11px] font-bold" aria-label="Período del gráfico">
           <button type="button" aria-pressed={mode === 'year'}
             onClick={() => { setMode('year'); setActive(null); }}
-            className={\`min-h-9 rounded-lg px-3 transition \${mode==='year' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'}\`}>
+            className={`min-h-9 rounded-lg px-3 transition ${mode==='year' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'}`}>
             {year}
           </button>
           <button type="button" aria-pressed={mode === 'all'}
             onClick={() => { setMode('all'); setActive(null); }}
-            className={\`min-h-9 rounded-lg px-3 transition \${mode==='all' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'}\`}>
+            className={`min-h-9 rounded-lg px-3 transition ${mode==='all' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'}`}>
             Histórico
           </button>
         </div>
@@ -91,7 +97,7 @@ export function FinanceInvestmentGrowthChart({ entries, throughMonth }: Props) {
       </div>
       <div className="mt-4 overflow-hidden rounded-2xl bg-white/75 px-1.5 pb-2 pt-2">
         <svg viewBox="0 0 344 177" className="block h-auto w-full overflow-visible" role="img"
-          aria-label={\`Aportes acumulados de \${monthName(points[0].month)} a \${monthName(points.at(-1)!.month)}\`}>
+          aria-label={`Aportes acumulados de ${monthName(points[0].month)} a ${monthName(points.at(-1)!.month)}`}>
           <defs>
             <linearGradient id="foco-growth-area" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#4a8cfa" stopOpacity=".25"/>
@@ -99,7 +105,7 @@ export function FinanceInvestmentGrowthChart({ entries, throughMonth }: Props) {
             </linearGradient>
           </defs>
           {[45,100,155].map(y=><line key={y} x1="16" x2="330" y1={y} y2={y} stroke="#dfe8f8" strokeWidth="1" strokeDasharray="4 5" />)}
-          {segment ? <path d={segment+\` L \${last!.x} 155 L \${first!.x} 155 Z\`} fill="url(#foco-growth-area)" /> : null}
+          {segment ? <path d={segment+` L ${last!.x} 155 L ${first!.x} 155 Z`} fill="url(#foco-growth-area)" /> : null}
           {segment ? <motion.path key={mode+'-'+throughMonth} d={segment} fill="none" stroke="#2563eb" strokeWidth="3.8" strokeLinecap="round"
             initial={reduced ? false : {pathLength:0}} whileInView={{pathLength:1}}
             viewport={{once:true,amount:0.45}} transition={{duration:1.35,ease:'easeOut'}} /> : null}

@@ -8,7 +8,7 @@ function isoDate(raw: string): string | null {
   const match = cleaned.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (!match) return null;
   const [, m, d, y] = match;
-  const iso = \`\${y}-\${m.padStart(2, '0')}-\${d.padStart(2, '0')}\`;
+  const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   const date = new Date(iso + 'T12:00:00Z');
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === iso ? iso : null;
 }
