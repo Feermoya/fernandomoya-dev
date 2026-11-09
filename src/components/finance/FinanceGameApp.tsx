@@ -67,7 +67,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     markOffline?: () => void;
   } | null>(null);
 
-  const { state, setState, stateRef, persist, patchState } = useFinancePersistence({
+  const { state, setState, stateRef, persist, patchState, pendingSaveRef, retryPendingSave } = useFinancePersistence({
     userId,
     bookReadyRef,
     onSaving: () => cloudSyncRef.current?.setSyncChip('saving'),
@@ -97,7 +97,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     setCloudErr,
     markOffline,
     applyCloudState,
-  } = useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, onUnauthorized: onSignOut });
+  } = useFinanceCloudSync({ userId, bookReadyRef, pendingSaveRef, stateRef, setState, onUnauthorized: onSignOut });
 
   cloudSyncRef.current = { setSyncChip, setLastRemoteAt, setCloudErr, markOffline };
 
@@ -216,6 +216,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     }
   }, [cloudReady, syncChip, patchState, state.currentMonth]);
 
+  const canWrite = cloudReady && syncChip !== 'offline' && syncChip !== 'error';
   const hasInvestments = state.entries.some((e) => e.type === 'investment');
   const isEmpty = !hasInvestments && state.goals.length === 0;
 
@@ -230,14 +231,18 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         {cloudErr && cloudReady && (syncChip === 'error' || syncChip === 'offline') ? (
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3" role="alert">
             <p className="min-w-0 flex-1 text-xs font-semibold text-amber-950">
-              No se pudieron confirmar los últimos cambios. {cloudErr}
+              {bookOpen ? 'No se pudieron confirmar los últimos cambios.' : 'No se pudo abrir tu cuenta.'} {cloudErr}
+              {pendingSaveRef.current ? ' No cierres la aplicación hasta confirmar el guardado.' : ''}
             </p>
             <button type="button" onClick={() => {
-              void sileo.promise(pullFromCloudImmediate(), {
-                loading: { title: 'Reintentando conexión…' },
-                success: { title: 'Datos actualizados' },
-                error: { title: 'No se pudo actualizar', description: 'Revisá la conexión y reintentá.' },
-              });
+              if (pendingSaveRef.current) {
+                void retryPendingSave().then(ok => {
+                  if (ok) sileo.success({ title: 'Cambios confirmados en Supabase' });
+                  else sileo.error({ title: 'No se pudo guardar', description: 'Revisá la conexión y reintentá.' });
+                });
+              } else {
+                void pullFromCloudImmediate();
+              }
             }} className="min-h-10 shrink-0 rounded-xl border border-amber-300 bg-white px-3 text-xs font-bold text-amber-900">
               Reintentar
             </button>
@@ -264,7 +269,10 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
               Admin
             </a>
             <FinanceInstallHint variant="button" />
-            <button type="button" className="foco-chip foco-chip--neutral" onClick={onSignOut}>
+            <button type="button" className="foco-chip foco-chip--neutral" onClick={() => {
+              if (pendingSaveRef.current && !window.confirm('Hay cambios sin guardar en Supabase. Si salís, se perderán. ¿Salir igualmente?')) return;
+              onSignOut();
+            }}>
               <LogOut size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
               Salir
             </button>
@@ -299,7 +307,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         ) : null}
 
         {bookOpen && section === 'bitcoin' ? (
-          <div inert={!cloudReady}>
+          <div inert={!canWrite}>
             <Suspense fallback={<p className="p-5 text-sm font-semibold text-slate-600" role="status">Abriendo Bitcoin…</p>}>
               <FinanceBitcoinPanel
                 entries={state.entries}
@@ -322,7 +330,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
               </div>
             ) : null}
 
-            <main className="finance-page-grid" inert={!cloudReady} aria-busy={!cloudReady}>
+            <main className="finance-page-grid" inert={!canWrite} aria-busy={!cloudReady}>
               <section
                 id="dashboard-financiero"
                 className="order-1 scroll-mt-20 lg:col-span-2 lg:order-none"
@@ -471,7 +479,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         ) : null}
       </div>
 
-      {bookOpen && cloudReady && section === 'dashboard' && !investOpen ? (
+      {bookOpen && canWrite && section === 'dashboard' && !investOpen ? (
         <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40">
           <FocoPrimaryButton
             data-tour="invest"
@@ -489,7 +497,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         </div>
       ) : null}
 
-      {investOpen && bookOpen && cloudReady ? (
+      {investOpen && bookOpen && canWrite ? (
         <Suspense fallback={<p role="status" className="p-3 text-xs text-slate-600">Abriendo formulario…</p>}>
           <FinanceInvestSheet
             open
@@ -503,7 +511,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         </Suspense>
       ) : null}
 
-      {bookOpen && cloudReady && section === 'dashboard' && !investOpen ? <FinanceWelcomeTour userId={userId} /> : null}
+      {bookOpen && canWrite && section === 'dashboard' && !investOpen ? <FinanceWelcomeTour userId={userId} /> : null}
 
       {confettiKey > 0 ? <FinanceConfettiBurst burstKey={confettiKey} /> : null}
 
