@@ -15,7 +15,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "finance:icons": "node scripts/generate-foco-pwa-icons.mjs"
+    "finance:icons": "node scripts/generate-foco-pwa-icons.mjs",
+    "test:finance-startup": "vitest run src/lib/finance/authStartup.test.ts src/lib/finance/pwaCleanup.test.ts",
+    "diagnose:foco": "node scripts/diagnose-foco-connection.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.3",
