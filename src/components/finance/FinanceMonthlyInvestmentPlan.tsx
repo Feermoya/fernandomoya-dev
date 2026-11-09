@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, Clock, RefreshCcw, Target } from 'lucide-react';
+import { Check, Clock, Pencil, RefreshCcw, Target, Trash2 } from 'lucide-react';
 import { sileo } from 'sileo';
 import type { FinanceEntry, MonthlyInvestmentPlanItem } from '@/lib/finance/types';
 import { formatARS } from '@/lib/finance/calculations';
@@ -27,6 +27,7 @@ type Props = {
   plan: MonthlyInvestmentPlanItem[] | undefined;
   onAddItems: (rawInput: string) => void;
   onRemoveItem: (id: string) => void;
+  onEditItem: (id: string, label: string, units: number) => void;
   onSplitMergedItem?: (itemId: string, rawLabel: string) => void;
   onCopyFromPreviousMonth?: () => void;
   hasPreviousMonthPlan?: boolean;
@@ -99,6 +100,7 @@ function PlanChip({
   prices,
   pricesLoading,
   onRemove,
+  onEdit,
   onSplit,
   compact,
 }: {
@@ -106,6 +108,7 @@ function PlanChip({
   prices: FinancePricesMap;
   pricesLoading: boolean;
   onRemove: () => void;
+  onEdit: () => void;
   onSplit?: () => void;
   compact?: boolean;
 }) {
@@ -177,13 +180,10 @@ function PlanChip({
                 Separar
               </button>
             ) : null}
-            <button
-              type="button"
-              onClick={onRemove}
-              className="rounded-md px-1.5 py-0.5 text-[9px] font-bold text-slate-400 hover:text-red-600"
-            >
-              Quitar
-            </button>
+            <button type="button" onClick={onEdit} aria-label={`Editar ${item.label}`}
+              className="inline-flex min-h-8 items-center rounded-lg px-2 text-blue-700 hover:bg-blue-50"><Pencil size={13} aria-hidden /></button>
+            <button type="button" onClick={onRemove} aria-label={`Eliminar ${item.label}`}
+              className="inline-flex min-h-8 items-center rounded-lg px-2 text-red-700 hover:bg-red-50"><Trash2 size={13} aria-hidden /></button>
           </div>
         ) : null}
       </article>
@@ -238,13 +238,8 @@ function PlanChip({
               Separar
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={onRemove}
-            className="min-h-[28px] text-[10px] font-bold text-slate-400 sm:opacity-0 sm:transition sm:group-hover:opacity-100 hover:text-red-600 focus-visible:opacity-100"
-          >
-            Quitar
-          </button>
+          <button type="button" onClick={onEdit} className="min-h-9 rounded-lg px-3 text-xs font-bold text-blue-700 hover:bg-blue-50">Editar</button>
+          <button type="button" onClick={onRemove} className="min-h-9 rounded-lg px-3 text-xs font-bold text-red-700 hover:bg-red-50">Eliminar</button>
         </div>
       ) : null}
     </article>
@@ -257,6 +252,7 @@ function ChipGrid({
   prices,
   pricesLoading,
   onRemoveItem,
+  onEditItem,
   onSplitMergedItem,
 }: {
   variant: 'pending' | 'completed';
@@ -264,6 +260,7 @@ function ChipGrid({
   prices: FinancePricesMap;
   pricesLoading: boolean;
   onRemoveItem: (id: string) => void;
+  onEditItem: (item: MonthlyInvestmentPlanItem) => void;
   onSplitMergedItem?: (id: string, label: string) => void;
 }) {
   if (items.length === 0) return null;
@@ -280,6 +277,7 @@ function ChipGrid({
           pricesLoading={pricesLoading}
           compact
           onRemove={() => onRemoveItem(progressItem.item.id)}
+          onEdit={() => onEditItem(progressItem.item)}
           onSplit={
             planItemLabelLooksLikeMergedTickers(progressItem.item.label) && onSplitMergedItem
               ? () => onSplitMergedItem(progressItem.item.id, progressItem.item.label)
@@ -427,6 +425,7 @@ export function FinanceMonthlyInvestmentPlan({
   plan,
   onAddItems,
   onRemoveItem,
+  onEditItem,
   onSplitMergedItem,
   onCopyFromPreviousMonth,
   hasPreviousMonthPlan,
@@ -435,6 +434,33 @@ export function FinanceMonthlyInvestmentPlan({
   const [rawInput, setRawInput] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editing, setEditing] = useState<MonthlyInvestmentPlanItem | null>(null);
+  const [editLabel, setEditLabel] = useState('');
+  const [editUnits, setEditUnits] = useState('1');
+  const [editError, setEditError] = useState<string | null>(null);
+  const beginEdit = (item: MonthlyInvestmentPlanItem) => {
+    setEditing(item);
+    setEditLabel(item.label);
+    setEditUnits(String(item.targetUnits ?? 1));
+    setEditError(null);
+  };
+  const saveEdit = () => {
+    if (!editing) return;
+    const units = Number(editUnits.replace(',', '.'));
+    const labels = parseInvestmentPlanInput(editLabel);
+    if (labels.length !== 1 || !Number.isFinite(units) || units <= 0 || units > 1_000_000) {
+      setEditError('Ingresá un activo y una cantidad válida.');
+      return;
+    }
+    if ((plan ?? []).some(item => item.id !== editing.id && item.month === month &&
+      normalizePlanLabel(item.label) === normalizePlanLabel(labels[0]))) {
+      setEditError('Ese activo ya está en el plan.');
+      return;
+    }
+    onEditItem(editing.id, labels[0], units);
+    setEditing(null);
+    sileo.success({ title: 'Plan actualizado', description: labels[0] });
+  };
 
   const [prices, setPrices] = useState<FinancePricesMap>({});
   const [pricesLoading, setPricesLoading] = useState(false);
@@ -490,6 +516,7 @@ export function FinanceMonthlyInvestmentPlan({
     setShowAddForm(false);
     setRawInput('');
     setAddError(null);
+    setEditing(null);
   }, [month]);
 
   const pendingItems = useMemo(
@@ -703,6 +730,31 @@ export function FinanceMonthlyInvestmentPlan({
         </p>
       ) : null}
 
+      {editing ? (
+        <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50/70 p-3" role="group" aria-label="Editar activo del plan">
+          <p className="text-sm font-extrabold text-blue-950">Editar {editing.label}</p>
+          <div className="mt-2 grid grid-cols-[minmax(0,1fr)_100px] gap-2">
+            <label className="block min-w-0">
+              <span className="finance-label">Activo</span>
+              <input type="text" value={editLabel} maxLength={30}
+                onChange={event => setEditLabel(event.target.value)}
+                className="finance-input-mobile mt-1 min-h-11 w-full rounded-xl px-3 text-sm font-bold" />
+            </label>
+            <label className="block">
+              <span className="finance-label">Cantidad</span>
+              <input type="number" min="0.00000001" step="any" inputMode="decimal" value={editUnits}
+                onChange={event => setEditUnits(event.target.value)}
+                className="finance-input-mobile mt-1 min-h-11 w-full rounded-xl px-3 text-sm font-bold" />
+            </label>
+          </div>
+          {editError ? <p role="alert" className="mt-2 text-xs font-semibold text-red-700">{editError}</p> : null}
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={saveEdit} className="min-h-11 flex-1 rounded-xl bg-blue-600 px-3 text-xs font-extrabold text-white">Guardar cambios</button>
+            <button type="button" onClick={() => setEditing(null)} className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700">Cancelar</button>
+          </div>
+        </div>
+      ) : null}
+
       {hasMergedItem ? (
         <p className="mt-2 text-[10px] font-semibold text-blue-600">
           Hay un ítem con varios tickers juntos. Usá «Separar» para dividirlo.
@@ -717,6 +769,7 @@ export function FinanceMonthlyInvestmentPlan({
             prices={prices}
             pricesLoading={pricesLoading}
             onRemoveItem={onRemoveItem}
+            onEditItem={beginEdit}
             onSplitMergedItem={onSplitMergedItem}
           />
           <ChipGrid
@@ -725,6 +778,7 @@ export function FinanceMonthlyInvestmentPlan({
             prices={prices}
             pricesLoading={pricesLoading}
             onRemoveItem={onRemoveItem}
+            onEditItem={beginEdit}
             onSplitMergedItem={onSplitMergedItem}
           />
         </div>
