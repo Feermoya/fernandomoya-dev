@@ -79,8 +79,9 @@ export function useFinanceCelebrations({ persist }: Options) {
           });
         }
         triggerEntryHaptic();
+        // Microcelebración para cada compra; feedback de éxito sin bloquear el guardado.
+        setConfettiKey((k) => k + 1);
         if (missionJustCompleted) {
-          setConfettiKey((k) => k + 1);
           triggerSuccessHaptic();
         } else if (overlay) {
           triggerSuccessHaptic();

@@ -55,6 +55,10 @@ export function FinanceEntryLoadSummaryCard({ summary, onDismiss }: Props) {
           <h4 className="mt-0.5 text-sm font-bold tracking-tight text-emerald-950">
             {summary.headline}
           </h4>
+          <motion.p initial={reduced ? false : {opacity:0,x:-8}} animate={{opacity:1,x:0}}
+            transition={{delay:0.12,duration:0.3}} className="mt-1 text-[11px] font-semibold text-emerald-800">
+            Un paso más en tus inversiones.
+          </motion.p>
         </div>
         <button
           type="button"

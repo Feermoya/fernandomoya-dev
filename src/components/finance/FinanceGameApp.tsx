@@ -55,6 +55,8 @@ const FinanceInvestSheet = lazy(() => import('@/components/finance/FinanceInvest
 const FinanceBitcoinPanel = lazy(() => import('@/components/finance/bitcoin/FinanceBitcoinPanel').then(m => ({ default: m.FinanceBitcoinPanel })));
 const FinanceMonthlyInvestmentPlan = lazy(() => import('@/components/finance/FinanceMonthlyInvestmentPlan').then(m => ({ default: m.FinanceMonthlyInvestmentPlan })));
 const FinanceBalanzImporter = lazy(() => import('@/components/finance/FinanceBalanzImporter').then(m => ({ default: m.FinanceBalanzImporter })));
+const FinanceInvestmentGrowthChart = lazy(() => import('@/components/finance/FinanceInvestmentGrowthChart').then(m => ({ default: m.FinanceInvestmentGrowthChart })));
+const FinanceMarketVolatility = lazy(() => import('@/components/finance/FinanceMarketVolatility').then(m => ({ default: m.FinanceMarketVolatility })));
 
 type FinanceAppSection = 'dashboard' | 'bitcoin';
 
@@ -430,15 +432,27 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                 />
               </section>
 
-              <section className="order-2 min-w-0 lg:order-none">
-                <FinanceConcentrationPanel entries={state.entries} month={month} />
+              <section className="order-2 min-w-0 lg:col-span-2 lg:order-none">
+                <Suspense fallback={<div role="status" className="h-40 animate-pulse rounded-2xl bg-blue-50" aria-label="Preparando la evolución histórica" />}>
+                  <FinanceInvestmentGrowthChart entries={state.entries} throughMonth={month} />
+                </Suspense>
               </section>
 
-              <section className="order-3 scroll-mt-20 lg:order-none">
-                <FinanceOverviewPanel state={state} month={month} variant="compact" />
+              <section className="order-3 min-w-0 lg:order-none">
+                <Suspense fallback={<div role="status" className="h-40 animate-pulse rounded-2xl bg-slate-50" aria-label="Consultando volatilidad" />}>
+                  <FinanceMarketVolatility />
+                </Suspense>
               </section>
 
               <section className="order-4 min-w-0 lg:order-none">
+                <FinanceConcentrationPanel entries={state.entries} month={month} />
+              </section>
+
+              <section className="order-5 scroll-mt-20 lg:order-none">
+                <FinanceOverviewPanel state={state} month={month} variant="compact" />
+              </section>
+
+              <section className="order-6 min-w-0 lg:order-none">
                 <FinanceRecentInvestments
                   month={month}
                   investments={sortedMonthInvestments}
@@ -447,7 +461,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                 />
               </section>
 
-              <section className="order-5 min-w-0 lg:order-none">
+              <section className="order-7 min-w-0 lg:order-none">
                 <FinancePortfolioPanel
                   holdings={state.portfolioHoldings ?? []}
                   onChange={(portfolioHoldings) =>
@@ -456,11 +470,11 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                 />
               </section>
 
-              <section className="order-6 min-w-0 lg:col-span-2 lg:order-none">
+              <section className="order-8 min-w-0 lg:col-span-2 lg:order-none">
                 <FinanceTickerHistoryPanel entries={state.entries} />
               </section>
 
-              <section className="order-7 min-w-0 scroll-mt-20 lg:col-span-2 lg:order-none">
+              <section className="order-9 min-w-0 scroll-mt-20 lg:col-span-2 lg:order-none">
                 <details className="finance-details group open:pb-1"
                   onToggle={(event) => { if (event.currentTarget.open) setPlanVisited(true); }}>
                   <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
