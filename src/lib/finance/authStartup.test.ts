@@ -29,7 +29,7 @@ describe('Supabase auth initial load', () => {
     const onSlow = vi.fn(), onSession = vi.fn(), onError = vi.fn();
     const subscribe = vi.fn();
     const stop = startFinanceAuthSession({
-      getSession: () => new Promise(() => {}),
+      getSession: () => new Promise<{ data: { session: string | null }; error: null }>(() => {}),
       subscribe,
     }, { onSlow, onSession, onError }, 6500);
     await flush();
@@ -45,7 +45,7 @@ describe('Supabase auth initial load', () => {
     let resolve!: (value: { data: { session: string }; error: null }) => void;
     const onSession = vi.fn(), subscribe = vi.fn();
     const stop = startFinanceAuthSession({
-      getSession: () => new Promise(r => { resolve = r; }),
+      getSession: () => new Promise<{ data: { session: string }; error: null }>(r => { resolve = r; }),
       subscribe,
     }, { onSession, onSlow: vi.fn(), onError: vi.fn() });
     await flush();
