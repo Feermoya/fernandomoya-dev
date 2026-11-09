@@ -2,7 +2,6 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import {
   Coins,
   Goal,
-  Lock,
   LogOut,
 } from 'lucide-react';
 import type { FinanceEntry, FinanceGoal, FinanceState } from '@/lib/finance/types';
@@ -260,14 +259,6 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-            <a
-              href="/admin"
-              className="foco-chip foco-chip--neutral"
-              aria-label="Admin"
-            >
-              <Lock size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
-              Admin
-            </a>
             <FinanceInstallHint variant="button" />
             <button type="button" className="foco-chip foco-chip--neutral" onClick={() => {
               if (pendingSaveRef.current && !window.confirm('Hay cambios sin guardar en Supabase. Si salís, se perderán. ¿Salir igualmente?')) return;

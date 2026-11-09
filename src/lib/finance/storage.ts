@@ -171,14 +171,6 @@ export function clearLegacyFinanceCacheAfterCloudRead(userId: string): void {
   }
 }
 
-export function exportFinanceState(state: FinanceState): string {
-  try {
-    return JSON.stringify(state, null, 2);
-  } catch {
-    return '{}';
-  }
-}
-
 export type ImportFinanceResult =
   | { ok: true; state: FinanceState }
   | { ok: false; error: string };

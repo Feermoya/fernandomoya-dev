@@ -126,7 +126,7 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
       </h3>
       <p className="mt-0.5 text-[13px] font-medium text-[var(--text-muted)]">Resumen de inversión</p>
 
-      <div className="mt-4 grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-2 sm:gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
         <StatCell
           label="Este mes"
           value={formatARS(monthInvested)}
