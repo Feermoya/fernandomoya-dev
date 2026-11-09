@@ -12,9 +12,10 @@ import {
 
 type Options = {
   persist: (updater: (prev: FinanceState) => FinanceState) => void;
+  onEntryQueued?: () => void;
 };
 
-export function useFinanceCelebrations({ persist }: Options) {
+export function useFinanceCelebrations({ persist, onEntryQueued }: Options) {
   const [levelUp, setLevelUp] = useState<{
     level: number;
     title: string;
@@ -70,12 +71,13 @@ export function useFinanceCelebrations({ persist }: Options) {
         return next;
       });
 
+      onEntryQueued?.();
       queueMicrotask(() => {
         if (summary) {
           setLoadSummary(summary);
-          sileo.success({
-            title: summary.headline,
-            description: summary.toastDescription,
+          sileo.info({
+            title: 'Inversión agregada al tablero',
+            description: 'Confirmando guardado en Supabase…',
           });
         }
         triggerEntryHaptic();
@@ -90,7 +92,7 @@ export function useFinanceCelebrations({ persist }: Options) {
         if (dash) setCelebration(dash);
       });
     },
-    [persist],
+    [persist, onEntryQueued],
   );
 
   return {

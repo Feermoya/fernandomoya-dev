@@ -59,6 +59,7 @@ type FinanceGameAppProps = {
 
 export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGameAppProps) {
   const bookReadyRef = useRef(false);
+  const entryAwaitingConfirmationRef = useRef(false);
   const cloudSyncRef = useRef<{
     setSyncChip: (value: FinanceSyncChip | ((prev: FinanceSyncChip) => FinanceSyncChip)) => void;
     setLastRemoteAt: (value: string | null) => void;
@@ -75,6 +76,10 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
       cloudSyncRef.current?.setLastRemoteAt(iso);
       cloudSyncRef.current?.setCloudErr(null);
       cloudSyncRef.current?.setSyncChip('synced');
+      if (entryAwaitingConfirmationRef.current) {
+        entryAwaitingConfirmationRef.current = false;
+        sileo.success({ title: 'Inversión guardada en Supabase' });
+      }
     },
     onRemoteOffline: () => {
       cloudSyncRef.current?.markOffline?.();
@@ -108,7 +113,10 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     dismissLevelUp,
     dismissLoadSummary,
     handleAddEntry,
-  } = useFinanceCelebrations({ persist });
+  } = useFinanceCelebrations({
+    persist,
+    onEntryQueued: () => { entryAwaitingConfirmationRef.current = true; },
+  });
 
   const [balanzBusy, setBalanzBusy] = useState(false);
   const [editingEntry, setEditingEntry] = useState<FinanceEntry | null>(null);
