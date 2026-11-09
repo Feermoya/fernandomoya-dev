@@ -1,17 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Cloud,
   Coins,
   Goal,
   Lock,
   LogOut,
-  Settings,
-  ShieldAlert,
-  Trophy,
 } from 'lucide-react';
 import type { FinanceEntry, FinanceGoal, FinanceState } from '@/lib/finance/types';
-import { getInitialFinanceState } from '@/lib/finance/storage';
-import { isFinanceCloudConfigured } from '@/lib/finance/cloudSync';
 import {
   getCurrentMonthKey,
   hasManualMonthSelection,
@@ -35,8 +29,6 @@ import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
 import { normalizePreferences } from '@/lib/finance/preferences';
 import type { FinancePreferences } from '@/lib/finance/types';
 import { FinanceGoals } from '@/components/finance/FinanceGoals';
-import { FinanceLevels } from '@/components/finance/FinanceLevels';
-import { FinanceJsonTools } from '@/components/finance/FinanceJsonTools';
 import { LevelUpOverlay } from '@/components/finance/LevelUpOverlay';
 import { getMonthlyMissionView } from '@/lib/finance/levels';
 import { useFinancePersistence } from '@/hooks/finance/useFinancePersistence';
@@ -46,7 +38,7 @@ import {
 } from '@/hooks/finance/useFinanceCloudSync';
 import { useFinanceMonthlyPlanActions } from '@/hooks/finance/useFinanceMonthlyPlanActions';
 import { useFinanceCelebrations } from '@/hooks/finance/useFinanceCelebrations';
-import { FocoChip, FocoPrimaryButton, FocoTabs, FOCO_ICON_STROKE } from '@/components/finance/ui';
+import { FocoPrimaryButton, FocoTabs, FOCO_ICON_STROKE } from '@/components/finance/ui';
 import { FinanceWelcomeTour } from '@/components/finance/FinanceWelcomeTour';
 import { sileo } from 'sileo';
 
@@ -66,35 +58,6 @@ type FinanceGameAppProps = {
   onSignOut: () => void;
 };
 
-function SyncStatusChip({ status }: { status: FinanceSyncChip }) {
-  const label =
-    status === 'loading'
-      ? 'Cargando nube…'
-      : status === 'synced'
-        ? 'Guardado en la nube'
-        : status === 'saving'
-          ? 'Guardando…'
-          : status === 'offline'
-            ? 'Nube no disponible'
-            : status === 'error'
-              ? 'No se pudo guardar'
-              : 'Solo en este dispositivo';
-  const tone =
-    status === 'synced'
-      ? 'success'
-      : status === 'error'
-        ? 'danger'
-        : status === 'loading'
-          ? 'primary'
-          : 'warning';
-
-  return (
-    <FocoChip tone={tone as 'success' | 'danger' | 'primary' | 'warning'} icon={<Cloud size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />}>
-      <span className="truncate">{label}</span>
-    </FocoChip>
-  );
-}
-
 export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGameAppProps) {
   const bookReadyRef = useRef(false);
   const cloudSyncRef = useRef<{
@@ -104,7 +67,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     markOffline?: () => void;
   } | null>(null);
 
-  const { state, setState, stateRef, persist, replaceState, patchState } = useFinancePersistence({
+  const { state, setState, stateRef, persist, patchState } = useFinancePersistence({
     userId,
     bookReadyRef,
     onSaving: () => cloudSyncRef.current?.setSyncChip('saving'),
@@ -127,10 +90,8 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     bookOpen,
     cloudReady,
     syncChip,
-    lastRemoteAt,
     cloudErr,
     pullFromCloudImmediate,
-    handleForcePush,
     setSyncChip,
     setLastRemoteAt,
     setCloudErr,
@@ -238,28 +199,6 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     [persist],
   );
 
-  const clearAll = useCallback(() => {
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm(
-        isFinanceCloudConfigured()
-          ? '¿Borrar los datos de tu cuenta en este navegador y en la nube? No se puede deshacer y no afecta a otras cuentas.'
-          : '¿Borrar todas las inversiones registradas, objetivos y retos en este dispositivo? No se puede deshacer.',
-      )
-    ) {
-      return;
-    }
-    persist((prev) => {
-      const fresh = getInitialFinanceState();
-      fresh.currentMonth = prev.currentMonth;
-      return fresh;
-    });
-    sileo.warning({
-      title: 'Datos borrados',
-      description: 'El libro quedó vacío.',
-    });
-  }, [persist]);
-
   const handleMonthChange = useCallback(
     (nextMonth: string) => {
       markMonthManuallyChanged();
@@ -288,27 +227,19 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     >
       <FinanceToaster />
       <div className="finance-page-container relative z-[1] mx-auto min-w-0 px-4 pb-4 pt-0 sm:px-5 sm:py-6 lg:px-6">
-        {cloudErr && cloudReady && syncChip === 'error' ? (
-          <div
-            className="mb-2 flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50 p-3 sm:mb-3"
-            role="status"
-          >
-            <p className="text-xs font-bold text-red-700">{cloudErr}</p>
-            <button
-              type="button"
-              onClick={() => {
-                void sileo.promise(pullFromCloudImmediate(), {
-                  loading: { title: 'Reintentando sincronización…' },
-                  success: { title: 'Sincronización completada' },
-                  error: {
-                    title: 'No se pudo sincronizar',
-                    description: 'Revisá la conexión e intentá nuevamente.',
-                  },
-                });
-              }}
-              className="finance-secondary-button min-h-[40px] self-start px-3 text-xs"
-            >
-              Reintentar sincronización
+        {cloudErr && cloudReady && (syncChip === 'error' || syncChip === 'offline') ? (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3" role="alert">
+            <p className="min-w-0 flex-1 text-xs font-semibold text-amber-950">
+              No se pudieron confirmar los últimos cambios. {cloudErr}
+            </p>
+            <button type="button" onClick={() => {
+              void sileo.promise(pullFromCloudImmediate(), {
+                loading: { title: 'Reintentando conexión…' },
+                success: { title: 'Datos actualizados' },
+                error: { title: 'No se pudo actualizar', description: 'Revisá la conexión y reintentá.' },
+              });
+            }} className="min-h-10 shrink-0 rounded-xl border border-amber-300 bg-white px-3 text-xs font-bold text-amber-900">
+              Reintentar
             </button>
           </div>
         ) : null}
@@ -332,32 +263,11 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
               <Lock size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
               Admin
             </a>
-            {isFinanceCloudConfigured() ? (
-              <button
-                type="button"
-                onClick={() => {
-                  void sileo.promise(pullFromCloudImmediate(), {
-                    loading: { title: 'Actualizando desde la nube…' },
-                    success: { title: 'Datos actualizados' },
-                    error: {
-                      title: 'No se pudo sincronizar',
-                      description: 'Revisá la conexión e intentá nuevamente.',
-                    },
-                  });
-                }}
-                disabled={syncChip === 'loading' || !cloudReady}
-                className="finance-touch-target inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-card)] bg-[var(--bg-card)] text-[var(--text-secondary)] disabled:opacity-40"
-                title="Sincronizar con la nube"
-              >
-                <Cloud size={20} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
-              </button>
-            ) : null}
             <FinanceInstallHint variant="button" />
             <button type="button" className="foco-chip foco-chip--neutral" onClick={onSignOut}>
               <LogOut size={16} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
               Salir
             </button>
-            <SyncStatusChip status={syncChip} />
           </div>
         </header>
 
@@ -507,25 +417,6 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
               </section>
 
               <div className="finance-advanced-section flex min-w-0 flex-col gap-2 sm:gap-2.5 lg:grid lg:grid-cols-2 lg:gap-3">
-                <details className="finance-details group open:pb-1">
-                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-                    <FinanceDetailsSummary icon={Trophy} label="Niveles" />
-                  </summary>
-                  <div className="px-3 pb-4 pt-3 sm:px-4">
-                    <FinanceLevels
-                      compact
-                      state={state}
-                      month={month}
-                      onWealthTargetChange={(n) =>
-                        patchState({
-                          wealthTarget:
-                            n === undefined || n === null || Number.isNaN(n) ? undefined : n,
-                        })
-                      }
-                    />
-                  </div>
-                </details>
-
                 <details className="finance-details open:pb-1" data-tour="goals">
                   <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
                     <FinanceDetailsSummary icon={Goal} label="Objetivos" />
@@ -549,43 +440,6 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                       preferences={preferences}
                       onChange={patchPreferences}
                     />
-                  </div>
-                </details>
-
-                <details className="finance-details open:pb-1">
-                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-                    <FinanceDetailsSummary icon={Settings} label="Configuración" />
-                  </summary>
-                  <div className="px-3 pb-4 pt-3 sm:px-4">
-                    <FinanceJsonTools
-                      state={state}
-                      onImport={replaceState}
-                      cloudAutoSync={isFinanceCloudConfigured()}
-                      cloudError={cloudErr}
-                      lastSyncIso={lastRemoteAt}
-                      onForcePull={pullFromCloudImmediate}
-                      onForcePush={handleForcePush}
-                    />
-                  </div>
-                </details>
-
-                <details className="finance-details open:pb-1 border-red-200 bg-red-50">
-                  <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
-                    <FinanceDetailsSummary icon={ShieldAlert} label="Zona peligrosa" tone="danger" />
-                  </summary>
-                  <div className="border-t border-red-200 px-4 pb-4 pt-3">
-                    <p className="text-xs font-medium text-red-700">
-                      {isFinanceCloudConfigured()
-                        ? 'Borrá todo en la nube y en este navegador. Exportá JSON antes si querés un archivo de respaldo.'
-                        : 'Borrá todo en este navegador. Exportá o copiá el JSON antes si querés conservarlo.'}
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-3 w-full rounded-xl border border-red-300 bg-red-600 py-2.5 text-sm font-bold text-white transition hover:bg-red-700"
-                      onClick={clearAll}
-                    >
-                      Borrar todo
-                    </button>
                   </div>
                 </details>
 

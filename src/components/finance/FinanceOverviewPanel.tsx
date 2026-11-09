@@ -29,10 +29,10 @@ function StatCell({
   delta?: ReactNode;
 }) {
   return (
-    <article className="foco-subcard">
-      <p className="foco-label">{label}</p>
-      <p className="foco-amount-secondary mt-1 tabular-nums">{value}</p>
-      {delta ? <div className="mt-2">{delta}</div> : null}
+    <article className="foco-subcard min-w-0 overflow-hidden !rounded-2xl !p-3 sm:!p-4">
+      <p className="foco-label !text-[10px] sm:!text-[11px]">{label}</p>
+      <p className="mt-2 whitespace-nowrap font-extrabold tabular-nums tracking-[-0.04em] text-slate-950 text-[clamp(1.3rem,4vw,1.75rem)]" title={value}>{value}</p>
+      {delta ? <div className="mt-2 min-w-0 text-xs">{delta}</div> : null}
     </article>
   );
 }
@@ -126,17 +126,20 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
       </h3>
       <p className="mt-0.5 text-[13px] font-medium text-[var(--text-muted)]">Resumen de inversión</p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-2 sm:gap-3">
         <StatCell
           label="Este mes"
           value={formatARS(monthInvested)}
           delta={
             <>
               {prevMonthInvested > 0 && monthPct != null && monthPct !== 0 ? (
-                <FocoTrendChip percent={monthPct} versus={`vs ${formatMonthShort(prevMonth)}`} />
+                <span className="inline-flex max-w-full flex-wrap items-center gap-1 text-[11px] font-semibold text-slate-500">
+                  <span className="tabular-nums">{monthPct > 0 ? '+' : ''}{monthPct}%</span>
+                  <span>vs {formatMonthShort(prevMonth)}</span>
+                </span>
               ) : null}
               {monthInvestedUsd > 0 ? (
-                <p className="mt-1 text-[13px] font-medium tabular-nums text-[var(--text-muted)]">
+                <p className="mt-1 break-words text-[12px] font-medium tabular-nums text-[var(--text-muted)]">
                   + {formatEntryAmount(monthInvestedUsd, 'USD')} en dólares
                 </p>
               ) : null}
@@ -148,9 +151,9 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
           value={formatARS(total)}
           delta={
             <>
-              <span className="text-[13px] font-medium text-[var(--text-muted)]">Desde el inicio</span>
+              <span className="block text-[12px] font-medium text-[var(--text-muted)]">Desde el inicio</span>
               {totalUsd > 0 ? (
-                <p className="mt-1 text-[13px] font-medium tabular-nums text-[var(--text-muted)]">
+                <p className="mt-1 break-words text-[12px] font-medium tabular-nums text-[var(--text-muted)]">
                   + {formatEntryAmount(totalUsd, 'USD')} en dólares
                 </p>
               ) : null}
@@ -160,8 +163,8 @@ export function FinanceOverviewPanel({ state, month, variant = 'full' }: Props) 
       </div>
 
       {compact ? (
-        <details className="mt-3">
-          <summary className="cursor-pointer list-none text-[13px] font-semibold text-[var(--primary)] [&::-webkit-details-marker]:hidden">
+        <details className="mt-3 border-t border-slate-100 pt-3">
+          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center text-[12px] font-bold text-[var(--primary)] [&::-webkit-details-marker]:hidden">
             Ver promedio, ops y año
           </summary>
           <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">{secondary}</div>
