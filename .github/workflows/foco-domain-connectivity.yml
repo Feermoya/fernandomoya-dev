@@ -1,0 +1,35 @@
+name: Foco domain connectivity diagnostic
+on:
+  push:
+    branches:
+      - diagnostics/foco-domain-timeout
+  workflow_dispatch:
+
+jobs:
+  external-domain-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: DNS authoritative, public resolvers and HTTP timings
+        shell: bash
+        run: |
+          set +e
+          echo "### Authoritative DNS for fermoyadev.com.ar"
+          for server in ns1.donweb.com ns2.donweb.com 1.1.1.1 8.8.8.8; do
+            for host in fermoyadev.com.ar www.fermoyadev.com.ar; do
+              echo "## DNS server=$server host=$host"
+              for type in CNAME A AAAA; do
+                echo "type $type"
+                timeout 5 dig +time=2 +tries=1 @"$server" "$host" "$type" +noall +answer
+              done
+            done
+          done
+          echo "### URL response and redirects"
+          for host in fermoyadev.com.ar www.fermoyadev.com.ar fernandomoya-dev.vercel.app; do
+            for family in 4 6; do
+              echo "## host=$host IPv$family"
+              timeout 18 curl -"$family" --max-time 13 --connect-timeout 6 -sS -L -I -D - -o /dev/null \
+                -w 'dns=%{time_namelookup} tcp=%{time_connect} tls=%{time_appconnect} ttfb=%{time_starttransfer} total=%{time_total} http=%{http_code} remote_ip=%{remote_ip} redirects=%{num_redirects}\n' \
+                "https://$host/foco-financiero"
+            done
+          done
