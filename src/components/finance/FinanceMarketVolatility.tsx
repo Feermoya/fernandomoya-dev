@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { Activity, ArrowDownRight, ArrowUpRight, CircleAlert } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
-import { getVixActionSignal, vixDialRatio } from '@/lib/finance/vixSignal';
+import { motion, useAnimationControls, useReducedMotion } from 'motion/react';
+import { getVixActionSignal, getVixNeedleTip, VIX_DIAL_CENTER } from '@/lib/finance/vixSignal';
 
 type VixData = { ok: boolean; value: number; date: string; percentileYear: number };
 type DialSegment = { start: number; end: number; color: string };
@@ -17,19 +17,19 @@ const DIAL_SEGMENTS: readonly DialSegment[] = [
 
 const TONE = {
   opportunity: {
-    badge: 'border-emerald-200 bg-emerald-100 text-emerald-800',
+    badge: 'border-emerald-300 bg-emerald-100 text-emerald-800 shadow-sm',
     icon: ArrowUpRight,
-    panel: 'border-emerald-100 bg-emerald-50/80',
+    panel: 'border-emerald-200 bg-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,.65)]',
   },
   neutral: {
-    badge: 'border-amber-200 bg-amber-100 text-amber-900',
+    badge: 'border-amber-300 bg-amber-100 text-amber-900 shadow-sm',
     icon: CircleAlert,
-    panel: 'border-amber-100 bg-amber-50/75',
+    panel: 'border-amber-200 bg-amber-50',
   },
   caution: {
-    badge: 'border-rose-200 bg-rose-100 text-rose-800',
+    badge: 'border-rose-300 bg-rose-100 text-rose-800 shadow-sm',
     icon: ArrowDownRight,
-    panel: 'border-rose-100 bg-rose-50/75',
+    panel: 'border-rose-200 bg-rose-50',
   },
 } as const;
 
@@ -49,6 +49,7 @@ export function FinanceMarketVolatility() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const reduced = useReducedMotion();
+  const needleControls = useAnimationControls();
   const dialId = useId();
 
   useEffect(() => {
@@ -70,10 +71,43 @@ export function FinanceMarketVolatility() {
   }, []);
 
   const signal = data ? getVixActionSignal(data.value, data.percentileYear) : null;
-  const ratio = data ? vixDialRatio(data.value) : 0;
-  const targetAngle = -90 + ratio * 180;
+  const needleTip = getVixNeedleTip(data?.value ?? 10);
   const theme = signal ? TONE[signal.tone] : TONE.neutral;
   const StateIcon = theme.icon;
+
+  useEffect(() => {
+    if (!data) return;
+
+    const value = data.value;
+    const finalTip = getVixNeedleTip(value);
+    if (reduced) {
+      needleControls.set({ x2: finalTip.x, y2: finalTip.y });
+      return;
+    }
+
+    let cancelled = false;
+    const moveNeedle = async () => {
+      // First sweep to the actual VIX value, then subtly oscillate about it.
+      await needleControls.start({
+        x2: finalTip.x,
+        y2: finalTip.y,
+        transition: { type: 'spring', stiffness: 72, damping: 14, mass: 1.05 },
+      });
+      if (cancelled) return;
+      const pressure = [-1.9, 1.9, -1.2, 2.2, -1.5, -1.9]
+        .map(degrees => getVixNeedleTip(value, degrees));
+      void needleControls.start({
+        x2: pressure.map(p => p.x),
+        y2: pressure.map(p => p.y),
+        transition: { duration: 2.3, ease: 'easeInOut', repeat: Infinity },
+      });
+    };
+    void moveNeedle();
+    return () => {
+      cancelled = true;
+      needleControls.stop();
+    };
+  }, [data?.value, needleControls, reduced]);
 
   return (
     <section className="min-w-0 rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-sm sm:p-5"
@@ -124,20 +158,32 @@ export function FinanceMarketVolatility() {
                 return <text key={value} x={position.x} y={position.y+4} textAnchor="middle"
                   fontSize="11" fontWeight="800" fill="#64748b">{value}</text>;
               })}
-              <motion.g style={{ transformOrigin: '160px 168px' }}
-                initial={reduced ? false : { rotate: -91 }}
-                animate={{ rotate: targetAngle }}
-                transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 70, damping: 14, mass: 1.1 }}>
-                <motion.g style={{ transformOrigin: '160px 168px' }}
-                  animate={reduced ? { rotate: 0 } : { rotate: [0, 1.3, -0.8, 0.6, 0] }}
-                  transition={reduced ? { duration: 0 } : { duration: 2.5, ease: 'easeInOut', repeat: Infinity, repeatDelay: 2.4, delay: 1.5 }}>
-                  <path d="M 156 169 L 160 80 L 164 169 Z" fill="#101b35"
-                    stroke="#ffffff" strokeWidth=".8" strokeLinejoin="round" />
-                </motion.g>
-              </motion.g>
-              <circle cx="160" cy="168" r="14" fill="#a1acc2" opacity=".22" filter={'url(#' + dialId + ')'} />
-              <circle cx="160" cy="168" r="12" fill="#0f1931" stroke="#fff" strokeWidth="4" />
-              <circle cx="160" cy="168" r="3.5" fill="#8aa3cf" />
+              {/* Fixed inner pivot: SVG line endpoints move, the axis never does. */}
+              <motion.line
+                x1={VIX_DIAL_CENTER.x}
+                y1={VIX_DIAL_CENTER.y}
+                initial={reduced ? { x2: needleTip.x, y2: needleTip.y } : { x2: 72, y2: VIX_DIAL_CENTER.y }}
+                animate={needleControls}
+                stroke="#ffffff"
+                strokeWidth="8"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+              <motion.line
+                x1={VIX_DIAL_CENTER.x}
+                y1={VIX_DIAL_CENTER.y}
+                initial={reduced ? { x2: needleTip.x, y2: needleTip.y } : { x2: 72, y2: VIX_DIAL_CENTER.y }}
+                animate={needleControls}
+                stroke="#0f1931"
+                strokeWidth="5"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+              <circle cx={VIX_DIAL_CENTER.x} cy={VIX_DIAL_CENTER.y} r="18"
+                fill="#9baacf" opacity=".2" filter={'url(#' + dialId + ')'} />
+              <circle cx={VIX_DIAL_CENTER.x} cy={VIX_DIAL_CENTER.y} r="13"
+                fill="#101b35" stroke="#fff" strokeWidth="4" />
+              <circle cx={VIX_DIAL_CENTER.x} cy={VIX_DIAL_CENTER.y} r="4" fill="#9ac5ff" />
               <text x="44" y="191" fontSize="10.5" fontWeight="700" fill="#697994">Calma</text>
               <text x="276" y="191" fontSize="10.5" textAnchor="end" fontWeight="700" fill="#697994">Miedo</text>
             </svg>

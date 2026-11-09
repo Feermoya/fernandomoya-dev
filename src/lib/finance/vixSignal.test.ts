@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getVixActionSignal, vixDialRatio } from './vixSignal';
+import { getVixActionSignal, getVixNeedleTip, VIX_DIAL_CENTER, VIX_NEEDLE_LENGTH, vixDialRatio } from './vixSignal';
 
 describe('VIX interpretation and tachometer', () => {
   it('high uncertainty highlights opportunities conditionally', () => {
@@ -28,5 +28,35 @@ describe('VIX interpretation and tachometer', () => {
     expect(vixDialRatio(50)).toBe(1);
     expect(vixDialRatio(90)).toBe(1);
     expect(vixDialRatio(Number.NaN)).toBe(0);
+  });
+});
+
+describe('centered, gently oscillating VIX needle', () => {
+  it('points left, up and right for VIX 10, 30 and 50', () => {
+    expect(getVixNeedleTip(10).x).toBeCloseTo(72);
+    expect(getVixNeedleTip(10).y).toBeCloseTo(168);
+    expect(getVixNeedleTip(30).x).toBeCloseTo(160);
+    expect(getVixNeedleTip(30).y).toBeCloseTo(80);
+    expect(getVixNeedleTip(50).x).toBeCloseTo(248);
+    expect(getVixNeedleTip(50).y).toBeCloseTo(168);
+  });
+
+  it('keeps a fixed-radius tip so the needle always grows from the central axle', () => {
+    for (const value of [10, 13, 25.64, 30, 45, 50]) {
+      for (const pressure of [-2.2, -0.8, 0, 1.9, 2.2]) {
+        const tip = getVixNeedleTip(value, pressure);
+        expect(Math.hypot(tip.x - VIX_DIAL_CENTER.x, tip.y - VIX_DIAL_CENTER.y))
+          .toBeCloseTo(VIX_NEEDLE_LENGTH);
+      }
+    }
+  });
+
+  it('makes a small but perceptible needle movement without falsifying the VIX', () => {
+    const a = getVixNeedleTip(25.64, -1.9);
+    const b = getVixNeedleTip(25.64, 1.9);
+    const pixelMovement = Math.hypot(b.x - a.x, b.y - a.y);
+    expect(pixelMovement).toBeGreaterThan(5);
+    expect(pixelMovement).toBeLessThan(8);
+    expect(vixDialRatio(25.64)).toBeCloseTo((25.64 - 10) / 40);
   });
 });

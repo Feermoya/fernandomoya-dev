@@ -48,3 +48,19 @@ export function getVixActionSignal(value: number, percentileYear: number): VixAc
 export function vixDialRatio(value: number): number {
   return Number.isFinite(value) ? Math.max(0, Math.min(1, (value - 10) / 40)) : 0;
 }
+
+/**
+ * Returns the needle's exact endpoint for an SVG line anchored at one center.
+ * Computing the coordinates rather than rotating nested SVG groups prevents
+ * CSS transform-box differences between Safari, Chrome and installed PWAs.
+ */
+export const VIX_DIAL_CENTER = { x: 160, y: 168 } as const;
+export const VIX_NEEDLE_LENGTH = 88;
+
+export function getVixNeedleTip(value: number, pressureDegrees = 0): { x: number; y: number } {
+  const angle = (180 + vixDialRatio(value) * 180 + pressureDegrees) * Math.PI / 180;
+  return {
+    x: VIX_DIAL_CENTER.x + Math.cos(angle) * VIX_NEEDLE_LENGTH,
+    y: VIX_DIAL_CENTER.y + Math.sin(angle) * VIX_NEEDLE_LENGTH,
+  };
+}
