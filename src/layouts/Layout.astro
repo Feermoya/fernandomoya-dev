@@ -115,8 +115,7 @@ const bodyBgClass = isTournamentsShell
     {
       isFinanceShell ? (
         <>
-          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-          <meta http-equiv="Pragma" content="no-cache" />
+          {/* Caching de Foco: cabeceras HTTP de Vercel, sin meta contradictorias. */}
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-title" content="Foco financiero" />
           <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -127,11 +126,12 @@ const bodyBgClass = isTournamentsShell
               window.__focoInstallPrompt = event;
               window.dispatchEvent(new Event('foco-install-available'));
             });
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/foco-sw.js?v=2', { scope: '/foco-financiero', updateViaCache: 'none' })
-                  .catch(() => { /* La app web funciona igual sin SW. */ });
-              });
+            // Legacy SW no longer needed: this app requires online Supabase.
+          </script>
+          <script>
+            import { cleanupLegacyFinanceWorker } from '@/lib/finance/pwaCleanup';
+            if (document.documentElement.classList.contains('finance-app-html') && 'serviceWorker' in navigator) {
+              void cleanupLegacyFinanceWorker(navigator.serviceWorker, window.location.origin);
             }
           </script>
         </>
