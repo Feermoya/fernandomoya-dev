@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import type { FinanceState } from '@/lib/finance/types';
 import {
   copyMonthlyPlanItemsToMonth,
+  editMonthlyInvestmentPlanItem,
   createMonthlyInvestmentPlanItems,
   getMonthlyPlanProgress,
   getMonthlyPlanUserItems,
@@ -87,6 +88,13 @@ export function useFinanceMonthlyPlanActions({ state, month, persist }: Options)
     [persist],
   );
 
+  const editMonthlyPlanItem = useCallback((id: string, label: string, units: number) => {
+    persist(prev => {
+      const changed = editMonthlyInvestmentPlanItem(prev.monthlyInvestmentPlan, id, label, units);
+      return changed === prev.monthlyInvestmentPlan ? prev : { ...prev, monthlyInvestmentPlan: changed };
+    });
+  }, [persist]);
+
   const splitMergedMonthlyPlanItem = useCallback(
     (itemId: string, rawLabel: string) => {
       persist((prev) => {
@@ -115,6 +123,7 @@ export function useFinanceMonthlyPlanActions({ state, month, persist }: Options)
     addMonthlyPlanItems,
     copyMonthlyPlanFromPreviousMonth,
     removeMonthlyPlanItem,
+    editMonthlyPlanItem,
     splitMergedMonthlyPlanItem,
   };
 }

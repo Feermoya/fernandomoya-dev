@@ -124,6 +124,7 @@ export function getInitialFinanceState(): FinanceState {
     currentMonth: currentMonthStr(),
     preferences: getDefaultPreferences(),
     monthlyInvestmentPlan: [],
+    monthlyInvestmentTargets: {},
     portfolioHoldings: [],
     bitcoin: getDefaultBitcoinModule(),
   };
@@ -233,6 +234,7 @@ export function withFinanceStateDefaults(state: FinanceState): FinanceState {
   return {
     ...state,
     monthlyInvestmentPlan: state.monthlyInvestmentPlan ?? [],
+    monthlyInvestmentTargets: state.monthlyInvestmentTargets ?? {},
     portfolioHoldings: state.portfolioHoldings ?? [],
     bitcoin: normalizeBitcoinModule(state.bitcoin),
     monitorStatus: state.monitorStatus,
@@ -274,6 +276,10 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
       challenges: o.challenges as FinanceState['challenges'],
       currentMonth: o.currentMonth,
       monthlyInvestmentPlan: normalizeMonthlyInvestmentPlan(o.monthlyInvestmentPlan),
+      monthlyInvestmentTargets: o.monthlyInvestmentTargets && typeof o.monthlyInvestmentTargets === 'object' && !Array.isArray(o.monthlyInvestmentTargets)
+        ? Object.fromEntries(Object.entries(o.monthlyInvestmentTargets as Record<string, unknown>)
+          .filter(([month, amount]) => /^\d{4}-\d{2}$/.test(month) && typeof amount === 'number' && Number.isFinite(amount) && amount > 0))
+        : {},
       portfolioHoldings: normalizePortfolioHoldings(o.portfolioHoldings),
       bitcoin: normalizeBitcoinModule(
         o.bitcoin && typeof o.bitcoin === 'object'

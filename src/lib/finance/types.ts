@@ -160,6 +160,8 @@ export type FinanceState = {
   wealthTarget?: number;
   preferences?: FinancePreferences;
   monthlyInvestmentPlan?: MonthlyInvestmentPlanItem[];
+  /** Meta personal mensual en ARS; no afecta los umbrales de niveles. */
+  monthlyInvestmentTargets?: Record<string, number>;
   /**
    * Posiciones históricas / cartera inicial.
    * No cuentan como inversiones del mes (objetivo, racha, niveles, ops).

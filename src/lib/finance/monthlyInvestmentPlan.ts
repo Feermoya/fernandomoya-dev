@@ -40,17 +40,8 @@ export type MonthlyPlanAnchorDef = {
   financeUrl: string;
 };
 
-export const MONTHLY_PLAN_ANCHORS: readonly MonthlyPlanAnchorDef[] = [
-  {
-    kind: 'retirement_spy',
-    label: 'SPY',
-    targetUnits: 1,
-    matchTerms: ['SPY', 'SPDR', 'SP500', 'S&P 500'],
-    badge: 'Jubilación',
-    hint: '1 nominal/mes',
-    financeUrl: 'https://g.co/finance/SPY:BCBA',
-  },
-] as const;
+// No inyectar SPY ni ningún otro activo: cada persona configura su plan.
+export const MONTHLY_PLAN_ANCHORS: readonly MonthlyPlanAnchorDef[] = [];
 
 export function getMonthlyPlanAnchorId(kind: MonthlyPlanAnchorKind, month: string): string {
   return `anchor-${kind}-${month}`;
@@ -313,9 +304,7 @@ export function getMonthlyPlanItems(
   plan: MonthlyInvestmentPlanItem[] | undefined,
   month: string,
 ): MonthlyInvestmentPlanItem[] {
-  const anchors = MONTHLY_PLAN_ANCHORS.map((anchor) => createMonthlyPlanAnchorItem(month, anchor));
-  const userItems = getMonthlyPlanUserItems(plan, month).filter((item) => !planItemDuplicatesAnchor(item));
-  return [...anchors, ...userItems];
+  return getMonthlyPlanUserItems(plan, month);
 }
 
 export function getPreviousMonthKey(month: string): string {
@@ -524,6 +513,29 @@ export function createMonthlyInvestmentPlanItems(params: {
     newItems.push(createMonthlyInvestmentPlanItem({ month: params.month, label }));
   }
   return newItems;
+}
+
+/** Edita un único activo del mes conservando el historial y su identificador. */
+export function editMonthlyInvestmentPlanItem(
+  plan: MonthlyInvestmentPlanItem[] | undefined,
+  id: string,
+  labelRaw: string,
+  units: number,
+): MonthlyInvestmentPlanItem[] {
+  const labels = parseInvestmentPlanInput(labelRaw);
+  const original = (plan ?? []).find(p => p.id === id && !isMonthlyPlanAnchorItem(p));
+  if (!original || labels.length !== 1 || !Number.isFinite(units) || units <= 0 || units > 1_000_000) return plan ?? [];
+  const label = labels[0];
+  if ((plan ?? []).some(p => p.id !== id && p.month === original.month &&
+    normalizePlanLabel(p.label) === normalizePlanLabel(label))) return plan ?? [];
+  return (plan ?? []).map(item => {
+    if (item.id !== id) return item;
+    const renamed = normalizePlanLabel(item.label) !== normalizePlanLabel(label);
+    const { referencePrice, ...rest } = item;
+    return { ...rest, label, targetUnits: units,
+      matchTerms: renamed ? buildDefaultMatchTerms(label) : item.matchTerms,
+      ...(renamed || referencePrice === undefined ? {} : { referencePrice }) };
+  });
 }
 
 export function copyMonthlyPlanItemsToMonth(params: {

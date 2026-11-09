@@ -436,9 +436,12 @@ export function getMonthlyMissionView(state: FinanceState, month: string): Month
   } else if (achieved === 5) target = TH.L6;
   else target = TH.L6;
 
+  const personalTarget = state.monthlyInvestmentTargets?.[month];
+  const hasPersonalGoal = typeof personalTarget === 'number' && Number.isFinite(personalTarget) && personalTarget > 0;
+  if (hasPersonalGoal) target = personalTarget;
   const percent = target > 0 ? Math.min(100, (pipe / target) * 100) : 0;
   const status: MonthlyMissionView['status'] =
-    percent >= 100 && !gapInfo.hint ? 'completed' : percent > 0 ? 'in_progress' : 'pending';
+    percent >= 100 && (hasPersonalGoal || !gapInfo.hint) ? 'completed' : percent > 0 ? 'in_progress' : 'pending';
 
   return {
     monthLabel: monthName,
