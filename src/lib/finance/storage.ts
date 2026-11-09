@@ -23,12 +23,14 @@ const FINANCE_APP_VERSION_KEY = 'fm-finance-app-version';
  */
 export function ensureFinanceAppDataVersion(): boolean {
   if (typeof window === 'undefined') return false;
-  const prev = window.localStorage.getItem(FINANCE_APP_VERSION_KEY);
-  const changed = prev !== FINANCE_APP_DATA_VERSION;
-  if (changed) {
-    window.localStorage.setItem(FINANCE_APP_VERSION_KEY, FINANCE_APP_DATA_VERSION);
+  try {
+    const prev = window.localStorage.getItem(FINANCE_APP_VERSION_KEY);
+    const changed = prev !== FINANCE_APP_DATA_VERSION;
+    if (changed) window.localStorage.setItem(FINANCE_APP_VERSION_KEY, FINANCE_APP_DATA_VERSION);
+    return changed;
+  } catch {
+    return false; // Safari en modo privado/restringido: continuar.
   }
-  return changed;
 }
 
 /** Clave de caché de un usuario. Nunca usa el localStorage global histórico. */

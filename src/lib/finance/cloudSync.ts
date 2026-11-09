@@ -63,6 +63,7 @@ function isNetworkFetchError(error: unknown): boolean {
   if (error instanceof FinanceCloudNetworkError) return true;
   if (error instanceof TypeError) return true;
   if (error instanceof Error) {
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') return true;
     const msg = error.message.toLowerCase();
     return (
       msg.includes('failed to fetch') ||
@@ -155,6 +156,7 @@ export async function fetchFinanceRemote(): Promise<RemoteFinanceRow | null> {
     method: 'GET',
     cache: 'no-store',
     credentials: 'same-origin',
+    signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(9000) : undefined,
     headers: await financeAuthHeaders(),
   });
 

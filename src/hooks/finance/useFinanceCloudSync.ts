@@ -15,6 +15,7 @@ import {
   isFinancePendingCloudPush,
   markFinancePendingCloudPush,
   saveFinanceState,
+  loadFinanceState,
   setFinanceLocalSavedAt,
 } from '@/lib/finance/storage';
 import {
@@ -23,7 +24,6 @@ import {
   isBrowserOnline,
   isFinanceCloudConfigured,
   isFinanceCloudNetworkError,
-  pingFinanceCloudKeepalive,
   upsertFinanceRemote,
 } from '@/lib/finance/cloudSync';
 import { prepareFinanceCloudSession, pullSessionBook } from '@/lib/finance/syncBootstrap';
@@ -61,31 +61,13 @@ export function useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, 
   const flushInFlight = useRef(false);
   const userIdRef = useRef(userId);
   userIdRef.current = userId;
+  const onUnauthorizedRef = useRef(onUnauthorized);
+  onUnauthorizedRef.current = onUnauthorized;
+  const lastResumePullRef = useRef(0);
 
   useEffect(() => {
     prepareFinanceCloudSession();
     setLastRemoteAt(null);
-    /** Cada visita/recarga cuenta como actividad en Supabase (anti-pausa Free). */
-    if (isFinanceCloudConfigured()) {
-      void pingFinanceCloudKeepalive();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isFinanceCloudConfigured()) return;
-
-    const pulse = () => {
-      if (document.visibilityState === 'visible') {
-        void pingFinanceCloudKeepalive();
-      }
-    };
-
-    document.addEventListener('visibilitychange', pulse);
-    window.addEventListener('focus', pulse);
-    return () => {
-      document.removeEventListener('visibilitychange', pulse);
-      window.removeEventListener('focus', pulse);
-    };
   }, []);
 
   const applyCloudState = useCallback(
@@ -136,9 +118,9 @@ export function useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, 
       setBookOpen(false);
       setCloudErr(message);
       setSyncChip('error');
-      if (reason === 'unauthorized') onUnauthorized?.();
+      if (reason === 'unauthorized') onUnauthorizedRef.current?.();
     },
-    [bookReadyRef, onUnauthorized],
+    [bookReadyRef],
   );
 
   const flushPendingCloudPush = useCallback(async () => {
@@ -260,9 +242,18 @@ export function useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, 
     }
 
     const gen = ++bootGenRef.current;
+    bookReadyRef.current = false;
     setCloudReady(false);
     setSyncChip('loading');
     setCloudErr(null);
+
+    // Mostrar el caché privado de esta cuenta mientras se comprueba la nube.
+    // Nunca habilitar escrituras antes de obtener el libro remoto.
+    const cached = loadFinanceState(userId);
+    if (cached) {
+      setState(cached);
+      setBookOpen(true);
+    }
 
     async function boot() {
       try {
@@ -300,7 +291,12 @@ export function useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, 
         setBookOpen(false);
         setCloudErr(result.message ?? 'No se pudo leer tu cuenta.');
         setSyncChip('error');
-        if (result.reason === 'unauthorized') onUnauthorized?.();
+        if (result.reason === 'unauthorized') onUnauthorizedRef.current?.();
+      } catch (error) {
+        if (gen !== bootGenRef.current) return;
+        setBookOpen(false);
+        setCloudErr(error instanceof Error ? error.message : 'No se pudo abrir tu cuenta.');
+        setSyncChip('error');
       } finally {
         if (gen === bootGenRef.current) {
           setCloudReady(true);
@@ -309,17 +305,20 @@ export function useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, 
     }
 
     void boot();
-  }, [applyCloudState, bookReadyRef, clearSoftOffline, flushPendingCloudPush, markCloudIssue, onUnauthorized, userId]);
+  }, [applyCloudState, bookReadyRef, clearSoftOffline, flushPendingCloudPush, markCloudIssue, userId, setState]);
 
   useEffect(() => {
     if (!isFinanceCloudConfigured()) return;
 
-    const onVis = () => {
-      if (document.visibilityState === 'visible') void pullFromCloudImmediate();
-    };
-    const onFocus = () => {
+    const onResume = () => {
+      if (document.visibilityState !== 'visible' || !bookReadyRef.current) return;
+      const now = Date.now();
+      if (now - lastResumePullRef.current < 30_000) return;
+      lastResumePullRef.current = now;
       void pullFromCloudImmediate();
     };
+    const onVis = onResume;
+    const onFocus = onResume;
     const onOnline = () => {
       setIsOfflineMode(false);
       void (async () => {
@@ -331,7 +330,7 @@ export function useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, 
       markCloudIssue('offline');
     };
     const onPageShow = (ev: PageTransitionEvent) => {
-      if (ev.persisted) void pullFromCloudImmediate();
+      if (ev.persisted) onResume();
     };
 
     document.addEventListener('visibilitychange', onVis);
@@ -356,7 +355,7 @@ export function useFinanceCloudSync({ userId, bookReadyRef, stateRef, setState, 
     if (!isFinanceCloudConfigured() || !cloudReady) return;
 
     const tick = () => {
-      if (document.visibilityState !== 'visible') return;
+      if (document.visibilityState !== 'visible' || !bookReadyRef.current) return;
       void pullFromCloudImmediate();
     };
     const id = window.setInterval(tick, isStandalonePwa() ? 45_000 : 5 * 60_000);

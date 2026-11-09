@@ -27,6 +27,7 @@ export default function FinanceAppRoot() {
 
     void client.auth.getSession().then(({ data, error }) => {
       if (!active) return;
+      clearTimeout(slower);
       if (error) { setAuthIssue(true); return; }
       setSession(data.session ?? null);
     }).catch(() => {
