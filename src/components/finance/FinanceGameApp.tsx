@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Cloud,
   Coins,
@@ -23,18 +23,14 @@ import { FinanceOverviewPanel } from '@/components/finance/FinanceOverviewPanel'
 import { FinanceConcentrationPanel } from '@/components/finance/FinanceConcentrationPanel';
 import { FinanceTickerHistoryPanel } from '@/components/finance/FinanceTickerHistoryPanel';
 import { FinanceRecentInvestments } from '@/components/finance/FinanceRecentInvestments';
-import { FinanceBalanzImporter } from '@/components/finance/FinanceBalanzImporter';
 import { FinanceEntryLoadSummaryCard } from '@/components/finance/entry';
-import { FinanceMonthlyInvestmentPlan } from '@/components/finance/FinanceMonthlyInvestmentPlan';
 import { FinanceInstallHint } from '@/components/finance/FinanceInstallHint';
 import { FinanceConfettiBurst } from '@/components/finance/FinanceConfettiBurst';
 import { FinanceEntryEditModal } from '@/components/finance/FinanceEntryEditModal';
-import { FinanceInvestSheet } from '@/components/finance/FinanceInvestSheet';
 import { FinanceQuickAmountsEditor } from '@/components/finance/FinanceQuickAmountsEditor';
 import { FinancePortfolioPanel } from '@/components/finance/portfolio';
 import { FinanceToaster } from '@/components/finance/FinanceToaster';
 import { FinanceDetailsSummary } from '@/components/finance/FinanceDetailsSummary';
-import { FinanceBitcoinPanel } from '@/components/finance/bitcoin';
 import { formatARS, getEntriesByMonth } from '@/lib/finance/calculations';
 import { normalizePreferences } from '@/lib/finance/preferences';
 import type { FinancePreferences } from '@/lib/finance/types';
@@ -53,6 +49,12 @@ import { useFinanceCelebrations } from '@/hooks/finance/useFinanceCelebrations';
 import { FocoChip, FocoPrimaryButton, FocoTabs, FOCO_ICON_STROKE } from '@/components/finance/ui';
 import { FinanceWelcomeTour } from '@/components/finance/FinanceWelcomeTour';
 import { sileo } from 'sileo';
+
+// Reducir el JS inicial: estas funciones se descargan solo cuando se usan.
+const FinanceInvestSheet = lazy(() => import('@/components/finance/FinanceInvestSheet').then(m => ({ default: m.FinanceInvestSheet })));
+const FinanceBitcoinPanel = lazy(() => import('@/components/finance/bitcoin/FinanceBitcoinPanel').then(m => ({ default: m.FinanceBitcoinPanel })));
+const FinanceMonthlyInvestmentPlan = lazy(() => import('@/components/finance/FinanceMonthlyInvestmentPlan').then(m => ({ default: m.FinanceMonthlyInvestmentPlan })));
+const FinanceBalanzImporter = lazy(() => import('@/components/finance/FinanceBalanzImporter').then(m => ({ default: m.FinanceBalanzImporter })));
 
 type FinanceAppSection = 'dashboard' | 'bitcoin';
 
@@ -150,6 +152,8 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
   const [editingEntry, setEditingEntry] = useState<FinanceEntry | null>(null);
   const [investOpen, setInvestOpen] = useState(false);
   const [section, setSection] = useState<FinanceAppSection>('dashboard');
+  const [planVisited, setPlanVisited] = useState(false);
+  const [balanzVisited, setBalanzVisited] = useState(false);
 
   const month = state.currentMonth;
 
@@ -359,7 +363,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
             <FocoTabs
               aria-label="Secciones de Foco financiero"
               value={section}
-              onChange={(id) => setSection(id as FinanceAppSection)}
+              onChange={(id) => { if (cloudReady) setSection(id as FinanceAppSection); }}
               items={[
                 { id: 'dashboard', label: 'Dashboard' },
                 { id: 'bitcoin', label: 'Bitcoin' },
@@ -382,12 +386,16 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         ) : null}
 
         {bookOpen && section === 'bitcoin' ? (
-          <FinanceBitcoinPanel
-            entries={state.entries}
-            holdings={state.portfolioHoldings ?? []}
-            bitcoin={state.bitcoin}
-            onChange={(bitcoin) => persist((prev) => ({ ...prev, bitcoin }))}
-          />
+          <div inert={!cloudReady}>
+            <Suspense fallback={<p className="p-5 text-sm font-semibold text-slate-600" role="status">Abriendo Bitcoin…</p>}>
+              <FinanceBitcoinPanel
+                entries={state.entries}
+                holdings={state.portfolioHoldings ?? []}
+                bitcoin={state.bitcoin}
+                onChange={(bitcoin) => persist((prev) => ({ ...prev, bitcoin }))}
+              />
+            </Suspense>
+          </div>
         ) : null}
 
         {bookOpen && section === 'dashboard' ? (
@@ -401,7 +409,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
               </div>
             ) : null}
 
-            <main className="finance-page-grid">
+            <main className="finance-page-grid" inert={!cloudReady} aria-busy={!cloudReady}>
               <section
                 id="dashboard-financiero"
                 className="order-1 scroll-mt-20 lg:col-span-2 lg:order-none"
@@ -445,7 +453,8 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
               </section>
 
               <section className="order-7 min-w-0 scroll-mt-20 lg:col-span-2 lg:order-none">
-                <details className="finance-details group open:pb-1">
+                <details className="finance-details group open:pb-1"
+                  onToggle={(event) => { if (event.currentTarget.open) setPlanVisited(true); }}>
                   <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
                     <span className="text-sm font-bold text-slate-900">Plan del mes</span>
                     <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-black tabular-nums text-slate-700">
@@ -454,19 +463,23 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                         : 'Sin pendientes'}
                     </span>
                   </summary>
-                  <div className="border-t border-slate-100 p-2 sm:p-3">
-                    <FinanceMonthlyInvestmentPlan
-                      embedded
-                      month={month}
-                      entries={state.entries}
-                      plan={state.monthlyInvestmentPlan}
-                      onAddItems={addMonthlyPlanItems}
-                      onRemoveItem={removeMonthlyPlanItem}
-                      onSplitMergedItem={splitMergedMonthlyPlanItem}
-                      hasPreviousMonthPlan={hasPreviousMonthPlan}
-                      onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
-                    />
-                  </div>
+                  {planVisited ? (
+                    <div className="border-t border-slate-100 p-2 sm:p-3">
+                      <Suspense fallback={<p role="status" className="p-3 text-xs text-slate-500">Abriendo plan…</p>}>
+                        <FinanceMonthlyInvestmentPlan
+                          embedded
+                          month={month}
+                          entries={state.entries}
+                          plan={state.monthlyInvestmentPlan}
+                          onAddItems={addMonthlyPlanItems}
+                          onRemoveItem={removeMonthlyPlanItem}
+                          onSplitMergedItem={splitMergedMonthlyPlanItem}
+                          hasPreviousMonthPlan={hasPreviousMonthPlan}
+                          onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
+                        />
+                      </Suspense>
+                    </div>
+                  ) : null}
                 </details>
               </section>
 
@@ -553,22 +566,27 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                   </div>
                 </details>
 
-                <details className="finance-details order-last open:pb-1 lg:col-span-2">
+                <details className="finance-details order-last open:pb-1 lg:col-span-2"
+                  onToggle={(event) => { if (event.currentTarget.open) setBalanzVisited(true); }}>
                   <summary className="flex min-h-[48px] cursor-pointer list-none items-center px-4 py-3.5 [&::-webkit-details-marker]:hidden">
                     <span className="text-sm font-bold text-slate-700">Importar PDF de Balanz</span>
                   </summary>
-                  <div className="border-t border-slate-100 px-3 pb-4 pt-3 sm:px-4">
-                    <FinanceBalanzImporter
-                      onBusyChange={setBalanzBusy}
-                      disabled={!cloudReady || syncChip !== 'synced'}
-                      onImported={(next, iso) => {
-                        applyCloudState(next, iso);
-                        setLastRemoteAt(iso);
-                        setSyncChip('synced');
-                        setCloudErr(null);
-                      }}
-                    />
-                  </div>
+                  {balanzVisited ? (
+                    <div className="border-t border-slate-100 px-3 pb-4 pt-3 sm:px-4">
+                      <Suspense fallback={<p role="status" className="p-3 text-xs text-slate-500">Abriendo importador…</p>}>
+                        <FinanceBalanzImporter
+                          onBusyChange={setBalanzBusy}
+                          disabled={!cloudReady || syncChip !== 'synced'}
+                          onImported={(next, iso) => {
+                            applyCloudState(next, iso);
+                            setLastRemoteAt(iso);
+                            setSyncChip('synced');
+                            setCloudErr(null);
+                          }}
+                        />
+                      </Suspense>
+                    </div>
+                  ) : null}
                 </details>
               </div>
             </main>
@@ -576,7 +594,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         ) : null}
       </div>
 
-      {bookOpen && section === 'dashboard' && !investOpen ? (
+      {bookOpen && cloudReady && section === 'dashboard' && !investOpen ? (
         <div className="finance-mobile-cta fixed inset-x-0 bottom-0 z-40">
           <FocoPrimaryButton
             data-tour="invest"
@@ -594,17 +612,21 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
         </div>
       ) : null}
 
-      <FinanceInvestSheet
-        open={investOpen && bookOpen}
-        month={month}
-        entries={state.entries}
-        quickAmounts={preferences.quickAmounts}
-        pendingPlanLabels={pendingPlanLabels}
-        onAddEntry={handleAddEntry}
-        onClose={() => setInvestOpen(false)}
-      />
+      {investOpen && bookOpen && cloudReady ? (
+        <Suspense fallback={<p role="status" className="p-3 text-xs text-slate-600">Abriendo formulario…</p>}>
+          <FinanceInvestSheet
+            open
+            month={month}
+            entries={state.entries}
+            quickAmounts={preferences.quickAmounts}
+            pendingPlanLabels={pendingPlanLabels}
+            onAddEntry={handleAddEntry}
+            onClose={() => setInvestOpen(false)}
+          />
+        </Suspense>
+      ) : null}
 
-      {bookOpen && section === 'dashboard' && !investOpen ? <FinanceWelcomeTour userId={userId} /> : null}
+      {bookOpen && cloudReady && section === 'dashboard' && !investOpen ? <FinanceWelcomeTour userId={userId} /> : null}
 
       {confettiKey > 0 ? <FinanceConfettiBurst burstKey={confettiKey} /> : null}
 
