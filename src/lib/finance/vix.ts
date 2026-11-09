@@ -47,3 +47,55 @@ export function vixZone(value: number): VixZone {
   if (value < 40) return 'alta';
   return 'extrema';
 }
+
+/**
+ * Lectura contextual del VIX para el panel. Combina rangos absolutos con el
+ * percentil de sus últimos 252 cierres: un nivel bajo del VIX no se convierte
+ * en "miedo alto" solamente por estar alto respecto de un año tranquilo.
+ * Es un indicador de condiciones del mercado, no una valoración de acciones.
+ */
+export type VixMarketInsight = {
+  title: string;
+  conclusion: string;
+  color: string;
+};
+
+export function getVixMarketInsight(value: number, percentileYear: number): VixMarketInsight {
+  const rank = Number.isFinite(percentileYear)
+    ? Math.max(0, Math.min(100, percentileYear))
+    : 50;
+
+  if (value >= 40 || (value >= 35 && rank >= 90)) {
+    return {
+      title: 'Miedo extremo',
+      conclusion: 'Hay mucha tensión. Las correcciones fuertes podrían generar oportunidades para analizar.',
+      color: '#dc2626',
+    };
+  }
+  if (value >= 30 || (value >= 25 && rank >= 85)) {
+    return {
+      title: 'Miedo alto',
+      conclusion: 'El mercado está nervioso. Algunas caídas podrían estar dejando oportunidades de compra.',
+      color: '#ea580c',
+    };
+  }
+  if (value >= 20 || (value >= 18 && rank >= 80)) {
+    return {
+      title: 'Mercado cauteloso',
+      conclusion: 'Hay incertidumbre. Podrían aparecer oportunidades puntuales si algunos precios corrigieron.',
+      color: '#d97706',
+    };
+  }
+  if (value < 15 && rank <= 40) {
+    return {
+      title: 'Mercado tranquilo',
+      conclusion: 'Hay poca tensión. Algunas acciones podrían estar cotizando a precios exigentes.',
+      color: '#059669',
+    };
+  }
+  return {
+    title: 'Mercado estable',
+    conclusion: 'No hay señales de miedo elevado. Las oportunidades dependen del precio de cada activo.',
+    color: '#2563eb',
+  };
+}

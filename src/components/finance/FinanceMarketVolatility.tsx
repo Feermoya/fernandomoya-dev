@@ -1,20 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Activity, ArrowUpRight, RefreshCcw } from 'lucide-react';
+import { Activity, RefreshCcw } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
-import { vixZone, type VixZone } from '@/lib/finance/vix';
+import { getVixMarketInsight, type VixZone } from '@/lib/finance/vix';
 
 type VixData = {
   ok: boolean; value: number; date: string; percentileYear: number;
   observations: number; source: string; sourceUrl: string; zone: VixZone; frequency: string;
 };
-const COPY: Record<VixZone, { title: string; description: string; color: string }> = {
-  calma: {title:'Volatilidad baja',description:'El mercado espera movimientos moderados. No indica que los activos estén caros.',color:'#10b981'},
-  normal: {title:'Volatilidad habitual',description:'La incertidumbre está en un rango común. El precio de los activos requiere su propio análisis.',color:'#2563eb'},
-  tension: {title:'Volatilidad elevada',description:'Hay mayor expectativa de movimientos en el S&P 500. Evaluá tu estrategia y el riesgo.',color:'#f59e0b'},
-  alta: {title:'Miedo elevado',description:'El mercado descuenta movimientos fuertes. Podría ser útil revisar oportunidades, sin asumir descuentos.',color:'#f97316'},
-  extrema: {title:'Estrés extremo',description:'Se esperan oscilaciones muy fuertes. No es una señal automática de compra.',color:'#ef4444'},
-};
-
 export function FinanceMarketVolatility() {
   const [data, setData] = useState<VixData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +28,7 @@ export function FinanceMarketVolatility() {
     const timeout = window.setTimeout(() => void load(controller.signal), 1300);
     return () => {window.clearTimeout(timeout); controller.abort();};
   }, []);
-  const current = data ? COPY[data.zone] ?? COPY[vixZone(data.value)] : null;
+  const current = data ? getVixMarketInsight(data.value, data.percentileYear) : null;
   const ratio = data ? Math.min(1,Math.max(0,(data.value-10)/40)) : 0;
   return (
     <section className="rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-sm sm:p-5" aria-labelledby="vix-title">
@@ -47,7 +39,7 @@ export function FinanceMarketVolatility() {
           </span>
           <div>
             <h3 id="vix-title" className="text-sm font-extrabold text-slate-900">Miedo del mercado</h3>
-            <p className="mt-0.5 text-[11px] font-medium text-slate-500">VIX · volatilidad esperada del S&P 500</p>
+            <p className="mt-0.5 text-[11px] font-medium text-slate-500">Cómo está el mercado hoy</p>
           </div>
         </div>
         <button type="button" onClick={()=>void load()} aria-label="Actualizar VIX" disabled={loading}
@@ -59,7 +51,7 @@ export function FinanceMarketVolatility() {
         <div className="mt-6 h-36 animate-pulse rounded-2xl bg-slate-50" role="status" aria-label="Consultando VIX en Cboe" />
       ) : error || !data ? (
         <div className="mt-5 rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm font-medium text-amber-900" role="status">
-          El indicador no está disponible. No mostramos valores inventados.
+          No se pudo actualizar. Probá nuevamente.
         </div>
       ) : (
         <>
@@ -89,21 +81,11 @@ export function FinanceMarketVolatility() {
               <p className="mt-1 text-xs font-extrabold" style={{color:current?.color}}>{current?.title}</p>
             </div>
           </div>
-          <div className="mt-3 rounded-2xl bg-slate-50 p-3.5">
-            <p className="text-[13px] font-semibold leading-relaxed text-slate-700">{current?.description}</p>
-            <p className="mt-2 text-[11px] font-medium text-slate-500">
-              Percentil {data.percentileYear} de las últimas {data.observations} ruedas. Cierre del {new Date(data.date+'T12:00:00Z').toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'})}.
-            </p>
+          <div className="mx-auto mt-4 max-w-[360px] rounded-2xl bg-slate-50 px-4 py-3 text-center">
+            <p className="text-[13px] font-semibold leading-relaxed text-slate-800">{current?.conclusion}</p>
           </div>
         </>
       )}
-      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-        El VIX mide volatilidad esperada a 30 días. No mide si las acciones están baratas ni pronostica la dirección del mercado.
-      </p>
-      <a href="https://www.cboe.com/tradable-products/vix/vix-historical-data" target="_blank" rel="noopener noreferrer"
-        className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:underline">
-        Fuente: Cboe (cierre diario) <ArrowUpRight size={13} aria-hidden />
-      </a>
     </section>
   );
 }
