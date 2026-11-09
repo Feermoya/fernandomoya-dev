@@ -29,7 +29,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600"
         }
       ]
     },
@@ -38,7 +38,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
+          "value": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600"
         }
       ]
     },
@@ -89,6 +89,15 @@
     },
     {
       "source": "/torneos.webmanifest",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/foco-sw.js",
       "headers": [
         {
           "key": "Cache-Control",

@@ -1,5 +1,6 @@
 ---
-export const prerender = false;
+// Pantalla pública sin datos privados en HTML. Evita cold start de SSR.
+export const prerender = true;
 
 import Layout from '@/layouts/Layout.astro';
 import FinanceAppRoot from '@/components/finance/FinanceAppRoot';
@@ -13,5 +14,12 @@ import { pageTitle } from '@/utils/seo';
   noindex={true}
   appShell={true}
 >
-  <FinanceAppRoot client:only="react" />
+  <FinanceAppRoot client:only="react">
+    <div slot="fallback" class="foco-boot-static" role="status" aria-live="polite">
+      <img src="/foco/icon-192.png" width="68" height="68" alt="" />
+      <strong>Foco financiero</strong>
+      <span>Abriendo tus inversiones…</span>
+      <div class="foco-boot-track" aria-hidden="true"><i></i></div>
+    </div>
+  </FinanceAppRoot>
 </Layout>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Flame, Target, Trophy } from 'lucide-react';
 import type { FinanceState } from '@/lib/finance/types';
 import {
@@ -58,19 +58,22 @@ function easeOutCubic(t: number): number {
   return 1 - (1 - x) ** 3;
 }
 
-/** 1200ms: el monto y el anillo terminan juntos, y el conteo se lee. */
+/** Mostrar el valor completo desde el primer render; animar solo cambios de mes. */
 function useEnterProgress(key: string, reduced: boolean) {
-  const [progress, setProgress] = useState(reduced ? 1 : 0);
+  const [progress, setProgress] = useState(1);
+  const lastKey = useRef(key);
   useEffect(() => {
-    if (reduced) {
+    if (reduced || lastKey.current === key) {
+      lastKey.current = key;
       setProgress(1);
       return;
     }
+    lastKey.current = key;
     setProgress(0);
     const start = performance.now();
     let raf = 0;
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / 1200);
+      const t = Math.min(1, (now - start) / 420);
       setProgress(easeOutCubic(t));
       if (t < 1) raf = requestAnimationFrame(tick);
     };

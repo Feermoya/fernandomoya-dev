@@ -76,6 +76,24 @@ const bodyBgClass = isTournamentsShell
 >
   <head>
     <meta charset="utf-8" />
+    {isFinanceShell ? (
+      <style is:inline>
+        html.finance-app-html, html.finance-app-html body { background: #f3f6fd; }
+        .foco-boot-static {
+          box-sizing: border-box; display: flex; min-height: 72dvh; padding: 7rem 1.5rem 4rem;
+          align-items: center; justify-content: flex-start; flex-direction: column;
+          color: #14213b; background: #f3f6fd; text-align: center;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .foco-boot-static img { width: 68px; height: 68px; border-radius: 19px; box-shadow: 0 9px 26px #14213b1a; }
+        .foco-boot-static strong { margin-top: 1.2rem; font-size: 1.35rem; letter-spacing: -.035em; font-weight: 800; }
+        .foco-boot-static span { margin-top: .35rem; font-size: .85rem; font-weight: 500; color: #536380; }
+        .foco-boot-track { margin-top: 1.8rem; height: 4px; width: min(11rem, 70vw); border-radius: 999px; background: #dce5f5; overflow: hidden; }
+        .foco-boot-track i { display: block; width: 40%; height: 100%; background: #2463eb; border-radius: inherit; animation: foco-boot-move 1.1s ease-in-out infinite alternate; }
+        @keyframes foco-boot-move { from { transform: translateX(0); } to { transform: translateX(150%); } }
+        @media (prefers-reduced-motion: reduce) { .foco-boot-track i { animation: none; width: 100%; } }
+      </style>
+    ) : null}
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -111,7 +129,7 @@ const bodyBgClass = isTournamentsShell
             });
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/foco-sw.js', { scope: '/foco-financiero' })
+                navigator.serviceWorker.register('/foco-sw.js?v=2', { scope: '/foco-financiero', updateViaCache: 'none' })
                   .catch(() => { /* La app web funciona igual sin SW. */ });
               });
             }
