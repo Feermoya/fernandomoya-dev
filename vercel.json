@@ -15,6 +15,9 @@
     },
     "api/finance-balanz.mjs": {
       "maxDuration": 20
+    },
+    "api/finance-vix.mjs": {
+      "maxDuration": 15
     }
   },
   "crons": [

@@ -33,6 +33,10 @@ const entries = [
     entry: path.join(entriesDir, 'finance-symbol-search.entry.ts'),
     outfile: path.join(root, 'api/finance-symbol-search.mjs'),
   },
+  {
+    entry: path.join(entriesDir, 'finance-vix.entry.ts'),
+    outfile: path.join(root, 'api/finance-vix.mjs'),
+  },
 ];
 
 for (const { entry, outfile } of entries) {
