@@ -204,7 +204,7 @@ export function getLevelProgressPercent(state: FinanceState, month: string, achi
   if (achieved >= 6) return 100;
 
   let low = 0;
-  let high = TH.L1;
+  let high: number = TH.L1;
   for (let i = 1; i < thresholds.length; i++) {
     if (pipe < thresholds[i]) {
       low = thresholds[i - 1];
@@ -424,7 +424,7 @@ export function getMonthlyMissionView(state: FinanceState, month: string): Month
 
   const gapInfo = getGapToNextInvestmentMilestone(state, month)!;
 
-  let target = TH.L1;
+  let target: number = TH.L1;
   if (achieved === 0) target = TH.L1;
   else if (achieved === 1) target = TH.L2;
   else if (achieved === 2) target = TH.L3;

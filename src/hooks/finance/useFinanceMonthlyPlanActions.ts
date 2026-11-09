@@ -90,8 +90,9 @@ export function useFinanceMonthlyPlanActions({ state, month, persist }: Options)
 
   const editMonthlyPlanItem = useCallback((id: string, label: string, units: number) => {
     persist(prev => {
-      const changed = editMonthlyInvestmentPlanItem(prev.monthlyInvestmentPlan, id, label, units);
-      return changed === prev.monthlyInvestmentPlan ? prev : { ...prev, monthlyInvestmentPlan: changed };
+      const current = prev.monthlyInvestmentPlan ?? [];
+      const changed = editMonthlyInvestmentPlanItem(current, id, label, units);
+      return changed === current ? prev : { ...prev, monthlyInvestmentPlan: changed };
     });
   }, [persist]);
 

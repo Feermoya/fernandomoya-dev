@@ -170,7 +170,7 @@ function PlanChip({
           </div>
         </div>
         {!anchor ? (
-          <div className="absolute right-1 top-1 flex gap-1 opacity-100 sm:opacity-0 sm:transition sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+          <div className="flex shrink-0 items-center gap-1">
             {onSplit ? (
               <button
                 type="button"
@@ -276,7 +276,12 @@ function ChipGrid({
           prices={prices}
           pricesLoading={pricesLoading}
           compact
-          onRemove={() => onRemoveItem(progressItem.item.id)}
+          onRemove={() => {
+            if (window.confirm(`¿Eliminar ${progressItem.item.label} de tu plan de este mes?`)) {
+              onRemoveItem(progressItem.item.id);
+              sileo.success({title:'Activo eliminado del plan'});
+            }
+          }}
           onEdit={() => onEditItem(progressItem.item)}
           onSplit={
             planItemLabelLooksLikeMergedTickers(progressItem.item.label) && onSplitMergedItem

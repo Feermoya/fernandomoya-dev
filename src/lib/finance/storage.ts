@@ -278,7 +278,7 @@ export function importFinanceState(jsonString: string): ImportFinanceResult {
       monthlyInvestmentPlan: normalizeMonthlyInvestmentPlan(o.monthlyInvestmentPlan),
       monthlyInvestmentTargets: o.monthlyInvestmentTargets && typeof o.monthlyInvestmentTargets === 'object' && !Array.isArray(o.monthlyInvestmentTargets)
         ? Object.fromEntries(Object.entries(o.monthlyInvestmentTargets as Record<string, unknown>)
-          .filter(([month, amount]) => /^\d{4}-\d{2}$/.test(month) && typeof amount === 'number' && Number.isFinite(amount) && amount > 0))
+          .filter(([month, amount]) => /^\d{4}-\d{2}$/.test(month) && typeof amount === 'number' && Number.isFinite(amount) && amount > 0)) as Record<string, number>
         : {},
       portfolioHoldings: normalizePortfolioHoldings(o.portfolioHoldings),
       bitcoin: normalizeBitcoinModule(
