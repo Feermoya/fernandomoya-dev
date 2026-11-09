@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Flame, Target, Trophy } from 'lucide-react';
+import { Check, Flame, Pencil, Target, Trophy, X } from 'lucide-react';
 import type { FinanceState } from '@/lib/finance/types';
 import {
   formatARS,
@@ -38,6 +38,8 @@ type Props = {
   mission: MonthlyMissionView;
   onMonthChange: (month: string) => void;
   celebration?: FinanceDashboardCelebration | null;
+  onMonthTargetChange?: (amount: number | null) => void;
+  hasPersonalTarget?: boolean;
 };
 
 function usePrefersReducedMotion(): boolean {
@@ -83,8 +85,11 @@ function useEnterProgress(key: string, reduced: boolean) {
   return progress;
 }
 
-export function FinanceDashboard({ state, mission, onMonthChange, celebration }: Props) {
+export function FinanceDashboard({ state, mission, onMonthChange, celebration, onMonthTargetChange, hasPersonalTarget }: Props) {
   const month = state.currentMonth;
+  const [editingTarget, setEditingTarget] = useState(false);
+  const [targetRaw, setTargetRaw] = useState('');
+  useEffect(() => { setEditingTarget(false); }, [month]);
   const entries = state.entries;
   const levelInfo = getMonthlyLevel(state, month);
   const rawProgress = getLevelProgressPercent(state, month, levelInfo.level);
@@ -142,15 +147,54 @@ export function FinanceDashboard({ state, mission, onMonthChange, celebration }:
 
       <FocoCard className="foco-goal-card" data-tour="goal">
         <div className="foco-goal-card__top">
-          <p className="foco-label">
-            <Target size={12} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
-            Objetivo del mes
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="foco-label">
+              <Target size={12} strokeWidth={FOCO_ICON_STROKE} aria-hidden />
+              Objetivo del mes
+            </p>
+            {onMonthTargetChange ? (
+              <button type="button" aria-label="Editar objetivo mensual"
+                onClick={() => { setTargetRaw(String(mission.targetAmount)); setEditingTarget(v => !v); }}
+                className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg text-blue-600 hover:bg-blue-50">
+                <Pencil size={15} aria-hidden />
+              </button>
+            ) : null}
+          </div>
           <FocoChip tone={missionDone ? 'successSolid' : 'primary'}>
             {missionDone ? 'Objetivo cumplido' : 'En curso'}
           </FocoChip>
         </div>
 
+        {editingTarget && onMonthTargetChange ? (
+          <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50/70 p-3">
+            <label className="block">
+              <span className="text-[11px] font-bold text-slate-700">Tu meta del mes en pesos</span>
+              <input className="finance-input-mobile mt-1 min-h-11 w-full rounded-xl px-3 text-sm font-bold" type="number"
+                min="1" step="1000" inputMode="numeric" value={targetRaw}
+                onChange={event => setTargetRaw(event.target.value)} />
+            </label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button type="button" onClick={() => {
+                const amount = Number(targetRaw);
+                if (Number.isFinite(amount) && amount > 0 && amount <= 100_000_000_000) {
+                  onMonthTargetChange(amount); setEditingTarget(false);
+                }
+              }} className="inline-flex min-h-10 items-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white">
+                <Check size={14} /> Guardar
+              </button>
+              {hasPersonalTarget ? (
+                <button type="button" onClick={() => { onMonthTargetChange(null); setEditingTarget(false); }}
+                  className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700">
+                  Usar meta de nivel
+                </button>
+              ) : null}
+              <button type="button" onClick={() => setEditingTarget(false)}
+                className="inline-flex min-h-10 items-center gap-1 rounded-xl px-2 text-xs font-bold text-slate-500">
+                <X size={14} /> Cancelar
+              </button>
+            </div>
+          </div>
+        ) : null}
         <div className="foco-goal-card__body">
           <FocoProgressRing
             percent={mission.percent}

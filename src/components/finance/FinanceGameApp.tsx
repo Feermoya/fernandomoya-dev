@@ -163,6 +163,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
     addMonthlyPlanItems,
     copyMonthlyPlanFromPreviousMonth,
     removeMonthlyPlanItem,
+    editMonthlyPlanItem,
     splitMergedMonthlyPlanItem,
   } = useFinanceMonthlyPlanActions({ state, month, persist });
 
@@ -419,6 +420,13 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                   mission={mission}
                   onMonthChange={handleMonthChange}
                   celebration={celebration}
+                  hasPersonalTarget={Boolean(state.monthlyInvestmentTargets?.[month])}
+                  onMonthTargetChange={(value) => persist(prev => {
+                    const nextTargets = { ...(prev.monthlyInvestmentTargets ?? {}) };
+                    if (value === null) delete nextTargets[month];
+                    else nextTargets[month] = value;
+                    return { ...prev, monthlyInvestmentTargets: nextTargets };
+                  })}
                 />
               </section>
 
@@ -473,6 +481,7 @@ export default function FinanceGameApp({ userId, email, onSignOut }: FinanceGame
                           plan={state.monthlyInvestmentPlan}
                           onAddItems={addMonthlyPlanItems}
                           onRemoveItem={removeMonthlyPlanItem}
+                          onEditItem={editMonthlyPlanItem}
                           onSplitMergedItem={splitMergedMonthlyPlanItem}
                           hasPreviousMonthPlan={hasPreviousMonthPlan}
                           onCopyFromPreviousMonth={copyMonthlyPlanFromPreviousMonth}
