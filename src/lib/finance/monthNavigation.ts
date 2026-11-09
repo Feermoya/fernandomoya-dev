@@ -30,20 +30,15 @@ export function isValidMonthKey(value: unknown): value is string {
   return typeof value === 'string' && MONTH_KEY_RE.test(value);
 }
 
+// Estado efímero de la vista: no escribir preferencias en sessionStorage.
+let manuallySelectedMonth = false;
+
 export function markMonthManuallyChanged(): void {
-  try {
-    sessionStorage.setItem(FINANCE_MONTH_MANUAL_SESSION_KEY, '1');
-  } catch {
-    /* ignore */
-  }
+  manuallySelectedMonth = true;
 }
 
 export function hasManualMonthSelection(): boolean {
-  try {
-    return sessionStorage.getItem(FINANCE_MONTH_MANUAL_SESSION_KEY) === '1';
-  } catch {
-    return false;
-  }
+  return manuallySelectedMonth;
 }
 
 export function parseMonthKey(monthKey: string): { year: number; month: number } {

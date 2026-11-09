@@ -20,10 +20,10 @@ export type RemoteFinanceRow = {
 };
 
 export const FINANCE_OFFLINE_USER_MESSAGE =
-  'Sin conexión a internet. Trabajás con los datos de este dispositivo. Al volver la red se sincroniza solo.';
+  'Sin conexión. Las inversiones nuevas requieren confirmar el guardado en Supabase.';
 
 export const FINANCE_CLOUD_UNREACHABLE_MESSAGE =
-  'No se pudo sincronizar con la nube. Tus datos siguen en este dispositivo; se reintenta al recargar.';
+  'No se pudo conectar con Supabase. Reintentá cuando tengas conexión.';
 
 export class FinanceCloudHttpError extends Error {
   readonly status: number;

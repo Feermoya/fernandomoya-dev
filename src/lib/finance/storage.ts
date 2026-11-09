@@ -155,6 +155,22 @@ export function saveFinanceState(userId: string, state: FinanceState): void {
   }
 }
 
+/**
+ * Retira las copias antiguas que ya fueron confirmadas en Supabase.
+ * Si existe una marca de edición pendiente de una versión anterior, se
+ * conserva sin tocar para evitar perder información no reconciliada.
+ */
+export function clearLegacyFinanceCacheAfterCloudRead(userId: string): void {
+  if (typeof window === 'undefined' || !userId) return;
+  try {
+    if (isFinancePendingCloudPush(userId)) return;
+    window.localStorage.removeItem(financeScopedKey(FINANCE_STORAGE_KEY, userId));
+    window.localStorage.removeItem(financeScopedKey(FINANCE_LOCAL_SAVED_AT_KEY, userId));
+  } catch {
+    /* Safari puede impedir acceso al almacenamiento. */
+  }
+}
+
 export function exportFinanceState(state: FinanceState): string {
   try {
     return JSON.stringify(state, null, 2);
