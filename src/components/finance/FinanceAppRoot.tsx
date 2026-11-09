@@ -6,6 +6,7 @@ import { FinanceSetPassword } from '@/components/finance/FinanceSetPassword';
 import { FinanceBootScreen } from '@/components/finance/FinanceBootScreen';
 import { FinanceStartupErrorBoundary } from '@/components/finance/FinanceStartupErrorBoundary';
 import { getFinanceAuthClient, signOutOfFinance } from '@/lib/finance/authClient';
+import { startFinanceAuthSession } from '@/lib/finance/authStartup';
 
 // El dashboard, PDFs, gráficos y la cartera no bloquean la primera pantalla.
 const FinanceGameApp = lazy(() => import('@/components/finance/FinanceGameApp'));
@@ -22,28 +23,24 @@ export default function FinanceAppRoot() {
   useEffect(() => {
     const client = getFinanceAuthClient();
     if (!client) { setSession(null); return; }
-    let active = true;
-    const slower = window.setTimeout(() => { if (active) setSlow(true); }, 4500);
 
-    void client.auth.getSession().then(({ data, error }) => {
-      if (!active) return;
-      clearTimeout(slower);
-      if (error) { setAuthIssue(true); return; }
-      setSession(data.session ?? null);
-    }).catch(() => {
-      if (active) setAuthIssue(true);
+    // Do not register onAuthStateChange until getSession has finished.
+    // This avoids a known browser Web Lock deadlock during session refresh.
+    return startFinanceAuthSession({
+      getSession: () => client.auth.getSession(),
+      subscribe: (onChange) => {
+        const { data } = client.auth.onAuthStateChange((_event, next) => onChange(next));
+        return () => data.subscription.unsubscribe();
+      },
+    }, {
+      onSession: (next) => {
+        setAuthIssue(false);
+        setSlow(false);
+        setSession(next);
+      },
+      onError: () => { setAuthIssue(true); setSlow(true); },
+      onSlow: () => setSlow(true),
     });
-
-    const { data } = client.auth.onAuthStateChange((_event, next) => {
-      if (!active) return;
-      setAuthIssue(false);
-      setSession(next);
-    });
-    return () => {
-      active = false;
-      clearTimeout(slower);
-      data.subscription.unsubscribe();
-    };
   }, []);
 
   if (session === undefined) {
