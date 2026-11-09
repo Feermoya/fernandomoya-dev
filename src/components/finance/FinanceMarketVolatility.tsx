@@ -1,88 +1,162 @@
-import { useEffect, useState } from 'react';
-import { Activity, RefreshCcw } from 'lucide-react';
+import { useEffect, useId, useState } from 'react';
+import { Activity, ArrowDownRight, ArrowUpRight, CircleAlert } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
-import { getVixMarketInsight, type VixZone } from '@/lib/finance/vix';
+import { getVixActionSignal, vixDialRatio } from '@/lib/finance/vixSignal';
 
-type VixData = {
-  ok: boolean; value: number; date: string; percentileYear: number;
-  observations: number; source: string; sourceUrl: string; zone: VixZone; frequency: string;
-};
+type VixData = { ok: boolean; value: number; date: string; percentileYear: number };
+type DialSegment = { start: number; end: number; color: string };
+
+const DIAL_SEGMENTS: readonly DialSegment[] = [
+  { start: 10, end: 16, color: '#17b890' },
+  { start: 16, end: 21, color: '#4bbfc0' },
+  { start: 21, end: 26, color: '#f9c554' },
+  { start: 26, end: 32, color: '#fb9944' },
+  { start: 32, end: 40, color: '#f7793c' },
+  { start: 40, end: 50, color: '#ee495b' },
+];
+
+const TONE = {
+  opportunity: {
+    badge: 'border-emerald-200 bg-emerald-100 text-emerald-800',
+    icon: ArrowUpRight,
+    panel: 'border-emerald-100 bg-emerald-50/80',
+  },
+  neutral: {
+    badge: 'border-amber-200 bg-amber-100 text-amber-900',
+    icon: CircleAlert,
+    panel: 'border-amber-100 bg-amber-50/75',
+  },
+  caution: {
+    badge: 'border-rose-200 bg-rose-100 text-rose-800',
+    icon: ArrowDownRight,
+    panel: 'border-rose-100 bg-rose-50/75',
+  },
+} as const;
+
+function dialPoint(angle: number, radius: number) {
+  const radians = angle * Math.PI / 180;
+  return { x: 160 + Math.cos(radians) * radius, y: 168 + Math.sin(radians) * radius };
+}
+function dialArc(startValue: number, endValue: number) {
+  const from = dialPoint(180 + (startValue - 10) / 40 * 180, 112);
+  const to = dialPoint(180 + (endValue - 10) / 40 * 180, 112);
+  return 'M ' + from.x.toFixed(2) + ' ' + from.y.toFixed(2)
+    + ' A 112 112 0 0 1 ' + to.x.toFixed(2) + ' ' + to.y.toFixed(2);
+}
+
 export function FinanceMarketVolatility() {
   const [data, setData] = useState<VixData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const reduced = useReducedMotion();
-  async function load(signal?: AbortSignal) {
-    setLoading(true); setError(false);
-    try {
-      const response = await fetch('/api/finance-vix', {cache:'default', signal});
-      const json = await response.json() as VixData;
-      if (!response.ok || json.ok !== true || !Number.isFinite(json.value)) throw Error();
-      setData(json);
-    } catch (e) {
-      if ((e as Error).name !== 'AbortError') { setData(null); setError(true); }
-    } finally { if (!signal?.aborted) setLoading(false); }
-  }
+  const dialId = useId();
+
   useEffect(() => {
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => void load(controller.signal), 1300);
-    return () => {window.clearTimeout(timeout); controller.abort();};
+    const timeout = window.setTimeout(async () => {
+      try {
+        const response = await fetch('/api/finance-vix', { signal: controller.signal });
+        if (!response.ok) throw new Error('VIX unavailable');
+        const result = await response.json() as VixData;
+        if (!result.ok || !Number.isFinite(result.value) || result.value <= 0) throw new Error('Invalid VIX');
+        if (!controller.signal.aborted) setData(result);
+      } catch {
+        if (!controller.signal.aborted) setError(true);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }, 900);
+    return () => { window.clearTimeout(timeout); controller.abort(); };
   }, []);
-  const current = data ? getVixMarketInsight(data.value, data.percentileYear) : null;
-  const ratio = data ? Math.min(1,Math.max(0,(data.value-10)/40)) : 0;
+
+  const signal = data ? getVixActionSignal(data.value, data.percentileYear) : null;
+  const ratio = data ? vixDialRatio(data.value) : 0;
+  const targetAngle = -90 + ratio * 180;
+  const theme = signal ? TONE[signal.tone] : TONE.neutral;
+  const StateIcon = theme.icon;
+
   return (
-    <section className="rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-sm sm:p-5" aria-labelledby="vix-title">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
-            <Activity size={19} aria-hidden />
-          </span>
-          <div>
-            <h3 id="vix-title" className="text-sm font-extrabold text-slate-900">Miedo del mercado</h3>
-            <p className="mt-0.5 text-[11px] font-medium text-slate-500">Cómo está el mercado hoy</p>
-          </div>
+    <section className="min-w-0 rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-sm sm:p-5"
+      aria-labelledby="vix-title">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+          <Activity size={19} aria-hidden />
+        </span>
+        <div>
+          <h3 id="vix-title" className="text-sm font-extrabold text-slate-900">Miedo del mercado</h3>
+          <p className="mt-0.5 text-[11px] font-medium text-slate-500">El pulso del S&amp;P 500</p>
         </div>
-        <button type="button" onClick={()=>void load()} aria-label="Actualizar VIX" disabled={loading}
-          className="flex min-h-9 min-w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 disabled:opacity-50">
-          <RefreshCcw size={15} className={loading?'animate-spin':''} aria-hidden />
-        </button>
       </div>
-      {loading && !data ? (
-        <div className="mt-6 h-36 animate-pulse rounded-2xl bg-slate-50" role="status" aria-label="Consultando VIX en Cboe" />
-      ) : error || !data ? (
-        <div className="mt-5 rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm font-medium text-amber-900" role="status">
-          No se pudo actualizar. Probá nuevamente.
-        </div>
+
+      {loading ? (
+        <div className="mx-auto mt-5 h-44 max-w-[320px] animate-pulse rounded-3xl bg-slate-50"
+          role="status" aria-label="Consultando miedo del mercado" />
+      ) : error || !data || !signal ? (
+        <p role="status" className="mt-5 rounded-2xl bg-slate-50 p-4 text-center text-sm font-medium text-slate-600">
+          El indicador no está disponible en este momento.
+        </p>
       ) : (
         <>
-          <div className="relative mx-auto mt-2 max-w-[310px]">
-            <svg viewBox="0 0 320 158" role="img" aria-label={`VIX ${data.value.toFixed(2)}, ${current?.title}`} className="h-auto w-full">
+          <div className="mx-auto mt-2 max-w-[340px]">
+            <svg viewBox="0 0 320 200" className="block h-auto w-full" role="img"
+              aria-label={'Tacómetro VIX ' + data.value.toFixed(2) + ', ' + signal.title}>
               <defs>
-                <linearGradient id="vix-gauge-colors" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#10b981"/><stop offset="32%" stopColor="#60a5fa"/>
-                  <stop offset="52%" stopColor="#fbbf24"/><stop offset="75%" stopColor="#fb923c"/>
-                  <stop offset="100%" stopColor="#ef4444"/>
-                </linearGradient>
+                <filter id={dialId} x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3.3" />
+                </filter>
               </defs>
-              <path d="M 44 133 A 116 116 0 0 1 276 133" fill="none" stroke="#e2e8f0" strokeWidth="17" strokeLinecap="round"/>
-              <path d="M 44 133 A 116 116 0 0 1 276 133" fill="none" stroke="url(#vix-gauge-colors)" strokeWidth="17" strokeLinecap="round"/>
-              <motion.line x1="160" y1="133" x2="160" y2="50"
-                stroke="#0f172a" strokeWidth="5" strokeLinecap="round"
-                style={{transformOrigin:'160px 133px'}}
-                initial={reduced ? {rotate:-90+ratio*180} : {rotate:-90}}
-                animate={{rotate:-90+ratio*180}}
-                transition={reduced?{duration:0}:{type:'spring',stiffness:75,damping:16}} />
-              <circle cx="160" cy="133" r="11" fill="#0f172a" stroke="white" strokeWidth="4"/>
-              <text x="36" y="155" fill="#64748b" fontSize="11" textAnchor="middle">Calma</text>
-              <text x="285" y="155" fill="#64748b" fontSize="11" textAnchor="middle">Estrés</text>
+              <path d={dialArc(10, 50)} fill="none" stroke="#ecf0f7" strokeWidth="25"
+                strokeLinecap="round" />
+              {DIAL_SEGMENTS.map((segment, index) => (
+                <path key={segment.start} d={dialArc(segment.start + (index ? .38 : 0), segment.end - (index === DIAL_SEGMENTS.length-1 ? 0 : .38))}
+                  fill="none" stroke={segment.color} strokeWidth="20" strokeLinecap="butt" />
+              ))}
+              {Array.from({ length: 21 }, (_, index) => {
+                const angle = 180 + index / 20 * 180;
+                const big = index % 5 === 0;
+                const inner = dialPoint(angle, big ? 81 : 86);
+                const outer = dialPoint(angle, 94);
+                return <line key={index} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+                  stroke={big ? '#7b8a9f' : '#b7c1cf'} strokeWidth={big ? 2 : 1.2} strokeLinecap="round" />;
+              })}
+              {[10, 20, 30, 40, 50].map(value => {
+                const position = dialPoint(180 + (value - 10) / 40 * 180, 67);
+                return <text key={value} x={position.x} y={position.y+4} textAnchor="middle"
+                  fontSize="11" fontWeight="800" fill="#64748b">{value}</text>;
+              })}
+              <motion.g style={{ transformOrigin: '160px 168px' }}
+                initial={reduced ? false : { rotate: -91 }}
+                animate={{ rotate: targetAngle }}
+                transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 70, damping: 14, mass: 1.1 }}>
+                <motion.g style={{ transformOrigin: '160px 168px' }}
+                  animate={reduced ? { rotate: 0 } : { rotate: [0, 1.3, -0.8, 0.6, 0] }}
+                  transition={reduced ? { duration: 0 } : { duration: 2.5, ease: 'easeInOut', repeat: Infinity, repeatDelay: 2.4, delay: 1.5 }}>
+                  <path d="M 156 169 L 160 80 L 164 169 Z" fill="#101b35"
+                    stroke="#ffffff" strokeWidth=".8" strokeLinejoin="round" />
+                </motion.g>
+              </motion.g>
+              <circle cx="160" cy="168" r="14" fill="#a1acc2" opacity=".22" filter={'url(#' + dialId + ')'} />
+              <circle cx="160" cy="168" r="12" fill="#0f1931" stroke="#fff" strokeWidth="4" />
+              <circle cx="160" cy="168" r="3.5" fill="#8aa3cf" />
+              <text x="44" y="191" fontSize="10.5" fontWeight="700" fill="#697994">Calma</text>
+              <text x="276" y="191" fontSize="10.5" textAnchor="end" fontWeight="700" fill="#697994">Miedo</text>
             </svg>
-            <div className="-mt-2 text-center">
-              <p className="text-[2.25rem] font-black leading-none tabular-nums tracking-tight text-slate-950">{data.value.toLocaleString('es-AR',{maximumFractionDigits:2})}</p>
-              <p className="mt-1 text-xs font-extrabold" style={{color:current?.color}}>{current?.title}</p>
+            <div className="-mt-1 text-center">
+              <p className="text-[2.4rem] font-black leading-none tabular-nums tracking-[-.04em] text-slate-950">
+                {data.value.toLocaleString('es-AR', { maximumFractionDigits: 2 })}
+              </p>
+              <p className="mt-1 text-xs font-bold text-slate-500">{signal.title}</p>
             </div>
           </div>
-          <div className="mx-auto mt-4 max-w-[360px] rounded-2xl bg-slate-50 px-4 py-3 text-center">
-            <p className="text-[13px] font-semibold leading-relaxed text-slate-800">{current?.conclusion}</p>
+
+          <div className={'mt-4 rounded-2xl border p-3.5 sm:p-4 ' + theme.panel}>
+            <span className={'inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-extrabold ' + theme.badge}>
+              <StateIcon size={15} aria-hidden />
+              {signal.badge}
+            </span>
+            <p className="mt-2.5 text-[13px] font-semibold leading-relaxed text-slate-800">
+              {signal.message}
+            </p>
           </div>
         </>
       )}
